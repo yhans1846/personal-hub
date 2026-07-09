@@ -173,7 +173,7 @@ files/
 # Claude Code
 ############################################
 
-.claude/
+#.claude/
 
 .claude-cache/
 
