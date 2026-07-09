@@ -14,11 +14,18 @@ const authStore = useAuthStore()
       </div>
     </el-header>
     <el-container>
-      <el-aside width="200px" class="app-aside">
+      <el-aside width="220px" class="app-aside">
         <el-menu router :default-active="$route.path">
-          <el-menu-item index="/">
+          <el-menu-item index="/dashboard">
             <span>首页</span>
           </el-menu-item>
+          <el-sub-menu index="notes">
+            <template #title>笔记管理</template>
+            <el-menu-item index="/notes">笔记列表</el-menu-item>
+            <el-menu-item index="/notes/categories">分类管理</el-menu-item>
+            <el-menu-item index="/notes/tags">标签管理</el-menu-item>
+            <el-menu-item index="/notes/recycle">回收站</el-menu-item>
+          </el-sub-menu>
         </el-menu>
       </el-aside>
       <el-main class="app-main">

@@ -13,11 +13,13 @@ const router = createRouter({
       component: () => import('@/components/AppLayout.vue'),
       redirect: '/dashboard',
       children: [
-        {
-          path: 'dashboard',
-          name: 'Dashboard',
-          component: () => import('@/views/Dashboard.vue')
-        }
+        { path: 'dashboard', name: 'Dashboard', component: () => import('@/views/Dashboard.vue') },
+        { path: 'notes', name: 'NoteList', component: () => import('@/views/notes/NoteList.vue') },
+        { path: 'notes/new', name: 'NoteCreate', component: () => import('@/views/notes/NoteEditor.vue') },
+        { path: 'notes/:id/edit', name: 'NoteEdit', component: () => import('@/views/notes/NoteEditor.vue') },
+        { path: 'notes/categories', name: 'NoteCategories', component: () => import('@/views/notes/NoteCategoryManage.vue') },
+        { path: 'notes/tags', name: 'NoteTags', component: () => import('@/views/notes/NoteTagManage.vue') },
+        { path: 'notes/recycle', name: 'RecycleBin', component: () => import('@/views/notes/RecycleBin.vue') }
       ]
     }
   ]
