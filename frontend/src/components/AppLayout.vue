@@ -1,11 +1,17 @@
 <script setup lang="ts">
-// 后台布局组件 — 待 Step 3 完善
+import { useAuthStore } from '@/store/authStore'
+
+const authStore = useAuthStore()
 </script>
 
 <template>
   <el-container class="app-layout">
     <el-header class="app-header">
       <span class="app-title">Personal Hub</span>
+      <div class="header-right">
+        <span class="user-name">{{ authStore.user?.nickname || authStore.user?.username }}</span>
+        <el-button text style="color: #fff" @click="authStore.logout()">退出</el-button>
+      </div>
     </el-header>
     <el-container>
       <el-aside width="200px" class="app-aside">
@@ -30,12 +36,22 @@
   background: #409eff;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 0 24px;
 }
 .app-title {
   color: #fff;
   font-size: 20px;
   font-weight: bold;
+}
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.user-name {
+  color: #fff;
+  font-size: 14px;
 }
 .app-aside {
   border-right: 1px solid #e6e6e6;

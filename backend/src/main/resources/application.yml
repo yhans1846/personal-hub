@@ -28,3 +28,8 @@ mybatis-plus:
     map-underscore-to-camel-case: true
     # 开发环境打印 SQL，生产环境关闭
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+# JWT 配置
+jwt:
+  secret: personal-hub-jwt-secret-key-2026-please-change-in-production
+  expiration: 86400000

@@ -11,15 +11,28 @@ const router = createRouter({
     {
       path: '/',
       component: () => import('@/components/AppLayout.vue'),
+      redirect: '/dashboard',
       children: [
         {
-          path: '',
+          path: 'dashboard',
           name: 'Dashboard',
           component: () => import('@/views/Dashboard.vue')
         }
       ]
     }
   ]
+})
+
+/** 路由守卫：未登录跳转登录页 */
+router.beforeEach((to, _from, next) => {
+  const token = localStorage.getItem('token')
+  if (to.path !== '/login' && !token) {
+    next('/login')
+  } else if (to.path === '/login' && token) {
+    next('/')
+  } else {
+    next()
+  }
 })
 
 export default router
