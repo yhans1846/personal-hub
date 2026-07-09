@@ -10,30 +10,82 @@ import com.personalhub.module.note.vo.NoteVO;
  */
 public interface NoteService {
 
-    /** 分页查询笔记列表 */
+    /**
+     * 分页查询笔记列表
+     *
+     * @param userId 用户ID
+     * @param query  查询条件（支持关键词搜索、分类/标签/收藏/回收站筛选）
+     * @return 笔记分页数据
+     */
     IPage<NoteVO> listNotes(Long userId, NoteQueryDTO query);
 
-    /** 获取笔记详情 */
+    /**
+     * 获取笔记详情
+     *
+     * @param id     笔记ID
+     * @param userId 用户ID
+     * @return 笔记详情VO
+     */
     NoteVO getById(Long id, Long userId);
 
-    /** 新建笔记 */
+    /**
+     * 新建笔记
+     *
+     * @param userId 用户ID
+     * @param dto    笔记创建参数
+     * @return 新建的笔记VO
+     */
     NoteVO create(Long userId, NoteCreateDTO dto);
 
-    /** 编辑笔记 */
+    /**
+     * 编辑笔记
+     *
+     * @param id     笔记ID
+     * @param userId 用户ID
+     * @param dto    笔记编辑参数
+     * @return 更新后的笔记VO
+     */
     NoteVO update(Long id, Long userId, NoteCreateDTO dto);
 
-    /** 删除笔记（软删除到回收站） */
+    /**
+     * 删除笔记（软删除到回收站）
+     *
+     * @param id     笔记ID
+     * @param userId 用户ID
+     */
     void delete(Long id, Long userId);
 
-    /** 恢复笔记 */
+    /**
+     * 恢复笔记
+     *
+     * @param id     笔记ID
+     * @param userId 用户ID
+     */
     void restore(Long id, Long userId);
 
-    /** 永久删除 */
+    /**
+     * 永久删除
+     *
+     * @param id     笔记ID
+     * @param userId 用户ID
+     */
     void permanentDelete(Long id, Long userId);
 
-    /** 切换收藏状态 */
+    /**
+     * 切换收藏状态
+     *
+     * @param id     笔记ID
+     * @param userId 用户ID
+     */
     void toggleFavorite(Long id, Long userId);
 
-    /** 最近编辑列表 */
+    /**
+     * 最近编辑列表
+     *
+     * @param userId 用户ID
+     * @param page   页码
+     * @param size   每页条数
+     * @return 笔记分页数据
+     */
     IPage<NoteVO> getRecent(Long userId, int page, int size);
 }

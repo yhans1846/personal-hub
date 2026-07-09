@@ -16,6 +16,9 @@ public class GlobalExceptionHandler {
 
     /**
      * 参数校验失败
+     *
+     * @param e 参数校验异常
+     * @return 统一返回（code=400）
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -29,6 +32,9 @@ public class GlobalExceptionHandler {
 
     /**
      * 业务异常
+     *
+     * @param e 业务异常
+     * @return 统一返回（code由异常指定）
      */
     @ExceptionHandler(BusinessException.class)
     public Result<Void> handleBusiness(BusinessException e) {
@@ -37,6 +43,9 @@ public class GlobalExceptionHandler {
 
     /**
      * 未登录 / Token 过期
+     *
+     * @param e 未认证异常
+     * @return 统一返回（code=401）
      */
     @ExceptionHandler(UnauthorizedException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
@@ -46,6 +55,9 @@ public class GlobalExceptionHandler {
 
     /**
      * 资源不存在
+     *
+     * @param e 资源不存在异常
+     * @return 统一返回（code=404）
      */
     @ExceptionHandler(NotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
@@ -55,6 +67,9 @@ public class GlobalExceptionHandler {
 
     /**
      * 未知异常
+     *
+     * @param e 异常
+     * @return 统一返回（code=500）
      */
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)

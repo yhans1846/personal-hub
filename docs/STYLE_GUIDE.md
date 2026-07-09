@@ -7,6 +7,18 @@
 
 ## 后端规范（Java / Spring Boot）
 
+### 阿里巴巴开发手册核心约定（强制遵守）
+
+| 规范 | 要求 |
+|------|------|
+| 类注释 | 所有 class / interface / enum 必须有 `/** 说明 */` Javadoc |
+| 方法注释 | 所有 public 方法必须有 Javadoc，包含 `@param` / `@return` / `@throws` |
+| 字段注释 | 所有字段用 `/** 说明 */` 放在字段上方，禁止行尾 `//` 注释 |
+| 常量命名 | `UPPER_SNAKE_CASE`，用 `final` 修饰 |
+| 魔法值 | 禁止硬编码数字/字符串，必须定义为常量 |
+| @Override | 实现类的方法不重复写 Javadoc，继承接口注释即可 |
+| @Bean 方法 | 配置类中的 @Bean 方法需写 Javadoc 说明用途 |
+
 ### 命名
 | 类型 | 规则 | 示例 |
 |------|------|------|
@@ -31,6 +43,13 @@ backend/src/main/java/com/personalhub/
 - **Service**: 接口 + 实现类，负责全部业务逻辑
 - **Mapper**: 继承 `BaseMapper<T>`，仅数据库操作，简单 CRUD 用内置方法
 - **DTO**: 接收请求（`@Valid`）| **VO**: 返回前端 | **Entity**: 不直接暴露
+- **Entity 注释**: 所有字段必须用 `/** */` 放在字段上方，遵循阿里巴巴开发手册
+
+> **所有后端 Java 代码**（Controller / Service / Mapper / Entity / DTO / VO / Config / Util）必须遵守阿里巴巴开发手册：
+> - 类必须有 `/** 说明 */` Javadoc
+> - public 方法必须有 Javadoc，含 `@param` / `@return`
+> - 字段必须有 `/** 说明 */` 行前注释
+> - 禁止魔法值，常量用 `UPPER_SNAKE_CASE`
 
 ### 时间 & Lombok
 - 统一 `LocalDateTime`，不用 `java.util.Date`

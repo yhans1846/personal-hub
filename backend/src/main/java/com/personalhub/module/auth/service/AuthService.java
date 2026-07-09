@@ -9,6 +9,10 @@ public interface AuthService {
 
     /**
      * 用户登录
+     *
+     * @param username 用户名
+     * @param password 密码
+     * @return 登录结果（包含JWT Token和用户信息）
      */
     LoginVO login(String username, String password);
 }

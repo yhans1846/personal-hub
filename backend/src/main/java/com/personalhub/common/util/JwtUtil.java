@@ -22,12 +22,19 @@ public class JwtUtil {
     @Value("${jwt.expiration}")
     private long expiration;
 
+    /**
+     * 获取 HMAC 签名密钥
+     */
     private SecretKey getKey() {
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
     /**
      * 生成 Token
+     *
+     * @param userId   用户ID
+     * @param username 用户名
+     * @return JWT Token 字符串
      */
     public String generateToken(Long userId, String username) {
         Date now = new Date();
@@ -44,6 +51,9 @@ public class JwtUtil {
 
     /**
      * 从 Token 中解析 Claims
+     *
+     * @param token JWT Token
+     * @return 解析后的 Claims
      */
     public Claims parseToken(String token) {
         return Jwts.parser()
@@ -55,6 +65,9 @@ public class JwtUtil {
 
     /**
      * 从 Token 中获取用户 ID
+     *
+     * @param token JWT Token
+     * @return 用户ID
      */
     public Long getUserId(String token) {
         return Long.valueOf(parseToken(token).getSubject());
@@ -62,6 +75,9 @@ public class JwtUtil {
 
     /**
      * 验证 Token 是否有效
+     *
+     * @param token JWT Token
+     * @return true 有效，false 无效
      */
     public boolean validateToken(String token) {
         try {
