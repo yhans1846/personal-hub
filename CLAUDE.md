@@ -1,55 +1,33 @@
 ## 项目简介
 
-**Personal Hub** — Spring Boot 3 + Vue 3 个人知识管理系统，仅供个人长期使用。
-
-前后端分离：backend（Spring Boot 3 + JDK 21），frontend（Vue 3 + TypeScript + Vite），docs（设计文档）
+**Personal Hub** — Spring Boot 3 + Vue 3 个人知识管理系统，前后端分离。
 
 ---
 
-# 文档说明
+# 文档索引
 
-所有设计存放于 `docs/`，开发前优先阅读对应文档：
+所有设计存放 `docs/`，开发前阅读对应文档：
 
-- **PROJECT.md** — 项目定位、功能规划、模块依赖。新功能应符合项目定位
-- **TECH_STACK.md** — 技术栈版本。不更换框架，新增依赖保持一致
-- **ROADMAP.md** — 阶段与计划。按路线图顺序开发
-- **DATABASE.md** — 表结构、ER、索引。优先复用已有表，新增表同步更新
-- **API.md** — RESTful 接口、返回结构。保持风格统一，修改同步更新
-- **STYLE_GUIDE.md** — Java/Vue 编码规范、命名目录规范。代码必须遵循
-- **CHANGELOG.md** — 版本记录。完成功能后建议更新
-
----
-
-# 开发原则
-
-1. 可读性优先 2. 可维护性优先 3. 项目结构统一 4. 不生成重复代码 5. 优先复用
-6. 不随意引入新依赖 7. 前后端命名一致 8. 接口风格统一 9. 数据库设计一致 10. 新增功能同步更新文档
+| 文档 | 内容 |
+|------|------|
+| PROJECT.md | 功能规划、模块依赖、项目原则 |
+| TECH_STACK.md | 技术栈版本与环境要求 |
+| ROADMAP.md | 开发阶段与进度 |
+| DATABASE.md | 表结构、ER、索引 |
+| API.md | RESTful 接口定义 |
+| STYLE_GUIDE.md | 编码规范、阿里巴巴手册、Swagger注解 |
+| CHANGELOG.md | 版本变更记录 |
+| DEVELOPMENT_PLAN.md | 分步开发计划与提交记录 |
 
 ---
 
 # 开发流程
 
-理解需求 → 查阅文档 → 评估影响（数据库/接口/模块）→ 给出方案（待确认）→ 生成代码 → **更新文档** → 提交代码
+需求 → 文档查阅 → 影响评估 → 方案确认 → 编码 → **更新 docs** → 提交
 
 > **铁律：提交代码前必须先同步更新 docs/ 下受影响的文档。**
-> 每次完成功能模块或重要修改后，检查并更新：
-> - CHANGELOG.md — 记录版本变更
-> - ROADMAP.md — 勾选已完成项
-> - DEVELOPMENT_PLAN.md — 更新进度状态
-> - 如涉及数据库变更 → DATABASE.md
-> - 如涉及接口变更 → API.md
-> - 如涉及技术栈变更 → TECH_STACK.md
 
----
-
-# 输出要求
-
-- 模块职责清晰，命名统一，添加必要中文注释
-- 用已有技术方案，不用过时 API
-- 不生成无用代码，不随意修改业务逻辑
-- 发现文档与代码冲突先指出，确认后修改
-- **所有 Controller / DTO / VO 必须添加 Swagger 注解**（@Tag, @Operation, @Schema），公共类 Result/PageResult 已含注解无需重复
-- **所有 Java 代码遵循阿里巴巴开发手册**：类/方法/字段必须有 `/** */` Javadoc，方法需含 @param/@return，禁止魔法值
+查看 `docs/STYLE_GUIDE.md` 获取完整编码规范（阿里巴巴手册、Swagger注解要求）。
 
 <!-- superpowers-zh:begin (do not edit between these markers) -->
 # Superpowers-ZH 中文增强版
