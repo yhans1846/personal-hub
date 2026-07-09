@@ -39,6 +39,7 @@
 - 用已有技术方案，不用过时 API
 - 不生成无用代码，不随意修改业务逻辑
 - 发现文档与代码冲突先指出，确认后修改
+- **所有 Controller / DTO / VO 必须添加 Swagger 注解**（@Tag, @Operation, @Schema），公共类 Result/PageResult 已含注解无需重复
 
 <!-- superpowers-zh:begin (do not edit between these markers) -->
 # Superpowers-ZH 中文增强版

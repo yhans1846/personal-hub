@@ -36,6 +36,13 @@ backend/src/main/java/com/personalhub/
 - 统一 `LocalDateTime`，不用 `java.util.Date`
 - Entity/DTO/VO 用 `@Data`，Controller/Service 用 `@RequiredArgsConstructor`
 
+### Swagger 注解规范
+- 所有 Controller 类添加 `@Tag(name = "模块名", description = "说明")`
+- 所有接口方法添加 `@Operation(summary = "简要说明", description = "详细说明")`
+- 所有 DTO 类添加 `@Schema(description = "说明")`，字段添加 `@Schema(description = "说明", example = "示例值")`
+- 所有 VO 类添加 `@Schema(description = "说明")`，字段添加 `@Schema(description = "说明")`
+- 统一返回 Result 和 PageResult 已添加 `@Schema`，无需重复
+
 ---
 
 ## 前端规范（Vue 3 / TypeScript）

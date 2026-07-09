@@ -33,3 +33,12 @@ mybatis-plus:
 jwt:
   secret: personal-hub-jwt-secret-key-2026-please-change-in-production
   expiration: 86400000
+
+# SpringDoc OpenAPI 配置
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs

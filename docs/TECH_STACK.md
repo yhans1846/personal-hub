@@ -15,6 +15,7 @@
 | JWT | 最新 | Token 登录认证 |
 | Lombok | 最新 | 简化代码 |
 | Maven | 3.8.5 | 依赖管理 |
+| SpringDoc OpenAPI | 2.6.0 | API 文档（Swagger UI）|
 
 > 版本说明："最新"指开发时当前可用最新正式版。Spring Boot 3.x 需 JDK 17+，本项目用 JDK 21 LTS。
 

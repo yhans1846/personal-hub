@@ -1,15 +1,22 @@
 package com.personalhub.common.result;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 /**
  * 统一返回结果
  */
 @Data
+@Schema(description = "统一返回结果")
 public class Result<T> {
 
+    @Schema(description = "状态码", example = "200")
     private int code;
+
+    @Schema(description = "提示信息", example = "success")
     private String message;
+
+    @Schema(description = "返回数据")
     private T data;
 
     private Result() {}
