@@ -175,6 +175,8 @@ files/
 
 #.claude/
 
+.claude/settings.local.json
+
 .claude-cache/
 
 .claude-history/

@@ -10,8 +10,8 @@
 | Spring Security | 最新稳定版    | 身份认证与授权         |
 | Spring Data Redis | 随 Spring Boot | Redis 集成            |
 | MyBatis-Plus    | 最新稳定版    | ORM 持久层框架         |
-| MySQL           | 8.x           | 关系型数据库           |
-| Redis           | 5.x           | 缓存（预留）           |
+| MySQL           | 8.x           | 关系型数据库（localhost:3306，库 personal_hub） |
+| Redis           | 5.x           | 缓存（localhost:6379，DB 8）|
 | JWT             | 最新稳定版    | Token 登录认证         |
 | Lombok          | 最新稳定版    | 简化 Java 代码         |
 | Maven           | 3.8.5         | 项目依赖管理           |
@@ -53,8 +53,8 @@
 | Node.js       | 22 LTS      | 前端运行时     |
 | pnpm          | 最新版      | 前端包管理器   |
 | Maven         | 3.8.5       | 后端依赖管理   |
-| MySQL         | 8.x         | 数据库         |
-| Redis         | 5.x         | 缓存（预留）   |
+| MySQL         | 8.x         | 数据库（localhost:3306） |
+| Redis         | 5.x         | 缓存（localhost:6379，DB 8） |
 
 ## 开发环境要求
 
