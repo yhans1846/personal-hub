@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### 2026-07-09（已完成）
+- **代码质量统一提升**：抽取 PageParam 分页基类 + ResultCode 状态码枚举 + 全局 @Slf4j 日志
 - **Maven 多模块拆分**：父 POM + 5 子模块（ph-common/ph-auth/ph-note/ph-study/ph-boot）
 - 更新开发计划/编码规范/技术栈文档
 

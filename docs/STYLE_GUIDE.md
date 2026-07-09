@@ -24,6 +24,62 @@
 - **VO**: `@Schema`(类+字段)
 - Result / PageResult 已添加无需重复
 
+### 公共组件编码思想
+
+以下模式应贯穿所有模块，新增代码时主动遵守：
+
+#### 1. 分页参数复用 `PageParam`
+所有分页查询 DTO **必须继承** `PageParam` 基类，禁止在各 DTO 中重复定义 `page` / `size`。
+```java
+// ✅ 正确
+public class XxxQueryDTO extends PageParam {
+    private String keyword;
+    // 只需要业务字段，page/size 由父类提供
+}
+
+// ❌ 错误 — 重复造轮子
+public class XxxQueryDTO {
+    private Integer page = 1;   // 重复
+    private Integer size = 10;  // 重复
+    private String keyword;
+}
+```
+
+#### 2. 统一返回状态码枚举 `ResultCode`
+返回给前端的 `code` **必须**使用 `ResultCode` 枚举，禁止硬编码魔法数字。
+```java
+// ✅ 正确
+return Result.badRequest("参数错误");
+return Result.error(ResultCode.FORBIDDEN, "无权限");
+throw new BusinessException(ResultCode.BAD_REQUEST, "库存不足");
+
+// ❌ 错误 — 魔法数字
+return Result.error(400, "参数错误");
+throw new BusinessException("库存不足");  // 默认 400 可接受，但推荐显式
+```
+
+#### 3. 关键路径必须记录日志
+- **Service 层**：增删改操作用 `log.info()`, 权限校验失败用 `log.warn()`
+- **异常处理器**：业务异常 `log.warn()`, 未知异常 `log.error()`（含堆栈）
+- **过滤器**：认证结果用 `log.debug()`
+
+```java
+@Slf4j
+@Service
+public class XxxServiceImpl implements XxxService {
+    public void delete(Long id, Long userId) {
+        // 校验失败 → log.warn
+        if (notFound) {
+            log.warn("资源不存在: id={}, userId={}", id, userId);
+            throw new NotFoundException("资源不存在");
+        }
+        // 操作成功 → log.info
+        mapper.deleteById(id);
+        log.info("删除资源: id={}, userId={}", id, userId);
+    }
+}
+```
+
 ### 命名
 | 类型 | 规则 | 示例 |
 |------|------|------|
