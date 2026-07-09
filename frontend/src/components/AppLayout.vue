@@ -26,6 +26,9 @@ const authStore = useAuthStore()
             <el-menu-item index="/notes/tags">标签管理</el-menu-item>
             <el-menu-item index="/notes/recycle">回收站</el-menu-item>
           </el-sub-menu>
+          <el-menu-item index="/study-records">
+            <span>学习记录</span>
+          </el-menu-item>
         </el-menu>
       </el-aside>
       <el-main class="app-main">

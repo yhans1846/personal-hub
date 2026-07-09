@@ -3,13 +3,16 @@
 ## [Unreleased]
 
 ### 待开发
-- Markdown 笔记 / 学习记录 / Todo / 文件管理（进行中）
+- Todo / 文件管理
 
 ### 2026-07-09（已完成）
-- 项目初始化：Spring Boot 3 后端脚手架 + Vue 3 前端脚手架
-- 数据库初始化：10 张第一阶段表（sys_user, note_note, note_category, note_tag, 关联表, study_record, todo_task, file_resource, file_category）
-- 用户认证模块：JWT 登录/退出 + Spring Security 配置 + 个人信息/修改密码接口
-- 文档压缩精简（减少 ~60% 非关键信息）
+- **项目初始化**：Spring Boot 3 后端脚手架 + Vue 3 前端脚手架
+- **数据库初始化**：10 张第一阶段表
+- **用户认证模块**：JWT 登录/退出 + Spring Security 配置 + 个人信息/修改密码
+- **Swagger 集成**：SpringDoc OpenAPI，所有 Controller/DTO/VO 添加注解
+- **Markdown 笔记模块**：CRUD + 分类管理 + 标签管理 + 收藏 + 搜索 + 回收站
+- **学习记录模块**：CRUD + 日期范围筛选 + 关键词搜索
+- 文档压缩精简 + 编码规范完善
 
 ---
 
