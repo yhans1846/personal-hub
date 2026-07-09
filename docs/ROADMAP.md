@@ -3,10 +3,10 @@
 ## 当前阶段：第一阶段（MVP）🚧 进行中
 
 ### 项目初始化
-- [ ] Spring Boot 3 后端（Maven）/ Vue 3 + Vite 前端 / MySQL 初始化 / 编码规范配置
+- [x] Spring Boot 3 后端（Maven）/ Vue 3 + Vite 前端 / MySQL 初始化
 
 ### 用户模块
-- [ ] 登录（JWT）/ Spring Security 配置 / 修改密码 / 个人信息
+- [x] 登录（JWT）/ Spring Security 配置 / 修改密码 / 个人信息
 
 ### Markdown 笔记
 - [ ] 新建/编辑/实时预览/自动保存 / 分类管理 / 标签管理
