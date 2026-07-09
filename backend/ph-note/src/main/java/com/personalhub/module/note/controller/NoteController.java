@@ -1,6 +1,7 @@
 package com.personalhub.module.note.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.personalhub.common.result.PageParam;
 import com.personalhub.common.result.PageResult;
 import com.personalhub.common.result.Result;
 import com.personalhub.module.note.dto.NoteCreateDTO;
@@ -88,10 +89,9 @@ public class NoteController {
     @GetMapping("/recent")
     public Result<PageResult<NoteVO>> recent(
             @Parameter(hidden = true) Authentication authentication,
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            PageParam pageParam) {
         Long userId = Long.valueOf(authentication.getName());
-        IPage<NoteVO> result = noteService.getRecent(userId, page, size);
+        IPage<NoteVO> result = noteService.getRecent(userId, pageParam.getPage(), pageParam.getSize());
         return Result.success(PageResult.of(result));
     }
 

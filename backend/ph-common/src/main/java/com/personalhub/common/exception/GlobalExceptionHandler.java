@@ -1,6 +1,8 @@
 package com.personalhub.common.exception;
 
 import com.personalhub.common.result.Result;
+import com.personalhub.common.result.ResultCode;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -11,14 +13,12 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 /**
  * 全局异常处理
  */
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     /**
      * 参数校验失败
-     *
-     * @param e 参数校验异常
-     * @return 统一返回（code=400）
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -27,53 +27,46 @@ public class GlobalExceptionHandler {
                 .map(FieldError::getDefaultMessage)
                 .findFirst()
                 .orElse("参数校验失败");
-        return Result.error(400, message);
+        log.warn("参数校验失败: {}", message);
+        return Result.badRequest(message);
     }
 
     /**
      * 业务异常
-     *
-     * @param e 业务异常
-     * @return 统一返回（code由异常指定）
      */
     @ExceptionHandler(BusinessException.class)
     public Result<Void> handleBusiness(BusinessException e) {
+        log.warn("业务异常: code={}, message={}", e.getCode(), e.getMessage());
         return Result.error(e.getCode(), e.getMessage());
     }
 
     /**
      * 未登录 / Token 过期
-     *
-     * @param e 未认证异常
-     * @return 统一返回（code=401）
      */
     @ExceptionHandler(UnauthorizedException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public Result<Void> handleUnauthorized(UnauthorizedException e) {
-        return Result.error(401, e.getMessage());
+        log.warn("未授权访问: {}", e.getMessage());
+        return Result.unauthorized(e.getMessage());
     }
 
     /**
      * 资源不存在
-     *
-     * @param e 资源不存在异常
-     * @return 统一返回（code=404）
      */
     @ExceptionHandler(NotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public Result<Void> handleNotFound(NotFoundException e) {
-        return Result.error(404, e.getMessage());
+        log.warn("资源不存在: {}", e.getMessage());
+        return Result.notFound(e.getMessage());
     }
 
     /**
      * 未知异常
-     *
-     * @param e 异常
-     * @return 统一返回（code=500）
      */
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Result<Void> handleException(Exception e) {
-        return Result.error("服务器内部错误");
+        log.error("服务器内部错误", e);
+        return Result.serverError("服务器内部错误");
     }
 }

@@ -11,9 +11,11 @@ import com.personalhub.module.study.mapper.StudyRecordMapper;
 import com.personalhub.module.study.service.StudyRecordService;
 import com.personalhub.module.study.vo.StudyRecordVO;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class StudyRecordServiceImpl implements StudyRecordService {
@@ -50,6 +52,7 @@ public class StudyRecordServiceImpl implements StudyRecordService {
     public StudyRecordVO getById(Long id, Long userId) {
         StudyRecord record = mapper.selectById(id);
         if (record == null || !record.getUserId().equals(userId)) {
+            log.warn("学习记录不存在或无权访问: id={}, userId={}", id, userId);
             throw new NotFoundException("学习记录不存在");
         }
         return StudyRecordVO.from(record);
@@ -65,6 +68,7 @@ public class StudyRecordServiceImpl implements StudyRecordService {
         record.setContent(dto.getContent());
         record.setReflection(dto.getReflection());
         mapper.insert(record);
+        log.info("新建学习记录: id={}, userId={}, subject={}", record.getId(), userId, dto.getSubject());
         return StudyRecordVO.from(record);
     }
 
@@ -72,6 +76,7 @@ public class StudyRecordServiceImpl implements StudyRecordService {
     public StudyRecordVO update(Long id, Long userId, StudyRecordCreateDTO dto) {
         StudyRecord record = mapper.selectById(id);
         if (record == null || !record.getUserId().equals(userId)) {
+            log.warn("编辑学习记录不存在或无权访问: id={}, userId={}", id, userId);
             throw new NotFoundException("学习记录不存在");
         }
         record.setSubject(dto.getSubject());
@@ -80,6 +85,7 @@ public class StudyRecordServiceImpl implements StudyRecordService {
         record.setContent(dto.getContent());
         record.setReflection(dto.getReflection());
         mapper.updateById(record);
+        log.info("编辑学习记录: id={}, userId={}", id, userId);
         return StudyRecordVO.from(record);
     }
 
@@ -87,8 +93,10 @@ public class StudyRecordServiceImpl implements StudyRecordService {
     public void delete(Long id, Long userId) {
         StudyRecord record = mapper.selectById(id);
         if (record == null || !record.getUserId().equals(userId)) {
+            log.warn("删除学习记录不存在或无权访问: id={}, userId={}", id, userId);
             throw new NotFoundException("学习记录不存在");
         }
         mapper.deleteById(id); // 逻辑删除
+        log.info("删除学习记录: id={}, userId={}", id, userId);
     }
 }

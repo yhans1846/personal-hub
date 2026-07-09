@@ -15,6 +15,7 @@ import com.personalhub.module.note.mapper.NoteTagMapper;
 import com.personalhub.module.note.service.NoteService;
 import com.personalhub.module.note.vo.NoteVO;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +29,7 @@ import java.util.stream.Collectors;
 /**
  * 笔记服务实现
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class NoteServiceImpl implements NoteService {
@@ -81,6 +83,7 @@ public class NoteServiceImpl implements NoteService {
     public NoteVO getById(Long id, Long userId) {
         Note note = noteMapper.selectById(id);
         if (note == null || !note.getUserId().equals(userId)) {
+            log.warn("笔记不存在或无权访问: id={}, userId={}", id, userId);
             throw new NotFoundException("笔记不存在");
         }
         NoteVO vo = NoteVO.from(note);
@@ -97,6 +100,7 @@ public class NoteServiceImpl implements NoteService {
         note.setTitle(dto.getTitle());
         note.setContent(dto.getContent());
         noteMapper.insert(note);
+        log.info("新建笔记: id={}, userId={}, title={}", note.getId(), userId, dto.getTitle());
 
         // 保存分类关联
         saveCategoryRels(note.getId(), dto.getCategoryIds());
@@ -111,11 +115,13 @@ public class NoteServiceImpl implements NoteService {
     public NoteVO update(Long id, Long userId, NoteCreateDTO dto) {
         Note note = noteMapper.selectById(id);
         if (note == null || !note.getUserId().equals(userId)) {
+            log.warn("编辑笔记不存在或无权访问: id={}, userId={}", id, userId);
             throw new NotFoundException("笔记不存在");
         }
         note.setTitle(dto.getTitle());
         note.setContent(dto.getContent());
         noteMapper.updateById(note);
+        log.info("编辑笔记: id={}, userId={}", id, userId);
 
         // 重建关联
         jdbcTemplate.update("DELETE FROM note_category_rel WHERE note_id = ?", id);
@@ -130,25 +136,30 @@ public class NoteServiceImpl implements NoteService {
     public void delete(Long id, Long userId) {
         Note note = noteMapper.selectById(id);
         if (note == null || !note.getUserId().equals(userId)) {
+            log.warn("删除笔记不存在或无权访问: id={}, userId={}", id, userId);
             throw new NotFoundException("笔记不存在");
         }
         noteMapper.deleteById(id); // MyBatis-Plus 逻辑删除
+        log.info("笔记移入回收站: id={}, userId={}", id, userId);
     }
 
     @Override
     public void restore(Long id, Long userId) {
         Note note = noteMapper.selectById(id);
         if (note == null || !note.getUserId().equals(userId)) {
+            log.warn("恢复笔记不存在或无权访问: id={}, userId={}", id, userId);
             throw new NotFoundException("笔记不存在");
         }
         note.setIsDeleted(0);
         noteMapper.updateById(note);
+        log.info("笔记恢复: id={}, userId={}", id, userId);
     }
 
     @Override
     public void permanentDelete(Long id, Long userId) {
         Note note = noteMapper.selectById(id);
         if (note == null || !note.getUserId().equals(userId)) {
+            log.warn("永久删除笔记不存在或无权访问: id={}, userId={}", id, userId);
             throw new NotFoundException("笔记不存在");
         }
         // 清除关联
@@ -156,16 +167,19 @@ public class NoteServiceImpl implements NoteService {
         jdbcTemplate.update("DELETE FROM note_tag_rel WHERE note_id = ?", id);
         // 物理删除
         noteMapper.deleteById(id);
+        log.info("笔记永久删除: id={}, userId={}", id, userId);
     }
 
     @Override
     public void toggleFavorite(Long id, Long userId) {
         Note note = noteMapper.selectById(id);
         if (note == null || !note.getUserId().equals(userId)) {
+            log.warn("切换收藏笔记不存在或无权访问: id={}, userId={}", id, userId);
             throw new NotFoundException("笔记不存在");
         }
         note.setIsFavorite(note.getIsFavorite() == 1 ? 0 : 1);
         noteMapper.updateById(note);
+        log.info("切换笔记收藏: id={}, userId={}, isFavorite={}", id, userId, note.getIsFavorite());
     }
 
     @Override

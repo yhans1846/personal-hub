@@ -7,12 +7,14 @@ import com.personalhub.module.auth.vo.LoginVO;
 import com.personalhub.module.user.entity.User;
 import com.personalhub.module.user.service.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 /**
  * 认证服务实现
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
@@ -25,12 +27,15 @@ public class AuthServiceImpl implements AuthService {
     public LoginVO login(String username, String password) {
         User user = userService.getByUsername(username);
         if (user == null) {
+            log.warn("登录失败，用户不存在: {}", username);
             throw new BusinessException("用户名或密码错误");
         }
         if (!passwordEncoder.matches(password, user.getPassword())) {
+            log.warn("登录失败，密码错误: userId={}", user.getId());
             throw new BusinessException("用户名或密码错误");
         }
         String token = jwtUtil.generateToken(user.getId(), user.getUsername());
+        log.info("用户登录成功: userId={}, username={}", user.getId(), username);
         return LoginVO.of(token, user);
     }
 }

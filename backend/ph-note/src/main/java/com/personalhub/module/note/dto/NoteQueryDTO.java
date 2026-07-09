@@ -1,20 +1,17 @@
 package com.personalhub.module.note.dto;
 
+import com.personalhub.common.result.PageParam;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * 笔记查询 DTO
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @Schema(description = "笔记查询参数")
-public class NoteQueryDTO {
-
-    @Schema(description = "页码", example = "1")
-    private Integer page = 1;
-
-    @Schema(description = "每页条数", example = "10")
-    private Integer size = 10;
+public class NoteQueryDTO extends PageParam {
 
     @Schema(description = "搜索关键词")
     private String keyword;
