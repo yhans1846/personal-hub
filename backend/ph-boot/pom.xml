@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.personalhub</groupId>
+        <artifactId>personal-hub</artifactId>
+        <version>0.1.0</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>ph-boot</artifactId>
+    <name>ph-boot</name>
+    <description>Spring Boot 启动入口</description>
+
+    <dependencies>
+        <!-- 内部模块 -->
+        <dependency>
+            <groupId>com.personalhub</groupId>
+            <artifactId>ph-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.personalhub</groupId>
+            <artifactId>ph-auth</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.personalhub</groupId>
+            <artifactId>ph-note</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.personalhub</groupId>
+            <artifactId>ph-study</artifactId>
+        </dependency>
+
+        <!-- MySQL（仅运行时需要） -->
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- Test -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>

@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### 2026-07-09（已完成）
+- **Maven 多模块拆分**：父 POM + 5 子模块（ph-common/ph-auth/ph-note/ph-study/ph-boot）
+- 更新开发计划/编码规范/技术栈文档
+
 ### 待开发
 - Todo / 文件管理
 

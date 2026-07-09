@@ -44,14 +44,33 @@
 - 统一 `LocalDateTime`，不用 `java.util.Date`
 - `@Data`(Entity/DTO/VO) / `@RequiredArgsConstructor`(Controller/Service)
 
-### 目录结构
+### Maven 多模块结构
+
 ```
-backend/src/main/java/com/personalhub/
-├── common/                   # config/ exception/ result/ util/
-├── module/{auth,note,study,todo,file}/
-│   └── {controller/ service/ mapper/ entity/ dto/ vo/}
-└── PersonalHubApplication.java
+backend/
+├── pom.xml                          # 父 POM（Spring Boot parent）
+├── ph-common/                       # 公共组件
+│   └── src/main/java/com/personalhub/common/
+│       ├── config/                  # MyBatis-Plus/Jackson/Redis/Security/Swagger
+│       ├── exception/               # 全局异常处理 + 自定义异常
+│       ├── filter/                  # JWT 认证过滤器
+│       ├── result/                  # Result / PageResult
+│       └── util/                    # JwtUtil
+├── ph-auth/                         # 认证 + 用户模块
+│   └── src/main/java/com/personalhub/
+│       ├── module/auth/             # 登录/退出
+│       └── module/user/             # 个人信息/密码
+├── ph-note/                         # 笔记模块
+│   └── src/main/java/com/personalhub/module/note/
+├── ph-study/                        # 学习记录模块
+│   └── src/main/java/com/personalhub/module/study/
+└── ph-boot/                         # Spring Boot 启动入口
+    └── src/main/
+        ├── java/com/personalhub/PersonalHubApplication.java
+        └── resources/               # application.yml + application-dev.yml
 ```
+
+每模块内部按分层组织：`controller/ dto/ entity/ mapper/ service/ vo/`
 
 ---
 

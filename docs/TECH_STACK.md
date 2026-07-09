@@ -19,8 +19,12 @@
 
 > 版本说明："最新"指开发时当前可用最新正式版。Spring Boot 3.x 需 JDK 17+，本项目用 JDK 21 LTS。
 
-### Maven 依赖管理
-- `${revision}` 统一版本号，`spring-boot-starter-parent` 管理 Spring 生态版本
+### Maven 多模块依赖管理
+- 父 POM `personal-hub` (packaging=pom) 统一管理依赖版本，子模块继承父 POM
+- `${mybatis-plus.version}` / `${jjwt.version}` / `${springdoc.version}` 集中管理版本
+- 内部模块间依赖通过 `dependencyManagement` 统一声明版本
+- `spring-boot-starter-parent` 作为父 POM 的 parent，由 Spring Boot 管理 Spring 生态版本
+- 仅 `web` 模块使用 `spring-boot-maven-plugin`（可执行 JAR）
 - 新增依赖前评估必要性，优先 Spring Boot 官方 starter
 
 ## 前端技术
