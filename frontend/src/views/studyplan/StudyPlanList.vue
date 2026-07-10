@@ -45,6 +45,17 @@ function getStatusType(status: number) {
   return 'danger'
 }
 
+function getRemainingDays(endDate: string | null): string {
+  if (!endDate) return ''
+  const end = new Date(endDate)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const diff = Math.ceil((end.getTime() - today.getTime()) / 86400000)
+  if (diff < 0) return `已超期 ${-diff} 天`
+  if (diff === 0) return '今天截止'
+  return `剩余 ${diff} 天`
+}
+
 const statusOptions = [
   { value: '', label: '全部状态' },
   { value: 0, label: '未开始' },
@@ -93,6 +104,9 @@ const statusOptions = [
             <Calendar :size="12" />
             {{ plan.startDate || '?' }} ~ {{ plan.endDate || '?' }}
           </span>
+          <span v-if="plan.endDate" class="plan-remaining" :class="{ overdue: new Date(plan.endDate) < new Date() && plan.status !== 2 }">
+            {{ getRemainingDays(plan.endDate) }}
+          </span>
           <span class="plan-records">
             <BookOpen :size="12" /> {{ plan.recordCount }} 条记录
           </span>
@@ -132,7 +146,9 @@ const statusOptions = [
 .plan-goal { font-size: var(--text-sm); color: var(--text-secondary); margin-bottom: var(--sp-3); line-height: var(--leading-normal); }
 .plan-progress { margin-bottom: var(--sp-3); }
 .plan-footer { display: flex; align-items: center; gap: var(--sp-4); font-size: var(--text-xs); color: var(--text-tertiary); }
-.plan-date, .plan-records { display: flex; align-items: center; gap: 3px; }
+.plan-date, .plan-records, .plan-remaining { display: flex; align-items: center; gap: 3px; }
+.plan-remaining { font-size: var(--text-xs); color: var(--accent); }
+.plan-remaining.overdue { color: var(--danger); }
 
 .plan-actions { position: absolute; top: var(--sp-3); right: var(--sp-3); display: flex; gap: var(--sp-1); opacity: 0; transition: opacity var(--transition); }
 .plan-card:hover .plan-actions { opacity: 1; }
