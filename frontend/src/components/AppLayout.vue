@@ -95,7 +95,7 @@ const router = useRouter()
             <span>分类管理</span>
           </router-link>
 
-          <router-link to="/notes/tags" class="nav-item nav-item--sub" :class="{ active: $route.path === '/notes/tags' }">
+          <router-link to="/tags" class="nav-item nav-item--sub" :class="{ active: $route.path === '/tags' }">
             <Tags :size="14" />
             <span>标签管理</span>
           </router-link>

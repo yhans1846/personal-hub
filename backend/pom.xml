@@ -29,6 +29,7 @@
         <module>ph-bookmark</module>
         <module>ph-studyplan</module>
         <module>ph-reading</module>
+        <module>ph-tag</module>
         <module>ph-boot</module>
     </modules>
 
@@ -93,6 +94,11 @@
             <dependency>
                 <groupId>com.personalhub</groupId>
                 <artifactId>ph-reading</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.personalhub</groupId>
+                <artifactId>ph-tag</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

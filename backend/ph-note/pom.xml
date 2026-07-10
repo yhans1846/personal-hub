@@ -20,5 +20,9 @@
             <groupId>com.personalhub</groupId>
             <artifactId>ph-common</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.personalhub</groupId>
+            <artifactId>ph-tag</artifactId>
+        </dependency>
     </dependencies>
 </project>

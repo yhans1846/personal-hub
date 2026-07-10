@@ -19,6 +19,6 @@ public class BookmarkQueryDTO extends PageParam {
     @Schema(description = "分类ID")
     private Long categoryId;
 
-    @Schema(description = "标签")
-    private String tag;
+    @Schema(description = "标签ID")
+    private Long tagId;
 }

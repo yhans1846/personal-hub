@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { createNote, updateNote, getNoteById, getCategories, getTags } from '@/api/noteApi'
+import { createNote, updateNote, getNoteById, getCategories } from '@/api/noteApi'
+import { getTags } from '@/api/tagApi'
 import { ElMessage } from 'element-plus'
 import { ArrowLeft } from 'lucide-vue-next'
 

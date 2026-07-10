@@ -233,3 +233,50 @@
 ```
 
 **PUT /api/readings/{id}** — 同 POST 请求体
+
+---
+
+## 第三阶段 — 接口设计
+
+### 十五、统一标签 `/api/tags`
+| 方法 | 路径 | 说明 | 认证 |
+|------|------|------|------|
+| GET | /api/tags | 获取所有标签（含使用次数）| 是 |
+| POST | /api/tags | 创建标签 | 是 |
+| PUT | /api/tags/{id} | 更新标签 | 是 |
+| DELETE | /api/tags/{id} | 删除标签 | 是 |
+| POST | /api/tags/{id}/bind | 绑定标签到实体 | 是 |
+| DELETE | /api/tags/{id}/unbind | 解绑标签 | 是 |
+| PUT | /api/tags/entities/{entityType}/{entityId} | 批量设置实体标签 | 是 |
+| GET | /api/tags/entities | 获取实体的标签列表 | 是 |
+
+**GET /api/tags** — 返回列表，每项含 `id`, `name`, `color`, `usageCount`
+
+**POST /api/tags**
+```json
+{"name":"前端","color":"#409eff"}
+```
+
+**POST /api/tags/{id}/bind** 参数: entityType(String), entityId(Long)
+
+**PUT /api/tags/entities/{entityType}/{entityId}** — 批量设置（先清空再绑定）
+```json
+[1, 2, 3]
+```
+
+### 标签关联实体类型
+| entityType | 说明 |
+|-----------|------|
+| note | 笔记 |
+| bookmark | 收藏夹 |
+| diary | 日记 |
+| study | 学习记录 |
+| todo | 待办 |
+| file | 文件 |
+| reading | 阅读记录 |
+| study_plan | 学习计划 |
+
+### 变更说明
+- 统一标签系统替换了原有的 `note_tag` + `note_tag_rel` 笔记标签系统
+- 收藏夹标签从逗号分隔改为关联系统（`tag_rel` 多态关联）
+- 旧版数据通过 `@PostConstruct` 自动迁移

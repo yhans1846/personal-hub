@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### 2026-07-10（已完成）
+- **统一标签系统**（第三阶段）：新建 ph-tag 模块 + tag/tag_rel 表 + 统一标签管理页面
+- 笔记标签迁移到统一系统（替换 note_tag + note_tag_rel）
+- 收藏夹标签迁移到统一系统（替换逗号分隔存储，`@PostConstruct` 自动迁移旧数据）
+- 标签支持颜色标记和使用次数统计
+- 标签管理页面支持颜色选择器
+- 更新数据库/API 文档
+
 ### 2026-07-09（已完成）
 - **代码质量统一提升**：抽取 PageParam 分页基类 + ResultCode 状态码枚举 + 全局 @Slf4j 日志
 - **Maven 多模块拆分**：父 POM + 5 子模块（ph-common/ph-auth/ph-note/ph-study/ph-boot）

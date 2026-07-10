@@ -2,23 +2,33 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getBookmarkList, deleteBookmark, getBookmarkCategories } from '@/api/bookmarkApi'
+import { getTags } from '@/api/tagApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Plus, Pencil, Trash2, ExternalLink, FolderOpen, Tag } from 'lucide-vue-next'
 import type { BookmarkVO, BookmarkQuery, BookmarkCategoryVO } from '@/types/bookmark'
+import type { TagVO } from '@/types/tag'
 
 const router = useRouter()
 const list = ref<BookmarkVO[]>([])
 const total = ref(0)
 const loading = ref(false)
 const categories = ref<BookmarkCategoryVO[]>([])
+const tags = ref<TagVO[]>([])
 const query = ref<BookmarkQuery>({ page: 1, size: 20, keyword: '' })
 
-onMounted(() => { fetchCategories(); fetchList() })
+onMounted(() => { fetchCategories(); fetchTags(); fetchList() })
 
 async function fetchCategories() {
   try {
     const res = await getBookmarkCategories()
     categories.value = res.data.data
+  } catch { /* ignore */ }
+}
+
+async function fetchTags() {
+  try {
+    const res = await getTags()
+    tags.value = res.data.data
   } catch { /* ignore */ }
 }
 
@@ -68,11 +78,19 @@ function getFaviconUrl(url: string) {
 
     <div class="toolbar">
       <div class="toolbar-left">
-        <el-input v-model="query.keyword" placeholder="搜索标题/网址..." style="width:240px" clearable @clear="onSearch" @keyup.enter="onSearch">
+        <el-input v-model="query.keyword" placeholder="搜索标题/网址..." style="width:200px" clearable @clear="onSearch" @keyup.enter="onSearch">
           <template #prefix><Search :size="14" style="color: var(--text-tertiary)" /></template>
         </el-input>
-        <el-select v-model="query.categoryId" placeholder="全部分类" style="width:140px" clearable @change="onFilterChange">
+        <el-select v-model="query.categoryId" placeholder="全部分类" style="width:130px" clearable @change="onFilterChange">
           <el-option v-for="c in categories" :key="c.id" :value="c.id" :label="c.name" />
+        </el-select>
+        <el-select v-model="query.tagId" placeholder="全部标签" style="width:130px" clearable @change="onFilterChange">
+          <el-option v-for="t in tags" :key="t.id" :value="t.id" :label="t.name">
+            <span style="display:flex;align-items:center;gap:6px">
+              <span class="tag-dot" :style="{ background: t.color }" />
+              {{ t.name }}
+            </span>
+          </el-option>
         </el-select>
       </div>
       <div class="toolbar-right">
@@ -107,8 +125,9 @@ function getFaviconUrl(url: string) {
             <FolderOpen :size="11" /> {{ item.categoryName }}
           </span>
           <div class="card-tags">
-            <span v-for="tag in item.tagList" :key="tag" class="card-tag">
-              <Tag :size="10" /> {{ tag }}
+            <span v-for="tag in (item.tags || [])" :key="tag.id" class="card-tag">
+              <span class="tag-dot" :style="{ background: tag.color }" />
+              {{ tag.name }}
             </span>
           </div>
           <div class="card-actions" @click.stop>
@@ -150,7 +169,7 @@ function getFaviconUrl(url: string) {
 .card-footer { display: flex; align-items: center; gap: var(--sp-2); font-size: var(--text-xs); color: var(--text-tertiary); flex-wrap: wrap; }
 .card-category { display: flex; align-items: center; gap: 2px; white-space: nowrap; }
 .card-tags { display: flex; gap: 4px; flex-wrap: wrap; flex: 1; }
-.card-tag { display: flex; align-items: center; gap: 2px; background: var(--bg-hover); padding: 1px 6px; border-radius: 4px; white-space: nowrap; }
+.card-tag { display: flex; align-items: center; gap: 3px; background: var(--bg-hover); padding: 1px 6px; border-radius: 4px; white-space: nowrap; }
 .card-actions { display: flex; gap: 2px; opacity: 0; transition: opacity var(--transition); }
 .bookmark-card:hover .card-actions { opacity: 1; }
 .icon-btn { background: none; border: none; cursor: pointer; padding: 4px; border-radius: var(--radius-sm); color: var(--text-tertiary); transition: all var(--transition); display: flex; }
@@ -158,4 +177,5 @@ function getFaviconUrl(url: string) {
 .icon-btn--danger:hover { color: var(--danger); background: var(--danger-light); }
 
 .toolbar-right { display: flex; gap: var(--sp-2); }
+.tag-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
 </style>

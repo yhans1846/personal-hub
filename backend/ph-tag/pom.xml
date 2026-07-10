@@ -11,18 +11,14 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>ph-bookmark</artifactId>
-    <name>ph-bookmark</name>
-    <description>收藏夹模块</description>
+    <artifactId>ph-tag</artifactId>
+    <name>ph-tag</name>
+    <description>统一标签模块</description>
 
     <dependencies>
         <dependency>
             <groupId>com.personalhub</groupId>
             <artifactId>ph-common</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.personalhub</groupId>
-            <artifactId>ph-tag</artifactId>
         </dependency>
     </dependencies>
 </project>

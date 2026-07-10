@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * 创建/编辑收藏 DTO
  */
@@ -31,6 +33,6 @@ public class BookmarkCreateDTO {
     @Schema(description = "分类ID")
     private Long categoryId;
 
-    @Schema(description = "标签（逗号分隔）", example = "开发,工具")
-    private String tags;
+    @Schema(description = "标签ID列表", example = "[1, 2]")
+    private List<Long> tagIds;
 }

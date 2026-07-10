@@ -211,6 +211,27 @@ sys_user ── note_note ── note_category_rel ── note_category
 | updated_at | DATETIME | 更新时间 | NOT NULL |
 
 ### 15. `reading_record` 阅读记录表
+
+### 16. `tag` 统一标签表
+| 字段 | 类型 | 说明 | 约束 |
+|------|------|------|------|
+| id | BIGINT | 主键 | PK |
+| user_id | BIGINT | 所属用户 | NOT NULL, INDEX |
+| name | VARCHAR(50) | 标签名称 | NOT NULL |
+| color | VARCHAR(7) | 标签颜色（#409eff）| NOT NULL |
+| created_at | DATETIME | 创建时间 | NOT NULL |
+| updated_at | DATETIME | 更新时间 | NOT NULL |
+
+### 17. `tag_rel` 标签关联表
+| 字段 | 类型 | 说明 | 约束 |
+|------|------|------|------|
+| id | BIGINT | 主键 | PK |
+| tag_id | BIGINT | 标签ID | NOT NULL, INDEX |
+| entity_type | VARCHAR(50) | 关联实体类型 | NOT NULL |
+| entity_id | BIGINT | 关联实体ID | NOT NULL |
+| created_at | DATETIME | 创建时间 | NOT NULL |
+
+**entity_type 取值**: note / bookmark / diary / study / todo / file / reading / study_plan
 | 字段 | 类型 | 说明 | 约束 |
 |------|------|------|------|
 | id | BIGINT | 主键 | PK |
@@ -235,14 +256,14 @@ sys_user ── note_note ── note_category_rel ── note_category
 
 ```
 sys_user ── note_note ── note_category_rel ── note_category
-                  └── note_tag_rel ──── note_tag
-     ├── study_record
-     ├── todo_task
-     ├── file_resource ── file_category
-     ├── diary_entry
-     ├── bookmark_url ── bookmark_category
-     ├── study_plan
-     └── reading_record
+                  └── tag_rel ── tag
+     ├── study_record ── tag_rel ── tag
+     ├── todo_task ── tag_rel ── tag
+     ├── file_resource ── file_category ── tag_rel ── tag
+     ├── diary_entry ── tag_rel ── tag
+     ├── bookmark_url ── bookmark_category ── tag_rel ── tag
+     ├── study_plan ── tag_rel ── tag
+     └── reading_record ── tag_rel ── tag
 ```
 
 ## 索引策略
@@ -260,10 +281,18 @@ sys_user ── note_note ── note_category_rel ── note_category
 | bookmark_url | idx_user_id / idx_category_id | NORMAL | 用户/分类查询 |
 | study_plan | idx_user_id | NORMAL | 用户查询 |
 | reading_record | idx_user_id | NORMAL | 用户查询 |
+| tag | idx_user_tag_name | UNIQUE | 用户标签去重 |
+| tag | idx_user_id | NORMAL | 用户查询 |
+| tag_rel | uk_tag_entity | UNIQUE | 标签-实体唯一 |
+| tag_rel | idx_entity | NORMAL | 按实体查询标签 |
+| tag_rel | idx_tag_id | NORMAL | 按标签查询实体 |
 
 ---
 
-## 第三阶段 — 待扩展表
-- **journal_entry**: user_id, title, content(MD), entry_date, mood
-- **bookmark**: user_id, title, url, icon, category_id, tags
-<!-- reading_record 已实现 -->
+## 第三阶段 — 已扩展表
+
+### 16. `tag` 统一标签表 — 见第二阶段已扩展表
+### 17. `tag_rel` 标签关联表 — 见第二阶段已扩展表
+
+<!-- 第三阶段后续待扩展表 -->
+- **dashboard_cache / stats_aggregation**（规划中）

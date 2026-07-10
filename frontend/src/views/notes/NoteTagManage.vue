@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { getTags, createTag, updateTag, deleteTag } from '@/api/noteApi'
+import { getTags, createTag, updateTag, deleteTag } from '@/api/tagApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Tags, Plus, Pencil, Trash2 } from 'lucide-vue-next'
 

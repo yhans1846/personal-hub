@@ -8,12 +8,12 @@ import com.personalhub.module.note.dto.NoteCreateDTO;
 import com.personalhub.module.note.dto.NoteQueryDTO;
 import com.personalhub.module.note.entity.Note;
 import com.personalhub.module.note.entity.NoteCategory;
-import com.personalhub.module.note.entity.NoteTag;
 import com.personalhub.module.note.mapper.NoteCategoryMapper;
 import com.personalhub.module.note.mapper.NoteMapper;
-import com.personalhub.module.note.mapper.NoteTagMapper;
 import com.personalhub.module.note.service.NoteService;
 import com.personalhub.module.note.vo.NoteVO;
+import com.personalhub.module.tag.service.TagService;
+import com.personalhub.module.tag.vo.TagVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -36,7 +36,7 @@ public class NoteServiceImpl implements NoteService {
 
     private final NoteMapper noteMapper;
     private final NoteCategoryMapper categoryMapper;
-    private final NoteTagMapper tagMapper;
+    private final TagService tagService;
     private final JdbcTemplate jdbcTemplate;
 
     @Override
@@ -62,7 +62,7 @@ public class NoteServiceImpl implements NoteService {
         }
         // 标签筛选
         if (query.getTagId() != null) {
-            wrapper.exists("SELECT 1 FROM note_tag_rel WHERE note_id = id AND tag_id = " + query.getTagId());
+            wrapper.exists("SELECT 1 FROM tag_rel WHERE entity_id = id AND entity_type = 'note' AND tag_id = " + query.getTagId());
         }
 
         wrapper.orderByDesc(Note::getUpdatedAt);
@@ -126,8 +126,7 @@ public class NoteServiceImpl implements NoteService {
         // 重建关联
         jdbcTemplate.update("DELETE FROM note_category_rel WHERE note_id = ?", id);
         saveCategoryRels(id, dto.getCategoryIds());
-        jdbcTemplate.update("DELETE FROM note_tag_rel WHERE note_id = ?", id);
-        saveTagRels(id, dto.getTagIds());
+        tagService.bindTags(id, "note", dto.getTagIds());
 
         return getById(id, userId);
     }
@@ -164,7 +163,7 @@ public class NoteServiceImpl implements NoteService {
         }
         // 清除关联
         jdbcTemplate.update("DELETE FROM note_category_rel WHERE note_id = ?", id);
-        jdbcTemplate.update("DELETE FROM note_tag_rel WHERE note_id = ?", id);
+        tagService.unbindAll("note", id);
         // 物理删除
         noteMapper.deleteById(id);
         log.info("笔记永久删除: id={}, userId={}", id, userId);
@@ -209,11 +208,7 @@ public class NoteServiceImpl implements NoteService {
     }
 
     private void saveTagRels(Long noteId, List<Long> tagIds) {
-        if (tagIds != null && !tagIds.isEmpty()) {
-            for (Long tid : tagIds) {
-                jdbcTemplate.update("INSERT INTO note_tag_rel (note_id, tag_id) VALUES (?, ?)", noteId, tid);
-            }
-        }
+        tagService.bindTags(noteId, "note", tagIds);
     }
 
     private List<NoteVO.CategoryItem> getCategories(Long noteId) {
@@ -231,15 +226,12 @@ public class NoteServiceImpl implements NoteService {
     }
 
     private List<NoteVO.TagItem> getTags(Long noteId) {
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList(
-                "SELECT t.id, t.name FROM note_tag t " +
-                "INNER JOIN note_tag_rel r ON t.id = r.tag_id " +
-                "WHERE r.note_id = ?", noteId);
-        if (rows.isEmpty()) return Collections.emptyList();
-        return rows.stream().map(row -> {
+        List<TagVO> tagVOs = tagService.getTags("note", noteId);
+        if (tagVOs.isEmpty()) return Collections.emptyList();
+        return tagVOs.stream().map(vo -> {
             NoteVO.TagItem item = new NoteVO.TagItem();
-            item.setId((Long) row.get("id"));
-            item.setName((String) row.get("name"));
+            item.setId(vo.getId());
+            item.setName(vo.getName());
             return item;
         }).collect(Collectors.toList());
     }

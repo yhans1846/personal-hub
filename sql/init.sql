@@ -245,3 +245,42 @@ CREATE TABLE IF NOT EXISTS `reading_record` (
     PRIMARY KEY (`id`),
     INDEX `idx_user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='阅读记录表';
+
+-- ========================================
+-- 16. 统一标签表
+-- ========================================
+CREATE TABLE IF NOT EXISTS `tag` (
+    `id`         BIGINT      NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `user_id`    BIGINT      NOT NULL COMMENT '所属用户',
+    `name`       VARCHAR(50) NOT NULL COMMENT '标签名称',
+    `color`      VARCHAR(7)  NOT NULL DEFAULT '#409eff' COMMENT '标签颜色',
+    `created_at` DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_at` DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `idx_user_tag_name` (`user_id`, `name`),
+    INDEX `idx_user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='统一标签表';
+
+-- ========================================
+-- 17. 标签关联表（多态关联）
+-- ========================================
+CREATE TABLE IF NOT EXISTS `tag_rel` (
+    `id`          BIGINT      NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `tag_id`      BIGINT      NOT NULL COMMENT '标签ID',
+    `entity_type` VARCHAR(50) NOT NULL COMMENT '关联实体类型(note/bookmark/diary/study/todo/file/reading/study_plan)',
+    `entity_id`   BIGINT      NOT NULL COMMENT '关联实体ID',
+    `created_at`  DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_tag_entity` (`tag_id`, `entity_type`, `entity_id`),
+    INDEX `idx_entity` (`entity_type`, `entity_id`),
+    INDEX `idx_tag_id` (`tag_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='标签关联表';
+
+-- ========================================
+-- 迁移：笔记标签 → 统一标签系统
+-- ========================================
+INSERT IGNORE INTO `tag` (`id`, `user_id`, `name`, `color`)
+SELECT `id`, `user_id`, `name`, '#409eff' FROM `note_tag`;
+
+INSERT IGNORE INTO `tag_rel` (`tag_id`, `entity_type`, `entity_id`)
+SELECT `tag_id`, 'note', `note_id` FROM `note_tag_rel`;

@@ -1,10 +1,12 @@
 package com.personalhub.module.bookmark.vo;
 
 import com.personalhub.module.bookmark.entity.BookmarkUrl;
+import com.personalhub.module.tag.vo.TagVO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 收藏夹 VO
@@ -34,11 +36,8 @@ public class BookmarkVO {
     @Schema(description = "分类名称")
     private String categoryName;
 
-    @Schema(description = "标签（逗号分隔）")
-    private String tags;
-
-    @Schema(description = "标签列表")
-    private String[] tagList;
+    @Schema(description = "关联标签列表")
+    private List<TagVO> tags;
 
     @Schema(description = "创建时间")
     private LocalDateTime createdAt;
@@ -54,16 +53,8 @@ public class BookmarkVO {
         vo.setDescription(url.getDescription());
         vo.setFavicon(url.getFavicon());
         vo.setCategoryId(url.getCategoryId());
-        vo.setTags(url.getTags());
         vo.setCreatedAt(url.getCreatedAt());
         vo.setUpdatedAt(url.getUpdatedAt());
-
-        // 标签列表
-        if (url.getTags() != null && !url.getTags().isBlank()) {
-            vo.setTagList(url.getTags().split("\\s*,\\s*"));
-        } else {
-            vo.setTagList(new String[0]);
-        }
         return vo;
     }
 }

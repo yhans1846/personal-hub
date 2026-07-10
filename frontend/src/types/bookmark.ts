@@ -1,3 +1,5 @@
+import type { TagVO } from './tag'
+
 /** 收藏夹 */
 export interface BookmarkVO {
   id: number
@@ -7,8 +9,7 @@ export interface BookmarkVO {
   favicon: string
   categoryId: number | null
   categoryName: string
-  tags: string
-  tagList: string[]
+  tags: TagVO[]
   createdAt: string
   updatedAt: string
 }
@@ -20,7 +21,7 @@ export interface BookmarkCreateDTO {
   description?: string
   favicon?: string
   categoryId?: number | null
-  tags?: string
+  tagIds?: number[]
 }
 
 /** 查询参数 */
@@ -29,7 +30,7 @@ export interface BookmarkQuery {
   size?: number
   keyword?: string
   categoryId?: number | null
-  tag?: string
+  tagId?: number
 }
 
 /** 收藏夹分类 */

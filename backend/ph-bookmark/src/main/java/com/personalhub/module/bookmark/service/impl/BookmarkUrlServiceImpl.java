@@ -12,12 +12,16 @@ import com.personalhub.module.bookmark.mapper.BookmarkCategoryMapper;
 import com.personalhub.module.bookmark.mapper.BookmarkUrlMapper;
 import com.personalhub.module.bookmark.service.BookmarkUrlService;
 import com.personalhub.module.bookmark.vo.BookmarkVO;
+import com.personalhub.module.tag.service.TagService;
+import com.personalhub.module.tag.vo.TagVO;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -31,6 +35,48 @@ public class BookmarkUrlServiceImpl implements BookmarkUrlService {
 
     private final BookmarkUrlMapper bookmarkUrlMapper;
     private final BookmarkCategoryMapper bookmarkCategoryMapper;
+    private final TagService tagService;
+
+    /**
+     * 启动时自动迁移旧版逗号分隔标签到统一标签系统
+     */
+    @PostConstruct
+    public void migrateOldTags() {
+        List<BookmarkUrl> bookmarks = bookmarkUrlMapper.selectList(
+                new LambdaQueryWrapper<BookmarkUrl>()
+                        .isNotNull(BookmarkUrl::getTags)
+                        .ne(BookmarkUrl::getTags, ""));
+
+        int migrated = 0;
+        for (BookmarkUrl bm : bookmarks) {
+            // 检查是否已迁移
+            List<TagVO> existingTags = tagService.getTags("bookmark", bm.getId());
+            if (!existingTags.isEmpty()) continue;
+
+            // 解析逗号分隔标签
+            String[] tagNames = bm.getTags().split("\\s*,\\s*");
+            for (String tagName : tagNames) {
+                if (tagName.isBlank()) continue;
+                try {
+                    // 查找或创建标签
+                    List<com.personalhub.module.tag.vo.TagVO> userTags = tagService.listByUser(bm.getUserId());
+                    com.personalhub.module.tag.vo.TagVO tag = userTags.stream()
+                            .filter(t -> t.getName().equals(tagName.trim()))
+                            .findFirst().orElse(null);
+                    if (tag == null) {
+                        tag = tagService.create(bm.getUserId(), tagName.trim(), null);
+                    }
+                    tagService.bindTag(tag.getId(), "bookmark", bm.getId());
+                } catch (Exception e) {
+                    log.warn("迁移标签失败: bookmarkId={}, tagName={}", bm.getId(), tagName);
+                }
+            }
+            migrated++;
+        }
+        if (migrated > 0) {
+            log.info("收藏夹标签迁移完成: {} 条记录", migrated);
+        }
+    }
 
     @Override
     public IPage<BookmarkVO> list(Long userId, BookmarkQueryDTO query) {
@@ -47,9 +93,9 @@ public class BookmarkUrlServiceImpl implements BookmarkUrlService {
         if (query.getCategoryId() != null) {
             wrapper.eq(BookmarkUrl::getCategoryId, query.getCategoryId());
         }
-        // 标签筛选
-        if (StringUtils.hasText(query.getTag())) {
-            wrapper.like(BookmarkUrl::getTags, query.getTag());
+        // 标签筛选（通过 tag_rel 子查询）
+        if (query.getTagId() != null) {
+            wrapper.exists("SELECT 1 FROM tag_rel WHERE entity_id = id AND entity_type = 'bookmark' AND tag_id = " + query.getTagId());
         }
 
         wrapper.orderByDesc(BookmarkUrl::getCreatedAt);
@@ -57,14 +103,17 @@ public class BookmarkUrlServiceImpl implements BookmarkUrlService {
         Page<BookmarkUrl> page = new Page<>(query.getPage(), query.getSize());
         IPage<BookmarkUrl> urlPage = bookmarkUrlMapper.selectPage(page, wrapper);
 
-        // 批量加载分类名称
+        // 批量加载分类名称和标签
         Map<Long, String> categoryMap = loadCategoryNames(userId);
+        List<Long> bookmarkIds = urlPage.getRecords().stream().map(BookmarkUrl::getId).collect(Collectors.toList());
+        Map<Long, List<TagVO>> tagsMap = tagService.getTagsMap("bookmark", bookmarkIds);
 
         return urlPage.convert(url -> {
             BookmarkVO vo = BookmarkVO.from(url);
             if (url.getCategoryId() != null) {
                 vo.setCategoryName(categoryMap.get(url.getCategoryId()));
             }
+            vo.setTags(tagsMap.getOrDefault(url.getId(), List.of()));
             return vo;
         });
     }
@@ -88,6 +137,7 @@ public class BookmarkUrlServiceImpl implements BookmarkUrlService {
             BookmarkCategory cat = bookmarkCategoryMapper.selectById(url.getCategoryId());
             if (cat != null) vo.setCategoryName(cat.getName());
         }
+        vo.setTags(tagService.getTags("bookmark", id));
         return vo;
     }
 
@@ -101,15 +151,20 @@ public class BookmarkUrlServiceImpl implements BookmarkUrlService {
         url.setDescription(dto.getDescription());
         url.setFavicon(dto.getFavicon());
         url.setCategoryId(dto.getCategoryId());
-        url.setTags(dto.getTags());
         bookmarkUrlMapper.insert(url);
         log.info("新建收藏: id={}, userId={}, title={}", url.getId(), userId, dto.getTitle());
+
+        // 保存标签关联
+        if (dto.getTagIds() != null && !dto.getTagIds().isEmpty()) {
+            tagService.bindTags(url.getId(), "bookmark", dto.getTagIds());
+        }
 
         BookmarkVO vo = BookmarkVO.from(url);
         if (url.getCategoryId() != null) {
             BookmarkCategory cat = bookmarkCategoryMapper.selectById(url.getCategoryId());
             if (cat != null) vo.setCategoryName(cat.getName());
         }
+        vo.setTags(tagService.getTags("bookmark", url.getId()));
         return vo;
     }
 
@@ -126,15 +181,18 @@ public class BookmarkUrlServiceImpl implements BookmarkUrlService {
         url.setDescription(dto.getDescription());
         url.setFavicon(dto.getFavicon());
         url.setCategoryId(dto.getCategoryId());
-        url.setTags(dto.getTags());
         bookmarkUrlMapper.updateById(url);
         log.info("编辑收藏: id={}, userId={}", id, userId);
+
+        // 更新标签关联
+        tagService.bindTags(id, "bookmark", dto.getTagIds());
 
         BookmarkVO vo = BookmarkVO.from(url);
         if (url.getCategoryId() != null) {
             BookmarkCategory cat = bookmarkCategoryMapper.selectById(url.getCategoryId());
             if (cat != null) vo.setCategoryName(cat.getName());
         }
+        vo.setTags(tagService.getTags("bookmark", id));
         return vo;
     }
 
@@ -146,6 +204,8 @@ public class BookmarkUrlServiceImpl implements BookmarkUrlService {
             log.warn("删除收藏不存在或无权访问: id={}, userId={}", id, userId);
             throw new NotFoundException("收藏不存在");
         }
+        // 清除标签关联
+        tagService.unbindAll("bookmark", id);
         bookmarkUrlMapper.deleteById(id);
         log.info("删除收藏: id={}, userId={}", id, userId);
     }

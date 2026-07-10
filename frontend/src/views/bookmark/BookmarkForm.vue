@@ -2,22 +2,26 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { createBookmark, updateBookmark, getBookmarkById, getBookmarkCategories } from '@/api/bookmarkApi'
+import { getTags } from '@/api/tagApi'
 import { ElMessage } from 'element-plus'
 import { ArrowLeft, FolderOpen } from 'lucide-vue-next'
 import type { BookmarkCategoryVO } from '@/types/bookmark'
+import type { TagVO } from '@/types/tag'
 
 const route = useRoute()
 const router = useRouter()
 const isEdit = !!route.params.id
 
-const form = ref({ title: '', url: '', description: '', categoryId: null as number | null, tags: '' })
+const form = ref({ title: '', url: '', description: '', categoryId: null as number | null, tagIds: [] as number[] })
 const categories = ref<BookmarkCategoryVO[]>([])
+const tags = ref<TagVO[]>([])
 const saving = ref(false)
 
 onMounted(async () => {
   try {
-    const res = await getBookmarkCategories()
-    categories.value = res.data.data
+    const [catRes, tagRes] = await Promise.all([getBookmarkCategories(), getTags()])
+    categories.value = catRes.data.data
+    tags.value = tagRes.data.data
   } catch { /* ignore */ }
 
   if (isEdit) {
@@ -27,7 +31,7 @@ onMounted(async () => {
     form.value.url = r.url
     form.value.description = r.description || ''
     form.value.categoryId = r.categoryId
-    form.value.tags = r.tags || ''
+    form.value.tagIds = (r.tags || []).map((t: TagVO) => t.id)
   }
 })
 
@@ -80,8 +84,15 @@ async function handleSave() {
           </el-select>
         </el-form-item>
         <el-form-item label="标签">
-          <el-input v-model="form.tags" placeholder="逗号分隔，例如：开发,工具,前端" />
-          <div class="form-hint">多个标签用逗号分隔</div>
+          <el-select v-model="form.tagIds" multiple placeholder="选择标签" style="width:100%" clearable>
+            <el-option v-for="t in tags" :key="t.id" :value="t.id" :label="t.name">
+              <span class="tag-option">
+                <span class="tag-dot" :style="{ background: t.color }" />
+                {{ t.name }}
+              </span>
+            </el-option>
+          </el-select>
+          <div class="form-hint">选择已有标签，可在标签管理页面创建新标签</div>
         </el-form-item>
         <el-form-item>
           <el-button @click="router.push('/bookmarks')">取消</el-button>
@@ -107,4 +118,6 @@ async function handleSave() {
   border-radius: var(--radius-lg); padding: var(--sp-6);
 }
 .form-hint { font-size: var(--text-xs); color: var(--text-tertiary); margin-top: 4px; }
+.tag-option { display: flex; align-items: center; gap: 6px; }
+.tag-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
 </style>
