@@ -81,7 +81,7 @@ async function handleToggleFavorite(note: NoteVO) {
         </div>
         <div class="note-card-footer">
           <div class="note-card-tags">
-            <span v-for="tag in note.tags.slice(0, 3)" :key="tag.id" class="meta-tag meta-tag--tag">{{ tag.name }}</span>
+            <span v-for="tag in note.tags.slice(0, 3)" :key="tag.id" class="meta-tag meta-tag--tag" :style="tag.color ? { background: tag.color + '20', color: tag.color } : {}">{{ tag.name }}</span>
             <span v-if="note.tags.length > 3" class="meta-tag meta-tag--more">+{{ note.tags.length - 3 }}</span>
           </div>
           <button class="delete-btn" @click.stop="handleDelete(note.id)">

@@ -18,6 +18,7 @@ export interface CategoryItem {
 export interface TagItem {
   id: number
   name: string
+  color?: string
 }
 
 /** 创建/编辑笔记 */

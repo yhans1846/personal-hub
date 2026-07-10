@@ -232,6 +232,7 @@ public class NoteServiceImpl implements NoteService {
             NoteVO.TagItem item = new NoteVO.TagItem();
             item.setId(vo.getId());
             item.setName(vo.getName());
+            item.setColor(vo.getColor());
             return item;
         }).collect(Collectors.toList());
     }

@@ -54,6 +54,8 @@ public class NoteVO {
         private Long id;
         @Schema(description = "标签名称")
         private String name;
+        @Schema(description = "标签颜色")
+        private String color;
     }
 
     public static NoteVO from(Note note) {
