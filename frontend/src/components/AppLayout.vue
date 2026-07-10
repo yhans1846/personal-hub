@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { useAuthStore } from '@/store/authStore'
 import { useRouter } from 'vue-router'
-import { LayoutDashboard, FileText, BookOpen, CheckSquare, PenLine, Bookmark, Target, BookMarked, FolderOpen, Grid3X3, Tags, Trash2, Search, BarChart3, Plus, Github, Sun, Moon, Bell } from 'lucide-vue-next'
-import { ref } from 'vue'
+import { LayoutDashboard, FileText, BookOpen, CheckSquare, PenLine, Bookmark, Target, BookMarked, FolderOpen, Grid3X3, Tags, Trash2, Search, BarChart3, Plus, Github, Sun, Moon, Bell, Palette } from 'lucide-vue-next'
+import { ref, onMounted } from 'vue'
 
 const authStore = useAuthStore()
 const router = useRouter()
@@ -16,6 +16,26 @@ function toggleTheme() {
   localStorage.setItem('theme-preference', theme)
   ;(window as any).__themeUserOverride = true
 }
+
+// 强调色
+const accentColors = [
+  { key: 'blue', color: '#4F7BFF' },
+  { key: 'purple', color: '#8B5CF6' },
+  { key: 'cyan', color: '#06B6D4' },
+  { key: 'orange', color: '#F97316' },
+  { key: 'green', color: '#10B981' },
+]
+const currentAccent = ref(document.documentElement.getAttribute('data-accent') || 'blue')
+function setAccent(key: string) {
+  currentAccent.value = key
+  document.documentElement.setAttribute('data-accent', key)
+  localStorage.setItem('accent-preference', key)
+}
+
+onMounted(() => {
+  const saved = localStorage.getItem('accent-preference')
+  if (saved) setAccent(saved)
+})
 
 // 快捷创建
 function handleQuickCreate(cmd: string) {
@@ -79,6 +99,28 @@ function handleQuickCreate(cmd: string) {
           <Sun v-if="isDark" :size="18" />
           <Moon v-else :size="18" />
         </button>
+
+        <!-- 强调色 -->
+        <el-dropdown trigger="click" placement="bottom">
+          <button class="topbar-icon-btn" title="主题色">
+            <Palette :size="18" />
+          </button>
+          <template #dropdown>
+            <div class="accent-picker">
+              <span class="accent-picker__label">主题色</span>
+              <div class="accent-picker__colors">
+                <button
+                  v-for="ac in accentColors" :key="ac.key"
+                  class="accent-dot"
+                  :class="{ active: currentAccent === ac.key }"
+                  :style="{ background: ac.color }"
+                  :title="ac.key"
+                  @click="setAccent(ac.key)"
+                />
+              </div>
+            </div>
+          </template>
+        </el-dropdown>
 
         <!-- 通知 -->
         <button class="topbar-icon-btn" title="通知">

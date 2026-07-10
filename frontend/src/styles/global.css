@@ -124,6 +124,40 @@
   --shadow-xl: 0 8px 32px rgba(0, 0, 0, 0.40);
 }
 
+/* ========== 强调色方案 ========== */
+[data-accent='purple'] {
+  --accent: #8B5CF6; --accent-hover: #7C3AED;
+  --accent-light: #F5F3FF; --accent-border: #DDD6FE;
+}
+[data-theme='dark'][data-accent='purple'] {
+  --accent: #A78BFA; --accent-hover: #C4B5FD;
+  --accent-light: rgba(167, 139, 250, 0.1); --accent-border: rgba(167, 139, 250, 0.3);
+}
+[data-accent='cyan'] {
+  --accent: #06B6D4; --accent-hover: #0891B2;
+  --accent-light: #ECFEFF; --accent-border: #A5F3FC;
+}
+[data-theme='dark'][data-accent='cyan'] {
+  --accent: #22D3EE; --accent-hover: #67E8F9;
+  --accent-light: rgba(34, 211, 238, 0.1); --accent-border: rgba(34, 211, 238, 0.3);
+}
+[data-accent='orange'] {
+  --accent: #F97316; --accent-hover: #EA580C;
+  --accent-light: #FFF7ED; --accent-border: #FED7AA;
+}
+[data-theme='dark'][data-accent='orange'] {
+  --accent: #FB923C; --accent-hover: #FDBA74;
+  --accent-light: rgba(251, 146, 60, 0.1); --accent-border: rgba(251, 146, 60, 0.3);
+}
+[data-accent='green'] {
+  --accent: #10B981; --accent-hover: #059669;
+  --accent-light: #ECFDF5; --accent-border: #A7F3D0;
+}
+[data-theme='dark'][data-accent='green'] {
+  --accent: #34D399; --accent-hover: #6EE7B7;
+  --accent-light: rgba(52, 211, 153, 0.1); --accent-border: rgba(52, 211, 153, 0.3);
+}
+
 /* ---------- 基础重置 ---------- */
 *, *::before, *::after {
   box-sizing: border-box;
@@ -412,3 +446,26 @@ a:hover { color: var(--accent-hover); }
 /* --- 路由过渡动画 --- */
 .page-fade-enter-active, .page-fade-leave-active { transition: opacity 200ms ease; }
 .page-fade-enter-from, .page-fade-leave-to { opacity: 0; }
+
+/* --- 强调色选择器 --- */
+.accent-picker {
+  padding: var(--sp-3) var(--sp-4);
+  min-width: 160px;
+}
+.accent-picker__label {
+  display: block;
+  font-size: 12px; color: var(--text-tertiary);
+  margin-bottom: var(--sp-3);
+}
+.accent-picker__colors {
+  display: flex; gap: var(--sp-2);
+  justify-content: center;
+}
+.accent-dot {
+  width: 24px; height: 24px; border-radius: 50%;
+  border: 2px solid transparent; cursor: pointer;
+  transition: all var(--transition);
+  padding: 0;
+}
+.accent-dot:hover { transform: scale(1.2); }
+.accent-dot.active { border-color: var(--text-primary); box-shadow: 0 0 0 2px var(--bg-card); }

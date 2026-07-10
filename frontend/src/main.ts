@@ -26,3 +26,9 @@ if (storedTheme) {
   darkModeQuery.addEventListener('change', updateTheme)
   updateTheme(darkModeQuery)
 }
+
+// 强调色初始化
+const savedAccent = localStorage.getItem('accent-preference')
+if (savedAccent) {
+  document.documentElement.setAttribute('data-accent', savedAccent)
+}
