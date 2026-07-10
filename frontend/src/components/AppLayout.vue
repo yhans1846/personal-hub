@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useAuthStore } from '@/store/authStore'
 import { useRouter } from 'vue-router'
-import { Layers, LayoutDashboard, FileText, BookOpen, CheckSquare, PenLine, FolderOpen, Grid3X3, Tags, Trash2, Search } from 'lucide-vue-next'
+import { Layers, LayoutDashboard, FileText, BookOpen, CheckSquare, PenLine, Bookmark, FolderOpen, Grid3X3, Tags, Trash2, Search } from 'lucide-vue-next'
 
 const authStore = useAuthStore()
 const router = useRouter()
@@ -68,6 +68,11 @@ const router = useRouter()
             <span>日记</span>
           </router-link>
 
+          <router-link to="/bookmarks" class="nav-item" :class="{ active: $route.path.startsWith('/bookmarks') && $route.path !== '/bookmarks/categories' }">
+            <Bookmark :size="18" />
+            <span>收藏夹</span>
+          </router-link>
+
           <router-link to="/files" class="nav-item" :class="{ active: $route.path.startsWith('/files') && $route.path !== '/files/categories' }">
             <FolderOpen :size="18" />
             <span>文件</span>
@@ -88,6 +93,11 @@ const router = useRouter()
           <router-link to="/files/categories" class="nav-item nav-item--sub" :class="{ active: $route.path === '/files/categories' }">
             <Grid3X3 :size="14" />
             <span>文件分类</span>
+          </router-link>
+
+          <router-link to="/bookmarks/categories" class="nav-item nav-item--sub" :class="{ active: $route.path === '/bookmarks/categories' }">
+            <Grid3X3 :size="14" />
+            <span>收藏夹分类</span>
           </router-link>
 
           <router-link to="/notes/recycle" class="nav-item nav-item--sub" :class="{ active: $route.path === '/notes/recycle' }">

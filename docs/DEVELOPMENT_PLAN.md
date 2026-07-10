@@ -15,7 +15,8 @@
 | 9 | Todo 模块 | ✅ |
 | 10 | 文件管理模块 | ✅ |
 | 11 | 日记模块 | ✅ |
-| - | 后续：收藏夹/学习计划/阅读记录 | 🔲 |
+| 12 | 收藏夹模块 — ph-bookmark 模块 + 前端 BookmarkList/BookmarkForm/BookmarkCategoryManage | ✅ |
+| - | 后续：学习计划/阅读记录 | 🔲 |
 
 ## 各步文件清单
 
@@ -49,5 +50,11 @@ SpringDoc OpenAPI 2.6.0 / 所有 Controller/DTO/VO 注解 / OpenApiConfig(common
 ### Step 10 — 文件管理模块
 `ph-file`模块(上传+下载+分类+搜索) / 前端 FileList.vue + FileCategoryManage.vue
 
+### Step 11 — 日记模块
+`ph-diary`模块 + `sql/init.sql`(新增diary_entry表) / 前端 DiaryList.vue + DiaryForm.vue / 路由+导航
+
+### Step 12 — 收藏夹模块
+`ph-bookmark`模块(BookmarkUrl+BookmarkCategory) + `sql/init.sql`(新增bookmark_url+bookmark_category表) / 前端 BookmarkList(卡片网格)+BookmarkForm+BookmarkCategoryManage / 路由+导航
+
 ### 后续（第二阶段）
-收藏夹 / 学习计划 / 阅读记录 / Dashboard & 数据统计 / 全局搜索 / 标签系统
+学习计划 / 阅读记录 / Dashboard & 数据统计 / 全局搜索 / 标签系统

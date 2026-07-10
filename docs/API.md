@@ -169,3 +169,27 @@
 ```
 
 **PUT /api/diaries/{id}** — 同 POST 请求体，所有字段可选
+
+### 十一、收藏夹 `/api/bookmarks`
+| 方法 | 路径 | 说明 | 认证 |
+|------|------|------|------|
+| GET | /api/bookmarks | 收藏列表（分页）| 是 |
+| GET | /api/bookmarks/{id} | 详情 | 是 |
+| POST | /api/bookmarks | 新建 | 是 |
+| PUT | /api/bookmarks/{id} | 编辑 | 是 |
+| DELETE | /api/bookmarks/{id} | 删除 | 是 |
+
+**GET /api/bookmarks** 参数: page, size, keyword, categoryId, tag
+
+**POST /api/bookmarks**
+```json
+{"title":"GitHub","url":"https://github.com","description":"","categoryId":1,"tags":"开发,工具"}
+```
+
+### 十二、收藏夹分类 `/api/bookmark-categories`
+| 方法 | 路径 | 说明 | 认证 |
+|------|------|------|------|
+| GET | /api/bookmark-categories | 列表 | 是 |
+| POST | /api/bookmark-categories | 新建 | 是 |
+| PUT | /api/bookmark-categories/{id} | 编辑 | 是 |
+| DELETE | /api/bookmark-categories/{id} | 删除 | 是 |

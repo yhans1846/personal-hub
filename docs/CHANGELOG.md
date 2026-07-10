@@ -14,6 +14,8 @@
 - 后端 ph-file 模块 + 前端 FileList/FileCategoryManage 页面
 - **日记模块**（第二阶段）：日记 CRUD + 月视图聚合 + 关键词搜索 + 心情/天气记录
 - 后端 ph-diary 模块 + 前端 DiaryList/DiaryForm 页面 + 侧边栏导航
+- **收藏夹模块**（第二阶段）：网址 CRUD + 分类管理 + 标签管理 + 关键词搜索
+- 后端 ph-bookmark 模块（BookmarkUrl + BookmarkCategory）+ 前端 BookmarkList/BookmarkForm/BookmarkCategoryManage
 - 更新路线图/数据库/API/版本记录
 
 ### 第一阶段 MVP 全部完成 ✅

@@ -168,3 +168,37 @@ CREATE TABLE IF NOT EXISTS `diary_entry` (
     INDEX `idx_user_id_date` (`user_id`, `date`),
     INDEX `idx_date` (`date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='日记表';
+
+-- ========================================
+-- 12. 收藏夹分类表
+-- ========================================
+CREATE TABLE IF NOT EXISTS `bookmark_category` (
+    `id`         BIGINT      NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `user_id`    BIGINT      NOT NULL COMMENT '所属用户',
+    `name`       VARCHAR(50) NOT NULL COMMENT '分类名称',
+    `sort_order` INT         NOT NULL DEFAULT 0 COMMENT '排序',
+    `created_at` DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_at` DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    INDEX `idx_user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='收藏夹分类表';
+
+-- ========================================
+-- 13. 收藏夹表
+-- ========================================
+CREATE TABLE IF NOT EXISTS `bookmark_url` (
+    `id`          BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `user_id`     BIGINT       NOT NULL COMMENT '所属用户',
+    `title`       VARCHAR(255) NOT NULL COMMENT '标题',
+    `url`         VARCHAR(2048) NOT NULL COMMENT '网址',
+    `description` TEXT         DEFAULT NULL COMMENT '描述',
+    `favicon`     VARCHAR(500) DEFAULT NULL COMMENT '图标URL',
+    `category_id` BIGINT       DEFAULT NULL COMMENT '分类ID',
+    `tags`        VARCHAR(500) DEFAULT NULL COMMENT '标签（逗号分隔）',
+    `is_deleted`  TINYINT      NOT NULL DEFAULT 0 COMMENT '逻辑删除',
+    `created_at`  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_at`  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    INDEX `idx_user_id` (`user_id`),
+    INDEX `idx_category_id` (`category_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='收藏夹表';

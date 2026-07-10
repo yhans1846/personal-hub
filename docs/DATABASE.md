@@ -169,6 +169,31 @@ sys_user ── note_note ── note_category_rel ── note_category
 | created_at | DATETIME | 创建时间 | NOT NULL |
 | updated_at | DATETIME | 更新时间 | NOT NULL |
 
+### 12. `bookmark_url` 收藏夹表
+| 字段 | 类型 | 说明 | 约束 |
+|------|------|------|------|
+| id | BIGINT | 主键 | PK |
+| user_id | BIGINT | 所属用户 | NOT NULL, INDEX |
+| title | VARCHAR(255) | 标题 | NOT NULL |
+| url | VARCHAR(2048) | 网址 | NOT NULL |
+| description | TEXT | 描述 | |
+| favicon | VARCHAR(500) | 图标URL | |
+| category_id | BIGINT | 分类ID | INDEX |
+| tags | VARCHAR(500) | 标签（逗号分隔） | |
+| is_deleted | TINYINT | 逻辑删除 | DEFAULT 0 |
+| created_at | DATETIME | 创建时间 | NOT NULL |
+| updated_at | DATETIME | 更新时间 | NOT NULL |
+
+### 13. `bookmark_category` 收藏夹分类表
+| 字段 | 类型 | 说明 | 约束 |
+|------|------|------|------|
+| id | BIGINT | 主键 | PK |
+| user_id | BIGINT | 所属用户 | NOT NULL, INDEX |
+| name | VARCHAR(50) | 分类名称 | NOT NULL |
+| sort_order | INT | 排序 | DEFAULT 0 |
+| created_at | DATETIME | 创建时间 | NOT NULL |
+| updated_at | DATETIME | 更新时间 | NOT NULL |
+
 ---
 
 ## ER 关系
@@ -179,7 +204,8 @@ sys_user ── note_note ── note_category_rel ── note_category
      ├── study_record
      ├── todo_task
      ├── file_resource ── file_category
-     └── diary_entry
+     ├── diary_entry
+     └── bookmark_url ── bookmark_category
 ```
 
 ## 索引策略
@@ -194,6 +220,7 @@ sys_user ── note_note ── note_category_rel ── note_category
 | todo_task | idx_user_id / idx_due_date | NORMAL | 用户查询 / 排序 |
 | file_resource | idx_user_id | NORMAL | 用户查询 |
 | diary_entry | idx_user_id_date / idx_date | NORMAL | 用户+日期查询 |
+| bookmark_url | idx_user_id / idx_category_id | NORMAL | 用户/分类查询 |
 
 ---
 
