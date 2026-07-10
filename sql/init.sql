@@ -149,3 +149,22 @@ CREATE TABLE IF NOT EXISTS `file_category` (
     PRIMARY KEY (`id`),
     INDEX `idx_user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='文件分类表';
+
+-- ========================================
+-- 11. 日记表
+-- ========================================
+CREATE TABLE IF NOT EXISTS `diary_entry` (
+    `id`         BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `user_id`    BIGINT       NOT NULL COMMENT '所属用户',
+    `date`       DATE         NOT NULL COMMENT '日记日期',
+    `title`      VARCHAR(200) DEFAULT NULL COMMENT '日记标题',
+    `content`    TEXT         DEFAULT NULL COMMENT '日记内容（Markdown）',
+    `mood`       TINYINT      DEFAULT NULL COMMENT '心情 1-很好 2-好 3-一般 4-不好 5-很差',
+    `weather`    VARCHAR(50)  DEFAULT NULL COMMENT '天气',
+    `is_deleted` TINYINT      NOT NULL DEFAULT 0 COMMENT '逻辑删除',
+    `created_at` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_at` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    INDEX `idx_user_id_date` (`user_id`, `date`),
+    INDEX `idx_date` (`date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='日记表';

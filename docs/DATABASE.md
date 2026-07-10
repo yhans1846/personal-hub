@@ -153,7 +153,51 @@ sys_user ── note_note ── note_category_rel ── note_category
 
 ---
 
-## 第二阶段 — 待扩展表
+## 第二阶段 — 已扩展表
+
+### 11. `diary_entry` 日记表
+| 字段 | 类型 | 说明 | 约束 |
+|------|------|------|------|
+| id | BIGINT | 主键 | PK |
+| user_id | BIGINT | 所属用户 | NOT NULL, INDEX |
+| date | DATE | 日记日期 | NOT NULL |
+| title | VARCHAR(200) | 日记标题 | |
+| content | TEXT | Markdown 内容 | |
+| mood | TINYINT | 心情（1很好 2好 3一般 4不好 5很差）| |
+| weather | VARCHAR(50) | 天气 | |
+| is_deleted | TINYINT | 逻辑删除 | DEFAULT 0 |
+| created_at | DATETIME | 创建时间 | NOT NULL |
+| updated_at | DATETIME | 更新时间 | NOT NULL |
+
+---
+
+## ER 关系
+
+```
+sys_user ── note_note ── note_category_rel ── note_category
+                  └── note_tag_rel ──── note_tag
+     ├── study_record
+     ├── todo_task
+     ├── file_resource ── file_category
+     └── diary_entry
+```
+
+## 索引策略
+
+| 表 | 索引 | 类型 | 说明 |
+|----|------|------|------|
+| sys_user | uk_username | UNIQUE | 用户名唯一 |
+| note_note | idx_user_id / idx_updated_at | NORMAL | 用户查询 / 排序 |
+| note_category | idx_user_id | NORMAL | 用户查询 |
+| note_tag | idx_user_id_name | UNIQUE | 用户标签去重 |
+| study_record | idx_user_id_date | NORMAL | 用户日期查询 |
+| todo_task | idx_user_id / idx_due_date | NORMAL | 用户查询 / 排序 |
+| file_resource | idx_user_id | NORMAL | 用户查询 |
+| diary_entry | idx_user_id_date / idx_date | NORMAL | 用户+日期查询 |
+
+---
+
+## 第三阶段 — 待扩展表
 - **journal_entry**: user_id, title, content(MD), entry_date, mood
 - **bookmark**: user_id, title, url, icon, category_id, tags
 - **study_plan**: user_id, name, goal, progress(0-100), start_date, end_date

@@ -144,3 +144,28 @@
 | POST | /api/file-categories | 新建 | 是 |
 | PUT | /api/file-categories/{id} | 修改 | 是 |
 | DELETE | /api/file-categories/{id} | 删除 | 是 |
+
+---
+
+## 第二阶段 — 接口设计
+
+### 十、日记 `/api/diaries`
+| 方法 | 路径 | 说明 | 认证 |
+|------|------|------|------|
+| GET | /api/diaries | 日记列表（分页）| 是 |
+| GET | /api/diaries/month | 月视图 | 是 |
+| GET | /api/diaries/{id} | 详情 | 是 |
+| POST | /api/diaries | 新建 | 是 |
+| PUT | /api/diaries/{id} | 编辑 | 是 |
+| DELETE | /api/diaries/{id} | 删除 | 是 |
+
+**GET /api/diaries** 参数: page, size, keyword, startDate, endDate, mood, month(YYYY-MM)
+
+**GET /api/diaries/month** 参数: month(YYYY-MM, 必填)
+
+**POST /api/diaries**
+```json
+{"date":"2026-07-10","title":"忙碌的一天","content":"# 日记内容（Markdown）","mood":2,"weather":"晴"}
+```
+
+**PUT /api/diaries/{id}** — 同 POST 请求体，所有字段可选

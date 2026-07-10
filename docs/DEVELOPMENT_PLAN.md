@@ -14,7 +14,8 @@
 | 8 | **代码质量统一** — PageParam 分页基类 + ResultCode 枚举 + 全局 @Slf4j 日志 | ✅ |
 | 9 | Todo 模块 | ✅ |
 | 10 | 文件管理模块 | ✅ |
-| - | 后续：日记/收藏夹/学习计划/阅读记录 | 🔲 |
+| 11 | 日记模块 | ✅ |
+| - | 后续：收藏夹/学习计划/阅读记录 | 🔲 |
 
 ## 各步文件清单
 
@@ -49,4 +50,4 @@ SpringDoc OpenAPI 2.6.0 / 所有 Controller/DTO/VO 注解 / OpenApiConfig(common
 `ph-file`模块(上传+下载+分类+搜索) / 前端 FileList.vue + FileCategoryManage.vue
 
 ### 后续（第二阶段）
-日记 / 收藏夹 / 学习计划 / 阅读记录 / Dashboard & 数据统计 / 全局搜索 / 标签系统
+收藏夹 / 学习计划 / 阅读记录 / Dashboard & 数据统计 / 全局搜索 / 标签系统

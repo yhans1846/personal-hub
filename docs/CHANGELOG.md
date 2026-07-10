@@ -12,7 +12,9 @@
 - 后端 ph-todo 模块（Entity/DTO/VO/Mapper/Service/Controller）+ 前端 TodoList/TodoForm 页面
 - **文件管理模块**：文件上传/下载/列表/搜索/删除 + 文件分类管理
 - 后端 ph-file 模块 + 前端 FileList/FileCategoryManage 页面
-- 更新路线图/开发计划/版本记录
+- **日记模块**（第二阶段）：日记 CRUD + 月视图聚合 + 关键词搜索 + 心情/天气记录
+- 后端 ph-diary 模块 + 前端 DiaryList/DiaryForm 页面 + 侧边栏导航
+- 更新路线图/数据库/API/版本记录
 
 ### 第一阶段 MVP 全部完成 ✅
 - **项目初始化**：Spring Boot 3 后端脚手架 + Vue 3 前端脚手架

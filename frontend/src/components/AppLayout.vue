@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useAuthStore } from '@/store/authStore'
 import { useRouter } from 'vue-router'
-import { Layers, LayoutDashboard, FileText, BookOpen, CheckSquare, FolderOpen, Grid3X3, Tags, Trash2, Search } from 'lucide-vue-next'
+import { Layers, LayoutDashboard, FileText, BookOpen, CheckSquare, PenLine, FolderOpen, Grid3X3, Tags, Trash2, Search } from 'lucide-vue-next'
 
 const authStore = useAuthStore()
 const router = useRouter()
@@ -61,6 +61,11 @@ const router = useRouter()
           <router-link to="/todos" class="nav-item" :class="{ active: $route.path.startsWith('/todos') }">
             <CheckSquare :size="18" />
             <span>待办任务</span>
+          </router-link>
+
+          <router-link to="/diaries" class="nav-item" :class="{ active: $route.path.startsWith('/diaries') }">
+            <PenLine :size="18" />
+            <span>日记</span>
           </router-link>
 
           <router-link to="/files" class="nav-item" :class="{ active: $route.path.startsWith('/files') && $route.path !== '/files/categories' }">

@@ -25,6 +25,7 @@
         <module>ph-study</module>
         <module>ph-todo</module>
         <module>ph-file</module>
+        <module>ph-diary</module>
         <module>ph-boot</module>
     </modules>
 
@@ -69,6 +70,11 @@
             <dependency>
                 <groupId>com.personalhub</groupId>
                 <artifactId>ph-file</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.personalhub</groupId>
+                <artifactId>ph-diary</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
