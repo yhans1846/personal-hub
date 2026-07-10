@@ -6,7 +6,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Plus, FileText, Star, Trash2, Clock } from 'lucide-vue-next'
 import { EmptyState, PageHeader } from '@/components'
 import type { NoteVO, NoteQuery } from '@/types/note'
-import { estimateReadingTime } from '@/utils/readingTime'
+import { estimateReadingTime, formatRelativeTime, isRecentlyEdited } from '@/utils/readingTime'
 
 const router = useRouter()
 const list = ref<NoteVO[]>([])
@@ -89,7 +89,10 @@ async function handleToggleFavorite(note: NoteVO) {
             <span v-for="tag in note.tags.slice(0, 3)" :key="tag.id" class="meta-tag meta-tag--tag" :style="tag.color ? { background: tag.color + '20', color: tag.color } : {}">{{ tag.name }}</span>
             <span v-if="note.tags.length > 3" class="meta-tag meta-tag--more">+{{ note.tags.length - 3 }}</span>
           </div>
-          <button class="delete-btn" @click.stop="handleDelete(note.id)">
+          <div class="note-card-footer-right">
+            <span v-if="isRecentlyEdited(note.updatedAt)" class="edited-dot" title="最近编辑" />
+            <span class="edited-time">{{ formatRelativeTime(note.updatedAt) }}</span>
+            <button class="delete-btn" @click.stop="handleDelete(note.id)">
             <Trash2 :size="14" />
           </button>
         </div>
@@ -104,6 +107,7 @@ async function handleToggleFavorite(note: NoteVO) {
       style="margin-top: var(--sp-6); justify-content: flex-end"
       @current-change="onPageChange"
     />
+  </div>
   </div>
 </template>
 
@@ -143,6 +147,9 @@ async function handleToggleFavorite(note: NoteVO) {
 .note-card-preview { font-size: var(--text-sm); color: var(--text-secondary); line-height: var(--leading-relaxed); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .note-card-footer { display: flex; justify-content: space-between; align-items: center; padding-top: var(--sp-2); border-top: 1px solid var(--border-light); }
 .note-card-tags { display: flex; gap: 4px; flex-wrap: wrap; }
+.note-card-footer-right { display: flex; align-items: center; gap: var(--sp-2); flex-shrink: 0; }
+.edited-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); flex-shrink: 0; }
+.edited-time { font-size: 11px; color: var(--text-tertiary); white-space: nowrap; }
 .delete-btn { background: none; border: none; color: var(--text-tertiary); cursor: pointer; padding: 4px; border-radius: 4px; transition: all var(--transition); }
 .delete-btn:hover { color: var(--danger); background: var(--danger-light); }
 </style>
