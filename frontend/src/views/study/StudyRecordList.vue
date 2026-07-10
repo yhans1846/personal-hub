@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { getStudyRecordList, deleteStudyRecord } from '@/api/studyApi'
+import { getStudyRecordList, deleteStudyRecord, getStudyStats } from '@/api/studyApi'
+import type { StudyStats } from '@/api/studyApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Plus, BookOpen, Pencil, Trash2 } from 'lucide-vue-next'
 import type { StudyRecordVO, StudyRecordQuery } from '@/types/study'
@@ -12,9 +13,16 @@ const router = useRouter()
 const list = ref<StudyRecordVO[]>([])
 const total = ref(0)
 const loading = ref(false)
+const stats = ref<StudyStats | null>(null)
 const query = ref<StudyRecordQuery>({ page: 1, size: 20, keyword: '' })
 
-onMounted(() => fetchList())
+onMounted(() => { fetchList(); fetchStats() })
+async function fetchStats() {
+  try {
+    const res = await getStudyStats()
+    stats.value = res.data.data
+  } catch { /* ignore */ }
+}
 
 async function fetchList() {
   loading.value = true
@@ -63,6 +71,15 @@ watch(list, (val) => { groupedList.value = groupByDate(val) }, { immediate: true
 <template>
   <div>
     <PageHeader title="学习记录" subtitle="共 {{ total }} 条记录" />
+
+    <!-- 统计条 -->
+    <div v-if="stats" class="study-stats">
+      <div class="stat-item"><span class="stat-num">{{ stats.todayDuration }}</span> 分钟 <span class="stat-label">今日学习</span></div>
+      <div class="stat-divider" />
+      <div class="stat-item"><span class="stat-num">{{ stats.weekDuration }}</span> 分钟 <span class="stat-label">本周</span></div>
+      <div class="stat-divider" />
+      <div class="stat-item"><span class="stat-num">{{ stats.streak }}</span> 天 <span class="stat-label">连续学习</span></div>
+    </div>
 
     <div class="toolbar">
       <div class="toolbar-left">
@@ -159,4 +176,10 @@ watch(list, (val) => { groupedList.value = groupByDate(val) }, { immediate: true
 }
 .icon-btn:hover { color: var(--accent); background: var(--accent-light); }
 .icon-btn--danger:hover { color: var(--danger); background: var(--danger-light); }
+
+.study-stats { display: flex; align-items: center; gap: var(--sp-4); padding: var(--sp-3) var(--sp-4); background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); margin-bottom: var(--sp-5); }
+.stat-item { font-size: var(--text-xs); color: var(--text-secondary); }
+.stat-num { font-size: var(--text-lg); font-weight: 700; color: var(--accent); }
+.stat-label { color: var(--text-tertiary); }
+.stat-divider { width: 1px; height: 28px; background: var(--border-color); }
 </style>

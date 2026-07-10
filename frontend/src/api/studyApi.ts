@@ -21,3 +21,13 @@ export function updateStudyRecord(id: number, data: StudyRecordCreateDTO) {
 export function deleteStudyRecord(id: number) {
   return request.delete<Result<void>>(`/study-records/${id}`)
 }
+
+export interface StudyStats {
+  todayDuration: number
+  weekDuration: number
+  streak: number
+}
+
+export function getStudyStats() {
+  return request.get<Result<StudyStats>>('/study-records/stats')
+}

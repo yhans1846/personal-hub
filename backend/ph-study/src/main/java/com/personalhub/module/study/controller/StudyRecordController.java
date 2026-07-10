@@ -7,6 +7,7 @@ import com.personalhub.module.study.dto.StudyRecordCreateDTO;
 import com.personalhub.module.study.dto.StudyRecordQueryDTO;
 import com.personalhub.module.study.service.StudyRecordService;
 import com.personalhub.module.study.vo.StudyRecordVO;
+import com.personalhub.module.study.vo.StudyStatsVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -62,6 +63,13 @@ public class StudyRecordController {
             @Valid @RequestBody StudyRecordCreateDTO dto) {
         Long userId = Long.valueOf(authentication.getName());
         return Result.success(service.update(id, userId, dto));
+    }
+
+    @Operation(summary = "学习统计", description = "今日学习时长、本周统计、连续学习天数")
+    @GetMapping("/stats")
+    public Result<StudyStatsVO> stats(@Parameter(hidden = true) Authentication authentication) {
+        Long userId = Long.valueOf(authentication.getName());
+        return Result.success(service.stats(userId));
     }
 
     @Operation(summary = "删除学习记录")

@@ -10,6 +10,7 @@ import com.personalhub.module.study.entity.StudyRecord;
 import com.personalhub.module.study.mapper.StudyRecordMapper;
 import com.personalhub.module.study.service.StudyRecordService;
 import com.personalhub.module.study.vo.StudyRecordVO;
+import com.personalhub.module.study.vo.StudyStatsVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -100,5 +101,44 @@ public class StudyRecordServiceImpl implements StudyRecordService {
         }
         mapper.deleteById(id); // 逻辑删除
         log.info("删除学习记录: id={}, userId={}", id, userId);
+    }
+
+    @Override
+    public StudyStatsVO stats(Long userId) {
+        // 获取全部有效记录（个人项目数据量小）
+        LambdaQueryWrapper<StudyRecord> all = new LambdaQueryWrapper<>();
+        all.eq(StudyRecord::getUserId, userId);
+        java.util.List<StudyRecord> records = mapper.selectList(all);
+
+        java.time.LocalDate today = java.time.LocalDate.now();
+        java.time.LocalDate weekStart = today.with(java.time.DayOfWeek.MONDAY);
+
+        long todayDuration = 0;
+        long weekDuration = 0;
+        java.util.Set<java.time.LocalDate> uniqueDates = new java.util.HashSet<>();
+
+        for (StudyRecord r : records) {
+            if (r.getDate() != null) {
+                if (r.getDate().equals(today)) todayDuration += r.getDuration();
+                if (!r.getDate().isBefore(weekStart)) weekDuration += r.getDuration();
+                uniqueDates.add(r.getDate());
+            }
+        }
+
+        // 连续天数：按日期倒序，从今天开始数连续
+        java.util.List<java.time.LocalDate> sorted = uniqueDates.stream()
+                .sorted(java.util.Comparator.reverseOrder()).toList();
+        long streak = 0;
+        for (java.time.LocalDate d : sorted) {
+            if (d.equals(today) || d.equals(today.minusDays(streak))) {
+                streak++;
+            } else break;
+        }
+
+        StudyStatsVO vo = new StudyStatsVO();
+        vo.setTodayDuration(todayDuration);
+        vo.setWeekDuration(weekDuration);
+        vo.setStreak(streak);
+        return vo;
     }
 }

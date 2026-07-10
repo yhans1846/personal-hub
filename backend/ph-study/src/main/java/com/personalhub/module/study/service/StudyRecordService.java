@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.personalhub.module.study.dto.StudyRecordCreateDTO;
 import com.personalhub.module.study.dto.StudyRecordQueryDTO;
 import com.personalhub.module.study.vo.StudyRecordVO;
+import com.personalhub.module.study.vo.StudyStatsVO;
 
 /**
  * 学习记录服务接口
@@ -54,4 +55,12 @@ public interface StudyRecordService {
      * @param userId 用户ID
      */
     void delete(Long id, Long userId);
+
+    /**
+     * 学习统计（今日时长 + 本周时长 + 连续天数）
+     *
+     * @param userId 用户ID
+     * @return 统计数据
+     */
+    StudyStatsVO stats(Long userId);
 }
