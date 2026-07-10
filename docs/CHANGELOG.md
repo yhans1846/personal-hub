@@ -10,9 +10,11 @@
 ### 2026-07-10（已完成）
 - **Todo 待办任务模块**：完整 CRUD + 完成状态切换 + 优先级(高/中/低) + 截止日期 + 超期提醒
 - 后端 ph-todo 模块（Entity/DTO/VO/Mapper/Service/Controller）+ 前端 TodoList/TodoForm 页面
+- **文件管理模块**：文件上传/下载/列表/搜索/删除 + 文件分类管理
+- 后端 ph-file 模块 + 前端 FileList/FileCategoryManage 页面
 - 更新路线图/开发计划/版本记录
 
-### 2026-07-09（已完成）
+### 第一阶段 MVP 全部完成 ✅
 - **项目初始化**：Spring Boot 3 后端脚手架 + Vue 3 前端脚手架
 - **数据库初始化**：10 张第一阶段表
 - **用户认证模块**：JWT 登录/退出 + Spring Security 配置 + 个人信息/修改密码

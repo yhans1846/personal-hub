@@ -1,6 +1,6 @@
 # Personal Hub - 开发路线图
 
-## 当前阶段：第一阶段（MVP）🚧 进行中
+## 当前阶段：第一阶段（MVP）✅ 已完成
 
 ### 项目初始化
 - [x] Spring Boot 3 后端（Maven）/ Vue 3 + Vite 前端 / MySQL 初始化
@@ -19,7 +19,7 @@
 - [x] CRUD / 完成状态切换 / 优先级 / 截止日期
 
 ### 文件管理
-- [ ] 上传（PDF/Word/Excel/PPT/MD/图片/ZIP）/ 下载 / 分类 / 搜索 / 删除
+- [x] 上传（PDF/Word/Excel/PPT/MD/图片/ZIP）/ 下载 / 分类 / 搜索 / 删除
 
 ---
 

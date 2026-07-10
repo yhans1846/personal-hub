@@ -13,7 +13,7 @@
 | 7 | **Maven 多模块拆分** — 父 POM + common/module-auth/module-note/module-study/web | ✅ |
 | 8 | **代码质量统一** — PageParam 分页基类 + ResultCode 枚举 + 全局 @Slf4j 日志 | ✅ |
 | 9 | Todo 模块 | ✅ |
-| 10 | 文件管理模块 | 🔲 |
+| 10 | 文件管理模块 | ✅ |
 | - | 后续：日记/收藏夹/学习计划/阅读记录 | 🔲 |
 
 ## 各步文件清单
@@ -45,8 +45,8 @@ SpringDoc OpenAPI 2.6.0 / 所有 Controller/DTO/VO 注解 / OpenApiConfig(common
 ### Step 9 — Todo 模块
 `ph-todo`模块(CRUD+状态+优先级+截止日期+超期提醒) / 前端 TodoList.vue + TodoForm.vue
 
-### Step 10 — 文件管理（待开发）
-file模块(上传+下载+分类) / 前端 FileList.vue + FileCategoryManage.vue
+### Step 10 — 文件管理模块
+`ph-file`模块(上传+下载+分类+搜索) / 前端 FileList.vue + FileCategoryManage.vue
 
 ### 后续（第二阶段）
 日记 / 收藏夹 / 学习计划 / 阅读记录 / Dashboard & 数据统计 / 全局搜索 / 标签系统

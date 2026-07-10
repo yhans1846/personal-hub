@@ -37,6 +37,10 @@
             <groupId>com.personalhub</groupId>
             <artifactId>ph-todo</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.personalhub</groupId>
+            <artifactId>ph-file</artifactId>
+        </dependency>
 
         <!-- MySQL（仅运行时需要） -->
         <dependency>

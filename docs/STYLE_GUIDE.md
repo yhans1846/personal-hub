@@ -122,7 +122,9 @@ backend/
 │   └── src/main/java/com/personalhub/module/study/
 ├── ph-todo/                         # 待办任务模块
 │   └── src/main/java/com/personalhub/module/todo/
-└── ph-boot/                         # Spring Boot 启动入口
+├── ph-file/                          # 文件管理模块
+│   └── src/main/java/com/personalhub/module/file/
+└── ph-boot/                          # Spring Boot 启动入口
     └── src/main/
         ├── java/com/personalhub/PersonalHubApplication.java
         └── resources/               # application.yml + application-dev.yml

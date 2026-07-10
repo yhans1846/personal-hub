@@ -25,7 +25,9 @@ const router = createRouter({
         { path: 'study-records/:id/edit', name: 'StudyRecordEdit', component: () => import('@/views/study/StudyRecordForm.vue') },
         { path: 'todos', name: 'TodoList', component: () => import('@/views/todos/TodoList.vue') },
         { path: 'todos/new', name: 'TodoCreate', component: () => import('@/views/todos/TodoForm.vue') },
-        { path: 'todos/:id/edit', name: 'TodoEdit', component: () => import('@/views/todos/TodoForm.vue') }
+        { path: 'todos/:id/edit', name: 'TodoEdit', component: () => import('@/views/todos/TodoForm.vue') },
+        { path: 'files', name: 'FileList', component: () => import('@/views/files/FileList.vue') },
+        { path: 'files/categories', name: 'FileCategories', component: () => import('@/views/files/FileCategoryManage.vue') }
       ]
     }
   ]
