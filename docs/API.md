@@ -243,6 +243,8 @@
 |------|------|------|------|
 | GET | /api/dashboard/stats | Dashboard 统计数据 | 是 |
 
+**GET /api/dashboard/trends** 参数: days(int, 默认30)
+
 **GET /api/dashboard/stats**
 ```json
 {
@@ -253,6 +255,16 @@
   "fileCount": 30,           "diaryCount": 10,
   "diaryCountThisMonth": 3,  "bookmarkCount": 25,
   "readingCount": 8,         "studyPlanCount": 5
+}
+```
+
+**GET /api/dashboard/trends?days=30** -- 返回 4 项趋势数据（每日聚合）
+```json
+{
+  "studyTrend": [{"date":"2026-07-01","value":120}],
+  "noteTrend": [{"date":"2026-07-01","value":2}],
+  "todoTrend": [{"date":"2026-07-01","value":3}],
+  "readingTrend": [{"date":"2026-07-01","value":1}]
 }
 ```
 

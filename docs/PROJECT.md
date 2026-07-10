@@ -43,7 +43,7 @@ personal-hub
 ### 第三阶段
 - [x] **标签系统**: 统一管理，全模块关联，筛选统计（ph-tag 模块，替换 note_tag + bookmark_tags）
 - [x] **Dashboard**: 系统概览（学习时长/待办/最近笔记/统计卡片，ph-dashboard 模块）
-- **数据统计**: 学习/笔记/文件/Todo 趋势（ECharts）
+- [x] **数据统计**: 学习/笔记/Todo/阅读趋势（ECharts 折线图，ph-dashboard 模块）
 - **全局搜索**: 跨模块统一搜索、高亮、历史
 
 ### 后续可扩展

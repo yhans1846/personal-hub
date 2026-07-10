@@ -5,6 +5,8 @@ import com.personalhub.module.bookmark.entity.BookmarkUrl;
 import com.personalhub.module.bookmark.mapper.BookmarkUrlMapper;
 import com.personalhub.module.dashboard.service.DashboardService;
 import com.personalhub.module.dashboard.vo.DashboardStatsVO;
+import com.personalhub.module.dashboard.vo.TrendVO;
+import com.personalhub.module.dashboard.vo.TrendVO.DataPoint;
 import com.personalhub.module.diary.entity.DiaryEntry;
 import com.personalhub.module.diary.mapper.DiaryEntryMapper;
 import com.personalhub.module.file.entity.FileResource;
@@ -27,6 +29,7 @@ import org.springframework.stereotype.Service;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
+import java.util.List;
 
 /**
  * Dashboard 服务实现
@@ -82,6 +85,46 @@ public class DashboardServiceImpl implements DashboardService {
         stats.setStudyPlanCount(countStudyPlans(userId));
 
         return stats;
+    }
+
+    @Override
+    public TrendVO getTrends(Long userId, int days) {
+        LocalDate since = LocalDate.now().minusDays(days);
+        TrendVO trends = new TrendVO();
+
+        // 学习趋势（按日期分组时长）
+        trends.setStudyTrend(queryTrend(
+                "SELECT date, COALESCE(SUM(duration), 0) FROM study_record " +
+                "WHERE user_id = ? AND date >= ? AND is_deleted = 0 GROUP BY date ORDER BY date",
+                userId, since));
+
+        // 笔记趋势（按创建日期分组）
+        trends.setNoteTrend(queryTrend(
+                "SELECT DATE(created_at), COUNT(*) FROM note_note " +
+                "WHERE user_id = ? AND created_at >= ? AND is_deleted = 0 GROUP BY DATE(created_at) ORDER BY DATE(created_at)",
+                userId, since));
+
+        // 待办趋势（按创建日期分组）
+        trends.setTodoTrend(queryTrend(
+                "SELECT DATE(created_at), COUNT(*) FROM todo_task " +
+                "WHERE user_id = ? AND created_at >= ? GROUP BY DATE(created_at) ORDER BY DATE(created_at)",
+                userId, since));
+
+        // 阅读趋势（按创建日期分组）
+        trends.setReadingTrend(queryTrend(
+                "SELECT DATE(created_at), COUNT(*) FROM reading_record " +
+                "WHERE user_id = ? AND created_at >= ? AND is_deleted = 0 GROUP BY DATE(created_at) ORDER BY DATE(created_at)",
+                userId, since));
+
+        return trends;
+    }
+
+    private List<DataPoint> queryTrend(String sql, Long userId, LocalDate since) {
+        return jdbcTemplate.query(sql,
+                new Object[]{userId, java.sql.Date.valueOf(since)},
+                (rs, rowNum) -> new DataPoint(
+                        rs.getString(1),
+                        rs.getLong(2)));
     }
 
     private Long countNotes(Long userId) {

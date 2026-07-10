@@ -20,6 +20,7 @@ const router = createRouter({
         { path: 'notes/categories', name: 'NoteCategories', component: () => import('@/views/notes/NoteCategoryManage.vue') },
         { path: 'notes/tags', name: 'NoteTags', component: () => import('@/views/tags/TagManage.vue') },
         { path: 'tags', name: 'TagManage', component: () => import('@/views/tags/TagManage.vue') },
+        { path: 'stats', name: 'Stats', component: () => import('@/views/stats/StatsView.vue') },
         { path: 'notes/recycle', name: 'RecycleBin', component: () => import('@/views/notes/RecycleBin.vue') },
         { path: 'study-records', name: 'StudyRecords', component: () => import('@/views/study/StudyRecordList.vue') },
         { path: 'study-records/new', name: 'StudyRecordCreate', component: () => import('@/views/study/StudyRecordForm.vue') },

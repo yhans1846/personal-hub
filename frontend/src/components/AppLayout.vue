@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useAuthStore } from '@/store/authStore'
 import { useRouter } from 'vue-router'
-import { Layers, LayoutDashboard, FileText, BookOpen, CheckSquare, PenLine, Bookmark, Target, BookMarked, FolderOpen, Grid3X3, Tags, Trash2, Search } from 'lucide-vue-next'
+import { Layers, LayoutDashboard, FileText, BookOpen, CheckSquare, PenLine, Bookmark, Target, BookMarked, FolderOpen, Grid3X3, Tags, Trash2, Search, BarChart3 } from 'lucide-vue-next'
 
 const authStore = useAuthStore()
 const router = useRouter()
@@ -113,6 +113,13 @@ const router = useRouter()
           <router-link to="/notes/recycle" class="nav-item nav-item--sub" :class="{ active: $route.path === '/notes/recycle' }">
             <Trash2 :size="14" />
             <span>回收站</span>
+          </router-link>
+
+          <div class="nav-divider" />
+
+          <router-link to="/stats" class="nav-item nav-item--sub" :class="{ active: $route.path === '/stats' }">
+            <BarChart3 :size="14" />
+            <span>数据统计</span>
           </router-link>
         </nav>
       </aside>
