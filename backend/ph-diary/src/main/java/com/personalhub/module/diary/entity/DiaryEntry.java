@@ -35,6 +35,9 @@ public class DiaryEntry {
     /** 天气 */
     private String weather;
 
+    /** 地点 */
+    private String location;
+
     /** 逻辑删除 0-正常 1-删除 */
     @TableLogic
     private Integer isDeleted;

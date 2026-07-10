@@ -8,6 +8,7 @@ export interface DiaryVO {
   mood: number
   moodLabel: string
   weather: string
+  location?: string
   createdAt: string
   updatedAt: string
 }
@@ -19,6 +20,7 @@ export interface DiaryCreateDTO {
   content?: string
   mood?: number
   weather?: string
+  location?: string
 }
 
 /** 查询参数 */

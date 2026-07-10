@@ -9,7 +9,7 @@ const route = useRoute()
 const router = useRouter()
 const isEdit = !!route.params.id
 
-const form = ref({ date: '', title: '', content: '', mood: 2, weather: '' })
+const form = ref({ date: '', title: '', content: '', mood: 2, weather: '', location: '' })
 const saving = ref(false)
 
 onMounted(async () => {
@@ -26,6 +26,7 @@ onMounted(async () => {
   form.value.content = r.content || ''
   form.value.mood = r.mood || 2
   form.value.weather = r.weather || ''
+  form.value.location = r.location || ''
 })
 
 async function handleSave() {
@@ -81,11 +82,20 @@ const weatherOptions = ['晴', '多云', '阴', '小雨', '大雨', '雷阵雨',
           </el-radio-group>
         </el-form-item>
 
-        <el-form-item label="天气">
-          <el-select v-model="form.weather" placeholder="选择天气" clearable style="width:100%">
-            <el-option v-for="w in weatherOptions" :key="w" :value="w" :label="w" />
-          </el-select>
-        </el-form-item>
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="天气">
+              <el-select v-model="form.weather" placeholder="选择天气" clearable style="width:100%">
+                <el-option v-for="w in weatherOptions" :key="w" :value="w" :label="w" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="地点">
+              <el-input v-model="form.location" placeholder="记录地点（可选）" maxlength="200" />
+            </el-form-item>
+          </el-col>
+        </el-row>
 
         <el-form-item label="内容">
           <el-input v-model="form.content" type="textarea" :rows="12" placeholder="开始写吧...（支持 Markdown 格式）" />

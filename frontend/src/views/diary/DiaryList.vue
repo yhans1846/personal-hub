@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getDiaryList, deleteDiary } from '@/api/diaryApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Plus, Pencil, Trash2, PenLine, Sun, Cloud, CloudRain, Smile, Frown, Meh } from 'lucide-vue-next'
+import { Search, Plus, Pencil, Trash2, PenLine, Sun, Cloud, CloudRain, Smile, Frown, Meh, MapPin } from 'lucide-vue-next'
 import { EmptyState, PageHeader } from '@/components'
 import type { DiaryVO, DiaryQuery } from '@/types/diary'
 
@@ -119,6 +119,7 @@ const moodOptions = [
                 <component :is="getWeatherIcon(entry.weather)" v-if="getWeatherIcon(entry.weather)" :size="14" />
                 {{ entry.weather }}
               </span>
+              <span v-if="entry.location" class="diary-location"><MapPin :size="12" /> {{ entry.location }}</span>
             </div>
           </div>
           <div v-if="entry.contentSummary" class="diary-summary">{{ entry.contentSummary }}</div>
@@ -162,7 +163,8 @@ const moodOptions = [
 .diary-header { display: flex; align-items: center; gap: var(--sp-3); margin-bottom: 4px; }
 .diary-title { font-size: var(--text-sm); font-weight: 500; }
 .diary-meta { display: flex; align-items: center; gap: var(--sp-2); margin-left: auto; font-size: var(--text-xs); }
-.diary-mood, .diary-weather { display: flex; align-items: center; gap: 2px; white-space: nowrap; }
+.diary-mood, .diary-weather, .diary-location { display: flex; align-items: center; gap: 2px; white-space: nowrap; }
+.diary-location { color: var(--text-tertiary); }
 .diary-summary {
   font-size: var(--text-sm); color: var(--text-secondary);
   line-height: var(--leading-normal); overflow: hidden;

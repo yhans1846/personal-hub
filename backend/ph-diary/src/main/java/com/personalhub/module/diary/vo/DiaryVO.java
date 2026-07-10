@@ -38,6 +38,9 @@ public class DiaryVO {
     @Schema(description = "天气")
     private String weather;
 
+    @Schema(description = "地点")
+    private String location;
+
     @Schema(description = "创建时间")
     private LocalDateTime createdAt;
 
@@ -52,6 +55,7 @@ public class DiaryVO {
         vo.setContent(entry.getContent());
         vo.setMood(entry.getMood());
         vo.setWeather(entry.getWeather());
+        vo.setLocation(entry.getLocation());
         vo.setCreatedAt(entry.getCreatedAt());
         vo.setUpdatedAt(entry.getUpdatedAt());
 

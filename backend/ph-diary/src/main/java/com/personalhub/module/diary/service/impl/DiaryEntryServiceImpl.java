@@ -106,6 +106,7 @@ public class DiaryEntryServiceImpl implements DiaryEntryService {
         entry.setContent(dto.getContent());
         entry.setMood(dto.getMood());
         entry.setWeather(dto.getWeather());
+        entry.setLocation(dto.getLocation());
         diaryEntryMapper.insert(entry);
         log.info("新建日记: id={}, userId={}, date={}", entry.getId(), userId, entry.getDate());
         return DiaryVO.from(entry);

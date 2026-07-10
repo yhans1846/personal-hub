@@ -28,4 +28,8 @@ public class DiaryCreateDTO {
 
     @Schema(description = "天气", example = "晴")
     private String weather;
+
+    @Size(max = 200, message = "地点长度不能超过200")
+    @Schema(description = "地点", example = "图书馆")
+    private String location;
 }
