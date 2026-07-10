@@ -44,7 +44,7 @@ function getStatusType(status: number) {
 }
 
 const statusOptions = [
-  { value: undefined, label: '全部状态' },
+  { value: '', label: '全部状态' },
   { value: 0, label: '未开始' },
   { value: 1, label: '进行中' },
   { value: 2, label: '已完成' },

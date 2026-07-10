@@ -45,14 +45,14 @@ async function handleDelete(id: number) {
 }
 
 const priorityOptions = [
-  { value: undefined, label: '全部', type: '' },
+  { value: '', label: '全部', type: '' },
   { value: 1, label: '高', type: 'danger' as const },
   { value: 2, label: '中', type: 'warning' as const },
   { value: 3, label: '低', type: 'info' as const }
 ]
 
 const doneOptions = [
-  { value: undefined, label: '全部' },
+  { value: '', label: '全部' },
   { value: false, label: '未完成' },
   { value: true, label: '已完成' }
 ]

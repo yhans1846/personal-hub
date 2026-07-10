@@ -33,7 +33,7 @@ function statusIcon(s: number) { return s === 0 ? Book : s === 1 ? BookOpen : Bo
 function statusType(s: number) { return s === 0 ? 'info' : s === 1 ? 'primary' : 'success' }
 
 const statusOptions = [
-  { value: undefined, label: '全部状态' },
+  { value: '', label: '全部状态' },
   { value: 0, label: '未读' }, { value: 1, label: '在读' }, { value: 2, label: '读完' }
 ]
 </script>

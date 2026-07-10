@@ -58,7 +58,7 @@ function getWeatherIcon(weather: string | null) {
 }
 
 const moodOptions = [
-  { value: undefined, label: '全部心情' },
+  { value: '', label: '全部心情' },
   { value: 1, label: '很好' },
   { value: 2, label: '好' },
   { value: 3, label: '一般' },
