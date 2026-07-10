@@ -19,6 +19,9 @@
 - **学习计划模块**（第二阶段）：计划 CRUD + 进度跟踪 + 时间管理 + 关联学习记录
 - 后端 ph-studyplan 模块 + study_record 表追加 plan_id 字段
 - 前端 StudyPlanList（进度条/状态标签/记录数）/ StudyPlanForm
+- **阅读记录模块**（第二阶段）：记录 CRUD + 章节进度 + 阅读笔记
+- 后端 ph-reading 模块 + 前端 ReadingList/ReadingForm
+- **第二阶段全部完成 🎉**
 - 更新路线图/数据库/API/版本记录
 
 ### 第一阶段 MVP 全部完成 ✅

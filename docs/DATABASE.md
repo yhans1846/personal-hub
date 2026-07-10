@@ -186,6 +186,14 @@ sys_user ── note_note ── note_category_rel ── note_category
 | updated_at | DATETIME | 更新时间 | NOT NULL |
 
 ### 13. `bookmark_category` 收藏夹分类表
+| 字段 | 类型 | 说明 | 约束 |
+|------|------|------|------|
+| id | BIGINT | 主键 | PK |
+| user_id | BIGINT | 所属用户 | NOT NULL, INDEX |
+| name | VARCHAR(50) | 分类名称 | NOT NULL |
+| sort_order | INT | 排序 | DEFAULT 0 |
+| created_at | DATETIME | 创建时间 | NOT NULL |
+| updated_at | DATETIME | 更新时间 | NOT NULL |
 
 ### 14. `study_plan` 学习计划表
 | 字段 | 类型 | 说明 | 约束 |
@@ -201,12 +209,23 @@ sys_user ── note_note ── note_category_rel ── note_category
 | is_deleted | TINYINT | 逻辑删除 | DEFAULT 0 |
 | created_at | DATETIME | 创建时间 | NOT NULL |
 | updated_at | DATETIME | 更新时间 | NOT NULL |
+
+### 15. `reading_record` 阅读记录表
 | 字段 | 类型 | 说明 | 约束 |
 |------|------|------|------|
 | id | BIGINT | 主键 | PK |
 | user_id | BIGINT | 所属用户 | NOT NULL, INDEX |
-| name | VARCHAR(50) | 分类名称 | NOT NULL |
-| sort_order | INT | 排序 | DEFAULT 0 |
+| book_title | VARCHAR(255) | 书名 | NOT NULL |
+| author | VARCHAR(200) | 作者 | |
+| cover_url | VARCHAR(500) | 封面图 | |
+| total_chapters | INT | 总章节数 | DEFAULT 0 |
+| current_chapter | INT | 当前章节 | DEFAULT 0 |
+| progress | INT | 阅读进度 0-100 | DEFAULT 0 |
+| status | TINYINT | 状态（0未读 1在读 2读完）| DEFAULT 0 |
+| notes | TEXT | 阅读笔记 | |
+| start_date | DATE | 开始阅读日期 | |
+| end_date | DATE | 读完日期 | |
+| is_deleted | TINYINT | 逻辑删除 | DEFAULT 0 |
 | created_at | DATETIME | 创建时间 | NOT NULL |
 | updated_at | DATETIME | 更新时间 | NOT NULL |
 
@@ -222,7 +241,8 @@ sys_user ── note_note ── note_category_rel ── note_category
      ├── file_resource ── file_category
      ├── diary_entry
      ├── bookmark_url ── bookmark_category
-     └── study_plan
+     ├── study_plan
+     └── reading_record
 ```
 
 ## 索引策略
@@ -239,10 +259,11 @@ sys_user ── note_note ── note_category_rel ── note_category
 | diary_entry | idx_user_id_date / idx_date | NORMAL | 用户+日期查询 |
 | bookmark_url | idx_user_id / idx_category_id | NORMAL | 用户/分类查询 |
 | study_plan | idx_user_id | NORMAL | 用户查询 |
+| reading_record | idx_user_id | NORMAL | 用户查询 |
 
 ---
 
 ## 第三阶段 — 待扩展表
 - **journal_entry**: user_id, title, content(MD), entry_date, mood
 - **bookmark**: user_id, title, url, icon, category_id, tags
-- **reading_record**: user_id, book_title, author, current_chapter, progress(0-100), notes
+<!-- reading_record 已实现 -->

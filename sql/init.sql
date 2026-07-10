@@ -222,3 +222,26 @@ CREATE TABLE IF NOT EXISTS `study_plan` (
     PRIMARY KEY (`id`),
     INDEX `idx_user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='学习计划表';
+
+-- ========================================
+-- 15. 阅读记录表
+-- ========================================
+CREATE TABLE IF NOT EXISTS `reading_record` (
+    `id`              BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `user_id`         BIGINT       NOT NULL COMMENT '所属用户',
+    `book_title`      VARCHAR(255) NOT NULL COMMENT '书名',
+    `author`          VARCHAR(200) DEFAULT NULL COMMENT '作者',
+    `cover_url`       VARCHAR(500) DEFAULT NULL COMMENT '封面图',
+    `total_chapters`  INT          NOT NULL DEFAULT 0 COMMENT '总章节数',
+    `current_chapter` INT          NOT NULL DEFAULT 0 COMMENT '当前章节',
+    `progress`        INT          NOT NULL DEFAULT 0 COMMENT '阅读进度 0-100',
+    `status`          TINYINT      NOT NULL DEFAULT 0 COMMENT '状态 0-未读 1-在读 2-读完',
+    `notes`           TEXT         DEFAULT NULL COMMENT '阅读笔记',
+    `start_date`      DATE         DEFAULT NULL COMMENT '开始阅读日期',
+    `end_date`        DATE         DEFAULT NULL COMMENT '读完日期',
+    `is_deleted`      TINYINT      NOT NULL DEFAULT 0 COMMENT '逻辑删除',
+    `created_at`      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_at`      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    INDEX `idx_user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='阅读记录表';

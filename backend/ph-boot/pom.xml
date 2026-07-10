@@ -53,6 +53,10 @@
             <groupId>com.personalhub</groupId>
             <artifactId>ph-studyplan</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.personalhub</groupId>
+            <artifactId>ph-reading</artifactId>
+        </dependency>
 
         <!-- MySQL（仅运行时需要） -->
         <dependency>

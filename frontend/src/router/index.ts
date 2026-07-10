@@ -36,6 +36,9 @@ const router = createRouter({
         { path: 'study-plans', name: 'StudyPlanList', component: () => import('@/views/studyplan/StudyPlanList.vue') },
         { path: 'study-plans/new', name: 'StudyPlanCreate', component: () => import('@/views/studyplan/StudyPlanForm.vue') },
         { path: 'study-plans/:id/edit', name: 'StudyPlanEdit', component: () => import('@/views/studyplan/StudyPlanForm.vue') },
+        { path: 'readings', name: 'ReadingList', component: () => import('@/views/reading/ReadingList.vue') },
+        { path: 'readings/new', name: 'ReadingCreate', component: () => import('@/views/reading/ReadingForm.vue') },
+        { path: 'readings/:id/edit', name: 'ReadingEdit', component: () => import('@/views/reading/ReadingForm.vue') },
         { path: 'files', name: 'FileList', component: () => import('@/views/files/FileList.vue') },
         { path: 'files/categories', name: 'FileCategories', component: () => import('@/views/files/FileCategoryManage.vue') }
       ]

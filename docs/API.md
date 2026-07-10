@@ -215,3 +215,21 @@
 ### 学习记录关联
 `study_record` 表新增 `plan_id` 字段，学习记录支持关联学习计划。
 **POST /api/study-records** 新增可选字段: `planId`
+
+### 十四、阅读记录 `/api/readings`
+| 方法 | 路径 | 说明 | 认证 |
+|------|------|------|------|
+| GET | /api/readings | 记录列表（分页）| 是 |
+| GET | /api/readings/{id} | 详情 | 是 |
+| POST | /api/readings | 新建 | 是 |
+| PUT | /api/readings/{id} | 编辑 | 是 |
+| DELETE | /api/readings/{id} | 删除 | 是 |
+
+**GET /api/readings** 参数: page, size, keyword, status
+
+**POST /api/readings**
+```json
+{"bookTitle":"深入理解Java虚拟机","author":"周志明","totalChapters":20,"currentChapter":5,"progress":25,"status":1,"notes":"经典好书"}
+```
+
+**PUT /api/readings/{id}** — 同 POST 请求体

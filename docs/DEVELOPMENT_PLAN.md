@@ -17,7 +17,8 @@
 | 11 | 日记模块 | ✅ |
 | 12 | 收藏夹模块 — ph-bookmark 模块 + 前端 BookmarkList/BookmarkForm/BookmarkCategoryManage | ✅ |
 | 13 | 学习计划模块 — ph-studyplan 模块 + study_record 追加 plan_id | ✅ |
-| - | 后续：阅读记录 | 🔲 |
+| 14 | 阅读记录模块 — ph-reading 模块 | ✅ |
+| - | 第二阶段全部完成！🎉 | |
 
 ## 各步文件清单
 
@@ -60,5 +61,8 @@ SpringDoc OpenAPI 2.6.0 / 所有 Controller/DTO/VO 注解 / OpenApiConfig(common
 ### Step 13 — 学习计划模块
 `ph-studyplan`模块 + `sql/init.sql`(新增study_plan表+study_record追加plan_id) / 前端 StudyPlanList(进度条)+StudyPlanForm / 路由+导航
 
-### 后续（第二阶段）
-阅读记录 / Dashboard & 数据统计 / 全局搜索 / 标签系统
+### Step 14 — 阅读记录模块
+`ph-reading`模块 + `sql/init.sql`(新增reading_record表) / 前端 ReadingList(书籍卡片)+ReadingForm(章节/进度) / 路由+导航
+
+### 后续（第三阶段）
+Dashboard & 数据统计 / 全局搜索 / 标签系统
