@@ -3,6 +3,7 @@ import { useAuthStore } from '@/store/authStore'
 import { useRouter } from 'vue-router'
 import { LayoutDashboard, FileText, BookOpen, CheckSquare, PenLine, Bookmark, Target, BookMarked, FolderOpen, Grid3X3, Tags, Trash2, Search, BarChart3, Plus, Github, Sun, Moon, Bell, Palette } from 'lucide-vue-next'
 import { ref, onMounted } from 'vue'
+import CommandPalette from './CommandPalette.vue'
 
 const authStore = useAuthStore()
 const router = useRouter()
@@ -241,6 +242,7 @@ function handleQuickCreate(cmd: string) {
         </div>
       </main>
     </div>
+    <CommandPalette />
   </div>
 </template>
 
