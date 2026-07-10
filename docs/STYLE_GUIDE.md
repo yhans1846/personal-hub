@@ -180,53 +180,144 @@ frontend/src/
 
 ## UI/UX 设计原则
 
-本项目不是企业后台，而是个人知识管理系统。设计参考 Notion、Linear、Obsidian、GitHub、Raycast。
+本项目不是企业后台，而是**个人知识管理系统**。设计参考 Notion、Linear、Raycast、Apple HIG。
 
 ### 核心调性
-- **简洁现代**、大量留白，适合长时间阅读和写作
-- **禁止**传统 Admin 模板视觉风格（灰底白卡、密集表格、深色侧栏大菜单）
-- **内容优先**：笔记、学习、阅读体验是核心，功能性控件退后
+- **简洁、专注、温暖、高级** — 不追求炫酷动画和复杂视觉
+- **长时间使用不疲劳** — 大量留白、舒适阅读体验、极低学习成本
+- **内容优先** — 笔记、学习、阅读体验是核心，功能性控件退后
+- **禁止** 传统 Admin 模板风格（灰底白卡、密集表格、深色大菜单）
 
-### 布局
-- **Dashboard 优先**：首页是知识管理概览，不是数据管理页
-- **减少表格**：优先使用卡片网格（Card Grid）、列表（List）、时间线（Timeline）
-- 响应式设计，桌面为主，兼顾平板
+### 整体布局
+```
+┌──────────────────────────────────────┐
+│ Logo        Search          User     │ ← 56px
+├────────────┬─────────────────────────┤
+│            │                         │
+│ Sidebar    │     Main Content        │
+│  240px     │    max-width: 1600px    │
+│            │     padding: 32px       │
+│            │                         │
+└────────────┴─────────────────────────┘
+```
 
-### 视觉 Token
-| 属性 | 值 |
-|------|-----|
-| 圆角（容器级） | 12px (`--radius-lg`) |
-| 圆角（组件级） | 6px (`--radius-sm`) |
-| 阴影 | 柔和浅阴影 `0 1px 3px rgba(0,0,0,0.06)` |
-| 间距体系 | 4 / 8 / 12 / 16 / 24 / 32 / 40 / 48 px |
-| 字体 | 系统字体栈 |
-| 阅读区最大宽度 | 800px (`--reading-max-width`) |
+### 侧边栏规范
+- 三段分组：**工作区**（首页/笔记/学习记录/待办/日记/收藏夹/计划/阅读/文件）、**管理**（分类/标签/回收站）、**统计**
+- 一级菜单：14px/500w/40px高/圆角12px，**激活态：实心蓝色背景+白色文字图标**
+- 二级菜单：13px/400w/灰色/缩进24px
+- 分组标题：11px/600w/灰色/大写
 
-### 色彩体系（CSS 变量定义在 `styles/global.css`）
-- **浅色**：背景 `#f8f9fa` → 卡片 `#ffffff`，文字 `#1a1a2e`
-- **深色**：背景 `#0d1117`（GitHub Dark）→ 卡片 `#161b22`，文字 `#e6edf3`
-- **强调色**：`#3b82f6`（浅色）/ `#58a6ff`（深色）
+### 颜色规范（CSS 变量定义在 `styles/global.css`）
 
-### 组件使用规范（Element Plus）
-- 使用 Element Plus 但通过 `styles/global.css` 全局覆盖提升质感
-- 按钮：flat/text 风格，无渐变/强阴影
-- 输入框：大圆角、淡边框
+| Token | 浅色 | 深色 |
+|-------|------|------|
+| `--accent` | `#4F7BFF` | `#60A5FA` |
+| `--accent-hover` | `#5B86FF` | `#93C5FD` |
+| `--bg-body` | `#F8FAFC` | `#0B1120` |
+| `--bg-card` | `#FFFFFF` | `#1E293B` |
+| `--border-color` | `#EAEAEA` | `#334155` |
+| `--text-primary` | `#0F172A` | `#F1F5F9` |
+| `--text-secondary` | `#64748B` | `#94A3B8` |
+| `--success` | `#22C55E` | `#34D399` |
+| `--warning` | `#F59E0B` | `#FBBF24` |
+| `--danger` | `#EF4444` | `#F87171` |
+
+**强调色支持 5 种切换**：蓝色 `#4F7BFF` / 紫色 `#8B5CF6` / 青色 `#06B6D4` / 橙色 `#F97316` / 绿色 `#10B981`，通过 `data-accent` 属性切换。
+
+### 字体与字号
+
+| 类型 | 大小 | 字重 |
+|------|------|------|
+| 页面标题 | 24px (text-2xl) | 600 |
+| 卡片标题 | 16px (text-base) | 600 |
+| 正文 | 14px (text-sm) | 400 |
+| 辅助文字 | 13px | 400 |
+| 标签 | 12px (text-xs) | 500 |
+
+字体栈：系统字体（SF Pro / Noto Sans SC / Segoe UI），等宽字体用 SF Mono / Fira Code。
+
+### 间距体系（8px 基准）
+`4 / 8 / 12 / 16 / 20 / 24 / 32 / 40 / 48px`，对应 `--sp-1` 至 `--sp-12`。
+
+### 卡片设计（统一，禁止各页面不同）
+- 圆角：12px（`--radius-lg`，容器级）/ 8px（`--radius-sm`，组件级）
+- 边框：`1px solid var(--border-color)`
+- 阴影：`--shadow-md`（`0 2px 8px rgba(0,0,0,0.06)`）
+- Hover：`transform: translateY(-2px)` + `--shadow-lg`
+
+### 按钮规范
+- 主按钮：Filled，主色 `var(--accent)`
+- 次按钮：Outlined（透明背景，hover 时变灰）
+- 危险按钮：红色
+- 禁止使用 Element Plus 默认蓝色
+
+### 图标规范
+- 统一使用 **lucide-vue-next**（已迁移为 `@lucide/vue`）
+- 禁止混用 Element Icon / Heroicons / Tabler / Remix
+- 图标尺寸：导航 18px、操作 14px、空状态 48px
+
+### 交互规范
+- 所有可点击元素：`cursor: pointer` + `transition: 200ms ease`
+- 输入框 Focus：蓝色边框（`2px var(--accent)` inset）
+- 卡片 Hover：`translateY(-2px)` + 阴影提升
+- 按钮 Hover：颜色渐变（浅色加深）
+- 操作按钮 hover 才显示（减少视觉噪音）
+
+### 空状态规范
+- **禁止** 纯文字 "暂无数据"
+- 必须包含：SVG 插画 + 引导文案 + 操作按钮
+- 使用 `<EmptyState>` 组件，传入 `illustration` 参数选择插画主题
+
+### 共享组件（`src/components/`）
+| 组件 | 用途 | Props |
+|------|------|-------|
+| `EmptyState` | 列表空状态 | `icon`, `text`, `actionLabel?`, `illustration?` |
+| `StatCard` | Dashboard 统计卡片 | `icon`, `value`, `label`, `color?` |
+| `PageHeader` | 页面标题 | `title`, `subtitle?`, 插槽 |
+| `CommandPalette` | Ctrl+K 全局搜索 | 全局快捷键 |
+
+### 动画标准
+- 路由过渡：`page-fade` 淡入淡出（200ms）
+- 收藏按钮：`fav-pop` 弹跳动效（350ms cubic-bezier）
+- 骨架屏：`pulse` 闪烁（1.5s）
+- 侧边栏展开（移动端）：slide 250ms ease
+
+### 响应式断点
+| 断点 | 行为 |
+|------|------|
+| < 768px | 侧边栏折叠为 overlay + 汉堡菜单，Dashboard 单列，Topbar 精简 |
+| < 1024px | Topbar 文字隐藏，统计卡片 2 列 |
+
+### Element Plus 使用规范
+- 全局安装 `element-plus`，通过 `styles/global.css` 覆盖主题变量
+- 不使用 SCSS 主题构建（CSS 变量覆盖更简单）
+- 按钮：flat/text 风格，无渐变强阴影
+- 输入框：圆角 8px、淡边框、focus 蓝色描边
 - 表格：仅数据密集型场景保留，边框最小化
-- 卡片：纯白（浅色）/ 深灰（深色），悬浮时阴影提升
+- 表单：`label-position="top"` 而非左侧标签
+- 对话框：圆角 16px、大阴影
+- 分页：简约风格，激活态 accent 色
+- 菜单：borderless，自定义 item hover/active
 
-### Vue 组件编写检查清单
-1. 优先卡片网格（card grid）/ 列表（list）/ 时间线（timeline），不用 table
-2. 卡片需悬浮反馈（hover shadow）
-3. 操作按钮 hover 才显示（减少视觉噪音）
-4. 标题/搜索/筛选在顶部统一区域
-5. 表单使用 `label-position="top"` 而非左侧
-6. 深色模式通过 `data-theme="dark"` 切换
-7. 统一骨架屏加载动画
+### 深色模式
+- 通过 `data-theme="dark"` 属性切换，CSS 变量自动适配
+- 初始跟随系统 `prefers-color-scheme: dark`
+- 手动切换后持久化到 `localStorage`（`theme-preference` 键）
+- 支持用户手动覆盖系统偏好
+
+### Checklist（新增页面时对照）
+1. ✅ 使用 `<PageHeader>` + `<EmptyState>` 共享组件
+2. ✅ 卡片网格/列表优先，不用 table
+3. ✅ 卡片 hover 反馈（translateY + shadow）
+4. ✅ 深色模式验证
+5. ✅ 响应式适配（768px 断点）
+6. ✅ 骨架屏加载状态
+7. ✅ 统一的页面结构（header → toolbar → list → pagination）
 
 ### 相关文件
-- 设计 Token 变量：`frontend/src/styles/global.css`
-- Element Plus 覆盖：同上文件
-- 深色模式检测：`frontend/src/main.ts` 中自动跟随系统偏好
+- 设计 Token / Element Plus 覆盖：`frontend/src/styles/global.css`
+- 共享组件：`frontend/src/components/`
+- 深色/强调色切换：`frontend/src/main.ts`
 
 ---
 

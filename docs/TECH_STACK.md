@@ -38,11 +38,16 @@
 | Pinia | 最新 | 状态管理 |
 | Axios | 最新 | HTTP 请求 |
 | Element Plus | 最新 | UI 组件库 |
+| lucide-vue-next / @lucide/vue | 最新 | 图标库（统一图标源） |
+| md-editor-v3 | 最新 | Markdown 编辑器组件 |
+| ECharts | 6.x | 数据可视化图表 |
 
 ### 前端约定
 - 全部 Vue 3 Composition API（`<script setup lang="ts">`）
 - 全部 TypeScript
 - 包管理器用 pnpm
+- 图标统一使用 lucide-vue-next（禁止混用 Element Icon / Heroicons 等）
+- UI 主题通过 `styles/global.css` CSS 变量覆盖，不修改 Element Plus 源代码
 
 ## 开发工具
 
