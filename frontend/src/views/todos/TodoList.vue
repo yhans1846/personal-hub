@@ -1,19 +1,38 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { getTodoList, deleteTodo, toggleDone } from '@/api/todoApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Plus, CheckCircle, Pencil, Trash2, Calendar } from 'lucide-vue-next'
+import { Search, Plus, CheckCircle, Pencil, Trash2, Calendar, GripVertical } from 'lucide-vue-next'
 import { EmptyState, PageHeader } from '@/components'
 import type { TodoVO, TodoQuery } from '@/types/todo'
+import Sortable from 'sortablejs'
 
 const router = useRouter()
 const list = ref<TodoVO[]>([])
 const total = ref(0)
 const loading = ref(false)
 const query = ref<TodoQuery>({ page: 1, size: 20, keyword: '' })
+const listRef = ref<HTMLElement | null>(null)
+let sortable: Sortable | null = null
 
-onMounted(() => fetchList())
+onMounted(async () => {
+  await fetchList()
+  await nextTick()
+  if (listRef.value) {
+    sortable = Sortable.create(listRef.value, {
+      animation: 200,
+      handle: '.drag-handle',
+      ghostClass: 'todo-item--ghost',
+      onEnd: (evt) => {
+        const item = list.value.splice(evt.oldIndex!, 1)[0]
+        list.value.splice(evt.newIndex!, 0, item)
+      }
+    })
+  }
+})
+
+onUnmounted(() => { sortable?.destroy() })
 
 async function fetchList() {
   loading.value = true
@@ -86,8 +105,9 @@ const doneOptions = [
 
     <EmptyState v-else-if="list.length === 0" :icon="CheckCircle" illustration="todo" text="没有待办任务" action-label="新建任务" :action-icon="Plus" @action="goCreate" />
 
-    <div v-else class="todo-list">
+    <div v-else ref="listRef" class="todo-list">
       <div v-for="todo in list" :key="todo.id" class="todo-item" :class="{ 'todo-item--done': todo.isDone === 1 }">
+        <div class="drag-handle" title="拖拽排序"><GripVertical :size="14" /></div>
         <label class="todo-checkbox" @click="handleToggleDone(todo.id)">
           <div class="todo-check" :class="{ checked: todo.isDone === 1 }">
             <CheckCircle v-if="todo.isDone === 1" :size="12" stroke="#fff" />
@@ -137,7 +157,13 @@ const doneOptions = [
   transition: all var(--transition);
 }
 .todo-item:hover { box-shadow: var(--shadow-sm); border-color: var(--accent-border); }
+.todo-item:active { cursor: grabbing; }
 .todo-item--done { opacity: 0.6; }
+
+.drag-handle { padding: 6px 2px; cursor: grab; opacity: 0; transition: opacity var(--transition); flex-shrink: 0; color: var(--text-tertiary); display: flex; align-items: center; }
+.todo-item:hover .drag-handle { opacity: 0.5; }
+.drag-handle:hover { opacity: 0.9 !important; }
+.todo-item--ghost { opacity: 0.3; border: 1px dashed var(--accent) !important; }
 
 .todo-checkbox { padding-top: 2px; cursor: pointer; flex-shrink: 0; }
 .todo-check { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--border-color); display: flex; align-items: center; justify-content: center; transition: all var(--transition); }
