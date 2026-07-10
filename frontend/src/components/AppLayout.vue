@@ -1,12 +1,17 @@
 <script setup lang="ts">
 import { useAuthStore } from '@/store/authStore'
 import { useRouter } from 'vue-router'
-import { LayoutDashboard, FileText, BookOpen, CheckSquare, PenLine, Bookmark, Target, BookMarked, FolderOpen, Grid3X3, Tags, Trash2, Search, BarChart3, Plus, Github, Sun, Moon, Bell, Palette } from 'lucide-vue-next'
+import { LayoutDashboard, FileText, BookOpen, CheckSquare, PenLine, Bookmark, Target, BookMarked, FolderOpen, Grid3X3, Tags, Trash2, Search, BarChart3, Plus, Github, Sun, Moon, Bell, Palette, Menu, X } from 'lucide-vue-next'
 import { ref, onMounted } from 'vue'
 import CommandPalette from './CommandPalette.vue'
 
 const authStore = useAuthStore()
 const router = useRouter()
+
+const sidebarOpen = ref(false)
+
+function toggleSidebar() { sidebarOpen.value = !sidebarOpen.value }
+function closeSidebar() { sidebarOpen.value = false }
 
 // 主题切换
 const isDark = ref(document.documentElement.getAttribute('data-theme') === 'dark')
@@ -56,6 +61,9 @@ function handleQuickCreate(cmd: string) {
     <!-- 顶部栏 -->
     <header class="topbar">
       <div class="topbar-left">
+        <button class="hamburger" @click="toggleSidebar" aria-label="菜单">
+          <Menu :size="20" />
+        </button>
         <router-link to="/" class="topbar-brand">
           <svg class="brand-logo" width="22" height="22" viewBox="0 0 22 22" fill="none">
             <rect x="2" y="2" width="9" height="9" rx="2.5" fill="var(--accent)" opacity="0.55" />
@@ -146,8 +154,15 @@ function handleQuickCreate(cmd: string) {
     </header>
 
     <div class="app-body">
+      <!-- 侧边栏遮罩（移动端） -->
+      <div class="sidebar-overlay" :class="{ open: sidebarOpen }" @click="closeSidebar" />
+
       <!-- 侧边栏 -->
-      <aside class="sidebar">
+      <aside class="sidebar" :class="{ open: sidebarOpen }">
+        <div class="sidebar-header">
+          <span class="sidebar-title">导航</span>
+          <button class="sidebar-close" @click="closeSidebar"><X :size="18" /></button>
+        </div>
         <nav class="sidebar-nav">
           <div class="sidebar-section">
             <div class="section-header">工作区</div>
@@ -262,7 +277,15 @@ function handleQuickCreate(cmd: string) {
   flex-shrink: 0;
   z-index: 100;
 }
-.topbar-left { display: flex; align-items: center; }
+.topbar-left { display: flex; align-items: center; gap: var(--sp-2); }
+.hamburger {
+  display: none; width: 32px; height: 32px;
+  align-items: center; justify-content: center;
+  background: none; border: none; color: var(--text-secondary);
+  cursor: pointer; border-radius: var(--radius-sm);
+  transition: all var(--transition);
+}
+.hamburger:hover { background: var(--bg-hover); color: var(--text-primary); }
 .topbar-brand {
   display: flex; align-items: center; gap: var(--sp-2);
   color: var(--text-primary); font-weight: 600; font-size: var(--text-base); text-decoration: none;
@@ -307,14 +330,18 @@ function handleQuickCreate(cmd: string) {
 .app-body { display: flex; flex: 1; overflow: hidden; }
 
 /* ============ 侧边栏 ============ */
+.sidebar-overlay {
+  display: none; position: fixed; inset: 0; z-index: 90;
+  background: rgba(0,0,0,0.4);
+}
 .sidebar {
   width: var(--sidebar-width); background: var(--bg-sidebar);
   border-right: 1px solid var(--border-color);
   overflow-y: auto; flex-shrink: 0; padding: var(--sp-4) 0;
 }
+.sidebar-header { display: none; }
 .sidebar-nav { display: flex; flex-direction: column; }
 
-/* 侧边栏分组 */
 .sidebar-section { margin-bottom: var(--sp-2); }
 .section-header {
   padding: var(--sp-3) var(--sp-4) var(--sp-1) var(--sp-4);
@@ -323,8 +350,6 @@ function handleQuickCreate(cmd: string) {
   text-transform: uppercase; letter-spacing: 0.5px;
   user-select: none;
 }
-
-/* 导航项 */
 .nav-item {
   display: flex; align-items: center; gap: var(--sp-3);
   height: 40px; padding: 0 var(--sp-4); margin: 0 var(--sp-2);
@@ -343,4 +368,45 @@ function handleQuickCreate(cmd: string) {
 /* ============ 主内容 ============ */
 .main-content { flex: 1; overflow-y: auto; padding: var(--sp-8); }
 .content-container { max-width: var(--content-max-width); margin: 0 auto; width: 100%; }
+
+/* ============ 响应式：平板 ============ */
+@media (max-width: 1024px) {
+  .quick-create-btn span { display: none; }
+  .user-name { display: none; }
+}
+
+/* ============ 响应式：移动端 ============ */
+@media (max-width: 768px) {
+  .hamburger { display: flex; }
+  .topbar { padding: 0 var(--sp-3); }
+  .topbar-center { max-width: none; margin: 0 var(--sp-2); }
+  .search-hint { display: none; }
+  .topbar-actions { margin: 0 var(--sp-2); gap: var(--sp-1); }
+  .quick-create-btn span { display: none; }
+  .user-name { display: none; }
+  .brand-text { display: none; }
+  .main-content { padding: var(--sp-4); }
+
+  .sidebar-overlay { display: block; opacity: 0; visibility: hidden; transition: all var(--transition); }
+  .sidebar-overlay.open { opacity: 1; visibility: visible; }
+
+  .sidebar {
+    position: fixed; top: 0; left: 0; bottom: 0; z-index: 95;
+    transform: translateX(-100%); transition: transform 250ms ease;
+    padding-top: 0;
+  }
+  .sidebar.open { transform: translateX(0); }
+  .sidebar-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: var(--sp-3) var(--sp-4);
+    border-bottom: 1px solid var(--border-color);
+  }
+  .sidebar-title { font-size: var(--text-sm); font-weight: 600; color: var(--text-primary); }
+  .sidebar-close {
+    background: none; border: none; color: var(--text-secondary);
+    cursor: pointer; padding: 4px; border-radius: var(--radius-sm);
+    transition: all var(--transition);
+  }
+  .sidebar-close:hover { background: var(--bg-hover); color: var(--text-primary); }
+}
 </style>

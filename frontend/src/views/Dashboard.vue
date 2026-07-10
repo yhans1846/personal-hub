@@ -349,4 +349,13 @@ const statCards = [
 .inline-tag { display: inline-block; padding: 0 6px; border-radius: 3px; background: var(--accent-light); color: var(--accent); font-size: var(--text-xs); }
 .todo-check { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--border-color); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all var(--transition); }
 .todo-check.checked { background: var(--accent); border-color: var(--accent); }
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .welcome-section { flex-direction: column; align-items: flex-start; gap: var(--sp-3); }
+  .welcome-section h1 { font-size: var(--text-xl); }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .dashboard-grid { grid-template-columns: 1fr; }
+  .skeleton-row { grid-template-columns: repeat(2, 1fr); }
+}
 </style>
