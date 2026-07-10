@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { getTodoList, deleteTodo, toggleDone } from '@/api/todoApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -12,7 +12,8 @@ const router = useRouter()
 const list = ref<TodoVO[]>([])
 const total = ref(0)
 const loading = ref(false)
-const query = ref<TodoQuery>({ page: 1, size: 20, keyword: '' })
+const query = ref<TodoQuery>({ page: 1, size: 9999, keyword: '' })
+const showDone = ref(false)
 const listRef = ref<HTMLElement | null>(null)
 let sortable: Sortable | null = null
 
@@ -44,6 +45,9 @@ async function fetchList() {
     loading.value = false
   }
 }
+
+const pendingList = computed(() => list.value.filter(t => t.isDone !== 1))
+const doneList = computed(() => list.value.filter(t => t.isDone === 1))
 
 function onSearch() { query.value.page = 1; fetchList() }
 function onPageChange(page: number) { query.value.page = page; fetchList() }
@@ -105,31 +109,58 @@ const doneOptions = [
 
     <EmptyState v-else-if="list.length === 0" :icon="CheckCircle" illustration="todo" text="没有待办任务" action-label="新建任务" :action-icon="Plus" @action="goCreate" />
 
-    <div v-else ref="listRef" class="todo-list">
-      <div v-for="todo in list" :key="todo.id" class="todo-item" :class="{ 'todo-item--done': todo.isDone === 1 }">
-        <div class="drag-handle" title="拖拽排序"><GripVertical :size="14" /></div>
-        <label class="todo-checkbox" @click="handleToggleDone(todo.id)">
-          <div class="todo-check" :class="{ checked: todo.isDone === 1 }">
-            <CheckCircle v-if="todo.isDone === 1" :size="12" stroke="#fff" />
+    <div v-else class="todos-wrapper">
+      <!-- 未完成 -->
+      <div ref="listRef" class="todo-list">
+        <div v-for="todo in pendingList" :key="todo.id" class="todo-item">
+          <div class="drag-handle"><GripVertical :size="14" /></div>
+          <label class="todo-checkbox" @click="handleToggleDone(todo.id)">
+            <div class="todo-check"><CheckCircle v-if="todo.isDone === 1" :size="12" stroke="#fff" /></div>
+          </label>
+          <div class="todo-body" @click="goEdit(todo.id)">
+            <div class="todo-header">
+              <span class="todo-title">{{ todo.title }}</span>
+              <el-tag :type="priorityOptions.find(p => p.value === todo.priority)?.type || 'info'" size="small">{{ todo.priorityLabel }}</el-tag>
+            </div>
+            <div v-if="todo.content" class="todo-desc">{{ todo.content.slice(0, 80) }}</div>
+            <div class="todo-footer">
+              <span v-if="todo.dueDate" class="todo-date" :class="{ 'text-danger': todo.isOverdue }"><Calendar :size="12" /> {{ todo.dueDate }}</span>
+            </div>
           </div>
-        </label>
-        <div class="todo-body" @click="goEdit(todo.id)">
-          <div class="todo-header">
-            <span class="todo-title" :class="{ 'text-line-through': todo.isDone === 1 }">{{ todo.title }}</span>
-            <el-tag :type="priorityOptions.find(p => p.value === todo.priority)?.type || 'info'" size="small">
-              {{ todo.priorityLabel }}
-            </el-tag>
-          </div>
-          <div v-if="todo.content" class="todo-desc">{{ todo.content.slice(0, 80) }}</div>
-          <div class="todo-footer">
-            <span v-if="todo.dueDate" class="todo-date" :class="{ 'text-danger': todo.isOverdue }">
-              <Calendar :size="12" /> {{ todo.dueDate }}
-            </span>
+          <div class="todo-actions">
+            <button class="icon-btn" @click.stop="goEdit(todo.id)"><Pencil :size="14" /></button>
+            <button class="icon-btn icon-btn--danger" @click.stop="handleDelete(todo.id)"><Trash2 :size="14" /></button>
           </div>
         </div>
-        <div class="todo-actions">
-          <button class="icon-btn" @click.stop="goEdit(todo.id)"><Pencil :size="14" /></button>
-          <button class="icon-btn icon-btn--danger" @click.stop="handleDelete(todo.id)"><Trash2 :size="14" /></button>
+      </div>
+
+      <!-- 已完成 -->
+      <div v-if="doneList.length > 0" class="done-section">
+        <div class="done-header" @click="showDone = !showDone">
+          <CheckCircle :size="14" class="done-icon" />
+          <span>已完成 {{ doneList.length }}</span>
+          <span class="done-toggle">{{ showDone ? '收起' : '展开' }}</span>
+        </div>
+        <div v-show="showDone" class="todo-list">
+          <div v-for="todo in doneList" :key="todo.id" class="todo-item todo-item--done">
+            <div class="drag-handle" style="visibility:hidden"><GripVertical :size="14" /></div>
+            <label class="todo-checkbox" @click="handleToggleDone(todo.id)">
+              <div class="todo-check checked"><CheckCircle :size="12" stroke="#fff" /></div>
+            </label>
+            <div class="todo-body" @click="goEdit(todo.id)">
+              <div class="todo-header">
+                <span class="todo-title text-line-through">{{ todo.title }}</span>
+                <el-tag :type="priorityOptions.find(p => p.value === todo.priority)?.type || 'info'" size="small">{{ todo.priorityLabel }}</el-tag>
+              </div>
+              <div class="todo-footer">
+                <span v-if="todo.dueDate" class="todo-date"><Calendar :size="12" /> {{ todo.dueDate }}</span>
+              </div>
+            </div>
+            <div class="todo-actions">
+              <button class="icon-btn" @click.stop="goEdit(todo.id)"><Pencil :size="14" /></button>
+              <button class="icon-btn icon-btn--danger" @click.stop="handleDelete(todo.id)"><Trash2 :size="14" /></button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -184,4 +215,10 @@ const doneOptions = [
 .icon-btn { background: none; border: none; cursor: pointer; padding: 6px; border-radius: var(--radius-sm); color: var(--text-tertiary); transition: all var(--transition); display: flex; align-items: center; }
 .icon-btn:hover { color: var(--accent); background: var(--accent-light); }
 .icon-btn--danger:hover { color: var(--danger); background: var(--danger-light); }
+
+.done-section { margin-top: var(--sp-4); }
+.done-header { display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-3) var(--sp-4); cursor: pointer; border-radius: var(--radius-md); transition: background var(--transition); font-size: var(--text-sm); color: var(--text-secondary); user-select: none; }
+.done-header:hover { background: var(--bg-hover); }
+.done-icon { color: var(--success); }
+.done-toggle { margin-left: auto; font-size: var(--text-xs); color: var(--text-tertiary); }
 </style>
