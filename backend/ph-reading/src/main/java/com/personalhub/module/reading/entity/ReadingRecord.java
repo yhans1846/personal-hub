@@ -16,6 +16,8 @@ public class ReadingRecord {
     private Integer totalChapters;
     private Integer currentChapter;
     private Integer progress;
+    private Integer rating;
+    private Integer totalDuration;
     private Integer status;
     private String notes;
     private LocalDate startDate;

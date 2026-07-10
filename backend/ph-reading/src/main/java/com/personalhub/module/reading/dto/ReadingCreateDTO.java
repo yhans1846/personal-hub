@@ -18,6 +18,8 @@ public class ReadingCreateDTO {
     @Schema(description = "总章节数", example = "20") private Integer totalChapters;
     @Schema(description = "当前章节", example = "5") private Integer currentChapter;
     @Min(0) @Max(100) @Schema(description = "阅读进度 0-100", example = "25") private Integer progress;
+    @Min(1) @Max(5) @Schema(description = "评分 1-5", example = "4") private Integer rating;
+    @Schema(description = "总阅读时长（分钟）", example = "120") private Integer totalDuration;
     @Min(0) @Max(2) @Schema(description = "状态 0-未读 1-在读 2-读完", example = "1") private Integer status;
     @Schema(description = "阅读笔记") private String notes;
     @Schema(description = "开始阅读日期") private LocalDate startDate;

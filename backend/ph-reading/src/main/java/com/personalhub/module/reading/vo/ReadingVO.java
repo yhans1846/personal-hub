@@ -16,6 +16,8 @@ public class ReadingVO {
     @Schema private Integer totalChapters;
     @Schema private Integer currentChapter;
     @Schema private Integer progress;
+    @Schema private Integer rating;
+    @Schema private Integer totalDuration;
     @Schema private Integer status;
     @Schema private String statusLabel;
     @Schema private String notes;
@@ -29,6 +31,7 @@ public class ReadingVO {
         vo.setId(r.getId()); vo.setBookTitle(r.getBookTitle()); vo.setAuthor(r.getAuthor());
         vo.setCoverUrl(r.getCoverUrl()); vo.setTotalChapters(r.getTotalChapters());
         vo.setCurrentChapter(r.getCurrentChapter()); vo.setProgress(r.getProgress());
+        vo.setRating(r.getRating()); vo.setTotalDuration(r.getTotalDuration());
         vo.setStatus(r.getStatus()); vo.setNotes(r.getNotes());
         vo.setStartDate(r.getStartDate()); vo.setEndDate(r.getEndDate());
         vo.setCreatedAt(r.getCreatedAt()); vo.setUpdatedAt(r.getUpdatedAt());

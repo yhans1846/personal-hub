@@ -6,6 +6,8 @@ export interface ReadingVO {
   totalChapters: number
   currentChapter: number
   progress: number
+  rating?: number
+  totalDuration?: number
   status: number
   statusLabel: string
   notes: string
@@ -22,6 +24,8 @@ export interface ReadingCreateDTO {
   totalChapters?: number
   currentChapter?: number
   progress?: number
+  rating?: number
+  totalDuration?: number
   status?: number
   notes?: string
   startDate?: string | null

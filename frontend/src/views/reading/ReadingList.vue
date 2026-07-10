@@ -5,7 +5,7 @@ import PageHeader from '@/components/PageHeader.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import { getReadingList, deleteReading } from '@/api/readingApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Plus, Pencil, Trash2, BookOpen, Book, BookCheck, Calendar, BookMarked } from 'lucide-vue-next'
+import { Search, Plus, Pencil, Trash2, BookOpen, Book, BookCheck, Calendar, BookMarked, Star, Clock } from 'lucide-vue-next'
 import type { ReadingVO, ReadingQuery } from '@/types/reading'
 
 const router = useRouter()
@@ -71,7 +71,17 @@ const statusOptions = [
             </el-tag>
             <span class="book-chapter" v-if="book.totalChapters > 0">{{ book.currentChapter }}/{{ book.totalChapters }} 章</span>
           </div>
-          <el-progress :percentage="book.progress" :stroke-width="6" :color="book.progress >= 100 ? 'var(--success)' : 'var(--accent)'" />
+          <div class="book-footer">
+            <el-progress :percentage="book.progress" :stroke-width="6" :color="book.progress >= 100 ? 'var(--success)' : 'var(--accent)'" />
+            <div class="book-footer-right">
+              <span v-if="book.rating" class="book-rating">
+                <Star :size="12" fill="var(--warning)" color="var(--warning)" /> {{ book.rating }}/5
+              </span>
+              <span v-if="book.totalDuration" class="book-duration">
+                <Clock :size="12" /> {{ book.totalDuration }} 分钟
+              </span>
+            </div>
+          </div>
         </div>
         <div class="book-actions" @click.stop>
           <button class="icon-btn" @click.stop="goEdit(book.id)"><Pencil :size="14" /></button>
@@ -100,6 +110,10 @@ const statusOptions = [
 .book-author { font-size:var(--text-xs);color:var(--text-secondary);margin-bottom:var(--sp-2) }
 .book-meta { display:flex;align-items:center;gap:var(--sp-3);margin-bottom:var(--sp-2) }
 .book-chapter { font-size:var(--text-xs);color:var(--text-tertiary) }
+.book-footer { display:flex;align-items:center;gap:var(--sp-3) }
+.book-footer-right { display:flex;align-items:center;gap:var(--sp-2);flex-shrink:0;font-size:var(--text-xs);color:var(--text-tertiary) }
+.book-rating { display:flex;align-items:center;gap:2px }
+.book-duration { display:flex;align-items:center;gap:2px }
 .book-actions { position:absolute;top:var(--sp-3);right:var(--sp-3);display:flex;gap:var(--sp-1);opacity:0;transition:opacity var(--transition) }
 .book-card:hover .book-actions { opacity:1 }
 .icon-btn { background:none;border:none;cursor:pointer;padding:6px;border-radius:var(--radius-sm);color:var(--text-tertiary);transition:all var(--transition);display:flex }

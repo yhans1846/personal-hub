@@ -3,12 +3,12 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { createReading, updateReading, getReadingById } from '@/api/readingApi'
 import { ElMessage } from 'element-plus'
-import { ArrowLeft } from 'lucide-vue-next'
+import { ArrowLeft, Star } from 'lucide-vue-next'
 
 const route = useRoute()
 const router = useRouter()
 const isEdit = !!route.params.id
-const form = ref({ bookTitle: '', author: '', coverUrl: '', totalChapters: 0, currentChapter: 0, progress: 0, status: 0, notes: '', startDate: null as string | null, endDate: null as string | null })
+const form = ref({ bookTitle: '', author: '', coverUrl: '', totalChapters: 0, currentChapter: 0, progress: 0, rating: undefined as number | undefined, totalDuration: undefined as number | undefined, status: 0, notes: '', startDate: null as string | null, endDate: null as string | null })
 const saving = ref(false)
 
 const statusOptions = [
@@ -18,7 +18,7 @@ const statusOptions = [
 onMounted(async () => {
   if (isEdit) {
     const r = (await getReadingById(Number(route.params.id))).data.data
-    form.value = { bookTitle: r.bookTitle, author: r.author || '', coverUrl: r.coverUrl || '', totalChapters: r.totalChapters, currentChapter: r.currentChapter, progress: r.progress, status: r.status, notes: r.notes || '', startDate: r.startDate, endDate: r.endDate }
+    form.value = { bookTitle: r.bookTitle, author: r.author || '', coverUrl: r.coverUrl || '', totalChapters: r.totalChapters, currentChapter: r.currentChapter, progress: r.progress, rating: r.rating, totalDuration: r.totalDuration, status: r.status, notes: r.notes || '', startDate: r.startDate, endDate: r.endDate }
   }
 })
 
@@ -86,6 +86,23 @@ function onProgressChange(val: number) {
         </el-form-item>
         <el-row :gutter="16">
           <el-col :span="12">
+            <el-form-item label="评分">
+              <div class="star-rating">
+                <button v-for="i in 5" :key="i" class="star-btn" :class="{ active: i <= (form.rating || 0) }" @click="form.rating = i">
+                  <Star :size="18" :fill="i <= (form.rating || 0) ? 'var(--warning)' : 'none'" :color="i <= (form.rating || 0) ? 'var(--warning)' : 'var(--text-tertiary)'" />
+                </button>
+                <span v-if="!form.rating" class="star-hint">点击评分</span>
+              </div>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="阅读时长（分钟）">
+              <el-input-number v-model="form.totalDuration" :min="0" :step="10" style="width:100%" placeholder="总阅读时长" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="16">
+          <el-col :span="12">
             <el-form-item label="开始日期">
               <el-date-picker v-model="form.startDate" type="date" value-format="YYYY-MM-DD" placeholder="开始日期" style="width:100%" clearable />
             </el-form-item>
@@ -116,4 +133,9 @@ function onProgressChange(val: number) {
 .icon-btn:hover { background:var(--bg-hover);color:var(--text-primary) }
 .form-card { background:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--radius-lg);padding:var(--sp-6) }
 .progress-label { font-size:var(--text-sm);font-weight:600;margin-left:var(--sp-2) }
+.star-rating { display:flex;align-items:center;gap:2px; }
+.star-btn { background:none;border:none;cursor:pointer;padding:2px;transition:transform var(--transition); }
+.star-btn:hover { transform:scale(1.2); }
+.star-btn.active { transform:scale(1.05); }
+.star-hint { font-size:var(--text-xs);color:var(--text-tertiary);margin-left:var(--sp-2); }
 </style>
