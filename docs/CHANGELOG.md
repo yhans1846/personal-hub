@@ -6,6 +6,7 @@
 - **Accent Color 主题色切换**：支持 5 种强调色（蓝/紫/青/橙/绿），CSS 变量动态切换，localStorage 持久化
 - **Command Palette**：Ctrl+K 全局搜索面板，支持页面导航 + 跨模块内容搜索（复用全局搜索 API）
 - **响应式适配**：768px/1024px 断点，移动端侧边栏折叠+汉堡菜单，Dashboard 单列重排，卡片自适应
+- **Markdown 编辑器**：替换 textarea 为 md-editor-v3，支持工具条/MD 语法高亮/实时预览/代码块
 - **UI 设计令牌刷新**：主色 #4F7BFF、内容宽度 1600px、圆角/阴影/过渡统一
 - **侧边栏重构**：三段分组（工作区/管理/统计）+ 实心蓝色激活态
 - **共享组件库**：新建 EmptyState/StatCard/PageHeader，更新 14 个视图
