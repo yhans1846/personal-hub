@@ -3,9 +3,10 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getNoteList, deleteNote, toggleFavorite } from '@/api/noteApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Plus, FileText, Star, Trash2 } from 'lucide-vue-next'
+import { Search, Plus, FileText, Star, Trash2, Clock } from 'lucide-vue-next'
 import { EmptyState, PageHeader } from '@/components'
 import type { NoteVO, NoteQuery } from '@/types/note'
+import { estimateReadingTime } from '@/utils/readingTime'
 
 const router = useRouter()
 const list = ref<NoteVO[]>([])
@@ -75,6 +76,7 @@ async function handleToggleFavorite(note: NoteVO) {
         </div>
         <div class="note-card-meta">
           <span v-for="cat in note.categories" :key="cat.id" class="meta-tag">{{ cat.name }}</span>
+          <span class="reading-time"><Clock :size="11" /> {{ estimateReadingTime(note.content) }}</span>
         </div>
         <div class="note-card-body">
           <p class="note-card-preview">{{ note.content?.replace(/#{1,6}\s/g, '').replace(/[*`]/g, '').slice(0, 120) || '暂无内容' }}</p>
@@ -127,7 +129,8 @@ async function handleToggleFavorite(note: NoteVO) {
   40% { transform: scale(1.3); }
   100% { transform: scale(1); }
 }
-.note-card-meta { display: flex; gap: var(--sp-2); margin-bottom: var(--sp-3); flex-wrap: wrap; }
+.note-card-meta { display: flex; gap: var(--sp-2); margin-bottom: var(--sp-3); flex-wrap: wrap; align-items: center; }
+.reading-time { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; color: var(--text-tertiary); margin-left: auto; }
 .meta-tag { display: inline-block; padding: 0 6px; height: 20px; line-height: 20px; border-radius: 4px; font-size: 11px; background: var(--accent-light); color: var(--accent); }
 .meta-tag--tag { background: var(--bg-hover); color: var(--text-tertiary); }
 .meta-tag--more { background: transparent; color: var(--text-tertiary); }
