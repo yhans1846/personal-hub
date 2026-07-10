@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { getCategories, createCategory, updateCategory, deleteCategory } from '@/api/noteApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { FolderPlus, Pencil, Trash2, Folder } from 'lucide-vue-next'
 
 const list = ref<any[]>([])
 const dialogVisible = ref(false)
@@ -50,22 +51,38 @@ async function handleDelete(id: number) {
 
 <template>
   <div>
-    <div class="toolbar">
-      <h3>笔记分类管理</h3>
-      <el-button type="primary" @click="openCreate">新建分类</el-button>
+    <div class="page-header">
+      <h2>分类管理</h2>
+      <p>管理笔记分类</p>
     </div>
-    <el-table :data="list" stripe>
-      <el-table-column prop="name" label="名称" />
-      <el-table-column prop="sortOrder" label="排序" width="100" />
-      <el-table-column label="操作" width="160">
-        <template #default="{ row }">
-          <el-button size="small" text @click="openEdit(row)">编辑</el-button>
-          <el-button size="small" text type="danger" @click="handleDelete(row.id)">删除</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
 
-    <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑分类' : '新建分类'" width="400px">
+    <div class="toolbar">
+      <span class="text-secondary">{{ list.length }} 个分类</span>
+      <el-button type="primary" size="small" @click="openCreate">
+        <FolderPlus :size="14" /> 新建分类
+      </el-button>
+    </div>
+
+    <div v-if="list.length === 0" class="empty-state">
+      <div class="empty-state__icon"><Folder :size="48" /></div>
+      <div class="empty-state__text">暂无分类，创建一个吧</div>
+    </div>
+
+    <div v-else class="manage-list">
+      <div v-for="item in list" :key="item.id" class="manage-item">
+        <div class="manage-item-left">
+          <Folder :size="16" class="text-tertiary" />
+          <span class="manage-item-name">{{ item.name }}</span>
+          <span class="manage-item-meta">排序 {{ item.sortOrder }}</span>
+        </div>
+        <div class="manage-item-actions">
+          <button class="icon-btn" @click="openEdit(item)"><Pencil :size="14" /></button>
+          <button class="icon-btn icon-btn--danger" @click="handleDelete(item.id)"><Trash2 :size="14" /></button>
+        </div>
+      </div>
+    </div>
+
+    <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑分类' : '新建分类'" width="400px" top="30vh">
       <el-form>
         <el-form-item label="名称">
           <el-input v-model="form.name" />
@@ -83,11 +100,24 @@ async function handleDelete(id: number) {
 </template>
 
 <style scoped>
-.toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
+.manage-list { display: flex; flex-direction: column; gap: var(--sp-2); }
+.manage-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: var(--sp-3) var(--sp-5); background: var(--bg-card);
+  border: 1px solid var(--border-color); border-radius: var(--radius-md);
+  transition: box-shadow var(--transition);
 }
-.toolbar h3 { margin: 0; }
+.manage-item:hover { box-shadow: var(--shadow-sm); }
+.manage-item-left { display: flex; align-items: center; gap: var(--sp-3); }
+.manage-item-name { font-size: var(--text-sm); font-weight: 500; }
+.manage-item-meta { font-size: var(--text-xs); color: var(--text-tertiary); }
+.manage-item-actions { display: flex; gap: var(--sp-1); }
+.icon-btn {
+  background: none; border: none; cursor: pointer;
+  padding: 6px; border-radius: var(--radius-sm);
+  color: var(--text-tertiary); transition: all var(--transition);
+  display: flex; align-items: center;
+}
+.icon-btn:hover { color: var(--accent); background: var(--accent-light); }
+.icon-btn--danger:hover { color: var(--danger); background: var(--danger-light); }
 </style>

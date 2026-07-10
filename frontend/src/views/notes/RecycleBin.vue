@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { getNoteList, restoreNote, permanentDeleteNote } from '@/api/noteApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { Trash2 } from 'lucide-vue-next'
 import type { NoteVO } from '@/types/note'
 
 const list = ref<NoteVO[]>([])
@@ -35,17 +36,46 @@ async function handlePermanentDelete(id: number) {
 
 <template>
   <div>
-    <h3>回收站</h3>
-    <el-table :data="list" v-loading="loading" stripe>
-      <el-table-column prop="title" label="标题" />
-      <el-table-column prop="updatedAt" label="删除时间" width="180" />
-      <el-table-column label="操作" width="180">
-        <template #default="{ row }">
-          <el-button size="small" type="primary" text @click="handleRestore(row.id)">恢复</el-button>
-          <el-button size="small" type="danger" text @click="handlePermanentDelete(row.id)">永久删除</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
-    <el-empty v-if="!loading && list.length === 0" description="回收站为空" />
+    <div class="page-header">
+      <h2>回收站</h2>
+      <p>已删除的笔记可以在此恢复或永久清除</p>
+    </div>
+
+    <div v-if="loading" style="padding: 48px 0; text-align: center; color: var(--text-tertiary);">加载中...</div>
+
+    <!-- 空状态 -->
+    <div v-else-if="list.length === 0" class="empty-state">
+      <div class="empty-state__icon"><Trash2 :size="48" /></div>
+      <div class="empty-state__text">回收站为空</div>
+    </div>
+
+    <div v-else class="recycle-list">
+      <div v-for="note in list" :key="note.id" class="recycle-item">
+        <div class="recycle-item-info">
+          <span class="recycle-item-title">{{ note.title }}</span>
+          <span class="recycle-item-date">删除于 {{ note.updatedAt?.slice(0, 16)?.replace('T', ' ') }}</span>
+        </div>
+        <div class="recycle-item-actions">
+          <el-button size="small" text @click="handleRestore(note.id)">恢复</el-button>
+          <el-button size="small" text type="danger" @click="handlePermanentDelete(note.id)">永久删除</el-button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
+
+<style scoped>
+.recycle-list { display: flex; flex-direction: column; gap: var(--sp-2); }
+.recycle-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: var(--sp-4) var(--sp-5); background: var(--bg-card);
+  border: 1px solid var(--border-color); border-radius: var(--radius-md);
+  transition: box-shadow var(--transition);
+}
+.recycle-item:hover { box-shadow: var(--shadow-sm); }
+.recycle-item-info { display: flex; flex-direction: column; gap: 2px; }
+.recycle-item-title { font-size: var(--text-sm); font-weight: 500; }
+.recycle-item-date { font-size: var(--text-xs); color: var(--text-tertiary); }
+.recycle-item-actions { display: flex; gap: var(--sp-2); flex-shrink: 0; opacity: 0; transition: opacity var(--transition); }
+.recycle-item:hover .recycle-item-actions { opacity: 1; }
+</style>

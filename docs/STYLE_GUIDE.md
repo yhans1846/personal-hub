@@ -164,6 +164,58 @@ frontend/src/
 
 ---
 
+## UI/UX 设计原则
+
+本项目不是企业后台，而是个人知识管理系统。设计参考 Notion、Linear、Obsidian、GitHub、Raycast。
+
+### 核心调性
+- **简洁现代**、大量留白，适合长时间阅读和写作
+- **禁止**传统 Admin 模板视觉风格（灰底白卡、密集表格、深色侧栏大菜单）
+- **内容优先**：笔记、学习、阅读体验是核心，功能性控件退后
+
+### 布局
+- **Dashboard 优先**：首页是知识管理概览，不是数据管理页
+- **减少表格**：优先使用卡片网格（Card Grid）、列表（List）、时间线（Timeline）
+- 响应式设计，桌面为主，兼顾平板
+
+### 视觉 Token
+| 属性 | 值 |
+|------|-----|
+| 圆角（容器级） | 12px (`--radius-lg`) |
+| 圆角（组件级） | 6px (`--radius-sm`) |
+| 阴影 | 柔和浅阴影 `0 1px 3px rgba(0,0,0,0.06)` |
+| 间距体系 | 4 / 8 / 12 / 16 / 24 / 32 / 40 / 48 px |
+| 字体 | 系统字体栈 |
+| 阅读区最大宽度 | 800px (`--reading-max-width`) |
+
+### 色彩体系（CSS 变量定义在 `styles/global.css`）
+- **浅色**：背景 `#f8f9fa` → 卡片 `#ffffff`，文字 `#1a1a2e`
+- **深色**：背景 `#0d1117`（GitHub Dark）→ 卡片 `#161b22`，文字 `#e6edf3`
+- **强调色**：`#3b82f6`（浅色）/ `#58a6ff`（深色）
+
+### 组件使用规范（Element Plus）
+- 使用 Element Plus 但通过 `styles/global.css` 全局覆盖提升质感
+- 按钮：flat/text 风格，无渐变/强阴影
+- 输入框：大圆角、淡边框
+- 表格：仅数据密集型场景保留，边框最小化
+- 卡片：纯白（浅色）/ 深灰（深色），悬浮时阴影提升
+
+### Vue 组件编写检查清单
+1. 优先卡片网格（card grid）/ 列表（list）/ 时间线（timeline），不用 table
+2. 卡片需悬浮反馈（hover shadow）
+3. 操作按钮 hover 才显示（减少视觉噪音）
+4. 标题/搜索/筛选在顶部统一区域
+5. 表单使用 `label-position="top"` 而非左侧
+6. 深色模式通过 `data-theme="dark"` 切换
+7. 统一骨架屏加载动画
+
+### 相关文件
+- 设计 Token 变量：`frontend/src/styles/global.css`
+- Element Plus 覆盖：同上文件
+- 深色模式检测：`frontend/src/main.ts` 中自动跟随系统偏好
+
+---
+
 ## Git Commit
 
 ```

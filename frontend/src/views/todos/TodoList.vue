@@ -1,15 +1,16 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getTodoList, deleteTodo, toggleDone } from '@/api/todoApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { Search, Plus, CheckCircle, Pencil, Trash2, Calendar } from 'lucide-vue-next'
 import type { TodoVO, TodoQuery } from '@/types/todo'
 
 const router = useRouter()
 const list = ref<TodoVO[]>([])
 const total = ref(0)
 const loading = ref(false)
-const query = ref<TodoQuery>({ page: 1, size: 10, keyword: '' })
+const query = ref<TodoQuery>({ page: 1, size: 20, keyword: '' })
 
 onMounted(() => fetchList())
 
@@ -26,9 +27,7 @@ async function fetchList() {
 
 function onSearch() { query.value.page = 1; fetchList() }
 function onPageChange(page: number) { query.value.page = page; fetchList() }
-
 function onFilterChange() { query.value.page = 1; fetchList() }
-
 function goCreate() { router.push('/todos/new') }
 function goEdit(id: number) { router.push(`/todos/${id}/edit`) }
 
@@ -45,22 +44,13 @@ async function handleDelete(id: number) {
   fetchList()
 }
 
-/** 优先级样式 */
-function priorityType(p: number) {
-  if (p === 1) return 'danger'
-  if (p === 2) return 'warning'
-  return 'info'
-}
-
-/** 优先级标签 */
 const priorityOptions = [
-  { value: undefined, label: '全部' },
-  { value: 1, label: '高' },
-  { value: 2, label: '中' },
-  { value: 3, label: '低' }
+  { value: undefined, label: '全部', type: '' },
+  { value: 1, label: '高', type: 'danger' as const },
+  { value: 2, label: '中', type: 'warning' as const },
+  { value: 3, label: '低', type: 'info' as const }
 ]
 
-/** 完成状态标签 */
 const doneOptions = [
   { value: undefined, label: '全部' },
   { value: false, label: '未完成' },
@@ -70,9 +60,16 @@ const doneOptions = [
 
 <template>
   <div>
+    <div class="page-header">
+      <h2>待办任务</h2>
+      <p>共 {{ total }} 个任务</p>
+    </div>
+
     <div class="toolbar">
       <div class="toolbar-left">
-        <el-input v-model="query.keyword" placeholder="搜索任务标题" style="width:200px" clearable @clear="onSearch" @keyup.enter="onSearch" />
+        <el-input v-model="query.keyword" placeholder="搜索任务..." style="width:200px" clearable @clear="onSearch" @keyup.enter="onSearch">
+          <template #prefix><Search :size="14" style="color: var(--text-tertiary)" /></template>
+        </el-input>
         <el-select v-model="query.priority" placeholder="优先级" style="width:100px" clearable @change="onFilterChange">
           <el-option v-for="item in priorityOptions" :key="item.label" :value="item.value" :label="item.label" />
         </el-select>
@@ -80,59 +77,91 @@ const doneOptions = [
           <el-option v-for="item in doneOptions" :key="item.label" :value="item.value" :label="item.label" />
         </el-select>
       </div>
+      <el-button type="primary" @click="goCreate">
+        <Plus :size="14" /> 新建任务
+      </el-button>
+    </div>
+
+    <div v-if="loading" class="loading-skeleton">
+      <div v-for="i in 5" :key="i" class="skeleton-todo" />
+    </div>
+
+    <div v-else-if="list.length === 0" class="empty-state">
+      <div class="empty-state__icon"><CheckCircle :size="48" /></div>
+      <div class="empty-state__text">没有匹配的任务，创建一个吧</div>
       <el-button type="primary" @click="goCreate">新建任务</el-button>
     </div>
 
-    <el-table :data="list" v-loading="loading" stripe>
-      <el-table-column label="完成" width="60">
-        <template #default="{ row }">
-          <el-checkbox :model-value="row.isDone === 1" @change="handleToggleDone(row.id)" />
-        </template>
-      </el-table-column>
-      <el-table-column prop="title" label="任务标题" min-width="200">
-        <template #default="{ row }">
-          <span :class="{ 'task-done': row.isDone === 1, 'task-overdue': row.isOverdue }">
-            {{ row.title }}
-          </span>
-        </template>
-      </el-table-column>
-      <el-table-column label="优先级" width="90">
-        <template #default="{ row }">
-          <el-tag :type="priorityType(row.priority)" size="small">
-            {{ row.priorityLabel }}
-          </el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column prop="dueDate" label="截止日期" width="120">
-        <template #default="{ row }">
-          <span v-if="row.dueDate" :class="{ 'text-danger': row.isOverdue }">{{ row.dueDate }}</span>
-          <span v-else class="text-muted">-</span>
-        </template>
-      </el-table-column>
-      <el-table-column prop="createdAt" label="创建时间" width="170" />
-      <el-table-column label="操作" width="160">
-        <template #default="{ row }">
-          <el-button size="small" text @click="goEdit(row.id)">编辑</el-button>
-          <el-button size="small" text type="danger" @click="handleDelete(row.id)">删除</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
+    <div v-else class="todo-list">
+      <div v-for="todo in list" :key="todo.id" class="todo-item" :class="{ 'todo-item--done': todo.isDone === 1 }">
+        <label class="todo-checkbox" @click="handleToggleDone(todo.id)">
+          <div class="todo-check" :class="{ checked: todo.isDone === 1 }">
+            <CheckCircle v-if="todo.isDone === 1" :size="12" stroke="#fff" />
+          </div>
+        </label>
+        <div class="todo-body" @click="goEdit(todo.id)">
+          <div class="todo-header">
+            <span class="todo-title" :class="{ 'text-line-through': todo.isDone === 1 }">{{ todo.title }}</span>
+            <el-tag :type="priorityOptions.find(p => p.value === todo.priority)?.type || 'info'" size="small">
+              {{ todo.priorityLabel }}
+            </el-tag>
+          </div>
+          <div v-if="todo.content" class="todo-desc">{{ todo.content.slice(0, 80) }}</div>
+          <div class="todo-footer">
+            <span v-if="todo.dueDate" class="todo-date" :class="{ 'text-danger': todo.isOverdue }">
+              <Calendar :size="12" /> {{ todo.dueDate }}
+            </span>
+          </div>
+        </div>
+        <div class="todo-actions">
+          <button class="icon-btn" @click.stop="goEdit(todo.id)"><Pencil :size="14" /></button>
+          <button class="icon-btn icon-btn--danger" @click.stop="handleDelete(todo.id)"><Trash2 :size="14" /></button>
+        </div>
+      </div>
+    </div>
 
     <el-pagination
+      v-if="total > query.size"
       v-model:current-page="query.page"
       :total="total" :page-size="query.size"
       layout="total, prev, pager, next"
-      style="margin-top:16px; justify-content:flex-end"
+      style="margin-top: var(--sp-6); justify-content: flex-end"
       @current-change="onPageChange"
     />
   </div>
 </template>
 
 <style scoped>
-.toolbar { display: flex; justify-content: space-between; margin-bottom: 16px; }
-.toolbar-left { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.task-done { text-decoration: line-through; color: #999; }
-.task-overdue { color: #f56c6c; font-weight: 500; }
-.text-danger { color: #f56c6c; }
-.text-muted { color: #c0c4cc; }
+.loading-skeleton { display: flex; flex-direction: column; gap: var(--sp-3); }
+.skeleton-todo { height: 80px; border-radius: var(--radius-md); background: var(--bg-hover); animation: pulse 1.5s ease-in-out infinite; }
+
+.todo-list { display: flex; flex-direction: column; gap: var(--sp-2); }
+.todo-item {
+  display: flex; align-items: flex-start; gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-5); background: var(--bg-card);
+  border: 1px solid var(--border-color); border-radius: var(--radius-md);
+  transition: all var(--transition);
+}
+.todo-item:hover { box-shadow: var(--shadow-sm); border-color: var(--accent-border); }
+.todo-item--done { opacity: 0.6; }
+
+.todo-checkbox { padding-top: 2px; cursor: pointer; flex-shrink: 0; }
+.todo-check { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--border-color); display: flex; align-items: center; justify-content: center; transition: all var(--transition); }
+.todo-check:hover { border-color: var(--accent); }
+.todo-check.checked { background: var(--accent); border-color: var(--accent); }
+
+.todo-body { flex: 1; min-width: 0; cursor: pointer; }
+.todo-header { display: flex; align-items: center; gap: var(--sp-2); margin-bottom: 4px; }
+.todo-title { font-size: var(--text-sm); font-weight: 500; }
+.text-line-through { text-decoration: line-through; color: var(--text-tertiary); }
+.todo-desc { font-size: var(--text-sm); color: var(--text-secondary); line-height: var(--leading-normal); display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 4px; }
+.todo-footer { display: flex; align-items: center; gap: var(--sp-3); font-size: var(--text-xs); color: var(--text-tertiary); }
+.todo-date { display: flex; align-items: center; gap: 3px; }
+
+.todo-actions { display: flex; gap: var(--sp-1); flex-shrink: 0; opacity: 0; transition: opacity var(--transition); align-items: center; }
+.todo-item:hover .todo-actions { opacity: 1; }
+
+.icon-btn { background: none; border: none; cursor: pointer; padding: 6px; border-radius: var(--radius-sm); color: var(--text-tertiary); transition: all var(--transition); display: flex; align-items: center; }
+.icon-btn:hover { color: var(--accent); background: var(--accent-light); }
+.icon-btn--danger:hover { color: var(--danger); background: var(--danger-light); }
 </style>

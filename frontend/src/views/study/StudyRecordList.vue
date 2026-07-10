@@ -1,15 +1,16 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { getStudyRecordList, deleteStudyRecord } from '@/api/studyApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { Search, Plus, BookOpen, Pencil, Trash2 } from 'lucide-vue-next'
 import type { StudyRecordVO, StudyRecordQuery } from '@/types/study'
 
 const router = useRouter()
 const list = ref<StudyRecordVO[]>([])
 const total = ref(0)
 const loading = ref(false)
-const query = ref<StudyRecordQuery>({ page: 1, size: 10, keyword: '' })
+const query = ref<StudyRecordQuery>({ page: 1, size: 20, keyword: '' })
 
 onMounted(() => fetchList())
 
@@ -26,53 +27,142 @@ async function fetchList() {
 
 function onSearch() { query.value.page = 1; fetchList() }
 function onPageChange(page: number) { query.value.page = page; fetchList() }
-
 function goCreate() { router.push('/study-records/new') }
 function goEdit(id: number) { router.push(`/study-records/${id}/edit`) }
 
 async function handleDelete(id: number) {
-  await ElMessageBox.confirm('确定删除该学习记录？', '提示', { type: 'warning' })
+  await ElMessageBox.confirm('确定删除该记录？', '提示', { type: 'warning' })
   await deleteStudyRecord(id)
   ElMessage.success('已删除')
   fetchList()
 }
 
 function formatHours(min: number) {
-  if (min < 60) return `${min}分钟`
-  return `${(min / 60).toFixed(1)}小时`
+  if (min < 60) return `${min} 分钟`
+  const h = Math.floor(min / 60)
+  const m = min % 60
+  return m > 0 ? `${h} 小时 ${m} 分钟` : `${h} 小时`
 }
+
+function groupByDate(items: StudyRecordVO[]) {
+  const groups: Record<string, StudyRecordVO[]> = {}
+  items.forEach(item => {
+    const key = item.date || '未知日期'
+    if (!groups[key]) groups[key] = []
+    groups[key].push(item)
+  })
+  return groups
+}
+
+const groupedList = ref<Record<string, StudyRecordVO[]>>({})
+watch(list, (val) => { groupedList.value = groupByDate(val) }, { immediate: true })
 </script>
 
 <template>
   <div>
-    <div class="toolbar">
-      <el-input v-model="query.keyword" placeholder="搜索主题/内容" style="width:240px" clearable @clear="onSearch" @keyup.enter="onSearch" />
-      <el-button type="primary" @click="goCreate">新建学习记录</el-button>
+    <div class="page-header">
+      <h2>学习记录</h2>
+      <p>共 {{ total }} 条记录</p>
     </div>
-    <el-table :data="list" v-loading="loading" stripe>
-      <el-table-column prop="subject" label="学习主题" min-width="160" />
-      <el-table-column prop="date" label="日期" width="120" />
-      <el-table-column label="时长" width="100">
-        <template #default="{ row }">{{ formatHours(row.duration) }}</template>
-      </el-table-column>
-      <el-table-column prop="reflection" label="心得" min-width="160" show-overflow-tooltip />
-      <el-table-column label="操作" width="160">
-        <template #default="{ row }">
-          <el-button size="small" text @click="goEdit(row.id)">编辑</el-button>
-          <el-button size="small" text type="danger" @click="handleDelete(row.id)">删除</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
+
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <el-input v-model="query.keyword" placeholder="搜索主题或内容..." style="width: 240px" clearable @clear="onSearch" @keyup.enter="onSearch">
+          <template #prefix><Search :size="14" style="color: var(--text-tertiary)" /></template>
+        </el-input>
+      </div>
+      <el-button type="primary" @click="goCreate">
+        <Plus :size="14" /> 新建记录
+      </el-button>
+    </div>
+
+    <div v-if="loading" class="loading-skeleton">
+      <div v-for="i in 5" :key="i" class="skeleton-study" />
+    </div>
+
+    <!-- 空状态 -->
+    <div v-else-if="list.length === 0" class="empty-state">
+      <div class="empty-state__icon"><BookOpen :size="48" /></div>
+      <div class="empty-state__text">还没有学习记录，开始记录今天的学习吧</div>
+      <el-button type="primary" @click="goCreate">开始记录</el-button>
+    </div>
+
+    <!-- 时间线 -->
+    <div v-else class="timeline">
+      <div v-for="(records, date) in groupedList" :key="date" class="timeline-group">
+        <div class="timeline-date">
+          <span class="timeline-date-badge">{{ date }}</span>
+          <span class="timeline-date-total">{{ records.reduce((s, r) => s + r.duration, 0) }} 分钟</span>
+        </div>
+        <div class="timeline-items">
+          <div v-for="r in records" :key="r.id" class="tl-item" @click="goEdit(r.id)">
+            <div class="tl-item-dot" />
+            <div class="tl-item-content">
+              <div class="tl-item-header">
+                <span class="tl-item-subject">{{ r.subject }}</span>
+                <span class="tl-item-duration">{{ formatHours(r.duration) }}</span>
+              </div>
+              <p v-if="r.content" class="tl-item-desc">{{ r.content.slice(0, 100) }}</p>
+              <p v-if="r.reflection" class="tl-item-reflection">💡 {{ r.reflection.slice(0, 80) }}</p>
+            </div>
+            <div class="tl-item-actions" @click.stop>
+              <button class="icon-btn" @click="goEdit(r.id)"><Pencil :size="14" /></button>
+              <button class="icon-btn icon-btn--danger" @click="handleDelete(r.id)"><Trash2 :size="14" /></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <el-pagination
+      v-if="total > query.size"
       v-model:current-page="query.page"
       :total="total" :page-size="query.size"
       layout="total, prev, pager, next"
-      style="margin-top:16px; justify-content:flex-end"
+      style="margin-top: var(--sp-6); justify-content: flex-end"
       @current-change="onPageChange"
     />
   </div>
 </template>
 
 <style scoped>
-.toolbar { display: flex; justify-content: space-between; margin-bottom: 16px; }
+.loading-skeleton { display: flex; flex-direction: column; gap: var(--sp-3); }
+.skeleton-study { height: 80px; border-radius: var(--radius-md); background: var(--bg-hover); animation: pulse 1.5s ease-in-out infinite; }
+
+.timeline { display: flex; flex-direction: column; gap: var(--sp-8); }
+.timeline-date { display: flex; align-items: center; gap: var(--sp-3); margin-bottom: var(--sp-4); padding-left: 12px; }
+.timeline-date-badge { font-size: var(--text-sm); font-weight: 600; }
+.timeline-date-total { font-size: var(--text-xs); color: var(--text-tertiary); }
+.timeline-items {
+  display: flex; flex-direction: column; gap: var(--sp-2);
+  position: relative; padding-left: 20px; border-left: 2px solid var(--border-color); margin-left: 8px;
+}
+.tl-item {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  padding: var(--sp-3) var(--sp-4); border-radius: var(--radius-md);
+  cursor: pointer; transition: background var(--transition); position: relative;
+}
+.tl-item:hover { background: var(--bg-hover); }
+.tl-item-dot {
+  position: absolute; left: -25px; top: 18px;
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--accent); border: 2px solid var(--bg-body); flex-shrink: 0;
+}
+.tl-item-content { flex: 1; min-width: 0; }
+.tl-item-header { display: flex; align-items: center; gap: var(--sp-2); margin-bottom: 4px; }
+.tl-item-subject { font-size: var(--text-sm); font-weight: 600; }
+.tl-item-duration { font-size: var(--text-xs); color: var(--accent); background: var(--accent-light); padding: 0 8px; border-radius: 4px; height: 20px; line-height: 20px; }
+.tl-item-desc { font-size: var(--text-sm); color: var(--text-secondary); line-height: var(--leading-normal); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 2px; }
+.tl-item-reflection { font-size: var(--text-xs); color: var(--text-tertiary); font-style: italic; }
+.tl-item-actions { display: flex; gap: var(--sp-1); flex-shrink: 0; opacity: 0; transition: opacity var(--transition); align-items: center; }
+.tl-item:hover .tl-item-actions { opacity: 1; }
+
+.icon-btn {
+  background: none; border: none; cursor: pointer;
+  padding: 6px; border-radius: var(--radius-sm);
+  color: var(--text-tertiary); transition: all var(--transition);
+  display: flex; align-items: center;
+}
+.icon-btn:hover { color: var(--accent); background: var(--accent-light); }
+.icon-btn--danger:hover { color: var(--danger); background: var(--danger-light); }
 </style>
