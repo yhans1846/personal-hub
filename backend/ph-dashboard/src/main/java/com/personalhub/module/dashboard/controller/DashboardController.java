@@ -3,6 +3,7 @@ package com.personalhub.module.dashboard.controller;
 import com.personalhub.common.result.Result;
 import com.personalhub.module.dashboard.service.DashboardService;
 import com.personalhub.module.dashboard.vo.DashboardStatsVO;
+import com.personalhub.module.dashboard.vo.SearchVO;
 import com.personalhub.module.dashboard.vo.TrendVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -39,5 +40,13 @@ public class DashboardController {
                                   Authentication authentication) {
         Long userId = Long.valueOf(authentication.getName());
         return Result.success(dashboardService.getTrends(userId, days));
+    }
+
+    @GetMapping("/search")
+    @Operation(summary = "全局搜索（跨所有模块）")
+    public Result<SearchVO> search(@RequestParam String keyword,
+                                   Authentication authentication) {
+        Long userId = Long.valueOf(authentication.getName());
+        return Result.success(dashboardService.search(userId, keyword));
     }
 }

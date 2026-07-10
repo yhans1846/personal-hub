@@ -5,6 +5,7 @@ import com.personalhub.module.bookmark.entity.BookmarkUrl;
 import com.personalhub.module.bookmark.mapper.BookmarkUrlMapper;
 import com.personalhub.module.dashboard.service.DashboardService;
 import com.personalhub.module.dashboard.vo.DashboardStatsVO;
+import com.personalhub.module.dashboard.vo.SearchVO;
 import com.personalhub.module.dashboard.vo.TrendVO;
 import com.personalhub.module.dashboard.vo.TrendVO.DataPoint;
 import com.personalhub.module.diary.entity.DiaryEntry;
@@ -29,6 +30,7 @@ import org.springframework.stereotype.Service;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -117,6 +119,121 @@ public class DashboardServiceImpl implements DashboardService {
                 userId, since));
 
         return trends;
+    }
+
+    @Override
+    public SearchVO search(Long userId, String keyword) {
+        String like = "%" + keyword + "%";
+        List<SearchVO.SearchGroup> groups = new ArrayList<>();
+        int total = 0;
+
+        // 笔记
+        List<SearchVO.SearchItem> notes = searchModule(
+                "SELECT id, title, LEFT(content, 200), updated_at FROM note_note " +
+                "WHERE user_id = ? AND is_deleted = 0 AND (title LIKE ? OR content LIKE ?) LIMIT 10",
+                userId, like, "%" + keyword + "%");
+        if (!notes.isEmpty()) {
+            notes.forEach(i -> i.setUrl("/notes/" + i.getId() + "/edit"));
+            groups.add(new SearchVO.SearchGroup("note", "笔记", "FileText", notes.size(), notes));
+            total += notes.size();
+        }
+
+        // 日记
+        List<SearchVO.SearchItem> diaries = searchModule(
+                "SELECT id, COALESCE(title, ''), LEFT(content, 200), date FROM diary_entry " +
+                "WHERE user_id = ? AND is_deleted = 0 AND (title LIKE ? OR content LIKE ?) LIMIT 10",
+                userId, like, "%" + keyword + "%");
+        if (!diaries.isEmpty()) {
+            diaries.forEach(i -> i.setUrl("/diaries/" + i.getId() + "/edit"));
+            groups.add(new SearchVO.SearchGroup("diary", "日记", "PenLine", diaries.size(), diaries));
+            total += diaries.size();
+        }
+
+        // 待办
+        List<SearchVO.SearchItem> todos = searchModule(
+                "SELECT id, title, LEFT(content, 200), created_at FROM todo_task " +
+                "WHERE user_id = ? AND (title LIKE ? OR content LIKE ?) LIMIT 10",
+                userId, like, "%" + keyword + "%");
+        if (!todos.isEmpty()) {
+            todos.forEach(i -> i.setUrl("/todos/" + i.getId() + "/edit"));
+            groups.add(new SearchVO.SearchGroup("todo", "待办", "CheckSquare", todos.size(), todos));
+            total += todos.size();
+        }
+
+        // 学习记录
+        List<SearchVO.SearchItem> studies = searchModule(
+                "SELECT id, subject, LEFT(content, 200), date FROM study_record " +
+                "WHERE user_id = ? AND is_deleted = 0 AND (subject LIKE ? OR content LIKE ?) LIMIT 10",
+                userId, like, "%" + keyword + "%");
+        if (!studies.isEmpty()) {
+            studies.forEach(i -> i.setUrl("/study-records/" + i.getId() + "/edit"));
+            groups.add(new SearchVO.SearchGroup("study", "学习记录", "BookOpen", studies.size(), studies));
+            total += studies.size();
+        }
+
+        // 收藏夹
+        List<SearchVO.SearchItem> bookmarks = searchModule(
+                "SELECT id, title, LEFT(description, 200), created_at FROM bookmark_url " +
+                "WHERE user_id = ? AND is_deleted = 0 AND (title LIKE ? OR url LIKE ? OR description LIKE ?) LIMIT 10",
+                userId, like, "%" + keyword + "%", "%" + keyword + "%");
+        if (!bookmarks.isEmpty()) {
+            bookmarks.forEach(i -> i.setUrl("/bookmarks/" + i.getId() + "/edit"));
+            groups.add(new SearchVO.SearchGroup("bookmark", "收藏夹", "Bookmark", bookmarks.size(), bookmarks));
+            total += bookmarks.size();
+        }
+
+        // 阅读记录
+        List<SearchVO.SearchItem> readings = searchModule(
+                "SELECT id, book_title, LEFT(notes, 200), created_at FROM reading_record " +
+                "WHERE user_id = ? AND is_deleted = 0 AND (book_title LIKE ? OR author LIKE ? OR notes LIKE ?) LIMIT 10",
+                userId, like, "%" + keyword + "%", "%" + keyword + "%");
+        if (!readings.isEmpty()) {
+            readings.forEach(i -> i.setUrl("/readings/" + i.getId() + "/edit"));
+            groups.add(new SearchVO.SearchGroup("reading", "阅读记录", "BookMarked", readings.size(), readings));
+            total += readings.size();
+        }
+
+        // 文件
+        List<SearchVO.SearchItem> files = searchModule(
+                "SELECT id, name, CONCAT(type, ' - ', FORMAT(size, 0), 'B'), created_at FROM file_resource " +
+                "WHERE user_id = ? AND is_deleted = 0 AND name LIKE ? LIMIT 10",
+                userId, like);
+        if (!files.isEmpty()) {
+            groups.add(new SearchVO.SearchGroup("file", "文件", "FolderOpen", files.size(), files));
+            total += files.size();
+        }
+
+        // 学习计划
+        List<SearchVO.SearchItem> plans = searchModule(
+                "SELECT id, name, LEFT(goal, 200), created_at FROM study_plan " +
+                "WHERE user_id = ? AND is_deleted = 0 AND (name LIKE ? OR goal LIKE ?) LIMIT 10",
+                userId, like, "%" + keyword + "%");
+        if (!plans.isEmpty()) {
+            plans.forEach(i -> i.setUrl("/study-plans/" + i.getId() + "/edit"));
+            groups.add(new SearchVO.SearchGroup("study_plan", "学习计划", "Target", plans.size(), plans));
+            total += plans.size();
+        }
+
+        SearchVO result = new SearchVO();
+        result.setGroups(groups);
+        result.setTotal(total);
+        return result;
+    }
+
+    private List<SearchVO.SearchItem> searchModule(String sql, Long userId, String... params) {
+        List<Object> args = new ArrayList<>();
+        args.add(userId);
+        for (String p : params) {
+            args.add(p);
+        }
+        return jdbcTemplate.query(sql, args.toArray(), (rs, rowNum) -> {
+            SearchVO.SearchItem item = new SearchVO.SearchItem();
+            item.setId(rs.getLong(1));
+            item.setTitle(rs.getString(2));
+            item.setSnippet(rs.getString(3));
+            item.setDate(rs.getString(4) != null ? rs.getString(4).substring(0, 10) : "");
+            return item;
+        });
     }
 
     private List<DataPoint> queryTrend(String sql, Long userId, LocalDate since) {

@@ -1,6 +1,7 @@
 package com.personalhub.module.dashboard.service;
 
 import com.personalhub.module.dashboard.vo.DashboardStatsVO;
+import com.personalhub.module.dashboard.vo.SearchVO;
 import com.personalhub.module.dashboard.vo.TrendVO;
 
 /**
@@ -13,4 +14,7 @@ public interface DashboardService {
 
     /** 获取趋势数据（学习/笔记/Todo/阅读） */
     TrendVO getTrends(Long userId, int days);
+
+    /** 全局搜索（跨所有模块） */
+    SearchVO search(Long userId, String keyword);
 }

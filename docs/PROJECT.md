@@ -44,7 +44,7 @@ personal-hub
 - [x] **标签系统**: 统一管理，全模块关联，筛选统计（ph-tag 模块，替换 note_tag + bookmark_tags）
 - [x] **Dashboard**: 系统概览（学习时长/待办/最近笔记/统计卡片，ph-dashboard 模块）
 - [x] **数据统计**: 学习/笔记/Todo/阅读趋势（ECharts 折线图，ph-dashboard 模块）
-- **全局搜索**: 跨模块统一搜索、高亮、历史
+- [x] **全局搜索**: 跨模块统一搜索、高亮（搜索 8 个模块）
 
 ### 后续可扩展
 AI 总结/问答 / OCR / PDF 预览 / MD 导出 PDF/HTML / 数据备份 / WebDAV / Docker / 深色/多主题
