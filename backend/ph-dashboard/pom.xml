@@ -11,19 +11,14 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>ph-boot</artifactId>
-    <name>ph-boot</name>
-    <description>Spring Boot 启动入口</description>
+    <artifactId>ph-dashboard</artifactId>
+    <name>ph-dashboard</name>
+    <description>Dashboard 数据聚合模块</description>
 
     <dependencies>
-        <!-- 内部模块 -->
         <dependency>
             <groupId>com.personalhub</groupId>
             <artifactId>ph-common</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.personalhub</groupId>
-            <artifactId>ph-auth</artifactId>
         </dependency>
         <dependency>
             <groupId>com.personalhub</groupId>
@@ -51,47 +46,11 @@
         </dependency>
         <dependency>
             <groupId>com.personalhub</groupId>
-            <artifactId>ph-studyplan</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.personalhub</groupId>
             <artifactId>ph-reading</artifactId>
         </dependency>
         <dependency>
             <groupId>com.personalhub</groupId>
-            <artifactId>ph-tag</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.personalhub</groupId>
-            <artifactId>ph-dashboard</artifactId>
-        </dependency>
-
-        <!-- MySQL（仅运行时需要） -->
-        <dependency>
-            <groupId>com.mysql</groupId>
-            <artifactId>mysql-connector-j</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-
-        <!-- Test -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.security</groupId>
-            <artifactId>spring-security-test</artifactId>
-            <scope>test</scope>
+            <artifactId>ph-studyplan</artifactId>
         </dependency>
     </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-            </plugin>
-        </plugins>
-    </build>
 </project>

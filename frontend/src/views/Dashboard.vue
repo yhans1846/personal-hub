@@ -5,7 +5,9 @@ import { useAuthStore } from '@/store/authStore'
 import { getTodoList } from '@/api/todoApi'
 import { getStudyRecordList } from '@/api/studyApi'
 import { getRecentNotes } from '@/api/noteApi'
-import { Plus, BookOpen, FileText, CheckCircle } from 'lucide-vue-next'
+import { getDashboardStats } from '@/api/dashboardApi'
+import type { DashboardStats } from '@/api/dashboardApi'
+import { Plus, BookOpen, FileText, CheckCircle, File, Bookmark, BookMarked, Target, Clock } from 'lucide-vue-next'
 import type { TodoVO } from '@/types/todo'
 import type { StudyRecordVO } from '@/types/study'
 import type { NoteVO } from '@/types/note'
@@ -13,6 +15,7 @@ import type { NoteVO } from '@/types/note'
 const router = useRouter()
 const authStore = useAuthStore()
 
+const stats = ref<DashboardStats | null>(null)
 const recentNotes = ref<NoteVO[]>([])
 const pendingTodos = ref<TodoVO[]>([])
 const recentStudies = ref<StudyRecordVO[]>([])
@@ -24,11 +27,13 @@ const greeting = hour < 6 ? '夜深了' : hour < 12 ? '上午好' : hour < 14 ? 
 onMounted(async () => {
   loading.value = true
   try {
-    const [notesRes, todosRes, studyRes] = await Promise.all([
+    const [statsRes, notesRes, todosRes, studyRes] = await Promise.all([
+      getDashboardStats().catch(() => null),
       getRecentNotes(1, 5).catch(() => null),
       getTodoList({ page: 1, size: 5, isDone: false }).catch(() => null),
       getStudyRecordList({ page: 1, size: 5 }).catch(() => null)
     ])
+    if (statsRes) stats.value = statsRes.data.data
     if (notesRes) recentNotes.value = notesRes.data.data.records
     if (todosRes) pendingTodos.value = todosRes.data.data.records
     if (studyRes) recentStudies.value = studyRes.data.data.records
@@ -47,11 +52,30 @@ function formatRelative(d: string) {
   return date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })
 }
 
+function formatDuration(minutes: number) {
+  if (minutes < 60) return `${minutes} 分钟`
+  const h = Math.floor(minutes / 60)
+  const m = minutes % 60
+  return m > 0 ? `${h} 小时 ${m} 分钟` : `${h} 小时`
+}
+
 async function handleToggleDone(id: number) {
   const { toggleDone } = await import('@/api/todoApi')
   await toggleDone(id)
   pendingTodos.value = pendingTodos.value.filter(t => t.id !== id)
 }
+
+const statCards = [
+  { key: 'noteCount' as const, icon: FileText, label: '笔记', color: 'var(--accent)', bg: 'var(--accent-light)', onClick: () => router.push('/notes') },
+  { key: 'studyCount' as const, icon: BookOpen, label: '学习记录', color: 'var(--info)', bg: '#ecf5ff', onClick: () => router.push('/study-records') },
+  { key: 'todoPending' as const, icon: CheckCircle, label: '待办任务', color: 'var(--warning)', bg: '#fdf6ec', onClick: () => router.push('/todos'),
+    append: (s: DashboardStats) => s.todoTotal > 0 ? ` ${s.todoDone}/${s.todoTotal}` : '' },
+  { key: 'fileCount' as const, icon: File, label: '文件', color: '#67c23a', bg: '#f0f9eb', onClick: () => router.push('/files') },
+  { key: 'diaryCount' as const, icon: Bookmark, label: '日记', color: '#9b59b6', bg: '#f3e8ff', onClick: () => router.push('/diaries') },
+  { key: 'bookmarkCount' as const, icon: Bookmark, label: '收藏', color: '#e74c3c', bg: '#fef0f0', onClick: () => router.push('/bookmarks') },
+  { key: 'readingCount' as const, icon: BookMarked, label: '阅读', color: '#1abc9c', bg: '#e8f8f5', onClick: () => router.push('/readings') },
+  { key: 'studyPlanCount' as const, icon: Target, label: '学习计划', color: '#34495e', bg: '#ebedf0', onClick: () => router.push('/study-plans') },
+]
 </script>
 
 <template>
@@ -60,7 +84,9 @@ async function handleToggleDone(id: number) {
     <div class="welcome-section">
       <div>
         <h1>{{ authStore.user?.nickname || authStore.user?.username || '用户' }}，{{ greeting }} 👋</h1>
-        <p class="welcome-sub">今天有什么计划？</p>
+        <p class="welcome-sub">
+          <span v-if="stats">共 {{ stats.noteCount }} 篇笔记，本周学习 {{ formatDuration(stats.studyDurationThisWeek) }}</span>
+        </p>
       </div>
       <div class="quick-actions">
         <el-button type="primary" size="small" @click="router.push('/notes/new')">
@@ -76,81 +102,111 @@ async function handleToggleDone(id: number) {
 
     <!-- 骨架屏 -->
     <div v-if="loading" class="loading-skeleton">
-      <div v-for="i in 3" :key="i" class="skeleton-card" />
-    </div>
-
-    <div v-else class="dashboard-grid">
-      <!-- 待办任务 -->
-      <div class="dash-card">
-        <div class="dash-card-header">
-          <h3>待办任务</h3>
-          <router-link to="/todos" class="dash-card-more">查看全部</router-link>
-        </div>
-        <div v-if="pendingTodos.length === 0" class="empty-state" style="padding: 32px 24px;">
-          <div class="empty-state__text">没有未完成的任务 🎉</div>
-        </div>
-        <div v-else class="dash-list">
-          <div v-for="todo in pendingTodos" :key="todo.id" class="dash-list-item" @click="handleToggleDone(todo.id)">
-            <div class="todo-check" :class="{ checked: todo.isDone === 1 }">
-              <CheckCircle v-if="todo.isDone === 1" :size="12" stroke="#fff" />
-            </div>
-            <div class="dash-list-content">
-              <span class="dash-list-title">{{ todo.title }}</span>
-              <div class="dash-list-meta">
-                <el-tag :type="todo.priority === 1 ? 'danger' : todo.priority === 2 ? 'warning' : 'info'" size="small">{{ todo.priorityLabel }}</el-tag>
-                <span v-if="todo.dueDate" class="text-tertiary" :class="{ 'text-danger': todo.isOverdue }">{{ todo.dueDate }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div class="skeleton-row">
+        <div v-for="i in 4" :key="i" class="skeleton-card" />
       </div>
-
-      <!-- 最近笔记 -->
-      <div class="dash-card">
-        <div class="dash-card-header">
-          <h3>最近更新</h3>
-          <router-link to="/notes" class="dash-card-more">查看全部</router-link>
-        </div>
-        <div v-if="recentNotes.length === 0" class="empty-state" style="padding: 32px 24px;">
-          <div class="empty-state__text">还没有笔记，开始写第一篇吧 ✍️</div>
-        </div>
-        <div v-else class="dash-list">
-          <div v-for="note in recentNotes" :key="note.id" class="dash-list-item" @click="router.push(`/notes/${note.id}/edit`)">
-            <FileText :size="16" stroke="var(--accent)" />
-            <div class="dash-list-content">
-              <span class="dash-list-title">{{ note.title }}</span>
-              <div class="dash-list-meta">
-                <span v-for="cat in note.categories" :key="cat.id" class="inline-tag">{{ cat.name }}</span>
-                <span class="text-tertiary">{{ formatRelative(note.updatedAt) }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 最近学习 -->
-      <div class="dash-card">
-        <div class="dash-card-header">
-          <h3>学习记录</h3>
-          <router-link to="/study-records" class="dash-card-more">查看全部</router-link>
-        </div>
-        <div v-if="recentStudies.length === 0" class="empty-state" style="padding: 32px 24px;">
-          <div class="empty-state__text">还没有学习记录 📚</div>
-        </div>
-        <div v-else class="dash-list">
-          <div v-for="s in recentStudies" :key="s.id" class="dash-list-item" @click="router.push(`/study-records/${s.id}/edit`)">
-            <BookOpen :size="16" stroke="var(--info)" />
-            <div class="dash-list-content">
-              <span class="dash-list-title">{{ s.subject }}</span>
-              <div class="dash-list-meta">
-                <span class="text-tertiary">{{ s.duration }} 分钟</span>
-                <span class="text-tertiary">{{ s.date }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div class="skeleton-row" style="margin-top: var(--sp-4)">
+        <div v-for="i in 3" :key="i" class="skeleton-card-wide" />
       </div>
     </div>
+
+    <template v-else>
+      <!-- 统计卡片 -->
+      <div class="stats-grid">
+        <div
+          v-for="card in statCards" :key="card.key"
+          class="stat-card"
+          :style="{ '--card-bg': card.bg, '--card-color': card.color }"
+          @click="card.onClick"
+        >
+          <div class="stat-icon"><component :is="card.icon" :size="20" /></div>
+          <div class="stat-body">
+            <span class="stat-value">{{ stats ? stats[card.key] : 0 }}{{ card.append ? card.append(stats!) : '' }}</span>
+            <span class="stat-label">{{ card.label }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 待办/超期 -->
+      <div v-if="stats && stats.todoOverdue > 0" class="overdue-bar" @click="router.push('/todos')">
+        <Clock :size="14" />
+        <span>{{ stats.todoOverdue }} 个待办已超期，点击查看</span>
+      </div>
+
+      <!-- 最近动态 -->
+      <div class="dashboard-grid">
+        <!-- 待办任务 -->
+        <div class="dash-card">
+          <div class="dash-card-header">
+            <h3>待办任务</h3>
+            <router-link to="/todos" class="dash-card-more">查看全部</router-link>
+          </div>
+          <div v-if="pendingTodos.length === 0" class="empty-state" style="padding: 32px 24px;">
+            <div class="empty-state__text">没有未完成的任务 🎉</div>
+          </div>
+          <div v-else class="dash-list">
+            <div v-for="todo in pendingTodos" :key="todo.id" class="dash-list-item" @click="handleToggleDone(todo.id)">
+              <div class="todo-check" :class="{ checked: todo.isDone === 1 }">
+                <CheckCircle v-if="todo.isDone === 1" :size="12" stroke="#fff" />
+              </div>
+              <div class="dash-list-content">
+                <span class="dash-list-title">{{ todo.title }}</span>
+                <div class="dash-list-meta">
+                  <el-tag :type="todo.priority === 1 ? 'danger' : todo.priority === 2 ? 'warning' : 'info'" size="small">{{ todo.priorityLabel }}</el-tag>
+                  <span v-if="todo.dueDate" class="text-tertiary" :class="{ 'text-danger': todo.isOverdue }">{{ todo.dueDate }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 最近笔记 -->
+        <div class="dash-card">
+          <div class="dash-card-header">
+            <h3>最近更新</h3>
+            <router-link to="/notes" class="dash-card-more">查看全部</router-link>
+          </div>
+          <div v-if="recentNotes.length === 0" class="empty-state" style="padding: 32px 24px;">
+            <div class="empty-state__text">还没有笔记，开始写第一篇吧 ✍️</div>
+          </div>
+          <div v-else class="dash-list">
+            <div v-for="note in recentNotes" :key="note.id" class="dash-list-item" @click="router.push(`/notes/${note.id}/edit`)">
+              <FileText :size="16" stroke="var(--accent)" />
+              <div class="dash-list-content">
+                <span class="dash-list-title">{{ note.title }}</span>
+                <div class="dash-list-meta">
+                  <span v-for="cat in note.categories" :key="cat.id" class="inline-tag">{{ cat.name }}</span>
+                  <span class="text-tertiary">{{ formatRelative(note.updatedAt) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 最近学习 -->
+        <div class="dash-card">
+          <div class="dash-card-header">
+            <h3>学习记录</h3>
+            <router-link to="/study-records" class="dash-card-more">查看全部</router-link>
+          </div>
+          <div v-if="recentStudies.length === 0" class="empty-state" style="padding: 32px 24px;">
+            <div class="empty-state__text">还没有学习记录 📚</div>
+          </div>
+          <div v-else class="dash-list">
+            <div v-for="s in recentStudies" :key="s.id" class="dash-list-item" @click="router.push(`/study-records/${s.id}/edit`)">
+              <BookOpen :size="16" stroke="var(--info)" />
+              <div class="dash-list-content">
+                <span class="dash-list-title">{{ s.subject }}</span>
+                <div class="dash-list-meta">
+                  <span class="text-tertiary">{{ s.duration }} 分钟</span>
+                  <span class="text-tertiary">{{ s.date }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
   </div>
 </template>
 
@@ -158,14 +214,47 @@ async function handleToggleDone(id: number) {
 .dashboard { max-width: var(--reading-max-width); margin: 0 auto; }
 .welcome-section {
   display: flex; justify-content: space-between; align-items: flex-end;
-  margin-bottom: var(--sp-8);
+  margin-bottom: var(--sp-6);
 }
 .welcome-section h1 { font-size: var(--text-2xl); font-weight: 600; margin-bottom: var(--sp-1); }
 .welcome-sub { font-size: var(--text-sm); color: var(--text-secondary); }
 .quick-actions { display: flex; gap: var(--sp-2); }
 
+/* 骨架屏 */
 .loading-skeleton { display: flex; flex-direction: column; gap: var(--sp-4); }
-.skeleton-card { height: 180px; border-radius: var(--radius-lg); background: var(--bg-hover); animation: pulse 1.5s ease-in-out infinite; }
+.skeleton-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--sp-3); }
+.skeleton-card { height: 80px; border-radius: var(--radius-md); background: var(--bg-hover); animation: pulse 1.5s ease-in-out infinite; }
+.skeleton-card-wide { height: 180px; border-radius: var(--radius-lg); background: var(--bg-hover); animation: pulse 1.5s ease-in-out infinite; }
+
+/* 统计卡片 */
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--sp-3); margin-bottom: var(--sp-4); }
+.stat-card {
+  display: flex; align-items: center; gap: var(--sp-3);
+  padding: var(--sp-4); background: var(--bg-card);
+  border: 1px solid var(--border-color); border-radius: var(--radius-md);
+  cursor: pointer; transition: all var(--transition);
+}
+.stat-card:hover { box-shadow: var(--shadow-sm); border-color: var(--accent-border); transform: translateY(-1px); }
+.stat-icon {
+  width: 40px; height: 40px; border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  background: var(--card-bg); color: var(--card-color); flex-shrink: 0;
+}
+.stat-body { display: flex; flex-direction: column; gap: 2px; }
+.stat-value { font-size: var(--text-lg); font-weight: 700; color: var(--text-primary); line-height: 1.2; }
+.stat-label { font-size: var(--text-xs); color: var(--text-tertiary); }
+
+/* 超期提醒 */
+.overdue-bar {
+  display: flex; align-items: center; gap: var(--sp-2);
+  padding: 8px var(--sp-4); margin-bottom: var(--sp-4);
+  background: var(--danger-light, #fef0f0); color: var(--danger);
+  border-radius: var(--radius-sm); font-size: var(--text-sm);
+  cursor: pointer; transition: opacity var(--transition);
+}
+.overdue-bar:hover { opacity: 0.85; }
+
+/* 卡片区域 */
 .dashboard-grid { display: flex; flex-direction: column; gap: var(--sp-5); }
 
 .dash-card {

@@ -238,7 +238,25 @@
 
 ## 第三阶段 — 接口设计
 
-### 十五、统一标签 `/api/tags`
+### 十五、Dashboard 数据统计 `/api/dashboard`
+| 方法 | 路径 | 说明 | 认证 |
+|------|------|------|------|
+| GET | /api/dashboard/stats | Dashboard 统计数据 | 是 |
+
+**GET /api/dashboard/stats**
+```json
+{
+  "noteCount": 42,           "studyCount": 15,
+  "studyDurationTotal": 1200,"studyDurationThisWeek": 300,
+  "todoTotal": 20,           "todoDone": 12,
+  "todoPending": 8,          "todoOverdue": 2,
+  "fileCount": 30,           "diaryCount": 10,
+  "diaryCountThisMonth": 3,  "bookmarkCount": 25,
+  "readingCount": 8,         "studyPlanCount": 5
+}
+```
+
+### 十六、统一标签 `/api/tags`
 | 方法 | 路径 | 说明 | 认证 |
 |------|------|------|------|
 | GET | /api/tags | 获取所有标签（含使用次数）| 是 |
