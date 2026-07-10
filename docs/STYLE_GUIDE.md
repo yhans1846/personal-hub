@@ -122,9 +122,21 @@ backend/
 │   └── src/main/java/com/personalhub/module/study/
 ├── ph-todo/                         # 待办任务模块
 │   └── src/main/java/com/personalhub/module/todo/
-├── ph-file/                          # 文件管理模块
+├── ph-file/                         # 文件管理模块
 │   └── src/main/java/com/personalhub/module/file/
-└── ph-boot/                          # Spring Boot 启动入口
+├── ph-diary/                        # 日记模块
+│   └── src/main/java/com/personalhub/module/diary/
+├── ph-bookmark/                     # 收藏夹模块
+│   └── src/main/java/com/personalhub/module/bookmark/
+├── ph-studyplan/                    # 学习计划模块
+│   └── src/main/java/com/personalhub/module/studyplan/
+├── ph-reading/                      # 阅读记录模块
+│   └── src/main/java/com/personalhub/module/reading/
+├── ph-tag/                          # 统一标签模块
+│   └── src/main/java/com/personalhub/module/tag/
+├── ph-dashboard/                    # Dashboard + 数据统计 + 全局搜索模块
+│   └── src/main/java/com/personalhub/module/dashboard/
+└── ph-boot/                         # Spring Boot 启动入口
     └── src/main/
         ├── java/com/personalhub/PersonalHubApplication.java
         └── resources/               # application.yml + application-dev.yml

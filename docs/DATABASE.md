@@ -53,7 +53,7 @@
 | created_at | DATETIME | 创建时间 | NOT NULL |
 | updated_at | DATETIME | 更新时间 | NOT NULL |
 
-### 4. `note_tag` 标签表
+### 4. `note_tag` 标签表（已废弃，由 `tag` 表替代）
 | 字段 | 类型 | 说明 | 约束 |
 |------|------|------|------|
 | id | BIGINT | 主键 | PK |
@@ -67,7 +67,7 @@
 | note_id | BIGINT | 笔记ID (FK) |
 | category_id | BIGINT | 分类ID (FK) |
 
-### 6. `note_tag_rel` 笔记-标签关联表
+### 6. `note_tag_rel` 笔记-标签关联表（已废弃，由 `tag_rel` 表替代）
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | note_id | BIGINT | 笔记ID (FK) |
@@ -180,7 +180,7 @@ sys_user ── note_note ── note_category_rel ── note_category
 | description | TEXT | 描述 | |
 | favicon | VARCHAR(500) | 图标URL | |
 | category_id | BIGINT | 分类ID | INDEX |
-| tags | VARCHAR(500) | 标签（逗号分隔） | |
+| tags | VARCHAR(500) | 标签（逗号分隔，遗留字段，数据已迁移到 tag_rel）| |
 | is_deleted | TINYINT | 逻辑删除 | DEFAULT 0 |
 | created_at | DATETIME | 创建时间 | NOT NULL |
 | updated_at | DATETIME | 更新时间 | NOT NULL |
@@ -211,6 +211,23 @@ sys_user ── note_note ── note_category_rel ── note_category
 | updated_at | DATETIME | 更新时间 | NOT NULL |
 
 ### 15. `reading_record` 阅读记录表
+| 字段 | 类型 | 说明 | 约束 |
+|------|------|------|------|
+| id | BIGINT | 主键 | PK |
+| user_id | BIGINT | 所属用户 | NOT NULL, INDEX |
+| book_title | VARCHAR(255) | 书名 | NOT NULL |
+| author | VARCHAR(200) | 作者 | |
+| cover_url | VARCHAR(500) | 封面图 | |
+| total_chapters | INT | 总章节数 | DEFAULT 0 |
+| current_chapter | INT | 当前章节 | DEFAULT 0 |
+| progress | INT | 阅读进度 0-100 | DEFAULT 0 |
+| status | TINYINT | 状态（0未读 1在读 2读完）| DEFAULT 0 |
+| notes | TEXT | 阅读笔记 | |
+| start_date | DATE | 开始阅读日期 | |
+| end_date | DATE | 读完日期 | |
+| is_deleted | TINYINT | 逻辑删除 | DEFAULT 0 |
+| created_at | DATETIME | 创建时间 | NOT NULL |
+| updated_at | DATETIME | 更新时间 | NOT NULL |
 
 ### 16. `tag` 统一标签表
 | 字段 | 类型 | 说明 | 约束 |
@@ -232,23 +249,6 @@ sys_user ── note_note ── note_category_rel ── note_category
 | created_at | DATETIME | 创建时间 | NOT NULL |
 
 **entity_type 取值**: note / bookmark / diary / study / todo / file / reading / study_plan
-| 字段 | 类型 | 说明 | 约束 |
-|------|------|------|------|
-| id | BIGINT | 主键 | PK |
-| user_id | BIGINT | 所属用户 | NOT NULL, INDEX |
-| book_title | VARCHAR(255) | 书名 | NOT NULL |
-| author | VARCHAR(200) | 作者 | |
-| cover_url | VARCHAR(500) | 封面图 | |
-| total_chapters | INT | 总章节数 | DEFAULT 0 |
-| current_chapter | INT | 当前章节 | DEFAULT 0 |
-| progress | INT | 阅读进度 0-100 | DEFAULT 0 |
-| status | TINYINT | 状态（0未读 1在读 2读完）| DEFAULT 0 |
-| notes | TEXT | 阅读笔记 | |
-| start_date | DATE | 开始阅读日期 | |
-| end_date | DATE | 读完日期 | |
-| is_deleted | TINYINT | 逻辑删除 | DEFAULT 0 |
-| created_at | DATETIME | 创建时间 | NOT NULL |
-| updated_at | DATETIME | 更新时间 | NOT NULL |
 
 ---
 
