@@ -179,11 +179,11 @@
 | PUT | /api/bookmarks/{id} | 编辑 | 是 |
 | DELETE | /api/bookmarks/{id} | 删除 | 是 |
 
-**GET /api/bookmarks** 参数: page, size, keyword, categoryId, tag
+**GET /api/bookmarks** 参数: page, size, keyword, categoryId, tagId
 
 **POST /api/bookmarks**
 ```json
-{"title":"GitHub","url":"https://github.com","description":"","categoryId":1,"tags":"开发,工具"}
+{"title":"GitHub","url":"https://github.com","description":"","categoryId":1,"tagIds":[1,2]}
 ```
 
 ### 十二、收藏夹分类 `/api/bookmark-categories`

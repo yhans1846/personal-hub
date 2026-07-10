@@ -130,30 +130,6 @@
 
 ---
 
-## ER 关系
-
-```
-sys_user ── note_note ── note_category_rel ── note_category
-                  └── note_tag_rel ──── note_tag
-     ├── study_record
-     ├── todo_task
-     └── file_resource ── file_category
-```
-
-## 索引策略
-
-| 表 | 索引 | 类型 | 说明 |
-|----|------|------|------|
-| sys_user | uk_username | UNIQUE | 用户名唯一 |
-| note_note | idx_user_id / idx_updated_at | NORMAL | 用户查询 / 排序 |
-| note_category | idx_user_id | NORMAL | 用户查询 |
-| note_tag | idx_user_id_name | UNIQUE | 用户标签去重 |
-| study_record | idx_user_id_date | NORMAL | 用户日期查询 |
-| todo_task | idx_user_id / idx_due_date | NORMAL | 用户查询 / 排序 |
-| file_resource | idx_user_id | NORMAL | 用户查询 |
-
----
-
 ## 第二阶段 — 已扩展表
 
 ### 11. `diary_entry` 日记表
@@ -287,12 +263,3 @@ sys_user ── note_note ── note_category_rel ── note_category
 | tag_rel | idx_entity | NORMAL | 按实体查询标签 |
 | tag_rel | idx_tag_id | NORMAL | 按标签查询实体 |
 
----
-
-## 第三阶段 — 已扩展表
-
-### 16. `tag` 统一标签表 — 见第二阶段已扩展表
-### 17. `tag_rel` 标签关联表 — 见第二阶段已扩展表
-
-<!-- 第三阶段后续待扩展表 -->
-- **dashboard_cache / stats_aggregation**（规划中）
