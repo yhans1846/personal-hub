@@ -177,7 +177,7 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-.stats-page { max-width: var(--reading-max-width); margin: 0 auto; }
+.stats-page { margin: 0 auto; width: 100%; }
 .page-header {
   display: flex; justify-content: space-between; align-items: center;
   margin-bottom: var(--sp-6);

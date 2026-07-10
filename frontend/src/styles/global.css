@@ -17,17 +17,17 @@
   --sp-12: 48px;
 
   /* ---- 圆角 ---- */
-  --radius-sm: 6px;
-  --radius-md: 10px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
   --radius-lg: 12px;
   --radius-xl: 16px;
   --radius-full: 9999px;
 
   /* ---- 阴影 ---- */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.1);
-  --shadow-xl: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --shadow-xl: 0 8px 32px rgba(0, 0, 0, 0.10);
 
   /* ---- 字体 ---- */
   --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', system-ui, sans-serif;
@@ -49,11 +49,11 @@
 
   /* ---- 布局 ---- */
   --sidebar-width: 240px;
-  --topbar-height: 52px;
-  --content-max-width: 1200px;
-  --reading-max-width: 800px;
+  --topbar-height: 56px;
+  --content-max-width: 1600px;
+  --reading-max-width: 1200px;
 
-  --transition: 150ms ease;
+  --transition: 200ms ease;
 
   /* ========== 浅色模式 ========== */
   --bg-body: #F8FAFC;
@@ -63,7 +63,7 @@
   --bg-active: #E2E8F0;
   --bg-sidebar: #FFFFFF;
 
-  --border-color: #E2E8F0;
+  --border-color: #EAEAEA;
   --border-light: #F1F5F9;
 
   --text-primary: #0F172A;
@@ -71,8 +71,8 @@
   --text-tertiary: #94A3B8;
   --text-placeholder: #CBD5E1;
 
-  --accent: #3B82F6;
-  --accent-hover: #2563EB;
+  --accent: #4F7BFF;
+  --accent-hover: #5B86FF;
   --accent-light: #EFF6FF;
   --accent-border: #BFDBFE;
 
@@ -81,7 +81,7 @@
   --danger-light: #FEF2F2;
   --warning: #F59E0B;
   --warning-light: #FFFBEB;
-  --success: #10B981;
+  --success: #22C55E;
   --success-light: #ECFDF5;
   --info: #6366F1;
   --info-light: #EEF2FF;
@@ -118,10 +118,10 @@
   --info: #818CF8;
   --info-light: rgba(129, 140, 248, 0.1);
 
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 1px 3px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.5);
-  --shadow-xl: 0 8px 24px rgba(0, 0, 0, 0.6);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.30);
+  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.35);
+  --shadow-xl: 0 8px 32px rgba(0, 0, 0, 0.40);
 }
 
 /* ---------- 基础重置 ---------- */
@@ -172,7 +172,7 @@ a:hover { color: var(--accent-hover); }
   background: var(--bg-card) !important;
   transition: box-shadow var(--transition), background var(--transition) !important;
 }
-.el-card:hover { box-shadow: var(--shadow-lg) !important; }
+.el-card:hover { box-shadow: var(--shadow-md) !important; transform: translateY(-2px); }
 .el-card__body { padding: var(--sp-5) var(--sp-6) !important; }
 
 /* --- Button --- */
@@ -408,3 +408,7 @@ a:hover { color: var(--accent-hover); }
 
 /* --- 骨架屏动画 --- */
 @keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+
+/* --- 路由过渡动画 --- */
+.page-fade-enter-active, .page-fade-leave-active { transition: opacity 200ms ease; }
+.page-fade-enter-from, .page-fade-leave-to { opacity: 0; }

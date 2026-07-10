@@ -5,6 +5,8 @@ import { getStudyRecordList, deleteStudyRecord } from '@/api/studyApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Plus, BookOpen, Pencil, Trash2 } from 'lucide-vue-next'
 import type { StudyRecordVO, StudyRecordQuery } from '@/types/study'
+import PageHeader from '@/components/PageHeader.vue'
+import EmptyState from '@/components/EmptyState.vue'
 
 const router = useRouter()
 const list = ref<StudyRecordVO[]>([])
@@ -60,10 +62,7 @@ watch(list, (val) => { groupedList.value = groupByDate(val) }, { immediate: true
 
 <template>
   <div>
-    <div class="page-header">
-      <h2>学习记录</h2>
-      <p>共 {{ total }} 条记录</p>
-    </div>
+    <PageHeader title="学习记录" subtitle="共 {{ total }} 条记录" />
 
     <div class="toolbar">
       <div class="toolbar-left">
@@ -80,12 +79,7 @@ watch(list, (val) => { groupedList.value = groupByDate(val) }, { immediate: true
       <div v-for="i in 5" :key="i" class="skeleton-study" />
     </div>
 
-    <!-- 空状态 -->
-    <div v-else-if="list.length === 0" class="empty-state">
-      <div class="empty-state__icon"><BookOpen :size="48" /></div>
-      <div class="empty-state__text">还没有学习记录，开始记录今天的学习吧</div>
-      <el-button type="primary" @click="goCreate">开始记录</el-button>
-    </div>
+    <EmptyState v-else-if="list.length === 0" :icon="BookOpen" text="还没有学习记录，开始记录今天的学习吧" action-label="开始记录" @action="goCreate" />
 
     <!-- 时间线 -->
     <div v-else class="timeline">

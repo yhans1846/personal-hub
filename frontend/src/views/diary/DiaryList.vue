@@ -3,7 +3,8 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getDiaryList, deleteDiary } from '@/api/diaryApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Plus, Pencil, Trash2, Calendar, Sun, Cloud, CloudRain, Smile, Frown, Meh } from 'lucide-vue-next'
+import { Search, Plus, Pencil, Trash2, PenLine, Sun, Cloud, CloudRain, Smile, Frown, Meh } from 'lucide-vue-next'
+import { EmptyState, PageHeader } from '@/components'
 import type { DiaryVO, DiaryQuery } from '@/types/diary'
 
 const router = useRouter()
@@ -69,10 +70,7 @@ const moodOptions = [
 
 <template>
   <div>
-    <div class="page-header">
-      <h2>日记</h2>
-      <p>共 {{ total }} 篇</p>
-    </div>
+    <PageHeader title="日记" subtitle="记录每天的生活" />
 
     <div class="toolbar">
       <div class="toolbar-left">
@@ -101,11 +99,7 @@ const moodOptions = [
       <div v-for="i in 5" :key="i" class="skeleton-diary" />
     </div>
 
-    <div v-else-if="list.length === 0" class="empty-state">
-      <div class="empty-state__icon"><Calendar :size="48" /></div>
-      <div class="empty-state__text">还没有日记，开始记录吧</div>
-      <el-button type="primary" @click="goCreate">写日记</el-button>
-    </div>
+    <EmptyState v-else-if="list.length === 0" :icon="PenLine" text="还没有日记，开始记录吧" action-label="写日记" :action-icon="Plus" @action="goCreate" />
 
     <div v-else class="diary-list">
       <div v-for="entry in list" :key="entry.id" class="diary-item" @click="goEdit(entry.id)">

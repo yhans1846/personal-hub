@@ -4,6 +4,8 @@ import { getTags, createTag, updateTag, deleteTag } from '@/api/tagApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Tags, Plus, Pencil, Trash2 } from 'lucide-vue-next'
 import type { TagVO } from '@/types/tag'
+import PageHeader from '@/components/PageHeader.vue'
+import EmptyState from '@/components/EmptyState.vue'
 
 const list = ref<TagVO[]>([])
 const dialogVisible = ref(false)
@@ -66,10 +68,7 @@ async function handleDelete(id: number) {
 
 <template>
   <div>
-    <div class="page-header">
-      <h2>统一标签管理</h2>
-      <p>管理所有模块的标签，支持颜色标记和使用统计</p>
-    </div>
+    <PageHeader title="统一标签管理" subtitle="管理所有模块的标签，支持颜色标记和使用统计" />
 
     <div class="toolbar">
       <span class="text-secondary">{{ list.length }} 个标签</span>
@@ -78,10 +77,7 @@ async function handleDelete(id: number) {
       </el-button>
     </div>
 
-    <div v-if="list.length === 0" class="empty-state">
-      <div class="empty-state__icon"><Tags :size="48" /></div>
-      <div class="empty-state__text">暂无标签</div>
-    </div>
+    <EmptyState v-if="list.length === 0" :icon="Tags" text="暂无标签" />
 
     <div v-else class="tag-grid">
       <div v-for="item in list" :key="item.id" class="tag-card">

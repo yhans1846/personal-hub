@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import PageHeader from '@/components/PageHeader.vue'
+import EmptyState from '@/components/EmptyState.vue'
 import { getStudyPlanList, deleteStudyPlan } from '@/api/studyplanApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Plus, Pencil, Trash2, Calendar, Target, BookOpen } from 'lucide-vue-next'
@@ -54,10 +56,7 @@ const statusOptions = [
 
 <template>
   <div>
-    <div class="page-header">
-      <h2>学习计划</h2>
-      <p>共 {{ total }} 个计划</p>
-    </div>
+    <PageHeader title="学习计划" subtitle="共 {{ total }} 个计划" />
 
     <div class="toolbar">
       <div class="toolbar-left">
@@ -77,11 +76,7 @@ const statusOptions = [
       <div v-for="i in 3" :key="i" class="skeleton-plan" />
     </div>
 
-    <div v-else-if="list.length === 0" class="empty-state">
-      <div class="empty-state__icon"><Target :size="48" /></div>
-      <div class="empty-state__text">还没有学习计划，创建一个吧</div>
-      <el-button type="primary" @click="goCreate">新建计划</el-button>
-    </div>
+    <EmptyState v-else-if="list.length === 0" :icon="Target" text="还没有学习计划，创建一个吧" action-label="新建计划" :action-icon="Plus" @action="goCreate" />
 
     <div v-else class="plan-list">
       <div v-for="plan in list" :key="plan.id" class="plan-card" @click="goEdit(plan.id)">

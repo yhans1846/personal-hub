@@ -7,10 +7,17 @@ import { getStudyRecordList } from '@/api/studyApi'
 import { getRecentNotes } from '@/api/noteApi'
 import { getDashboardStats } from '@/api/dashboardApi'
 import type { DashboardStats } from '@/api/dashboardApi'
+import { getBookmarkList } from '@/api/bookmarkApi'
+import { getReadingList } from '@/api/readingApi'
+import { getStudyPlanList } from '@/api/studyplanApi'
 import { Plus, BookOpen, FileText, CheckCircle, File, Bookmark, BookMarked, Target, Clock } from 'lucide-vue-next'
+import StatCard from '@/components/StatCard.vue'
 import type { TodoVO } from '@/types/todo'
 import type { StudyRecordVO } from '@/types/study'
 import type { NoteVO } from '@/types/note'
+import type { BookmarkVO } from '@/types/bookmark'
+import type { ReadingVO } from '@/types/reading'
+import type { StudyPlanVO } from '@/types/studyplan'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -19,6 +26,9 @@ const stats = ref<DashboardStats | null>(null)
 const recentNotes = ref<NoteVO[]>([])
 const pendingTodos = ref<TodoVO[]>([])
 const recentStudies = ref<StudyRecordVO[]>([])
+const todayPlans = ref<StudyPlanVO[]>([])
+const recentReadings = ref<ReadingVO[]>([])
+const recentBookmarks = ref<BookmarkVO[]>([])
 const loading = ref(true)
 
 const hour = new Date().getHours()
@@ -27,16 +37,22 @@ const greeting = hour < 6 ? '夜深了' : hour < 12 ? '上午好' : hour < 14 ? 
 onMounted(async () => {
   loading.value = true
   try {
-    const [statsRes, notesRes, todosRes, studyRes] = await Promise.all([
+    const [statsRes, notesRes, todosRes, studyRes, plansRes, readingsRes, bookmarksRes] = await Promise.all([
       getDashboardStats().catch(() => null),
       getRecentNotes(1, 5).catch(() => null),
       getTodoList({ page: 1, size: 5, isDone: false }).catch(() => null),
-      getStudyRecordList({ page: 1, size: 5 }).catch(() => null)
+      getStudyRecordList({ page: 1, size: 5 }).catch(() => null),
+      getStudyPlanList({ page: 1, size: 5, status: 1 }).catch(() => null),
+      getReadingList({ page: 1, size: 5 }).catch(() => null),
+      getBookmarkList({ page: 1, size: 5 }).catch(() => null)
     ])
     if (statsRes) stats.value = statsRes.data.data
     if (notesRes) recentNotes.value = notesRes.data.data.records
     if (todosRes) pendingTodos.value = todosRes.data.data.records
     if (studyRes) recentStudies.value = studyRes.data.data.records
+    if (plansRes) todayPlans.value = plansRes.data.data.records
+    if (readingsRes) recentReadings.value = readingsRes.data.data.records
+    if (bookmarksRes) recentBookmarks.value = bookmarksRes.data.data.records
   } finally {
     loading.value = false
   }
@@ -66,15 +82,15 @@ async function handleToggleDone(id: number) {
 }
 
 const statCards = [
-  { key: 'noteCount' as const, icon: FileText, label: '笔记', color: 'var(--accent)', bg: 'var(--accent-light)', onClick: () => router.push('/notes') },
-  { key: 'studyCount' as const, icon: BookOpen, label: '学习记录', color: 'var(--info)', bg: '#ecf5ff', onClick: () => router.push('/study-records') },
-  { key: 'todoPending' as const, icon: CheckCircle, label: '待办任务', color: 'var(--warning)', bg: '#fdf6ec', onClick: () => router.push('/todos'),
+  { key: 'noteCount' as const, icon: FileText, label: '笔记', color: 'var(--accent)', onClick: () => router.push('/notes') },
+  { key: 'studyCount' as const, icon: BookOpen, label: '学习记录', color: 'var(--info)', onClick: () => router.push('/study-records') },
+  { key: 'todoPending' as const, icon: CheckCircle, label: '待办任务', color: 'var(--warning)', onClick: () => router.push('/todos'),
     append: (s: DashboardStats) => s.todoTotal > 0 ? ` ${s.todoDone}/${s.todoTotal}` : '' },
-  { key: 'fileCount' as const, icon: File, label: '文件', color: '#67c23a', bg: '#f0f9eb', onClick: () => router.push('/files') },
-  { key: 'diaryCount' as const, icon: Bookmark, label: '日记', color: '#9b59b6', bg: '#f3e8ff', onClick: () => router.push('/diaries') },
-  { key: 'bookmarkCount' as const, icon: Bookmark, label: '收藏', color: '#e74c3c', bg: '#fef0f0', onClick: () => router.push('/bookmarks') },
-  { key: 'readingCount' as const, icon: BookMarked, label: '阅读', color: '#1abc9c', bg: '#e8f8f5', onClick: () => router.push('/readings') },
-  { key: 'studyPlanCount' as const, icon: Target, label: '学习计划', color: '#34495e', bg: '#ebedf0', onClick: () => router.push('/study-plans') },
+  { key: 'fileCount' as const, icon: File, label: '文件', color: 'var(--success)', onClick: () => router.push('/files') },
+  { key: 'diaryCount' as const, icon: Bookmark, label: '日记', color: 'var(--info)', onClick: () => router.push('/diaries') },
+  { key: 'bookmarkCount' as const, icon: Bookmark, label: '收藏', color: 'var(--warning)', onClick: () => router.push('/bookmarks') },
+  { key: 'readingCount' as const, icon: BookMarked, label: '阅读', color: 'var(--success)', onClick: () => router.push('/readings') },
+  { key: 'studyPlanCount' as const, icon: Target, label: '学习计划', color: 'var(--text-secondary)', onClick: () => router.push('/study-plans') },
 ]
 </script>
 
@@ -113,18 +129,15 @@ const statCards = [
     <template v-else>
       <!-- 统计卡片 -->
       <div class="stats-grid">
-        <div
+        <StatCard
           v-for="card in statCards" :key="card.key"
-          class="stat-card"
-          :style="{ '--card-bg': card.bg, '--card-color': card.color }"
+          :icon="card.icon"
+          :value="stats ? stats[card.key] : 0"
+          :label="card.label"
+          :color="card.color"
+          :append="card.append ? card.append(stats!) : undefined"
           @click="card.onClick"
-        >
-          <div class="stat-icon"><component :is="card.icon" :size="20" /></div>
-          <div class="stat-body">
-            <span class="stat-value">{{ stats ? stats[card.key] : 0 }}{{ card.append ? card.append(stats!) : '' }}</span>
-            <span class="stat-label">{{ card.label }}</span>
-          </div>
-        </div>
+        />
       </div>
 
       <!-- 待办/超期 -->
@@ -133,8 +146,53 @@ const statCards = [
         <span>{{ stats.todoOverdue }} 个待办已超期，点击查看</span>
       </div>
 
-      <!-- 最近动态 -->
+      <!-- 内容模块 - 2列网格 -->
       <div class="dashboard-grid">
+        <!-- 今日计划 -->
+        <div class="dash-card">
+          <div class="dash-card-header">
+            <h3>今日计划</h3>
+            <router-link to="/study-plans" class="dash-card-more">查看全部</router-link>
+          </div>
+          <div v-if="todayPlans.length === 0" class="empty-state" style="padding: 32px 24px;">
+            <div class="empty-state__text">暂无进行中的计划 📋</div>
+          </div>
+          <div v-else class="dash-list">
+            <div v-for="plan in todayPlans" :key="plan.id" class="dash-list-item" @click="router.push(`/study-plans/${plan.id}/edit`)">
+              <Target :size="16" stroke="var(--info)" />
+              <div class="dash-list-content">
+                <span class="dash-list-title">{{ plan.title }}</span>
+                <div class="dash-list-meta">
+                  <span class="text-tertiary" v-if="plan.progress !== undefined">进度 {{ plan.progress }}%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 最近阅读 -->
+        <div class="dash-card">
+          <div class="dash-card-header">
+            <h3>最近阅读</h3>
+            <router-link to="/readings" class="dash-card-more">查看全部</router-link>
+          </div>
+          <div v-if="recentReadings.length === 0" class="empty-state" style="padding: 32px 24px;">
+            <div class="empty-state__text">还没有阅读记录 📖</div>
+          </div>
+          <div v-else class="dash-list">
+            <div v-for="r in recentReadings" :key="r.id" class="dash-list-item" @click="router.push(`/readings/${r.id}/edit`)">
+              <BookMarked :size="16" stroke="var(--success)" />
+              <div class="dash-list-content">
+                <span class="dash-list-title">{{ r.title }}</span>
+                <div class="dash-list-meta">
+                  <span class="text-tertiary" v-if="r.author">{{ r.author }}</span>
+                  <span class="text-tertiary">{{ formatRelative(r.updatedAt) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- 待办任务 -->
         <div class="dash-card">
           <div class="dash-card-header">
@@ -183,7 +241,30 @@ const statCards = [
           </div>
         </div>
 
-        <!-- 最近学习 -->
+        <!-- 最近收藏 -->
+        <div class="dash-card">
+          <div class="dash-card-header">
+            <h3>最近收藏</h3>
+            <router-link to="/bookmarks" class="dash-card-more">查看全部</router-link>
+          </div>
+          <div v-if="recentBookmarks.length === 0" class="empty-state" style="padding: 32px 24px;">
+            <div class="empty-state__text">还没有收藏 🔖</div>
+          </div>
+          <div v-else class="dash-list">
+            <div v-for="bm in recentBookmarks" :key="bm.id" class="dash-list-item" @click="router.push(`/bookmarks/${bm.id}/edit`)">
+              <Bookmark :size="16" stroke="var(--warning)" />
+              <div class="dash-list-content">
+                <span class="dash-list-title">{{ bm.title }}</span>
+                <div class="dash-list-meta">
+                  <span class="text-tertiary" v-if="bm.url">{{ bm.url }}</span>
+                  <span class="text-tertiary">{{ formatRelative(bm.updatedAt) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 学习记录 -->
         <div class="dash-card">
           <div class="dash-card-header">
             <h3>学习记录</h3>
@@ -211,7 +292,7 @@ const statCards = [
 </template>
 
 <style scoped>
-.dashboard { max-width: var(--reading-max-width); margin: 0 auto; }
+.dashboard { margin: 0 auto; width: 100%; }
 .welcome-section {
   display: flex; justify-content: space-between; align-items: flex-end;
   margin-bottom: var(--sp-6);
@@ -226,23 +307,8 @@ const statCards = [
 .skeleton-card { height: 80px; border-radius: var(--radius-md); background: var(--bg-hover); animation: pulse 1.5s ease-in-out infinite; }
 .skeleton-card-wide { height: 180px; border-radius: var(--radius-lg); background: var(--bg-hover); animation: pulse 1.5s ease-in-out infinite; }
 
-/* 统计卡片 */
-.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--sp-3); margin-bottom: var(--sp-4); }
-.stat-card {
-  display: flex; align-items: center; gap: var(--sp-3);
-  padding: var(--sp-4); background: var(--bg-card);
-  border: 1px solid var(--border-color); border-radius: var(--radius-md);
-  cursor: pointer; transition: all var(--transition);
-}
-.stat-card:hover { box-shadow: var(--shadow-sm); border-color: var(--accent-border); transform: translateY(-1px); }
-.stat-icon {
-  width: 40px; height: 40px; border-radius: var(--radius-sm);
-  display: flex; align-items: center; justify-content: center;
-  background: var(--card-bg); color: var(--card-color); flex-shrink: 0;
-}
-.stat-body { display: flex; flex-direction: column; gap: 2px; }
-.stat-value { font-size: var(--text-lg); font-weight: 700; color: var(--text-primary); line-height: 1.2; }
-.stat-label { font-size: var(--text-xs); color: var(--text-tertiary); }
+/* 统计卡片（样式已移至 StatCard 组件） */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--sp-3); margin-bottom: var(--sp-4); }
 
 /* 超期提醒 */
 .overdue-bar {
@@ -254,14 +320,14 @@ const statCards = [
 }
 .overdue-bar:hover { opacity: 0.85; }
 
-/* 卡片区域 */
-.dashboard-grid { display: flex; flex-direction: column; gap: var(--sp-5); }
+/* 卡片区域 - 2列网格 */
+.dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-5); }
 
 .dash-card {
   background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); overflow: hidden;
-  transition: box-shadow var(--transition);
+  transition: all var(--transition);
 }
-.dash-card:hover { box-shadow: var(--shadow-md); }
+.dash-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
 .dash-card-header {
   display: flex; justify-content: space-between; align-items: center;
   padding: var(--sp-4) var(--sp-6); border-bottom: 1px solid var(--border-light);

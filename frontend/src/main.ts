@@ -12,10 +12,17 @@ app.use(router)
 app.use(ElementPlus)
 app.mount('#app')
 
-// 监听系统深色模式
-const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)')
-function updateTheme(e: MediaQueryListEvent | MediaQueryList) {
-  document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light')
+// 主题初始化（优先用户偏好，其次系统偏好）
+const storedTheme = localStorage.getItem('theme-preference')
+if (storedTheme) {
+  document.documentElement.setAttribute('data-theme', storedTheme)
+  ;(window as any).__themeUserOverride = true
+} else {
+  const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)')
+  function updateTheme(e: MediaQueryListEvent | MediaQueryList) {
+    if ((window as any).__themeUserOverride) return
+    document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light')
+  }
+  darkModeQuery.addEventListener('change', updateTheme)
+  updateTheme(darkModeQuery)
 }
-darkModeQuery.addEventListener('change', updateTheme)
-updateTheme(darkModeQuery)

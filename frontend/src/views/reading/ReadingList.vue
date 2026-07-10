@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import PageHeader from '@/components/PageHeader.vue'
+import EmptyState from '@/components/EmptyState.vue'
 import { getReadingList, deleteReading } from '@/api/readingApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Plus, Pencil, Trash2, BookOpen, Book, BookCheck, Calendar } from 'lucide-vue-next'
+import { Search, Plus, Pencil, Trash2, BookOpen, Book, BookCheck, Calendar, BookMarked } from 'lucide-vue-next'
 import type { ReadingVO, ReadingQuery } from '@/types/reading'
 
 const router = useRouter()
@@ -40,7 +42,7 @@ const statusOptions = [
 
 <template>
   <div>
-    <div class="page-header"><h2>阅读记录</h2><p>共 {{ total }} 本</p></div>
+    <PageHeader title="阅读记录" subtitle="共 {{ total }} 本" />
     <div class="toolbar">
       <div class="toolbar-left">
         <el-input v-model="query.keyword" placeholder="搜索书名/作者..." style="width:220px" clearable @clear="onSearch" @keyup.enter="onSearch">
@@ -56,11 +58,7 @@ const statusOptions = [
     <div v-if="loading" class="loading-skeleton">
       <div v-for="i in 4" :key="i" class="skeleton-book" />
     </div>
-    <div v-else-if="list.length === 0" class="empty-state">
-      <div class="empty-state__icon"><BookOpen :size="48" /></div>
-      <div class="empty-state__text">还没有阅读记录，添加一本书吧</div>
-      <el-button type="primary" @click="goCreate">添加书籍</el-button>
-    </div>
+    <EmptyState v-else-if="list.length === 0" :icon="BookMarked" text="还没有阅读记录，添加一本书吧" action-label="添加书籍" :action-icon="Plus" @action="goCreate" />
     <div v-else class="book-grid">
       <div v-for="book in list" :key="book.id" class="book-card" @click="goEdit(book.id)">
         <div v-if="book.coverUrl" class="book-cover"><img :src="book.coverUrl" alt="" /></div>

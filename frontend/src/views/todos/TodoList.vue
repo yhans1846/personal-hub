@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { getTodoList, deleteTodo, toggleDone } from '@/api/todoApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Plus, CheckCircle, Pencil, Trash2, Calendar } from 'lucide-vue-next'
+import { EmptyState, PageHeader } from '@/components'
 import type { TodoVO, TodoQuery } from '@/types/todo'
 
 const router = useRouter()
@@ -60,10 +61,7 @@ const doneOptions = [
 
 <template>
   <div>
-    <div class="page-header">
-      <h2>待办任务</h2>
-      <p>共 {{ total }} 个任务</p>
-    </div>
+    <PageHeader title="待办任务" subtitle="管理日常任务" />
 
     <div class="toolbar">
       <div class="toolbar-left">
@@ -86,11 +84,7 @@ const doneOptions = [
       <div v-for="i in 5" :key="i" class="skeleton-todo" />
     </div>
 
-    <div v-else-if="list.length === 0" class="empty-state">
-      <div class="empty-state__icon"><CheckCircle :size="48" /></div>
-      <div class="empty-state__text">没有匹配的任务，创建一个吧</div>
-      <el-button type="primary" @click="goCreate">新建任务</el-button>
-    </div>
+    <EmptyState v-else-if="list.length === 0" :icon="CheckCircle" text="没有待办任务" action-label="新建任务" :action-icon="Plus" @action="goCreate" />
 
     <div v-else class="todo-list">
       <div v-for="todo in list" :key="todo.id" class="todo-item" :class="{ 'todo-item--done': todo.isDone === 1 }">

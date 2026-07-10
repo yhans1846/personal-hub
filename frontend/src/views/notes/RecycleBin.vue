@@ -4,6 +4,8 @@ import { getNoteList, restoreNote, permanentDeleteNote } from '@/api/noteApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Trash2 } from 'lucide-vue-next'
 import type { NoteVO } from '@/types/note'
+import PageHeader from '@/components/PageHeader.vue'
+import EmptyState from '@/components/EmptyState.vue'
 
 const list = ref<NoteVO[]>([])
 const loading = ref(false)
@@ -36,18 +38,11 @@ async function handlePermanentDelete(id: number) {
 
 <template>
   <div>
-    <div class="page-header">
-      <h2>回收站</h2>
-      <p>已删除的笔记可以在此恢复或永久清除</p>
-    </div>
+    <PageHeader title="回收站" subtitle="已删除的笔记可以在此恢复或永久清除" />
 
     <div v-if="loading" style="padding: 48px 0; text-align: center; color: var(--text-tertiary);">加载中...</div>
 
-    <!-- 空状态 -->
-    <div v-else-if="list.length === 0" class="empty-state">
-      <div class="empty-state__icon"><Trash2 :size="48" /></div>
-      <div class="empty-state__text">回收站为空</div>
-    </div>
+    <EmptyState v-else-if="list.length === 0" :icon="Trash2" text="回收站为空" />
 
     <div v-else class="recycle-list">
       <div v-for="note in list" :key="note.id" class="recycle-item">

@@ -3,6 +3,8 @@ import { ref, onMounted } from 'vue'
 import { getCategories, createCategory, updateCategory, deleteCategory } from '@/api/noteApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { FolderPlus, Pencil, Trash2, Folder } from 'lucide-vue-next'
+import PageHeader from '@/components/PageHeader.vue'
+import EmptyState from '@/components/EmptyState.vue'
 
 const list = ref<any[]>([])
 const dialogVisible = ref(false)
@@ -51,10 +53,7 @@ async function handleDelete(id: number) {
 
 <template>
   <div>
-    <div class="page-header">
-      <h2>分类管理</h2>
-      <p>管理笔记分类</p>
-    </div>
+    <PageHeader title="分类管理" subtitle="管理笔记分类" />
 
     <div class="toolbar">
       <span class="text-secondary">{{ list.length }} 个分类</span>
@@ -63,10 +62,7 @@ async function handleDelete(id: number) {
       </el-button>
     </div>
 
-    <div v-if="list.length === 0" class="empty-state">
-      <div class="empty-state__icon"><Folder :size="48" /></div>
-      <div class="empty-state__text">暂无分类，创建一个吧</div>
-    </div>
+    <EmptyState v-if="list.length === 0" :icon="Folder" text="暂无分类，创建一个吧" />
 
     <div v-else class="manage-list">
       <div v-for="item in list" :key="item.id" class="manage-item">

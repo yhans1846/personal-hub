@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import PageHeader from '@/components/PageHeader.vue'
+import EmptyState from '@/components/EmptyState.vue'
 import { getBookmarkList, deleteBookmark, getBookmarkCategories } from '@/api/bookmarkApi'
 import { getTags } from '@/api/tagApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Plus, Pencil, Trash2, ExternalLink, FolderOpen, Tag } from 'lucide-vue-next'
+import { Search, Plus, Pencil, Trash2, FolderOpen, Tag, Bookmark } from 'lucide-vue-next'
 import type { BookmarkVO, BookmarkQuery, BookmarkCategoryVO } from '@/types/bookmark'
 import type { TagVO } from '@/types/tag'
 
@@ -71,10 +73,7 @@ function getFaviconUrl(url: string) {
 
 <template>
   <div>
-    <div class="page-header">
-      <h2>收藏夹</h2>
-      <p>共 {{ total }} 个收藏</p>
-    </div>
+    <PageHeader title="收藏夹" subtitle="共 {{ total }} 个收藏" />
 
     <div class="toolbar">
       <div class="toolbar-left">
@@ -107,11 +106,7 @@ function getFaviconUrl(url: string) {
       <div v-for="i in 6" :key="i" class="skeleton-card" />
     </div>
 
-    <div v-else-if="list.length === 0" class="empty-state">
-      <div class="empty-state__icon"><ExternalLink :size="48" /></div>
-      <div class="empty-state__text">还没有收藏，添加一个吧</div>
-      <el-button type="primary" @click="goCreate">新建收藏</el-button>
-    </div>
+    <EmptyState v-else-if="list.length === 0" :icon="Bookmark" text="还没有收藏，添加一个吧" action-label="新建收藏" :action-icon="Plus" @action="goCreate" />
 
     <div v-else class="bookmark-grid">
       <div v-for="item in list" :key="item.id" class="bookmark-card" @click="goEdit(item.id)">

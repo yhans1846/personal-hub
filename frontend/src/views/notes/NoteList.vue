@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { getNoteList, deleteNote, toggleFavorite } from '@/api/noteApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Plus, FileText, Star, Trash2 } from 'lucide-vue-next'
+import { EmptyState, PageHeader } from '@/components'
 import type { NoteVO, NoteQuery } from '@/types/note'
 
 const router = useRouter()
@@ -44,10 +45,7 @@ async function handleToggleFavorite(note: NoteVO) {
 
 <template>
   <div>
-    <div class="page-header">
-      <h2>笔记</h2>
-      <p>共 {{ total }} 篇笔记</p>
-    </div>
+    <PageHeader title="笔记" subtitle="记录想法与知识" />
 
     <div class="toolbar">
       <div class="toolbar-left">
@@ -65,11 +63,7 @@ async function handleToggleFavorite(note: NoteVO) {
     </div>
 
     <!-- 空状态 -->
-    <div v-else-if="list.length === 0" class="empty-state">
-      <div class="empty-state__icon"><FileText :size="48" /></div>
-      <div class="empty-state__text">还没有笔记，开始写第一篇吧</div>
-      <el-button type="primary" @click="goCreate">新建笔记</el-button>
-    </div>
+    <EmptyState v-else-if="list.length === 0" :icon="FileText" text="还没有笔记，开始写第一篇吧" action-label="新建笔记" :action-icon="Plus" @action="goCreate" />
 
     <div v-else class="note-grid">
       <div v-for="note in list" :key="note.id" class="note-card" @click="goEdit(note.id)">
@@ -124,9 +118,15 @@ async function handleToggleFavorite(note: NoteVO) {
   font-size: var(--text-base); font-weight: 600; line-height: var(--leading-tight);
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
-.fav-btn { background: none; border: none; cursor: pointer; color: var(--text-tertiary); padding: 4px; border-radius: 4px; flex-shrink: 0; transition: all var(--transition); }
-.fav-btn:hover { color: var(--warning); background: var(--warning-light); }
-.fav-btn.favored { color: var(--warning); }
+.fav-btn { background: none; border: none; cursor: pointer; color: var(--text-tertiary); padding: 4px; border-radius: 4px; flex-shrink: 0; transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1); }
+.fav-btn:hover { color: var(--warning); background: var(--warning-light); transform: scale(1.15); }
+.fav-btn:active { transform: scale(0.85); }
+.fav-btn.favored { color: var(--warning); animation: fav-pop 350ms ease; }
+@keyframes fav-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
 .note-card-meta { display: flex; gap: var(--sp-2); margin-bottom: var(--sp-3); flex-wrap: wrap; }
 .meta-tag { display: inline-block; padding: 0 6px; height: 20px; line-height: 20px; border-radius: 4px; font-size: 11px; background: var(--accent-light); color: var(--accent); }
 .meta-tag--tag { background: var(--bg-hover); color: var(--text-tertiary); }

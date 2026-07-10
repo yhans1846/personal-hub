@@ -4,6 +4,8 @@ import { getBookmarkCategories, createBookmarkCategory, updateBookmarkCategory, 
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Pencil, Trash2, FolderOpen } from 'lucide-vue-next'
 import type { BookmarkCategoryVO } from '@/types/bookmark'
+import PageHeader from '@/components/PageHeader.vue'
+import EmptyState from '@/components/EmptyState.vue'
 
 const list = ref<BookmarkCategoryVO[]>([])
 const loading = ref(false)
@@ -60,20 +62,13 @@ async function handleDelete(item: BookmarkCategoryVO) {
 
 <template>
   <div>
-    <div class="page-header">
-      <h2>收藏夹分类</h2>
-      <p>共 {{ list.length }} 个分类</p>
-    </div>
+    <PageHeader title="收藏夹分类" subtitle="共 {{ list.length }} 个分类" />
 
     <div v-if="loading" class="loading-skeleton">
       <div v-for="i in 3" :key="i" class="skeleton-row" />
     </div>
 
-    <div v-else-if="list.length === 0" class="empty-state">
-      <div class="empty-state__icon"><FolderOpen :size="48" /></div>
-      <div class="empty-state__text">还没有分类，创建一个吧</div>
-      <el-button type="primary" @click="openCreate">新建分类</el-button>
-    </div>
+    <EmptyState v-else-if="list.length === 0" :icon="FolderOpen" text="还没有分类，创建一个吧" action-label="新建分类" @action="openCreate" />
 
     <div v-else class="category-list">
       <div v-for="item in list" :key="item.id" class="category-item">

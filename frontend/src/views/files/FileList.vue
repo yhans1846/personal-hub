@@ -5,6 +5,8 @@ import { getFileList, uploadFile, deleteFile, getFileDownloadUrl, getFileCategor
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Upload, FileIcon, ImageIcon, FileText, Archive, Download, Trash2, Plus } from 'lucide-vue-next'
 import type { FileVO, FileQuery, FileCategory } from '@/types/file'
+import PageHeader from '@/components/PageHeader.vue'
+import EmptyState from '@/components/EmptyState.vue'
 
 const router = useRouter()
 const list = ref<FileVO[]>([])
@@ -81,10 +83,7 @@ function getFileIcon(icon: string) {
 
 <template>
   <div>
-    <div class="page-header">
-      <h2>文件</h2>
-      <p>共 {{ total }} 个文件</p>
-    </div>
+    <PageHeader title="文件" subtitle="共 {{ total }} 个文件" />
 
     <div class="toolbar">
       <div class="toolbar-left">
@@ -120,13 +119,7 @@ function getFileIcon(icon: string) {
       <div v-for="i in 8" :key="i" class="skeleton-file-card" />
     </div>
 
-    <div v-else-if="list.length === 0" class="empty-state" style="padding: var(--sp-12) var(--sp-6);">
-      <div class="empty-state__icon"><FileIcon :size="48" /></div>
-      <div class="empty-state__text">还没有文件，上传你的第一个文件吧</div>
-      <el-button type="primary" @click="showUpload = true">
-        <Upload :size="14" /> 上传文件
-      </el-button>
-    </div>
+    <EmptyState v-else-if="list.length === 0" :icon="FileIcon" text="还没有文件，上传你的第一个文件吧" :action-icon="Upload" action-label="上传文件" @action="showUpload = true" />
 
     <div v-else class="file-grid">
       <div v-for="file in list" :key="file.id" class="file-card">
