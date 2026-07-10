@@ -107,6 +107,7 @@ public class DiaryEntryServiceImpl implements DiaryEntryService {
         entry.setMood(dto.getMood());
         entry.setWeather(dto.getWeather());
         entry.setLocation(dto.getLocation());
+        entry.setImageFileId(dto.getImageFileId());
         diaryEntryMapper.insert(entry);
         log.info("新建日记: id={}, userId={}, date={}", entry.getId(), userId, entry.getDate());
         return DiaryVO.from(entry);
@@ -125,6 +126,8 @@ public class DiaryEntryServiceImpl implements DiaryEntryService {
         if (dto.getContent() != null) entry.setContent(dto.getContent());
         if (dto.getMood() != null) entry.setMood(dto.getMood());
         if (dto.getWeather() != null) entry.setWeather(dto.getWeather());
+        if (dto.getLocation() != null) entry.setLocation(dto.getLocation());
+        if (dto.getImageFileId() != null) entry.setImageFileId(dto.getImageFileId());
         diaryEntryMapper.updateById(entry);
         log.info("编辑日记: id={}, userId={}", id, userId);
         return DiaryVO.from(entry);

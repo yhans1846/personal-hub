@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getDiaryList, deleteDiary } from '@/api/diaryApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Plus, Pencil, Trash2, PenLine, Sun, Cloud, CloudRain, Smile, Frown, Meh, MapPin } from 'lucide-vue-next'
+import { Search, Plus, Pencil, Trash2, PenLine, Sun, Cloud, CloudRain, Smile, Frown, Meh, MapPin, ImageIcon } from 'lucide-vue-next'
 import { EmptyState, PageHeader } from '@/components'
 import type { DiaryVO, DiaryQuery } from '@/types/diary'
 
@@ -123,6 +123,7 @@ const moodOptions = [
             </div>
           </div>
           <div v-if="entry.contentSummary" class="diary-summary">{{ entry.contentSummary }}</div>
+          <img v-if="entry.imageFileId" :src="`/api/files/${entry.imageFileId}/download`" class="diary-image" />
         </div>
         <div class="diary-actions" @click.stop>
           <button class="icon-btn" @click.stop="goEdit(entry.id)"><Pencil :size="14" /></button>
@@ -165,6 +166,7 @@ const moodOptions = [
 .diary-meta { display: flex; align-items: center; gap: var(--sp-2); margin-left: auto; font-size: var(--text-xs); }
 .diary-mood, .diary-weather, .diary-location { display: flex; align-items: center; gap: 2px; white-space: nowrap; }
 .diary-location { color: var(--text-tertiary); }
+.diary-image { max-width: 80px; max-height: 60px; border-radius: var(--radius-sm); object-fit: cover; margin-top: 4px; }
 .diary-summary {
   font-size: var(--text-sm); color: var(--text-secondary);
   line-height: var(--leading-normal); overflow: hidden;

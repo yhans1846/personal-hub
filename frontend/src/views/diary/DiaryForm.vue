@@ -2,14 +2,15 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { createDiary, updateDiary, getDiaryById } from '@/api/diaryApi'
+import { uploadFile } from '@/api/fileApi'
 import { ElMessage } from 'element-plus'
-import { ArrowLeft, Smile, Meh, Frown } from 'lucide-vue-next'
+import { ArrowLeft, Smile, Meh, Frown, Upload, X } from 'lucide-vue-next'
 
 const route = useRoute()
 const router = useRouter()
 const isEdit = !!route.params.id
 
-const form = ref({ date: '', title: '', content: '', mood: 2, weather: '', location: '' })
+const form = ref({ date: '', title: '', content: '', mood: 2, weather: '', location: '', imageFileId: undefined as number | undefined })
 const saving = ref(false)
 
 onMounted(async () => {
@@ -27,6 +28,7 @@ onMounted(async () => {
   form.value.mood = r.mood || 2
   form.value.weather = r.weather || ''
   form.value.location = r.location || ''
+  form.value.imageFileId = r.imageFileId
 })
 
 async function handleSave() {
@@ -52,6 +54,25 @@ const moodOptions = [
 ]
 
 const weatherOptions = ['晴', '多云', '阴', '小雨', '大雨', '雷阵雨', '雪', '雾']
+
+const uploading = ref(false)
+const previewUrl = ref('')
+const fileInput = ref<HTMLInputElement | null>(null)
+
+async function handleImageUpload(file: File) {
+  uploading.value = true
+  try {
+    const res = await uploadFile(file)
+    form.value.imageFileId = res.data.data.id
+  } finally { uploading.value = false }
+}
+
+async function onFileChange(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (file) await handleImageUpload(file)
+}
+
+function removeImage() { form.value.imageFileId = undefined }
 </script>
 
 <template>
@@ -97,6 +118,16 @@ const weatherOptions = ['晴', '多云', '阴', '小雨', '大雨', '雷阵雨',
           </el-col>
         </el-row>
 
+        <el-form-item label="配图">
+          <div v-if="form.imageFileId" class="image-preview">
+            <img :src="`/api/files/${form.imageFileId}/download`" class="preview-img" />
+            <button class="image-remove" @click="removeImage"><X :size="14" /></button>
+          </div>
+          <div v-else>
+            <input type="file" accept="image/*" @change="onFileChange" class="file-input" />
+          </div>
+        </el-form-item>
+
         <el-form-item label="内容">
           <el-input v-model="form.content" type="textarea" :rows="12" placeholder="开始写吧...（支持 Markdown 格式）" />
           <div class="form-hint">支持 Markdown 格式：标题、列表、加粗、代码等</div>
@@ -128,4 +159,8 @@ const weatherOptions = ['晴', '多云', '阴', '小雨', '大雨', '雷阵雨',
 .form-hint { font-size: var(--text-xs); color: var(--text-tertiary); margin-top: 4px; }
 .mood-radio { display: flex; align-items: center; gap: 4px; }
 .mood-radio :deep(.el-radio__label) { display: flex; align-items: center; gap: 4px; }
+.file-input { font-size: var(--text-sm); color: var(--text-secondary); }
+.image-preview { position: relative; display: inline-block; }
+.preview-img { max-width: 200px; max-height: 150px; border-radius: var(--radius-sm); object-fit: cover; }
+.image-remove { position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; border-radius: 50%; background: rgba(0,0,0,0.5); color: #fff; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 </style>

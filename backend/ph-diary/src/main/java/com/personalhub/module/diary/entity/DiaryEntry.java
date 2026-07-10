@@ -38,6 +38,9 @@ public class DiaryEntry {
     /** 地点 */
     private String location;
 
+    /** 配图文件ID */
+    private Long imageFileId;
+
     /** 逻辑删除 0-正常 1-删除 */
     @TableLogic
     private Integer isDeleted;

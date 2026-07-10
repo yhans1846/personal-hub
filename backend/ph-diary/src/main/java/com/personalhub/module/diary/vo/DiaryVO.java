@@ -41,6 +41,9 @@ public class DiaryVO {
     @Schema(description = "地点")
     private String location;
 
+    @Schema(description = "配图文件ID")
+    private Long imageFileId;
+
     @Schema(description = "创建时间")
     private LocalDateTime createdAt;
 
@@ -56,6 +59,7 @@ public class DiaryVO {
         vo.setMood(entry.getMood());
         vo.setWeather(entry.getWeather());
         vo.setLocation(entry.getLocation());
+        vo.setImageFileId(entry.getImageFileId());
         vo.setCreatedAt(entry.getCreatedAt());
         vo.setUpdatedAt(entry.getUpdatedAt());
 

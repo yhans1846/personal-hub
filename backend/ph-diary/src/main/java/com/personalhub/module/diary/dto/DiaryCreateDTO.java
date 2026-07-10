@@ -32,4 +32,7 @@ public class DiaryCreateDTO {
     @Size(max = 200, message = "地点长度不能超过200")
     @Schema(description = "地点", example = "图书馆")
     private String location;
+
+    @Schema(description = "配图文件ID")
+    private Long imageFileId;
 }
