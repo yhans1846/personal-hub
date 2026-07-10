@@ -84,7 +84,7 @@ const doneOptions = [
       <div v-for="i in 5" :key="i" class="skeleton-todo" />
     </div>
 
-    <EmptyState v-else-if="list.length === 0" :icon="CheckCircle" text="没有待办任务" action-label="新建任务" :action-icon="Plus" @action="goCreate" />
+    <EmptyState v-else-if="list.length === 0" :icon="CheckCircle" illustration="todo" text="没有待办任务" action-label="新建任务" :action-icon="Plus" @action="goCreate" />
 
     <div v-else class="todo-list">
       <div v-for="todo in list" :key="todo.id" class="todo-item" :class="{ 'todo-item--done': todo.isDone === 1 }">

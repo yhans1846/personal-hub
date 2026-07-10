@@ -58,7 +58,7 @@ const statusOptions = [
     <div v-if="loading" class="loading-skeleton">
       <div v-for="i in 4" :key="i" class="skeleton-book" />
     </div>
-    <EmptyState v-else-if="list.length === 0" :icon="BookMarked" text="还没有阅读记录，添加一本书吧" action-label="添加书籍" :action-icon="Plus" @action="goCreate" />
+    <EmptyState v-else-if="list.length === 0" :icon="BookMarked" illustration="reading" text="还没有阅读记录，添加一本书吧" action-label="添加书籍" :action-icon="Plus" @action="goCreate" />
     <div v-else class="book-grid">
       <div v-for="book in list" :key="book.id" class="book-card" @click="goEdit(book.id)">
         <div v-if="book.coverUrl" class="book-cover"><img :src="book.coverUrl" alt="" /></div>

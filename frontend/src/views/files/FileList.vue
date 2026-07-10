@@ -119,7 +119,7 @@ function getFileIcon(icon: string) {
       <div v-for="i in 8" :key="i" class="skeleton-file-card" />
     </div>
 
-    <EmptyState v-else-if="list.length === 0" :icon="FileIcon" text="还没有文件，上传你的第一个文件吧" :action-icon="Upload" action-label="上传文件" @action="showUpload = true" />
+    <EmptyState v-else-if="list.length === 0" :icon="FileIcon" illustration="file" text="还没有文件，上传你的第一个文件吧" :action-icon="Upload" action-label="上传文件" @action="showUpload = true" />
 
     <div v-else class="file-grid">
       <div v-for="file in list" :key="file.id" class="file-card">

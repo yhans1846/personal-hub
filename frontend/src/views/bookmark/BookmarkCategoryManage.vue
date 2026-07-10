@@ -68,7 +68,7 @@ async function handleDelete(item: BookmarkCategoryVO) {
       <div v-for="i in 3" :key="i" class="skeleton-row" />
     </div>
 
-    <EmptyState v-else-if="list.length === 0" :icon="FolderOpen" text="还没有分类，创建一个吧" action-label="新建分类" @action="openCreate" />
+    <EmptyState v-else-if="list.length === 0" :icon="FolderOpen" illustration="default" text="还没有分类，创建一个吧" action-label="新建分类" @action="openCreate" />
 
     <div v-else class="category-list">
       <div v-for="item in list" :key="item.id" class="category-item">

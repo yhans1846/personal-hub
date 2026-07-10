@@ -76,7 +76,7 @@ const statusOptions = [
       <div v-for="i in 3" :key="i" class="skeleton-plan" />
     </div>
 
-    <EmptyState v-else-if="list.length === 0" :icon="Target" text="还没有学习计划，创建一个吧" action-label="新建计划" :action-icon="Plus" @action="goCreate" />
+    <EmptyState v-else-if="list.length === 0" :icon="Target" illustration="plan" text="还没有学习计划，创建一个吧" action-label="新建计划" :action-icon="Plus" @action="goCreate" />
 
     <div v-else class="plan-list">
       <div v-for="plan in list" :key="plan.id" class="plan-card" @click="goEdit(plan.id)">

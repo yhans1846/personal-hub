@@ -63,7 +63,7 @@ async function handleToggleFavorite(note: NoteVO) {
     </div>
 
     <!-- 空状态 -->
-    <EmptyState v-else-if="list.length === 0" :icon="FileText" text="还没有笔记，开始写第一篇吧" action-label="新建笔记" :action-icon="Plus" @action="goCreate" />
+    <EmptyState v-else-if="list.length === 0" :icon="FileText" illustration="note" text="还没有笔记，开始写第一篇吧" action-label="新建笔记" :action-icon="Plus" @action="goCreate" />
 
     <div v-else class="note-grid">
       <div v-for="note in list" :key="note.id" class="note-card" @click="goEdit(note.id)">

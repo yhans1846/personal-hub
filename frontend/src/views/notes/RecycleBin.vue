@@ -42,7 +42,7 @@ async function handlePermanentDelete(id: number) {
 
     <div v-if="loading" style="padding: 48px 0; text-align: center; color: var(--text-tertiary);">加载中...</div>
 
-    <EmptyState v-else-if="list.length === 0" :icon="Trash2" text="回收站为空" />
+    <EmptyState v-else-if="list.length === 0" :icon="Trash2" illustration="default" text="回收站为空" />
 
     <div v-else class="recycle-list">
       <div v-for="note in list" :key="note.id" class="recycle-item">

@@ -62,7 +62,7 @@ async function handleDelete(id: number) {
       </el-button>
     </div>
 
-    <EmptyState v-if="list.length === 0" :icon="Folder" text="暂无分类" />
+    <EmptyState v-if="list.length === 0" :icon="Folder" illustration="default" text="暂无分类" />
 
     <div v-else class="manage-list">
       <div v-for="item in list" :key="item.id" class="manage-item">

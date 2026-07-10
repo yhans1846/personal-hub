@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useAuthStore } from '@/store/authStore'
 import { useRouter } from 'vue-router'
-import { Layers, LayoutDashboard, FileText, BookOpen, CheckSquare, PenLine, Bookmark, Target, BookMarked, FolderOpen, Grid3X3, Tags, Trash2, Search, BarChart3, Plus, Github, Sun, Moon, Bell } from 'lucide-vue-next'
+import { LayoutDashboard, FileText, BookOpen, CheckSquare, PenLine, Bookmark, Target, BookMarked, FolderOpen, Grid3X3, Tags, Trash2, Search, BarChart3, Plus, Github, Sun, Moon, Bell } from 'lucide-vue-next'
 import { ref } from 'vue'
 
 const authStore = useAuthStore()
@@ -36,7 +36,11 @@ function handleQuickCreate(cmd: string) {
     <header class="topbar">
       <div class="topbar-left">
         <router-link to="/" class="topbar-brand">
-          <Layers :size="22" class="brand-icon" />
+          <svg class="brand-logo" width="22" height="22" viewBox="0 0 22 22" fill="none">
+            <rect x="2" y="2" width="9" height="9" rx="2.5" fill="var(--accent)" opacity="0.55" />
+            <rect x="7" y="7" width="9" height="9" rx="2.5" fill="var(--accent)" opacity="0.75" />
+            <rect x="12" y="12" width="9" height="9" rx="2.5" fill="var(--accent)" />
+          </svg>
           <span class="brand-text">Personal Hub</span>
         </router-link>
       </div>
@@ -219,7 +223,7 @@ function handleQuickCreate(cmd: string) {
   display: flex; align-items: center; gap: var(--sp-2);
   color: var(--text-primary); font-weight: 600; font-size: var(--text-base); text-decoration: none;
 }
-.brand-icon { color: var(--accent); }
+.brand-logo { flex-shrink: 0; }
 
 .topbar-center { flex: 1; display: flex; justify-content: center; max-width: 400px; margin: 0 auto; }
 .search-trigger {

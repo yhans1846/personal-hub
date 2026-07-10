@@ -77,7 +77,7 @@ async function handleDelete(id: number) {
       </el-button>
     </div>
 
-    <EmptyState v-if="list.length === 0" :icon="Tags" text="暂无标签" />
+    <EmptyState v-if="list.length === 0" :icon="Tags" illustration="default" text="暂无标签" />
 
     <div v-else class="tag-grid">
       <div v-for="item in list" :key="item.id" class="tag-card">

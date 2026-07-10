@@ -106,7 +106,7 @@ function getFaviconUrl(url: string) {
       <div v-for="i in 6" :key="i" class="skeleton-card" />
     </div>
 
-    <EmptyState v-else-if="list.length === 0" :icon="Bookmark" text="还没有收藏，添加一个吧" action-label="新建收藏" :action-icon="Plus" @action="goCreate" />
+    <EmptyState v-else-if="list.length === 0" :icon="Bookmark" illustration="bookmark" text="还没有收藏，添加一个吧" action-label="新建收藏" :action-icon="Plus" @action="goCreate" />
 
     <div v-else class="bookmark-grid">
       <div v-for="item in list" :key="item.id" class="bookmark-card" @click="goEdit(item.id)">

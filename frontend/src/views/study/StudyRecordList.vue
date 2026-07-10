@@ -79,7 +79,7 @@ watch(list, (val) => { groupedList.value = groupByDate(val) }, { immediate: true
       <div v-for="i in 5" :key="i" class="skeleton-study" />
     </div>
 
-    <EmptyState v-else-if="list.length === 0" :icon="BookOpen" text="还没有学习记录，开始记录今天的学习吧" action-label="开始记录" @action="goCreate" />
+    <EmptyState v-else-if="list.length === 0" :icon="BookOpen" illustration="study" text="还没有学习记录，开始记录今天的学习吧" action-label="开始记录" @action="goCreate" />
 
     <!-- 时间线 -->
     <div v-else class="timeline">

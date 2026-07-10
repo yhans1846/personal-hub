@@ -99,7 +99,7 @@ const moodOptions = [
       <div v-for="i in 5" :key="i" class="skeleton-diary" />
     </div>
 
-    <EmptyState v-else-if="list.length === 0" :icon="PenLine" text="还没有日记，开始记录吧" action-label="写日记" :action-icon="Plus" @action="goCreate" />
+    <EmptyState v-else-if="list.length === 0" :icon="PenLine" illustration="diary" text="还没有日记，开始记录吧" action-label="写日记" :action-icon="Plus" @action="goCreate" />
 
     <div v-else class="diary-list">
       <div v-for="entry in list" :key="entry.id" class="diary-item" @click="goEdit(entry.id)">
