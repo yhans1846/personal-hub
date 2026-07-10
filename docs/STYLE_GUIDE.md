@@ -120,6 +120,8 @@ backend/
 │   └── src/main/java/com/personalhub/module/note/
 ├── ph-study/                        # 学习记录模块
 │   └── src/main/java/com/personalhub/module/study/
+├── ph-todo/                         # 待办任务模块
+│   └── src/main/java/com/personalhub/module/todo/
 └── ph-boot/                         # Spring Boot 启动入口
     └── src/main/
         ├── java/com/personalhub/PersonalHubApplication.java

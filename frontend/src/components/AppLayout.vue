@@ -29,6 +29,9 @@ const authStore = useAuthStore()
           <el-menu-item index="/study-records">
             <span>学习记录</span>
           </el-menu-item>
+          <el-menu-item index="/todos">
+            <span>待办任务</span>
+          </el-menu-item>
         </el-menu>
       </el-aside>
       <el-main class="app-main">

@@ -22,7 +22,10 @@ const router = createRouter({
         { path: 'notes/recycle', name: 'RecycleBin', component: () => import('@/views/notes/RecycleBin.vue') },
         { path: 'study-records', name: 'StudyRecords', component: () => import('@/views/study/StudyRecordList.vue') },
         { path: 'study-records/new', name: 'StudyRecordCreate', component: () => import('@/views/study/StudyRecordForm.vue') },
-        { path: 'study-records/:id/edit', name: 'StudyRecordEdit', component: () => import('@/views/study/StudyRecordForm.vue') }
+        { path: 'study-records/:id/edit', name: 'StudyRecordEdit', component: () => import('@/views/study/StudyRecordForm.vue') },
+        { path: 'todos', name: 'TodoList', component: () => import('@/views/todos/TodoList.vue') },
+        { path: 'todos/new', name: 'TodoCreate', component: () => import('@/views/todos/TodoForm.vue') },
+        { path: 'todos/:id/edit', name: 'TodoEdit', component: () => import('@/views/todos/TodoForm.vue') }
       ]
     }
   ]

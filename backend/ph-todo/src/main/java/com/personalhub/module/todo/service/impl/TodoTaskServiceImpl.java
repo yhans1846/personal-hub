@@ -1,0 +1,123 @@
+package com.personalhub.module.todo.service.impl;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.personalhub.common.exception.NotFoundException;
+import com.personalhub.module.todo.dto.TodoCreateDTO;
+import com.personalhub.module.todo.dto.TodoQueryDTO;
+import com.personalhub.module.todo.entity.TodoTask;
+import com.personalhub.module.todo.mapper.TodoTaskMapper;
+import com.personalhub.module.todo.service.TodoTaskService;
+import com.personalhub.module.todo.vo.TodoVO;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
+/**
+ * 待办任务服务实现
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class TodoTaskServiceImpl implements TodoTaskService {
+
+    private final TodoTaskMapper todoTaskMapper;
+
+    @Override
+    public IPage<TodoVO> list(Long userId, TodoQueryDTO query) {
+        LambdaQueryWrapper<TodoTask> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(TodoTask::getUserId, userId);
+
+        // 搜索关键词
+        if (StringUtils.hasText(query.getKeyword())) {
+            wrapper.like(TodoTask::getTitle, query.getKeyword());
+        }
+        // 优先级筛选
+        if (query.getPriority() != null) {
+            wrapper.eq(TodoTask::getPriority, query.getPriority());
+        }
+        // 完成状态筛选
+        if (query.getIsDone() != null) {
+            wrapper.eq(TodoTask::getIsDone, query.getIsDone() ? 1 : 0);
+        }
+
+        // 按创建时间倒序，未完成排前
+        wrapper.orderByAsc(TodoTask::getIsDone)
+               .orderByDesc(TodoTask::getCreatedAt);
+
+        Page<TodoTask> page = new Page<>(query.getPage(), query.getSize());
+        IPage<TodoTask> taskPage = todoTaskMapper.selectPage(page, wrapper);
+
+        return taskPage.convert(TodoVO::from);
+    }
+
+    @Override
+    public TodoVO getById(Long id, Long userId) {
+        TodoTask task = todoTaskMapper.selectById(id);
+        if (task == null || !task.getUserId().equals(userId)) {
+            log.warn("任务不存在或无权访问: id={}, userId={}", id, userId);
+            throw new NotFoundException("任务不存在");
+        }
+        return TodoVO.from(task);
+    }
+
+    @Override
+    @Transactional
+    public TodoVO create(Long userId, TodoCreateDTO dto) {
+        TodoTask task = new TodoTask();
+        task.setUserId(userId);
+        task.setTitle(dto.getTitle());
+        task.setContent(dto.getContent());
+        task.setPriority(dto.getPriority() != null ? dto.getPriority() : 2);
+        task.setDueDate(dto.getDueDate());
+        todoTaskMapper.insert(task);
+        log.info("新建待办任务: id={}, userId={}, title={}", task.getId(), userId, dto.getTitle());
+        return TodoVO.from(task);
+    }
+
+    @Override
+    @Transactional
+    public TodoVO update(Long id, Long userId, TodoCreateDTO dto) {
+        TodoTask task = todoTaskMapper.selectById(id);
+        if (task == null || !task.getUserId().equals(userId)) {
+            log.warn("编辑任务不存在或无权访问: id={}, userId={}", id, userId);
+            throw new NotFoundException("任务不存在");
+        }
+        task.setTitle(dto.getTitle());
+        task.setContent(dto.getContent());
+        task.setPriority(dto.getPriority() != null ? dto.getPriority() : 2);
+        task.setDueDate(dto.getDueDate());
+        todoTaskMapper.updateById(task);
+        log.info("编辑待办任务: id={}, userId={}", id, userId);
+        return TodoVO.from(task);
+    }
+
+    @Override
+    @Transactional
+    public void delete(Long id, Long userId) {
+        TodoTask task = todoTaskMapper.selectById(id);
+        if (task == null || !task.getUserId().equals(userId)) {
+            log.warn("删除任务不存在或无权访问: id={}, userId={}", id, userId);
+            throw new NotFoundException("任务不存在");
+        }
+        todoTaskMapper.deleteById(id); // MyBatis-Plus 逻辑删除
+        log.info("删除待办任务: id={}, userId={}", id, userId);
+    }
+
+    @Override
+    @Transactional
+    public TodoVO toggleDone(Long id, Long userId) {
+        TodoTask task = todoTaskMapper.selectById(id);
+        if (task == null || !task.getUserId().equals(userId)) {
+            log.warn("切换状态任务不存在或无权访问: id={}, userId={}", id, userId);
+            throw new NotFoundException("任务不存在");
+        }
+        task.setIsDone(task.getIsDone() == null || task.getIsDone() == 0 ? 1 : 0);
+        todoTaskMapper.updateById(task);
+        log.info("切换待办任务状态: id={}, userId={}, isDone={}", id, userId, task.getIsDone());
+        return TodoVO.from(task);
+    }
+}

@@ -23,6 +23,7 @@
         <module>ph-auth</module>
         <module>ph-note</module>
         <module>ph-study</module>
+        <module>ph-todo</module>
         <module>ph-boot</module>
     </modules>
 
@@ -57,6 +58,11 @@
             <dependency>
                 <groupId>com.personalhub</groupId>
                 <artifactId>ph-study</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.personalhub</groupId>
+                <artifactId>ph-todo</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

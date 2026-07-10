@@ -7,8 +7,10 @@
 - **Maven 多模块拆分**：父 POM + 5 子模块（ph-common/ph-auth/ph-note/ph-study/ph-boot）
 - 更新开发计划/编码规范/技术栈文档
 
-### 待开发
-- Todo / 文件管理
+### 2026-07-10（已完成）
+- **Todo 待办任务模块**：完整 CRUD + 完成状态切换 + 优先级(高/中/低) + 截止日期 + 超期提醒
+- 后端 ph-todo 模块（Entity/DTO/VO/Mapper/Service/Controller）+ 前端 TodoList/TodoForm 页面
+- 更新路线图/开发计划/版本记录
 
 ### 2026-07-09（已完成）
 - **项目初始化**：Spring Boot 3 后端脚手架 + Vue 3 前端脚手架
