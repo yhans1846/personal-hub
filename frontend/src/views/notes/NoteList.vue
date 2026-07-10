@@ -69,7 +69,10 @@ async function handleToggleFavorite(note: NoteVO) {
     <div v-else class="note-grid">
       <div v-for="note in list" :key="note.id" class="note-card" @click="goEdit(note.id)">
         <div class="note-card-header">
-          <span class="note-card-title">{{ note.title }}</span>
+          <div class="note-card-title-row">
+            <FileText :size="14" class="note-type-icon" />
+            <span class="note-card-title">{{ note.title }}</span>
+          </div>
           <button class="fav-btn" :class="{ favored: note.isFavorite === 1 }" @click.stop="handleToggleFavorite(note)">
             <Star :size="14" :fill="note.isFavorite === 1 ? 'currentColor' : 'none'" />
           </button>
@@ -116,6 +119,8 @@ async function handleToggleFavorite(note: NoteVO) {
 }
 .note-card:hover { box-shadow: var(--shadow-md); border-color: var(--accent-border); }
 .note-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--sp-2); }
+.note-card-title-row { display: flex; align-items: center; gap: var(--sp-2); min-width: 0; }
+.note-type-icon { color: var(--accent); opacity: 0.6; flex-shrink: 0; margin-top: 2px; }
 .note-card-title {
   font-size: var(--text-base); font-weight: 600; line-height: var(--leading-tight);
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
