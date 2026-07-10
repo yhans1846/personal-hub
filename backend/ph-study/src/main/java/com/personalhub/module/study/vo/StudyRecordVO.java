@@ -32,6 +32,9 @@ public class StudyRecordVO {
     @Schema(description = "学习心得")
     private String reflection;
 
+    @Schema(description = "关联学习计划ID")
+    private Long planId;
+
     @Schema(description = "创建时间")
     private LocalDateTime createdAt;
 
@@ -46,6 +49,7 @@ public class StudyRecordVO {
         vo.setDuration(record.getDuration());
         vo.setContent(record.getContent());
         vo.setReflection(record.getReflection());
+        vo.setPlanId(record.getPlanId());
         vo.setCreatedAt(record.getCreatedAt());
         vo.setUpdatedAt(record.getUpdatedAt());
         return vo;

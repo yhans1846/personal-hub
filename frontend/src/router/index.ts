@@ -33,6 +33,9 @@ const router = createRouter({
         { path: 'bookmarks/new', name: 'BookmarkCreate', component: () => import('@/views/bookmark/BookmarkForm.vue') },
         { path: 'bookmarks/:id/edit', name: 'BookmarkEdit', component: () => import('@/views/bookmark/BookmarkForm.vue') },
         { path: 'bookmarks/categories', name: 'BookmarkCategories', component: () => import('@/views/bookmark/BookmarkCategoryManage.vue') },
+        { path: 'study-plans', name: 'StudyPlanList', component: () => import('@/views/studyplan/StudyPlanList.vue') },
+        { path: 'study-plans/new', name: 'StudyPlanCreate', component: () => import('@/views/studyplan/StudyPlanForm.vue') },
+        { path: 'study-plans/:id/edit', name: 'StudyPlanEdit', component: () => import('@/views/studyplan/StudyPlanForm.vue') },
         { path: 'files', name: 'FileList', component: () => import('@/views/files/FileList.vue') },
         { path: 'files/categories', name: 'FileCategories', component: () => import('@/views/files/FileCategoryManage.vue') }
       ]

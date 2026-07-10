@@ -16,7 +16,8 @@
 | 10 | 文件管理模块 | ✅ |
 | 11 | 日记模块 | ✅ |
 | 12 | 收藏夹模块 — ph-bookmark 模块 + 前端 BookmarkList/BookmarkForm/BookmarkCategoryManage | ✅ |
-| - | 后续：学习计划/阅读记录 | 🔲 |
+| 13 | 学习计划模块 — ph-studyplan 模块 + study_record 追加 plan_id | ✅ |
+| - | 后续：阅读记录 | 🔲 |
 
 ## 各步文件清单
 
@@ -56,5 +57,8 @@ SpringDoc OpenAPI 2.6.0 / 所有 Controller/DTO/VO 注解 / OpenApiConfig(common
 ### Step 12 — 收藏夹模块
 `ph-bookmark`模块(BookmarkUrl+BookmarkCategory) + `sql/init.sql`(新增bookmark_url+bookmark_category表) / 前端 BookmarkList(卡片网格)+BookmarkForm+BookmarkCategoryManage / 路由+导航
 
+### Step 13 — 学习计划模块
+`ph-studyplan`模块 + `sql/init.sql`(新增study_plan表+study_record追加plan_id) / 前端 StudyPlanList(进度条)+StudyPlanForm / 路由+导航
+
 ### 后续（第二阶段）
-学习计划 / 阅读记录 / Dashboard & 数据统计 / 全局搜索 / 标签系统
+阅读记录 / Dashboard & 数据统计 / 全局搜索 / 标签系统

@@ -16,6 +16,9 @@
 - 后端 ph-diary 模块 + 前端 DiaryList/DiaryForm 页面 + 侧边栏导航
 - **收藏夹模块**（第二阶段）：网址 CRUD + 分类管理 + 标签管理 + 关键词搜索
 - 后端 ph-bookmark 模块（BookmarkUrl + BookmarkCategory）+ 前端 BookmarkList/BookmarkForm/BookmarkCategoryManage
+- **学习计划模块**（第二阶段）：计划 CRUD + 进度跟踪 + 时间管理 + 关联学习记录
+- 后端 ph-studyplan 模块 + study_record 表追加 plan_id 字段
+- 前端 StudyPlanList（进度条/状态标签/记录数）/ StudyPlanForm
 - 更新路线图/数据库/API/版本记录
 
 ### 第一阶段 MVP 全部完成 ✅

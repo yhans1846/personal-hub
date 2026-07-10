@@ -193,3 +193,25 @@
 | POST | /api/bookmark-categories | 新建 | 是 |
 | PUT | /api/bookmark-categories/{id} | 编辑 | 是 |
 | DELETE | /api/bookmark-categories/{id} | 删除 | 是 |
+
+### 十三、学习计划 `/api/study-plans`
+| 方法 | 路径 | 说明 | 认证 |
+|------|------|------|------|
+| GET | /api/study-plans | 计划列表（分页）| 是 |
+| GET | /api/study-plans/{id} | 详情 | 是 |
+| POST | /api/study-plans | 新建 | 是 |
+| PUT | /api/study-plans/{id} | 编辑 | 是 |
+| DELETE | /api/study-plans/{id} | 删除 | 是 |
+
+**GET /api/study-plans** 参数: page, size, keyword, status
+
+**POST /api/study-plans**
+```json
+{"name":"Spring Boot 深入学习","goal":"完成官方文档阅读","progress":0,"startDate":"2026-07-01","endDate":"2026-08-31","status":0}
+```
+
+**PUT /api/study-plans/{id}** — 同 POST 请求体
+
+### 学习记录关联
+`study_record` 表新增 `plan_id` 字段，学习记录支持关联学习计划。
+**POST /api/study-records** 新增可选字段: `planId`

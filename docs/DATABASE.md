@@ -83,6 +83,7 @@
 | duration | INT | 时长（分钟）| NOT NULL |
 | content | TEXT | 学习内容 | |
 | reflection | TEXT | 学习心得 | |
+| plan_id | BIGINT | 关联学习计划ID | INDEX |
 | is_deleted | TINYINT | 逻辑删除 | DEFAULT 0 |
 | created_at | DATETIME | 创建时间 | NOT NULL |
 | updated_at | DATETIME | 更新时间 | NOT NULL |
@@ -185,6 +186,21 @@ sys_user ── note_note ── note_category_rel ── note_category
 | updated_at | DATETIME | 更新时间 | NOT NULL |
 
 ### 13. `bookmark_category` 收藏夹分类表
+
+### 14. `study_plan` 学习计划表
+| 字段 | 类型 | 说明 | 约束 |
+|------|------|------|------|
+| id | BIGINT | 主键 | PK |
+| user_id | BIGINT | 所属用户 | NOT NULL, INDEX |
+| name | VARCHAR(200) | 计划名称 | NOT NULL |
+| goal | TEXT | 学习目标 | |
+| progress | INT | 进度百分比 0-100 | DEFAULT 0 |
+| start_date | DATE | 开始日期 | |
+| end_date | DATE | 结束日期 | |
+| status | TINYINT | 状态（0未开始 1进行中 2已完成 3已放弃）| DEFAULT 0 |
+| is_deleted | TINYINT | 逻辑删除 | DEFAULT 0 |
+| created_at | DATETIME | 创建时间 | NOT NULL |
+| updated_at | DATETIME | 更新时间 | NOT NULL |
 | 字段 | 类型 | 说明 | 约束 |
 |------|------|------|------|
 | id | BIGINT | 主键 | PK |
@@ -205,7 +221,8 @@ sys_user ── note_note ── note_category_rel ── note_category
      ├── todo_task
      ├── file_resource ── file_category
      ├── diary_entry
-     └── bookmark_url ── bookmark_category
+     ├── bookmark_url ── bookmark_category
+     └── study_plan
 ```
 
 ## 索引策略
@@ -221,11 +238,11 @@ sys_user ── note_note ── note_category_rel ── note_category
 | file_resource | idx_user_id | NORMAL | 用户查询 |
 | diary_entry | idx_user_id_date / idx_date | NORMAL | 用户+日期查询 |
 | bookmark_url | idx_user_id / idx_category_id | NORMAL | 用户/分类查询 |
+| study_plan | idx_user_id | NORMAL | 用户查询 |
 
 ---
 
 ## 第三阶段 — 待扩展表
 - **journal_entry**: user_id, title, content(MD), entry_date, mood
 - **bookmark**: user_id, title, url, icon, category_id, tags
-- **study_plan**: user_id, name, goal, progress(0-100), start_date, end_date
 - **reading_record**: user_id, book_title, author, current_chapter, progress(0-100), notes

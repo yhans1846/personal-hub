@@ -90,6 +90,7 @@ CREATE TABLE IF NOT EXISTS `study_record` (
     `duration`   INT          NOT NULL COMMENT '学习时长（分钟）',
     `content`    TEXT         DEFAULT NULL COMMENT '学习内容',
     `reflection` TEXT         DEFAULT NULL COMMENT '学习心得',
+    `plan_id`    BIGINT       DEFAULT NULL COMMENT '关联学习计划ID',
     `is_deleted` TINYINT      NOT NULL DEFAULT 0 COMMENT '逻辑删除',
     `created_at` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_at` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
@@ -202,3 +203,22 @@ CREATE TABLE IF NOT EXISTS `bookmark_url` (
     INDEX `idx_user_id` (`user_id`),
     INDEX `idx_category_id` (`category_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='收藏夹表';
+
+-- ========================================
+-- 14. 学习计划表
+-- ========================================
+CREATE TABLE IF NOT EXISTS `study_plan` (
+    `id`         BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `user_id`    BIGINT       NOT NULL COMMENT '所属用户',
+    `name`       VARCHAR(200) NOT NULL COMMENT '计划名称',
+    `goal`       TEXT         DEFAULT NULL COMMENT '学习目标',
+    `progress`   INT          NOT NULL DEFAULT 0 COMMENT '进度百分比 0-100',
+    `start_date` DATE         DEFAULT NULL COMMENT '开始日期',
+    `end_date`   DATE         DEFAULT NULL COMMENT '结束日期',
+    `status`     TINYINT      NOT NULL DEFAULT 0 COMMENT '状态 0-未开始 1-进行中 2-已完成 3-已放弃',
+    `is_deleted` TINYINT      NOT NULL DEFAULT 0 COMMENT '逻辑删除',
+    `created_at` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_at` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    INDEX `idx_user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='学习计划表';

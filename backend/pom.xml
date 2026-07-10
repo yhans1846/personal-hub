@@ -27,6 +27,7 @@
         <module>ph-file</module>
         <module>ph-diary</module>
         <module>ph-bookmark</module>
+        <module>ph-studyplan</module>
         <module>ph-boot</module>
     </modules>
 
@@ -81,6 +82,11 @@
             <dependency>
                 <groupId>com.personalhub</groupId>
                 <artifactId>ph-bookmark</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.personalhub</groupId>
+                <artifactId>ph-studyplan</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
