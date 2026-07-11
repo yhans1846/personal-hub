@@ -1,19 +1,31 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
-import { useRouter } from 'vue-router'
 import { getStudyRecordList, deleteStudyRecord, getStudyStats } from '@/api/studyApi'
 import type { StudyStats } from '@/api/studyApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { BookOpen, Pencil, Trash2, Plus } from 'lucide-vue-next'
 import type { StudyRecordVO, StudyRecordQuery } from '@/types/study'
 import { PageHeader, EmptyState, ListToolbar, ListPagination } from '@/components'
+import StudyDrawer from './StudyDrawer.vue'
 
-const router = useRouter()
 const list = ref<StudyRecordVO[]>([])
 const total = ref(0)
 const loading = ref(false)
 const stats = ref<StudyStats | null>(null)
 const query = ref<StudyRecordQuery>({ page: 1, size: 20, keyword: '' })
+
+const drawerVisible = ref(false)
+const editId = ref<number | undefined>()
+
+function openCreate() {
+  editId.value = undefined
+  drawerVisible.value = true
+}
+
+function openEdit(id: number) {
+  editId.value = id
+  drawerVisible.value = true
+}
 
 onMounted(() => { fetchList(); fetchStats() })
 async function fetchStats() {
@@ -36,8 +48,8 @@ async function fetchList() {
 
 function onSearch() { query.value.page = 1; fetchList() }
 function onPageChange(page: number) { query.value.page = page; fetchList() }
-function goCreate() { router.push('/study-records/new') }
-function goEdit(id: number) { router.push(`/study-records/${id}/edit`) }
+function goCreate() { openCreate() }
+function goEdit(id: number) { openEdit(id) }
 
 async function handleDelete(id: number) {
   await ElMessageBox.confirm('确定删除该记录？', '提示', { type: 'warning' })
@@ -116,6 +128,8 @@ watch(list, (val) => { groupedList.value = groupByDate(val) }, { immediate: true
     </div>
 
     <ListPagination v-if="total > query.size" :total="total" :page="query.page" :size="query.size" @update:page="onPageChange" />
+
+    <StudyDrawer v-model="drawerVisible" :entity-id="editId" @saved="fetchList" />
   </div>
 </template>
 
