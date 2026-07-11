@@ -2,102 +2,41 @@
 
 ## [Unreleased]
 
-### 2026-07-11（第六阶段：体验打磨 + 后端优化 + 通知系统）
+### 2026-07-11 第六阶段：体验打磨 + 后端优化 + 通知系统
 - 搜索栏 Ctrl+K 快捷键提示
 - 学习统计 SQL 聚合优化（SUM + DISTINCT 替代全量加载）
 - 笔记 Markdown 导出（.md 文件下载）
-- **通知系统**：后端 ph-notification 模块 + sys_notification 表 + 自动检测生成（待办超期/计划截止/计划完成）+ 定时任务
-- 前端 NotificationBell 组件（el-badge 红标 + el-popover 下拉面板 + 全部已读/清空）
+- 通知系统 + NotificationBell 组件
 
-### 2026-07-11（功能增强第五阶段）
+### 2026-07-11 第五阶段：功能增强
+- 笔记：标签颜色显示、阅读时间估算、MD 类型图标、最近编辑标识
+- 待办：拖拽排序（sortablejs）、已完成折叠
+- 学习记录：今日时长/本周统计/连续天数
+- 日记：地点记录、配图上传
+- 学习计划：剩余天数、超期标记
+- 阅读记录：评分(1-5星)、阅读时长
 
-#### 笔记
-- 标签颜色显示
-- 阅读时间估算
-- Markdown 类型图标
-- 最近编辑标识 + 相对时间
+### 2026-07-11 第四阶段：UI 优化
+- Accent Color 主题色切换（5 种）、Command Palette、响应式适配
+- Markdown 编辑器（md-editor-v3）、设计令牌刷新
+- 侧边栏三段分组、共享组件库（EmptyState/StatCard/PageHeader）
+- Dashboard 扩展、Topbar 增强、过渡动画、深色模式
+- 空状态插画（9 套 SVG）
 
-#### 待办
-- 拖拽排序（sortablejs）
-- 已完成折叠
+### 2026-07-11 第三阶段
+- 统一标签系统（ph-tag 模块 + tag/tag_rel 表）
+- Dashboard 统计 + ECharts 趋势图 + 全局搜索
 
-#### 学习记录
-- 今日学习时长 / 本周统计 / 连续学习天数（GET /api/study-records/stats）
+### 2026-07-10 第二阶段
+- Todo、文件管理、日记、收藏夹、学习计划、阅读记录模块
 
-#### 日记
-- 地点记录
-- 配图上传（关联文件模块）
-
-#### 学习计划
-- 剩余天数 / 超期标记
-
-#### 阅读记录
-- 评分（1-5 星）
-- 阅读时长（分钟）
-
-### 2026-07-11（UI 优化第四阶段）
-- **Accent Color 主题色切换**：支持 5 种强调色（蓝/紫/青/橙/绿），CSS 变量动态切换，localStorage 持久化
-- **Command Palette**：Ctrl+K 全局搜索面板，支持页面导航 + 跨模块内容搜索（复用全局搜索 API）
-- **响应式适配**：768px/1024px 断点，移动端侧边栏折叠+汉堡菜单，Dashboard 单列重排，卡片自适应
-- **Markdown 编辑器**：替换 textarea 为 md-editor-v3，支持工具条/MD 语法高亮/实时预览/代码块
-- **UI 设计令牌刷新**：主色 #4F7BFF、内容宽度 1600px、圆角/阴影/过渡统一
-- **侧边栏重构**：三段分组（工作区/管理/统计）+ 实心蓝色激活态
-- **共享组件库**：新建 EmptyState/StatCard/PageHeader，更新 14 个视图
-- **Dashboard 扩展**：2 列网格，新增今日计划/最近阅读/最近收藏 3 模块
-- **Topbar 增强**：+新建/GitHub/主题切换/通知按钮
-- **过渡动画**：路由淡入淡出、收藏弹跳动效
-- **网站 Logo**：自定义 SVG 重叠方块标识
-- **空状态插画**：9 套极简 SVG 插画覆盖全场景
-- **统一标签系统**（第三阶段）：新建 ph-tag 模块 + tag/tag_rel 表 + 统一标签管理页面
-- 笔记标签迁移到统一系统（替换 note_tag + note_tag_rel）
-- 收藏夹标签迁移到统一系统（替换逗号分隔存储，`@PostConstruct` 自动迁移旧数据）
-- 标签支持颜色标记和使用次数统计
-- 标签管理页面支持颜色选择器
-- **Dashboard 统计模块**（第三阶段）：新建 ph-dashboard 模块 + 聚合统计 API
-- 统计卡片：笔记/学习/Todo/文件/日记/收藏/阅读/计划 8 项指标
-- 本周学习时长 / 本月日记数 / 超期待办提醒
-- **数据统计趋势图**（第三阶段）：ECharts 折线图 + 7/30/90 天范围切换
-- 趋势类型：学习时长 / 笔记新增 / 待办新增 / 阅读新增
-- **全局搜索**（第三阶段最终模块）：跨 8 模块统一搜索 + 关键词高亮
-- 支持搜索：笔记/日记/待办/学习记录/收藏夹/阅读记录/文件/学习计划
-- 搜索结果按模块分组展示，关键词高亮，可点击跳转
-- **第三阶段全部完成 🎉**
-- 更新项目/路线图/API 文档
-
-### 2026-07-09（已完成）
-- **代码质量统一提升**：抽取 PageParam 分页基类 + ResultCode 状态码枚举 + 全局 @Slf4j 日志
-- **Maven 多模块拆分**：父 POM + 5 子模块（ph-common/ph-auth/ph-note/ph-study/ph-boot）
-- 更新开发计划/编码规范/技术栈文档
-
-### 2026-07-10（已完成）
-- **Todo 待办任务模块**：完整 CRUD + 完成状态切换 + 优先级(高/中/低) + 截止日期 + 超期提醒
-- 后端 ph-todo 模块（Entity/DTO/VO/Mapper/Service/Controller）+ 前端 TodoList/TodoForm 页面
-- **文件管理模块**：文件上传/下载/列表/搜索/删除 + 文件分类管理
-- 后端 ph-file 模块 + 前端 FileList/FileCategoryManage 页面
-- **日记模块**（第二阶段）：日记 CRUD + 月视图聚合 + 关键词搜索 + 心情/天气记录
-- 后端 ph-diary 模块 + 前端 DiaryList/DiaryForm 页面 + 侧边栏导航
-- **收藏夹模块**（第二阶段）：网址 CRUD + 分类管理 + 标签管理 + 关键词搜索
-- 后端 ph-bookmark 模块（BookmarkUrl + BookmarkCategory）+ 前端 BookmarkList/BookmarkForm/BookmarkCategoryManage
-- **学习计划模块**（第二阶段）：计划 CRUD + 进度跟踪 + 时间管理 + 关联学习记录
-- 后端 ph-studyplan 模块 + study_record 表追加 plan_id 字段
-- 前端 StudyPlanList（进度条/状态标签/记录数）/ StudyPlanForm
-- **阅读记录模块**（第二阶段）：记录 CRUD + 章节进度 + 阅读笔记
-- 后端 ph-reading 模块 + 前端 ReadingList/ReadingForm
-- **第二阶段全部完成 🎉**
-- 更新路线图/数据库/API/版本记录
-
-### 第一阶段 MVP 全部完成 ✅
-- **项目初始化**：Spring Boot 3 后端脚手架 + Vue 3 前端脚手架
-- **数据库初始化**：10 张第一阶段表
-- **用户认证模块**：JWT 登录/退出 + Spring Security 配置 + 个人信息/修改密码
-- **Swagger 集成**：SpringDoc OpenAPI，所有 Controller/DTO/VO 添加注解
-- **Markdown 笔记模块**：CRUD + 分类管理 + 标签管理 + 收藏 + 搜索 + 回收站
-- **学习记录模块**：CRUD + 日期范围筛选 + 关键词搜索
-- 文档压缩精简 + 编码规范完善
+### 2026-07-09 第一阶段 MVP
+- 项目初始化、用户认证、Markdown 笔记、学习记录
+- Maven 多模块拆分、代码质量统一、Swagger 集成
+- docs 体系搭建（8 文档）
 
 ---
 
 ## [0.1.0] — 2026-07-09
 - 初始化项目仓库，完成项目规划文档
 - docs 体系搭建：PROJECT / TECH_STACK / ROADMAP / DATABASE / API / STYLE_GUIDE / CHANGELOG
-- 安装 Superpowers-ZH 技能框架（20 skills）

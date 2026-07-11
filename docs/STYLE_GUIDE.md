@@ -102,8 +102,10 @@ public class XxxServiceImpl implements XxxService {
 
 ### Maven 多模块结构
 
+#### 当前结构（14 模块）
+
 ```
-backend/
+personal-hub-server/
 ├── pom.xml                          # 父 POM（Spring Boot parent）
 ├── ph-common/                       # 公共组件
 │   └── src/main/java/com/personalhub/common/
@@ -113,36 +115,41 @@ backend/
 │       ├── result/                  # Result / PageResult
 │       └── util/                    # JwtUtil
 ├── ph-auth/                         # 认证 + 用户模块
-│   └── src/main/java/com/personalhub/
-│       ├── module/auth/             # 登录/退出
-│       └── module/user/             # 个人信息/密码
 ├── ph-note/                         # 笔记模块
-│   └── src/main/java/com/personalhub/module/note/
 ├── ph-study/                        # 学习记录模块
-│   └── src/main/java/com/personalhub/module/study/
 ├── ph-todo/                         # 待办任务模块
-│   └── src/main/java/com/personalhub/module/todo/
 ├── ph-file/                         # 文件管理模块
-│   └── src/main/java/com/personalhub/module/file/
 ├── ph-diary/                        # 日记模块
-│   └── src/main/java/com/personalhub/module/diary/
 ├── ph-bookmark/                     # 收藏夹模块
-│   └── src/main/java/com/personalhub/module/bookmark/
 ├── ph-studyplan/                    # 学习计划模块
-│   └── src/main/java/com/personalhub/module/studyplan/
 ├── ph-reading/                      # 阅读记录模块
-│   └── src/main/java/com/personalhub/module/reading/
 ├── ph-tag/                          # 统一标签模块
-│   └── src/main/java/com/personalhub/module/tag/
 ├── ph-dashboard/                    # Dashboard + 数据统计 + 全局搜索模块
-│   └── src/main/java/com/personalhub/module/dashboard/
 └── ph-boot/                         # Spring Boot 启动入口
     └── src/main/
         ├── java/com/personalhub/PersonalHubApplication.java
         └── resources/               # application.yml + application-dev.yml
 ```
 
+#### 目标结构（领域聚合，7 模块）
+
+后续重构逐步合并为领域模块：
+
+```
+personal-hub-server/
+├── ph-common        # 公共能力
+├── ph-system        # 用户 + 认证 + 通知       <- ph-auth + ph-notification
+├── ph-knowledge     # 笔记 + 日记 + 学习记录    <- ph-note + ph-diary + ph-study
+│                    # + 阅读记录 + 标签         <- + ph-reading + ph-tag
+├── ph-planning      # Todo + 学习计划           <- ph-todo + ph-studyplan
+├── ph-resource      # 收藏夹 + 文件管理         <- ph-bookmark + ph-file
+├── ph-dashboard     # 聚合查询 + 全局搜索       <- ph-dashboard
+└── ph-boot          # 启动入口
+```
+
 每模块内部按分层组织：`controller/ dto/ entity/ mapper/ service/ vo/`
+
+> 领域划分原则：按业务领域聚合，不按数据库表划分模块，避免"每张表一个 Module"的数据库思维。
 
 ---
 
@@ -159,22 +166,90 @@ backend/
 | CSS class | kebab-case/BEM | `.note-card__title` |
 
 ### 目录结构
+
+#### 当前：按页面类型组织
+
 ```
-frontend/src/
+personal-hub-web/src/
 ├── api/           # Axios实例 + 各模块接口
 ├── router/        # 路由配置
-├── store/         # Pinia（按模块拆分）
+├── stores/        # Pinia（按模块拆分）
 ├── types/         # TS 类型定义
-├── views/         # 页面组件
+├── views/         # 页面组件（按页面一级目录）
 ├── components/    # 公共组件
+│   ├── common/    # 通用组件（EmptyState / PageHeader 等）
+│   ├── business/  # 业务组件
+│   └── charts/    # ECharts 图表
 ├── composables/   # 组合式函数
+├── layouts/       # 布局组件
+├── styles/        # 全局样式
 └── utils/         # 工具函数
 ```
+
+#### 目标：按业务领域组织（推荐）
+
+随着模块增多，`views/` 一级目录膨胀，推荐重组为 `modules/` 结构，与后端领域对齐：
+
+```
+personal-hub-web/src/
+├── api/               # 按领域聚合的 API 文件
+├── components/        # 公共组件（common / business / charts）
+├── composables/
+├── layouts/
+├── router/
+├── stores/            # 仅全局状态（user / theme / dashboard）
+├── styles/
+├── types/
+├── utils/
+└── modules/           # 按业务领域组织页面
+    ├── dashboard/
+    │   ├── Dashboard.vue
+    │   ├── components/     # Greeting / StatCards / QuickActions 等
+    │   └── api.ts
+    ├── knowledge/
+    │   ├── note/           # List / Detail / Edit + components/
+    │   ├── diary/
+    │   ├── study/
+    │   ├── reading/
+    │   └── tag/
+    ├── planning/
+    │   ├── todo/
+    │   └── studyplan/
+    ├── resource/
+    │   ├── bookmark/
+    │   └── file/
+    ├── search/
+    └── system/
+        └── login/
+```
+
+> 每个模块内部按功能分层：页面级组件（List / Detail / Edit）+ 私有 `components/` + `api.ts`。
+> Dashboard.vue 只负责布局和数据组装，子模块拆分到 `dashboard/components/`。
 
 ### 组件 / API / Store
 - 全部 `<script setup lang="ts">` + TypeScript，Props/Emits 类型推断
 - Pinia 按模块拆分 Store，简单状态组件内管理
 - API 请求统一封装在 `api/` 目录
+- **API 文件按领域聚合**，与后端模块命名保持一致：
+
+  ```
+  api/
+  ├── request.ts         # Axios 实例 + 拦截器
+  ├── auth.ts            # 认证相关
+  ├── knowledge.ts       # 笔记/日记/学习/阅读/标签
+  ├── planning.ts        # Todo / 学习计划
+  ├── resource.ts        # 收藏夹 / 文件
+  ├── dashboard.ts       # 首页统计 + 趋势
+  ├── notification.ts    # 通知
+  └── search.ts          # 全局搜索
+  ```
+
+  禁止每张表一个 api 文件（如 `note.ts` / `study.ts` / `reading.ts` 各写一个），同一领域放一起。
+
+### Pinia 使用原则
+- **全局状态**：`user`（登录信息）、`theme`（主题/强调色）、`dashboard`（首页聚合数据）用 Pinia Store
+- **业务列表数据**：直接在页面组件内通过 API 获取和管理，不建议所有业务都建 Store
+- 简单数据传递用 props + emits，跨多层传递用 provide/inject，**不滥用 Pinia 做全局状态管理**
 
 ### 依赖引入原则
 - 可用社区包简化实现时优先使用，不强行手写轮子
@@ -267,6 +342,13 @@ frontend/src/
 | `ListPagination` | 分页 | `total`, `page`, `size` |
 | `CommandPalette` | Ctrl+K 全局搜索 | 全局快捷键 |
 | `NotificationBell` | 通知下拉 | el-badge 红标 + el-popover 面板，自动检测生成 |
+| `SearchBar` | 通用搜索框 | `placeholder`, `modelValue`, `debounce?` |
+| `ConfirmDialog` | 确认弹窗 | `title`, `content`, `confirmText?`, `cancelText?` |
+| `MarkdownEditor` | Markdown 编辑器 | `modelValue`, `previewOnly?` |
+| `Tag` | 标签展示 | `name`, `color`, `closable?` |
+| `PriorityTag` | 优先级标签 | `priority` (高/中/低) |
+| `ProgressCard` | 进度卡片 | `value`, `max`, `label` |
+| `FileUploader` | 文件上传 | `accept`, `multiple?`, `maxSize?` |
 
 ### 工具函数（`src/utils/`）
 | 文件 | 函数 | 用途 |
@@ -334,9 +416,9 @@ frontend/src/
 7. ✅ 统一的页面结构（header → toolbar → list → pagination）
 
 ### 相关文件
-- 设计 Token / Element Plus 覆盖：`frontend/src/styles/global.css`
-- 共享组件：`frontend/src/components/`
-- 深色/强调色切换：`frontend/src/main.ts`
+- 设计 Token / Element Plus 覆盖：`personal-hub-web/src/styles/global.css`
+- 共享组件：`personal-hub-web/src/components/`
+- 深色/强调色切换：`personal-hub-web/src/main.ts`
 
 ---
 
