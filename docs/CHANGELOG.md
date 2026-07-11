@@ -2,10 +2,12 @@
 
 ## [Unreleased]
 
-### 2026-07-11（第六阶段：体验打磨 + 后端优化 + 新功能）
+### 2026-07-11（第六阶段：体验打磨 + 后端优化 + 通知系统）
 - 搜索栏 Ctrl+K 快捷键提示
 - 学习统计 SQL 聚合优化（SUM + DISTINCT 替代全量加载）
 - 笔记 Markdown 导出（.md 文件下载）
+- **通知系统**：后端 ph-notification 模块 + sys_notification 表 + 自动检测生成（待办超期/计划截止/计划完成）+ 定时任务
+- 前端 NotificationBell 组件（el-badge 红标 + el-popover 下拉面板 + 全部已读/清空）
 
 ### 2026-07-11（功能增强第五阶段）
 

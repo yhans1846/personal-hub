@@ -6,7 +6,7 @@
 
 # 文档索引
 
-所有设计存放 `docs/`，开发前阅读对应文档：
+开发前先查阅对应文档：
 
 | 文档 | 内容 |
 |------|------|
@@ -15,43 +15,11 @@
 | ROADMAP.md | 开发阶段与进度 |
 | DATABASE.md | 表结构、ER、索引 |
 | API.md | RESTful 接口定义 |
-| STYLE_GUIDE.md | 编码规范 + UI 设计系统（必读） |
+| STYLE_GUIDE.md | 编码规范 + UI 设计系统 + 共享组件（必读） |
 | CHANGELOG.md | 版本变更记录 |
 | DEVELOPMENT_PLAN.md | 分步开发计划与提交记录 |
 
 ---
-
-# 前端架构速览
-
-## 共享组件（`frontend/src/components/`）
-
-| 组件 | 用途 | 关键 Props |
-|------|------|-----------|
-| `PageHeader` | 页面标题 | `title`, `subtitle?`, 插槽 |
-| `EmptyState` | 空状态 | `icon`, `text`, `illustration?`, `actionLabel?` |
-| `StatCard` | 统计卡片 | `icon`, `value`, `label`, `color?` |
-| `ListToolbar` | 列表搜索栏 | `search`, `search-placeholder`, `create-label` + `#filters` 插槽 |
-| `ListPagination` | 分页 | `total`, `page`, `size` |
-| `CommandPalette` | Ctrl+K 全局搜索 | 全局快捷键，自动注册 |
-
-## 工具函数（`frontend/src/utils/`）
-
-| 文件 | 函数 | 用途 |
-|------|------|------|
-| `readingTime.ts` | `estimateReadingTime()` | Markdown 阅读时长估算 |
-| | `formatRelativeTime()` | 相对时间格式化（刚刚/X分钟前） |
-| | `isRecentlyEdited()` | 24 小时内编辑检测 |
-
-## 项目关键约定
-
-- **依赖引入**：可用社区包简化时优先使用，不强行手写轮子（如拖拽用 sortablejs），也不随意引入大包
-- **图标**：统一使用 `lucide-vue-next`，禁止混用 Element Icon / Heroicons
-- **新页面模板**：PageHeader → ListToolbar（#filters 插槽） → loading skeleton → EmptyState → 内容 → ListPagination
-- **设计 Token** 全部定义在 `frontend/src/styles/global.css` 的 CSS 变量中
-- **深色模式**：`data-theme="dark"` + `localStorage` 持久化，支持用户手动切换覆盖系统偏好
-- **强调色**：`data-accent="blue|purple|cyan|orange|green"`，5 色可选
-
---- 
 
 # 开发流程
 
@@ -59,7 +27,7 @@
 
 > **铁律：提交代码前必须先同步更新 docs/ 下受影响的文档。**
 
-查看 `docs/STYLE_GUIDE.md` 获取完整编码规范（阿里巴巴手册、Swagger注解要求）。
+查看 `docs/STYLE_GUIDE.md` 获取完整编码规范（阿里巴巴手册、Swagger注解要求）及前端共享组件/工具函数说明。
 
 <!-- superpowers-zh:begin (do not edit between these markers) -->
 # Superpowers-ZH 中文增强版

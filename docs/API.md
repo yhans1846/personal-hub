@@ -298,6 +298,35 @@
 [1, 2, 3]
 ```
 
+### 十七、系统通知 `/api/notifications`
+| 方法 | 路径 | 说明 | 认证 |
+|------|------|------|------|
+| GET | /api/notifications | 通知列表（分页，未读优先）| 是 |
+| GET | /api/notifications/unread-count | 未读通知数 | 是 |
+| PUT | /api/notifications/read | 标记已读（批量）| 是 |
+| PUT | /api/notifications/read-all | 全部标记已读 | 是 |
+| DELETE | /api/notifications | 清空所有通知 | 是 |
+| POST | /api/notifications/check | 触发系统通知检测生成 | 是 |
+
+**通知类型**: TODO_OVERDUE（待办超期）/ PLAN_DEADLINE（计划即将截止）/ PLAN_COMPLETED（计划已完成）
+
+**GET /api/notifications** 参数: page, size — 未读排前，按时间倒序
+
+**PUT /api/notifications/read** — `[1, 2, 3]`（通知 ID 数组）
+
+**GET /api/notifications/unread-count**
+```json
+{"code":200,"message":"success","data":3}
+```
+
+**GET /api/notifications**
+```json
+{
+  "code":200,"message":"success",
+  "data":{"records":[{"id":1,"type":"TODO_OVERDUE","title":"待办超期: 测试任务","content":"已超过截止日期","isRead":false,"relatedId":1,"relatedType":"todo","createdAt":"2026-07-11T09:00:00"}],"total":1,"page":1,"size":10}
+}
+```
+
 ### 标签关联实体类型
 | entityType | 说明 |
 |-----------|------|

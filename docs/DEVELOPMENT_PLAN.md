@@ -24,6 +24,8 @@
 | 17 | 数据统计趋势图 — ECharts 趋势图（学习/笔记/Todo/阅读）+ 日期范围切换 | ✅ |
 | 18 | 全局搜索 — 跨 8 模块统一搜索 + 关键词高亮 + 结果分组 | ✅ |
 | - | 第三阶段全部完成！🎉 | |
+| 19 | 通知系统 — ph-notification 模块 + sys_notification 表 + 自动检测生成 + NotificationBell 组件 | ✅ |
+| - | 第四阶段全部完成！🎉 | |
 
 ## 各步文件清单
 
@@ -77,3 +79,6 @@ ph-reading 模块 + sql 新表 + 前端 ReadingList/ReadingForm
 
 ### 第六阶段：后端优化 + 代码重构
 学习统计 SQL 聚合、待办今日任务 API、阅读数据联动 Dashboard、抽离 ListToolbar/ListPagination 共享组件
+
+### 第七阶段：通知系统（当前）
+| 19 | 通知系统 — ph-notification 模块 + sys_notification 表 + 自动检测生成 + NotificationBell 组件 | ✅ |

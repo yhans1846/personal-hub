@@ -257,6 +257,27 @@ frontend/src/
 - 危险按钮：红色
 - 禁止使用 Element Plus 默认蓝色
 
+### 共享组件（`src/components/`）
+| 组件 | 用途 | Props |
+|------|------|-------|
+| `EmptyState` | 列表空状态 | `icon`, `text`, `actionLabel?`, `illustration?` |
+| `StatCard` | Dashboard 统计卡片 | `icon`, `value`, `label`, `color?` |
+| `PageHeader` | 页面标题 | `title`, `subtitle?`, 插槽 |
+| `ListToolbar` | 列表搜索栏 | `search`, `search-placeholder`, `create-label` + `#filters` 插槽 |
+| `ListPagination` | 分页 | `total`, `page`, `size` |
+| `CommandPalette` | Ctrl+K 全局搜索 | 全局快捷键 |
+| `NotificationBell` | 通知下拉 | el-badge 红标 + el-popover 面板，自动检测生成 |
+
+### 工具函数（`src/utils/`）
+| 文件 | 函数 | 用途 |
+|------|------|------|
+| `readingTime.ts` | `estimateReadingTime()` | Markdown 阅读时长估算 |
+| | `formatRelativeTime()` | 相对时间格式化（刚刚/X分钟前） |
+| | `isRecentlyEdited()` | 24 小时内编辑检测 |
+
+### 新页面模板
+`PageHeader` → `ListToolbar`（`#filters` 插槽）→ loading skeleton → `EmptyState` → 内容 → `ListPagination`
+
 ### 图标规范
 - 统一使用 **lucide-vue-next**（已迁移为 `@lucide/vue`）
 - 禁止混用 Element Icon / Heroicons / Tabler / Remix
@@ -273,14 +294,6 @@ frontend/src/
 - **禁止** 纯文字 "暂无数据"
 - 必须包含：SVG 插画 + 引导文案 + 操作按钮
 - 使用 `<EmptyState>` 组件，传入 `illustration` 参数选择插画主题
-
-### 共享组件（`src/components/`）
-| 组件 | 用途 | Props |
-|------|------|-------|
-| `EmptyState` | 列表空状态 | `icon`, `text`, `actionLabel?`, `illustration?` |
-| `StatCard` | Dashboard 统计卡片 | `icon`, `value`, `label`, `color?` |
-| `PageHeader` | 页面标题 | `title`, `subtitle?`, 插槽 |
-| `CommandPalette` | Ctrl+K 全局搜索 | 全局快捷键 |
 
 ### 动画标准
 - 路由过渡：`page-fade` 淡入淡出（200ms）

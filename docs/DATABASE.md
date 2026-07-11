@@ -228,6 +228,25 @@
 
 ---
 
+## 第四阶段 — 新增表
+
+### 18. `sys_notification` 系统通知表
+| 字段 | 类型 | 说明 | 约束 |
+|------|------|------|------|
+| id | BIGINT | 主键 | PK |
+| user_id | BIGINT | 所属用户 | NOT NULL, INDEX |
+| type | VARCHAR(50) | 通知类型（TODO_OVERDUE/PLAN_DEADLINE/PLAN_COMPLETED）| NOT NULL |
+| title | VARCHAR(200) | 通知标题 | NOT NULL |
+| content | TEXT | 通知内容 | |
+| is_read | TINYINT | 是否已读 | DEFAULT 0 |
+| related_id | BIGINT | 关联实体ID | |
+| related_type | VARCHAR(50) | 关联实体类型（todo/study_plan）| |
+| created_at | DATETIME | 创建时间 | NOT NULL |
+
+无逻辑删除（通知自动生成，只读不可修改，通过「清空」批量删除）。
+
+---
+
 ## ER 关系
 
 ```
@@ -239,7 +258,8 @@ sys_user ── note_note ── note_category_rel ── note_category
      ├── diary_entry ── tag_rel ── tag
      ├── bookmark_url ── bookmark_category ── tag_rel ── tag
      ├── study_plan ── tag_rel ── tag
-     └── reading_record ── tag_rel ── tag
+     ├── reading_record ── tag_rel ── tag
+     └── sys_notification（独立，定时任务自动生成）
 ```
 
 ## 索引策略
@@ -257,6 +277,7 @@ sys_user ── note_note ── note_category_rel ── note_category
 | bookmark_url | idx_user_id / idx_category_id | NORMAL | 用户/分类查询 |
 | study_plan | idx_user_id | NORMAL | 用户查询 |
 | reading_record | idx_user_id | NORMAL | 用户查询 |
+| sys_notification | idx_user_read / idx_created_at | NORMAL | 用户未读查询 / 时间排序 |
 | tag | idx_user_tag_name | UNIQUE | 用户标签去重 |
 | tag | idx_user_id | NORMAL | 用户查询 |
 | tag_rel | uk_tag_entity | UNIQUE | 标签-实体唯一 |
