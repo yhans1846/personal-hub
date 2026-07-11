@@ -6,6 +6,7 @@ import { getBookmarkList, deleteBookmark, getBookmarkCategories } from '@/api/bo
 import { getTags } from '@/api/tagApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Pencil, Trash2, FolderOpen, Tag, Bookmark } from 'lucide-vue-next'
+import BookmarkDialog from './BookmarkDialog.vue'
 import type { BookmarkVO, BookmarkQuery, BookmarkCategoryVO } from '@/types/bookmark'
 import type { TagVO } from '@/types/tag'
 
@@ -16,6 +17,19 @@ const loading = ref(false)
 const categories = ref<BookmarkCategoryVO[]>([])
 const tags = ref<TagVO[]>([])
 const query = ref<BookmarkQuery>({ page: 1, size: 20, keyword: '' })
+
+const dialogVisible = ref(false)
+const editId = ref<number | undefined>()
+
+function openCreate() {
+  editId.value = undefined
+  dialogVisible.value = true
+}
+
+function openEdit(id: number) {
+  editId.value = id
+  dialogVisible.value = true
+}
 
 onMounted(() => { fetchCategories(); fetchTags(); fetchList() })
 
@@ -47,8 +61,8 @@ async function fetchList() {
 function onSearch() { query.value.page = 1; fetchList() }
 function onFilterChange() { query.value.page = 1; fetchList() }
 function onPageChange(page: number) { query.value.page = page; fetchList() }
-function goCreate() { router.push('/bookmarks/new') }
-function goEdit(id: number) { router.push(`/bookmarks/${id}/edit`) }
+function goCreate() { openCreate() }
+function goEdit(id: number) { openEdit(id) }
 function goCategories() { router.push('/bookmarks/categories') }
 
 async function handleDelete(id: number) {
@@ -124,6 +138,8 @@ function getFaviconUrl(url: string) {
     </div>
 
     <ListPagination v-if="total > (query.size ?? 20)" :total="total" :page="query.page" :size="query.size" @update:page="onPageChange" />
+
+    <BookmarkDialog v-model="dialogVisible" :entity-id="editId" @saved="fetchList" />
   </div>
 </template>
 
