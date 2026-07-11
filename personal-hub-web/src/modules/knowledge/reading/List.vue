@@ -1,17 +1,29 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import { PageHeader, EmptyState, ListToolbar, ListPagination } from '@/components'
 import { getReadingList, deleteReading } from '@/api/readingApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Pencil, Trash2, BookOpen, Book, BookCheck, Calendar, BookMarked, Star, Clock } from 'lucide-vue-next'
+import ReadingDrawer from './ReadingDrawer.vue'
 import type { ReadingVO, ReadingQuery } from '@/types/reading'
 
-const router = useRouter()
 const list = ref<ReadingVO[]>([])
 const total = ref(0)
 const loading = ref(false)
 const query = ref<ReadingQuery>({ page: 1, size: 20, keyword: '' })
+
+const drawerVisible = ref(false)
+const editId = ref<number | undefined>()
+
+function openCreate() {
+  editId.value = undefined
+  drawerVisible.value = true
+}
+
+function openEdit(id: number) {
+  editId.value = id
+  drawerVisible.value = true
+}
 
 onMounted(() => fetchList())
 async function fetchList() {
@@ -22,8 +34,8 @@ async function fetchList() {
 function onSearch() { query.value.page = 1; fetchList() }
 function onFilterChange() { query.value.page = 1; fetchList() }
 function onPageChange(p: number) { query.value.page = p; fetchList() }
-function goCreate() { router.push('/readings/new') }
-function goEdit(id: number) { router.push(`/readings/${id}/edit`) }
+function goCreate() { openCreate() }
+function goEdit(id: number) { openEdit(id) }
 
 async function handleDelete(id: number) {
   await ElMessageBox.confirm('确定删除该阅读记录？', '提示', { type: 'warning' })
@@ -85,6 +97,8 @@ const statusOptions = [
       </div>
     </div>
     <ListPagination v-if="total > (query.size ?? 20)" :total="total" :page="query.page" :size="query.size" @update:page="onPageChange" />
+
+    <ReadingDrawer v-model="drawerVisible" :entity-id="editId" @saved="fetchList" />
   </div>
 </template>
 
