@@ -43,12 +43,13 @@
 | created_at | DATETIME | 创建时间 | NOT NULL |
 | updated_at | DATETIME | 更新时间 | NOT NULL |
 
-### 3. `note_category` 分类表
+### 3. `category` 统一分类表
 | 字段 | 类型 | 说明 | 约束 |
 |------|------|------|------|
 | id | BIGINT | 主键 | PK |
 | user_id | BIGINT | 所属用户 | NOT NULL, INDEX |
 | name | VARCHAR(50) | 分类名称 | NOT NULL |
+| type | VARCHAR(20) | 分类类型: note/bookmark/file | NOT NULL, INDEX |
 | sort_order | INT | 排序 | DEFAULT 0 |
 | created_at | DATETIME | 创建时间 | NOT NULL |
 | updated_at | DATETIME | 更新时间 | NOT NULL |
@@ -118,16 +119,6 @@
 | created_at | DATETIME | 创建时间 | NOT NULL |
 | updated_at | DATETIME | 更新时间 | NOT NULL |
 
-### 10. `file_category` 文件分类表
-| 字段 | 类型 | 说明 | 约束 |
-|------|------|------|------|
-| id | BIGINT | 主键 | PK |
-| user_id | BIGINT | 所属用户 | NOT NULL, INDEX |
-| name | VARCHAR(50) | 分类名称 | NOT NULL |
-| sort_order | INT | 排序 | DEFAULT 0 |
-| created_at | DATETIME | 创建时间 | NOT NULL |
-| updated_at | DATETIME | 更新时间 | NOT NULL |
-
 ---
 
 ## 第二阶段 — 已扩展表
@@ -161,17 +152,7 @@
 | created_at | DATETIME | 创建时间 | NOT NULL |
 | updated_at | DATETIME | 更新时间 | NOT NULL |
 
-### 13. `bookmark_category` 收藏夹分类表
-| 字段 | 类型 | 说明 | 约束 |
-|------|------|------|------|
-| id | BIGINT | 主键 | PK |
-| user_id | BIGINT | 所属用户 | NOT NULL, INDEX |
-| name | VARCHAR(50) | 分类名称 | NOT NULL |
-| sort_order | INT | 排序 | DEFAULT 0 |
-| created_at | DATETIME | 创建时间 | NOT NULL |
-| updated_at | DATETIME | 更新时间 | NOT NULL |
-
-### 14. `study_plan` 学习计划表
+### 13. `study_plan` 学习计划表
 | 字段 | 类型 | 说明 | 约束 |
 |------|------|------|------|
 | id | BIGINT | 主键 | PK |
@@ -267,13 +248,15 @@ UNIQUE KEY `uk_user_layout` (`user_id`, `layout_type`)
 ## ER 关系
 
 ```
-sys_user ── note_note ── note_category_rel ── note_category
+sys_user ── note_note ── note_category_rel ── category（type=note）
                   └── tag_rel ── tag
      ├── study_record ── tag_rel ── tag
      ├── todo_task ── tag_rel ── tag
-     ├── file_resource ── file_category ── tag_rel ── tag
+     ├── file_resource ── tag_rel ── tag
+     │                     └── category（type=file）
      ├── diary_entry ── tag_rel ── tag
-     ├── bookmark_url ── bookmark_category ── tag_rel ── tag
+     ├── bookmark_url ── tag_rel ── tag
+     │                     └── category（type=bookmark）
      ├── study_plan ── tag_rel ── tag
      ├── reading_record ── tag_rel ── tag
      └── sys_notification（独立，定时任务自动生成）
@@ -286,7 +269,10 @@ sys_user ── note_note ── note_category_rel ── note_category
 |----|------|------|------|
 | sys_user | uk_username | UNIQUE | 用户名唯一 |
 | note_note | idx_user_id / idx_updated_at | NORMAL | 用户查询 / 排序 |
-| note_category | idx_user_id | NORMAL | 用户查询 |
+| category | idx_user_id | NORMAL | 用户查询 |
+| category | idx_type | NORMAL | 按类型查询 |
+| category | idx_user_type | NORMAL | 用户+类型查询 |
+| category | uk_user_type_name | UNIQUE | 用户+类型+名称唯一 |
 | note_tag | idx_user_id_name | UNIQUE | 用户标签去重 |
 | study_record | idx_user_id_date | NORMAL | 用户日期查询 |
 | todo_task | idx_user_id / idx_due_date | NORMAL | 用户查询 / 排序 |

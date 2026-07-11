@@ -10,28 +10,6 @@ SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- ----------------------------
--- Table structure for bookmark_category
--- ----------------------------
-DROP TABLE IF EXISTS `bookmark_category`;
-CREATE TABLE `bookmark_category`  (
-                                      `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
-                                      `user_id` bigint NOT NULL COMMENT '所属用户',
-                                      `name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '分类名称',
-                                      `sort_order` int NOT NULL DEFAULT 0 COMMENT '排序',
-                                      `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-                                      `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-                                      PRIMARY KEY (`id`) USING BTREE,
-                                      INDEX `idx_user_id`(`user_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '收藏夹分类表' ROW_FORMAT = Dynamic;
-
--- ----------------------------
--- Records of bookmark_category
--- ----------------------------
-INSERT INTO `bookmark_category` VALUES (1, 1, '开发工具', 0, '2026-07-11 14:34:19', '2026-07-11 14:34:19');
-INSERT INTO `bookmark_category` VALUES (2, 1, '学习资源', 1, '2026-07-11 14:34:19', '2026-07-11 14:34:19');
-INSERT INTO `bookmark_category` VALUES (3, 1, '常用网站', 2, '2026-07-11 14:34:19', '2026-07-11 14:34:19');
-
--- ----------------------------
 -- Table structure for bookmark_url
 -- ----------------------------
 DROP TABLE IF EXISTS `bookmark_url`;
@@ -83,26 +61,36 @@ CREATE TABLE `diary_entry`  (
 -- ----------------------------
 
 -- ----------------------------
--- Table structure for file_category
+-- Table structure for category（统一分类）
 -- ----------------------------
-DROP TABLE IF EXISTS `file_category`;
-CREATE TABLE `file_category`  (
-                                  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
-                                  `user_id` bigint NOT NULL COMMENT '所属用户',
-                                  `name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '分类名称',
-                                  `sort_order` int NOT NULL DEFAULT 0 COMMENT '排序',
-                                  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-                                  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-                                  PRIMARY KEY (`id`) USING BTREE,
-                                  INDEX `idx_user_id`(`user_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '文件分类表' ROW_FORMAT = Dynamic;
+DROP TABLE IF EXISTS `category`;
+CREATE TABLE `category`  (
+                             `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+                             `user_id` bigint NOT NULL COMMENT '所属用户',
+                             `name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '分类名称',
+                             `type` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '分类类型: note, bookmark, file',
+                             `sort_order` int NOT NULL DEFAULT 0 COMMENT '排序',
+                             `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                             `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+                             PRIMARY KEY (`id`) USING BTREE,
+                             INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
+                             INDEX `idx_type`(`type` ASC) USING BTREE,
+                             INDEX `idx_user_type`(`user_id` ASC, `type` ASC) USING BTREE,
+                             UNIQUE INDEX `uk_user_type_name`(`user_id` ASC, `type` ASC, `name` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 10 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '统一分类表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
--- Records of file_category
+-- Records of category
 -- ----------------------------
-INSERT INTO `file_category` VALUES (1, 1, '文档', 0, '2026-07-11 14:34:19', '2026-07-11 14:34:19');
-INSERT INTO `file_category` VALUES (2, 1, '图片', 1, '2026-07-11 14:34:19', '2026-07-11 14:34:19');
-INSERT INTO `file_category` VALUES (3, 1, '其他', 2, '2026-07-11 14:34:19', '2026-07-11 14:34:19');
+INSERT INTO `category` VALUES (1, 1, '技术笔记', 'note', 0, '2026-07-11 14:34:19', '2026-07-11 14:34:19');
+INSERT INTO `category` VALUES (2, 1, '生活记录', 'note', 1, '2026-07-11 14:34:19', '2026-07-11 14:34:19');
+INSERT INTO `category` VALUES (3, 1, '读书笔记', 'note', 2, '2026-07-11 14:34:19', '2026-07-11 14:34:19');
+INSERT INTO `category` VALUES (4, 1, '开发工具', 'bookmark', 0, '2026-07-11 14:34:19', '2026-07-11 14:34:19');
+INSERT INTO `category` VALUES (5, 1, '学习资源', 'bookmark', 1, '2026-07-11 14:34:19', '2026-07-11 14:34:19');
+INSERT INTO `category` VALUES (6, 1, '常用网站', 'bookmark', 2, '2026-07-11 14:34:19', '2026-07-11 14:34:19');
+INSERT INTO `category` VALUES (7, 1, '文档', 'file', 0, '2026-07-11 14:34:19', '2026-07-11 14:34:19');
+INSERT INTO `category` VALUES (8, 1, '图片', 'file', 1, '2026-07-11 14:34:19', '2026-07-11 14:34:19');
+INSERT INTO `category` VALUES (9, 1, '其他', 'file', 2, '2026-07-11 14:34:19', '2026-07-11 14:34:19');
 
 -- ----------------------------
 -- Table structure for file_resource
@@ -130,28 +118,6 @@ CREATE TABLE `file_resource`  (
 -- ----------------------------
 -- Records of file_resource
 -- ----------------------------
-
--- ----------------------------
--- Table structure for note_category
--- ----------------------------
-DROP TABLE IF EXISTS `note_category`;
-CREATE TABLE `note_category`  (
-                                  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
-                                  `user_id` bigint NOT NULL COMMENT '所属用户',
-                                  `name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '分类名称',
-                                  `sort_order` int NOT NULL DEFAULT 0 COMMENT '排序',
-                                  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-                                  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-                                  PRIMARY KEY (`id`) USING BTREE,
-                                  INDEX `idx_user_id`(`user_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '笔记分类表' ROW_FORMAT = Dynamic;
-
--- ----------------------------
--- Records of note_category
--- ----------------------------
-INSERT INTO `note_category` VALUES (1, 1, '技术笔记', 0, '2026-07-11 14:34:19', '2026-07-11 14:34:19');
-INSERT INTO `note_category` VALUES (2, 1, '生活记录', 1, '2026-07-11 14:34:19', '2026-07-11 14:34:19');
-INSERT INTO `note_category` VALUES (3, 1, '读书笔记', 2, '2026-07-11 14:34:19', '2026-07-11 14:34:19');
 
 -- ----------------------------
 -- Table structure for note_category_rel
