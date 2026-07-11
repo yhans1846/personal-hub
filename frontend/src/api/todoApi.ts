@@ -25,3 +25,7 @@ export function deleteTodo(id: number) {
 export function toggleDone(id: number) {
   return request.patch<Result<TodoVO>>(`/todos/${id}/done`)
 }
+
+export function getTodayTodos() {
+  return request.get<Result<TodoVO[]>>('/todos/today')
+}

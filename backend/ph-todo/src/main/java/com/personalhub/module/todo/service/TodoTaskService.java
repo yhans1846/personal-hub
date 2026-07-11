@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.personalhub.module.todo.dto.TodoCreateDTO;
 import com.personalhub.module.todo.dto.TodoQueryDTO;
 import com.personalhub.module.todo.vo.TodoVO;
+import java.util.List;
 
 /**
  * 待办任务服务接口
@@ -63,4 +64,12 @@ public interface TodoTaskService {
      * @return 更新后的任务VO
      */
     TodoVO toggleDone(Long id, Long userId);
+
+    /**
+     * 今日待办列表（未完成的今日任务）
+     *
+     * @param userId 用户ID
+     * @return 今日待办列表
+     */
+    List<TodoVO> today(Long userId);
 }

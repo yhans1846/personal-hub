@@ -120,4 +120,14 @@ public class TodoTaskServiceImpl implements TodoTaskService {
         log.info("切换待办任务状态: id={}, userId={}, isDone={}", id, userId, task.getIsDone());
         return TodoVO.from(task);
     }
+
+    @Override
+    public java.util.List<TodoVO> today(Long userId) {
+        LambdaQueryWrapper<TodoTask> w = new LambdaQueryWrapper<>();
+        w.eq(TodoTask::getUserId, userId);
+        w.eq(TodoTask::getIsDone, 0);
+        w.eq(TodoTask::getDueDate, java.time.LocalDate.now());
+        w.orderByAsc(TodoTask::getPriority);
+        return todoTaskMapper.selectList(w).stream().map(TodoVO::from).toList();
+    }
 }

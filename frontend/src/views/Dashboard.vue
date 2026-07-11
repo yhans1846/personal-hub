@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/store/authStore'
-import { getTodoList } from '@/api/todoApi'
+import { getTodoList, getTodayTodos } from '@/api/todoApi'
 import { getStudyRecordList } from '@/api/studyApi'
 import { getRecentNotes } from '@/api/noteApi'
 import { getDashboardStats } from '@/api/dashboardApi'
@@ -27,6 +27,7 @@ const recentNotes = ref<NoteVO[]>([])
 const pendingTodos = ref<TodoVO[]>([])
 const recentStudies = ref<StudyRecordVO[]>([])
 const todayPlans = ref<StudyPlanVO[]>([])
+const todayTodos = ref<TodoVO[]>([])
 const recentReadings = ref<ReadingVO[]>([])
 const recentBookmarks = ref<BookmarkVO[]>([])
 const loading = ref(true)
@@ -37,20 +38,22 @@ const greeting = hour < 6 ? '夜深了' : hour < 12 ? '上午好' : hour < 14 ? 
 onMounted(async () => {
   loading.value = true
   try {
-    const [statsRes, notesRes, todosRes, studyRes, plansRes, readingsRes, bookmarksRes] = await Promise.all([
+    const [statsRes, notesRes, todosRes, studyRes, plansRes, readingsRes, bookmarksRes, todayTodosRes] = await Promise.all([
       getDashboardStats().catch(() => null),
       getRecentNotes(1, 5).catch(() => null),
       getTodoList({ page: 1, size: 5, isDone: false }).catch(() => null),
       getStudyRecordList({ page: 1, size: 5 }).catch(() => null),
       getStudyPlanList({ page: 1, size: 5, status: 1 }).catch(() => null),
       getReadingList({ page: 1, size: 5 }).catch(() => null),
-      getBookmarkList({ page: 1, size: 5 }).catch(() => null)
+      getBookmarkList({ page: 1, size: 5 }).catch(() => null),
+      getTodayTodos().catch(() => null)
     ])
     if (statsRes) stats.value = statsRes.data.data
     if (notesRes) recentNotes.value = notesRes.data.data.records
     if (todosRes) pendingTodos.value = todosRes.data.data.records
     if (studyRes) recentStudies.value = studyRes.data.data.records
     if (plansRes) todayPlans.value = plansRes.data.data.records
+    if (todayTodosRes) todayTodos.value = todayTodosRes.data.data
     if (readingsRes) recentReadings.value = readingsRes.data.data.records
     if (bookmarksRes) recentBookmarks.value = bookmarksRes.data.data.records
   } finally {
@@ -154,14 +157,25 @@ const statCards = [
             <h3>今日计划</h3>
             <router-link to="/study-plans" class="dash-card-more">查看全部</router-link>
           </div>
-          <div v-if="todayPlans.length === 0" class="empty-state" style="padding: 32px 24px;">
-            <div class="empty-state__text">暂无进行中的计划 📋</div>
+          <div v-if="todayPlans.length === 0 && todayTodos.length === 0" class="empty-state" style="padding: 32px 24px;">
+            <div class="empty-state__text">暂无今日计划 📋</div>
           </div>
           <div v-else class="dash-list">
+            <div v-for="todo in todayTodos" :key="'t'+todo.id" class="dash-list-item" @click="handleToggleDone(todo.id)">
+              <div class="todo-check" :class="{ checked: todo.isDone === 1 }">
+                <CheckCircle v-if="todo.isDone === 1" :size="12" stroke="#fff" />
+              </div>
+              <div class="dash-list-content">
+                <span class="dash-list-title">{{ todo.title }}</span>
+                <div class="dash-list-meta">
+                  <el-tag :type="todo.priority === 1 ? 'danger' : todo.priority === 2 ? 'warning' : 'info'" size="small">{{ todo.priorityLabel }}</el-tag>
+                </div>
+              </div>
+            </div>
             <div v-for="plan in todayPlans" :key="plan.id" class="dash-list-item" @click="router.push(`/study-plans/${plan.id}/edit`)">
               <Target :size="16" stroke="var(--info)" />
               <div class="dash-list-content">
-                <span class="dash-list-title">{{ plan.title }}</span>
+                <span class="dash-list-title">{{ plan.name }}</span>
                 <div class="dash-list-meta">
                   <span class="text-tertiary" v-if="plan.progress !== undefined">进度 {{ plan.progress }}%</span>
                 </div>

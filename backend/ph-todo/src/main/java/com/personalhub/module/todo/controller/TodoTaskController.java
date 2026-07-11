@@ -7,6 +7,7 @@ import com.personalhub.module.todo.dto.TodoCreateDTO;
 import com.personalhub.module.todo.dto.TodoQueryDTO;
 import com.personalhub.module.todo.service.TodoTaskService;
 import com.personalhub.module.todo.vo.TodoVO;
+import java.util.List;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -72,6 +73,13 @@ public class TodoTaskController {
         Long userId = Long.valueOf(authentication.getName());
         todoTaskService.delete(id, userId);
         return Result.success();
+    }
+
+    @Operation(summary = "今日待办", description = "查询今日到期的未完成待办")
+    @GetMapping("/today")
+    public Result<List<TodoVO>> today(@Parameter(hidden = true) Authentication authentication) {
+        Long userId = Long.valueOf(authentication.getName());
+        return Result.success(todoTaskService.today(userId));
     }
 
     @Operation(summary = "切换完成状态")
