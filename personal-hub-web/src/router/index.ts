@@ -18,7 +18,7 @@ const router = createRouter({
         { path: 'notes/new', name: 'NoteCreate', component: () => import('@/modules/knowledge/note/Editor.vue') },
         { path: 'notes/:id/edit', name: 'NoteEdit', component: () => import('@/modules/knowledge/note/Editor.vue') },
         { path: 'categories', name: 'CategoryManage', component: () => import('@/modules/category/CategoryManage.vue') },
-        { path: 'notes/tags', name: 'NoteTags', component: () => import('@/modules/knowledge/tag/Manage.vue') },
+
         { path: 'tags', name: 'TagManage', component: () => import('@/modules/knowledge/tag/Manage.vue') },
         { path: 'stats', name: 'Stats', component: () => import('@/modules/stats/StatsView.vue') },
         { path: 'search', name: 'Search', component: () => import('@/modules/search/SearchView.vue') },

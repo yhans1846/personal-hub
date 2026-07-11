@@ -24,9 +24,6 @@ export function deleteBookmark(id: number) {
 export function getFileList(params: FileQuery) {
   return request.get<Result<PageResult<FileVO>>>('/files', { params })
 }
-export function getFileById(id: number) {
-  return request.get<Result<FileVO>>(`/files/${id}`)
-}
 export function uploadFile(file: File, categoryId?: number) {
   const form = new FormData()
   form.append('file', file)

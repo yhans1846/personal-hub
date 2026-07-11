@@ -8,14 +8,15 @@ import { getTags } from '@/api/tagApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Pencil, Trash2, FolderOpen, Tag, Bookmark } from 'lucide-vue-next'
 import BookmarkDialog from './BookmarkDialog.vue'
-import type { BookmarkVO, BookmarkQuery, BookmarkCategoryVO } from '@/types/bookmark'
+import type { BookmarkVO, BookmarkQuery } from '@/types/bookmark'
 import type { TagVO } from '@/types/tag'
+import type { CategoryVO } from '@/types/category'
 
 const router = useRouter()
 const list = ref<BookmarkVO[]>([])
 const total = ref(0)
 const loading = ref(false)
-const categories = ref<BookmarkCategoryVO[]>([])
+const categories = ref<CategoryVO[]>([])
 const tags = ref<TagVO[]>([])
 const query = ref<BookmarkQuery>({ page: 1, size: 20, keyword: '' })
 

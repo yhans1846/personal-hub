@@ -110,15 +110,3 @@ export function updateTag(id: number, data: TagUpdateDTO) {
 export function deleteTag(id: number) {
   return request.delete<Result<void>>(`/tags/${id}`)
 }
-export function bindTag(tagId: number, entityType: string, entityId: number) {
-  return request.post<Result<void>>(`/tags/${tagId}/bind`, null, { params: { entityType, entityId } })
-}
-export function unbindTag(tagId: number, entityType: string, entityId: number) {
-  return request.delete<Result<void>>(`/tags/${tagId}/unbind`, { params: { entityType, entityId } })
-}
-export function getEntityTags(entityType: string, entityId: number) {
-  return request.get<Result<TagVO[]>>('/tags/entities', { params: { entityType, entityId } })
-}
-export function setEntityTags(entityType: string, entityId: number, tagIds: number[]) {
-  return request.put<Result<void>>(`/tags/entities/${entityType}/${entityId}`, tagIds)
-}

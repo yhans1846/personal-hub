@@ -21,10 +21,3 @@ export interface FileQuery {
   type?: string
   categoryId?: number
 }
-
-/** 文件分类 */
-export interface FileCategory {
-  id: number
-  name: string
-  sortOrder: number
-}

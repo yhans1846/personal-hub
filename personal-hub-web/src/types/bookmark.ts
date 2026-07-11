@@ -32,18 +32,3 @@ export interface BookmarkQuery {
   categoryId?: number | null
   tagId?: number
 }
-
-/** 收藏夹分类 */
-export interface BookmarkCategoryVO {
-  id: number
-  name: string
-  sortOrder: number
-  count: number
-  createdAt: string
-}
-
-/** 收藏夹分类请求 */
-export interface BookmarkCategoryDTO {
-  name: string
-  sortOrder?: number
-}

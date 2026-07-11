@@ -56,7 +56,7 @@ function clearDraft() {
 }
 
 onMounted(async () => {
-  const [catRes, tagRes] = await Promise.all([getCategories(), getTags()])
+  const [catRes, tagRes] = await Promise.all([getCategories('note'), getTags()])
   categories.value = catRes.data.data
   tags.value = tagRes.data.data
 
