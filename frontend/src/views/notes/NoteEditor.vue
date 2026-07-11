@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, watch, onUnmounted } from 'vue'
+import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { createNote, updateNote, getNoteById, getCategories } from '@/api/noteApi'
 import { getTags } from '@/api/tagApi'
@@ -17,6 +17,10 @@ const categories = ref<any[]>([])
 const tags = ref<any[]>([])
 const saving = ref(false)
 const draftKey = `draft_note_${route.params.id || 'new'}`
+
+const editorTheme = computed(() =>
+  document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'
+)
 
 // 自动保存草稿
 let draftTimer: ReturnType<typeof setTimeout> | null = null
@@ -125,7 +129,7 @@ function handleExport() {
       <input v-model="form.title" class="editor-title" placeholder="无标题笔记" />
       <MdEditor
         v-model="form.content"
-        :theme="document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'"
+        :theme="editorTheme"
         :toolbars="['bold', 'italic', 'heading', 'strikeThrough', '|', 'quote', 'unorderedList', 'orderedList', '|', 'code', 'codeBlock', 'link', 'image', 'table', '|', 'preview', 'catalog']"
         language="zh-CN"
         placeholder="开始写作..."
