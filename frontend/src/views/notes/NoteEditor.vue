@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { createNote, updateNote, getNoteById, getCategories } from '@/api/noteApi'
 import { getTags } from '@/api/tagApi'
@@ -16,6 +16,38 @@ const form = ref({ title: '', content: '', categoryIds: [] as number[], tagIds: 
 const categories = ref<any[]>([])
 const tags = ref<any[]>([])
 const saving = ref(false)
+const draftKey = `draft_note_${route.params.id || 'new'}`
+
+// 自动保存草稿
+let draftTimer: ReturnType<typeof setTimeout> | null = null
+watch(() => [form.value.title, form.value.content], () => {
+  if (draftTimer) clearTimeout(draftTimer)
+  draftTimer = setTimeout(() => {
+    const data = { title: form.value.title, content: form.value.content, categoryIds: form.value.categoryIds, tagIds: form.value.tagIds }
+    localStorage.setItem(draftKey, JSON.stringify(data))
+  }, 30000) // 30 秒无操作后保存
+}, { deep: true })
+onUnmounted(() => { if (draftTimer) clearTimeout(draftTimer) })
+
+function restoreDraft() {
+  const raw = localStorage.getItem(draftKey)
+  if (!raw) return false
+  try {
+    const data = JSON.parse(raw)
+    if (data.title || data.content) {
+      form.value.title = data.title || ''
+      form.value.content = data.content || ''
+      form.value.categoryIds = data.categoryIds || []
+      form.value.tagIds = data.tagIds || []
+      return true
+    }
+  } catch { /* ignore */ }
+  return false
+}
+
+function clearDraft() {
+  localStorage.removeItem(draftKey)
+}
 
 onMounted(async () => {
   const [catRes, tagRes] = await Promise.all([getCategories(), getTags()])
@@ -29,6 +61,8 @@ onMounted(async () => {
     form.value.content = note.content
     form.value.categoryIds = note.categories.map((c: any) => c.id)
     form.value.tagIds = note.tags.map((t: any) => t.id)
+  } else if (restoreDraft()) {
+    ElMessage.info('已恢复未保存的草稿')
   }
 })
 
@@ -43,6 +77,7 @@ async function handleSave() {
       await createNote(form.value)
       ElMessage.success('笔记已创建')
     }
+    clearDraft()
     router.push('/notes')
   } finally {
     saving.value = false
