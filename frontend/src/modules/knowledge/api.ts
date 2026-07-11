@@ -1,0 +1,142 @@
+import request from '@/api/request'
+import type { Result, PageResult } from '@/types/common'
+import type { NoteVO, NoteCreateDTO, NoteQuery } from '@/types/note'
+import type { DiaryVO, DiaryCreateDTO, DiaryQuery } from '@/types/diary'
+import type { StudyRecordVO, StudyRecordCreateDTO, StudyRecordQuery } from '@/types/study'
+import type { ReadingVO, ReadingCreateDTO, ReadingQuery } from '@/types/reading'
+import type { TagVO, TagCreateDTO, TagUpdateDTO } from '@/types/tag'
+
+// ====== 笔记 ======
+export function getNoteList(params: NoteQuery) {
+  return request.get<Result<PageResult<NoteVO>>>('/notes', { params })
+}
+export function getNoteById(id: number) {
+  return request.get<Result<NoteVO>>(`/notes/${id}`)
+}
+export function createNote(data: NoteCreateDTO) {
+  return request.post<Result<NoteVO>>('/notes', data)
+}
+export function updateNote(id: number, data: NoteCreateDTO) {
+  return request.put<Result<NoteVO>>(`/notes/${id}`, data)
+}
+export function deleteNote(id: number) {
+  return request.delete<Result<void>>(`/notes/${id}`)
+}
+export function toggleFavorite(id: number) {
+  return request.put<Result<void>>(`/notes/${id}/favorite`)
+}
+export function getRecentNotes(page = 1, size = 10) {
+  return request.get<Result<PageResult<NoteVO>>>('/notes/recent', { params: { page, size } })
+}
+export function restoreNote(id: number) {
+  return request.patch<Result<void>>(`/notes/${id}/restore`)
+}
+export function permanentDeleteNote(id: number) {
+  return request.delete<Result<void>>(`/notes/${id}/permanent`)
+}
+export function getNoteCategories() {
+  return request.get<Result<any[]>>('/note-categories')
+}
+export function createNoteCategory(data: { name: string; sortOrder?: number }) {
+  return request.post<Result<any>>('/note-categories', data)
+}
+export function updateNoteCategory(id: number, data: { name: string; sortOrder?: number }) {
+  return request.put<Result<any>>(`/note-categories/${id}`, data)
+}
+export function deleteNoteCategory(id: number) {
+  return request.delete<Result<void>>(`/note-categories/${id}`)
+}
+
+// 向后兼容别名
+export const getCategories = getNoteCategories
+export const createCategory = createNoteCategory
+export const updateCategory = updateNoteCategory
+export const deleteCategory = deleteNoteCategory
+
+// ====== 日记 ======
+export function getDiaryList(params: DiaryQuery) {
+  return request.get<Result<PageResult<DiaryVO>>>('/diaries', { params })
+}
+export function getDiaryByMonth(month: string) {
+  return request.get<Result<DiaryVO[]>>('/diaries/month', { params: { month } })
+}
+export function getDiaryById(id: number) {
+  return request.get<Result<DiaryVO>>(`/diaries/${id}`)
+}
+export function createDiary(data: DiaryCreateDTO) {
+  return request.post<Result<DiaryVO>>('/diaries', data)
+}
+export function updateDiary(id: number, data: DiaryCreateDTO) {
+  return request.put<Result<DiaryVO>>(`/diaries/${id}`, data)
+}
+export function deleteDiary(id: number) {
+  return request.delete<Result<void>>(`/diaries/${id}`)
+}
+
+// ====== 学习记录 ======
+export function getStudyRecordList(params: StudyRecordQuery) {
+  return request.get<Result<PageResult<StudyRecordVO>>>('/study-records', { params })
+}
+export function getStudyRecordById(id: number) {
+  return request.get<Result<StudyRecordVO>>(`/study-records/${id}`)
+}
+export function createStudyRecord(data: StudyRecordCreateDTO) {
+  return request.post<Result<StudyRecordVO>>('/study-records', data)
+}
+export function updateStudyRecord(id: number, data: StudyRecordCreateDTO) {
+  return request.put<Result<StudyRecordVO>>(`/study-records/${id}`, data)
+}
+export function deleteStudyRecord(id: number) {
+  return request.delete<Result<void>>(`/study-records/${id}`)
+}
+export interface StudyStats {
+  todayDuration: number
+  weekDuration: number
+  streak: number
+}
+export function getStudyStats() {
+  return request.get<Result<StudyStats>>('/study-records/stats')
+}
+
+// ====== 阅读记录 ======
+export function getReadingList(params: ReadingQuery) {
+  return request.get<Result<PageResult<ReadingVO>>>('/readings', { params })
+}
+export function getReadingById(id: number) {
+  return request.get<Result<ReadingVO>>(`/readings/${id}`)
+}
+export function createReading(data: ReadingCreateDTO) {
+  return request.post<Result<ReadingVO>>('/readings', data)
+}
+export function updateReading(id: number, data: ReadingCreateDTO) {
+  return request.put<Result<ReadingVO>>(`/readings/${id}`, data)
+}
+export function deleteReading(id: number) {
+  return request.delete<Result<void>>(`/readings/${id}`)
+}
+
+// ====== 标签 ======
+export function getTags() {
+  return request.get<Result<TagVO[]>>('/tags')
+}
+export function createTag(data: TagCreateDTO) {
+  return request.post<Result<TagVO>>('/tags', data)
+}
+export function updateTag(id: number, data: TagUpdateDTO) {
+  return request.put<Result<void>>(`/tags/${id}`, data)
+}
+export function deleteTag(id: number) {
+  return request.delete<Result<void>>(`/tags/${id}`)
+}
+export function bindTag(tagId: number, entityType: string, entityId: number) {
+  return request.post<Result<void>>(`/tags/${tagId}/bind`, null, { params: { entityType, entityId } })
+}
+export function unbindTag(tagId: number, entityType: string, entityId: number) {
+  return request.delete<Result<void>>(`/tags/${tagId}/unbind`, { params: { entityType, entityId } })
+}
+export function getEntityTags(entityType: string, entityId: number) {
+  return request.get<Result<TagVO[]>>('/tags/entities', { params: { entityType, entityId } })
+}
+export function setEntityTags(entityType: string, entityId: number, tagIds: number[]) {
+  return request.put<Result<void>>(`/tags/entities/${entityType}/${entityId}`, tagIds)
+}

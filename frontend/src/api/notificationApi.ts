@@ -1,3 +1,5 @@
+// 向后兼容：保留通知 API（系统模块的一部分）
+
 import request from './request'
 import type { Result, PageResult } from '@/types/common'
 import type { NotificationVO } from '@/types/notification'

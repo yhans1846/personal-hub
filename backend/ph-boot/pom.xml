@@ -23,47 +23,19 @@
         </dependency>
         <dependency>
             <groupId>com.personalhub</groupId>
-            <artifactId>ph-auth</artifactId>
+            <artifactId>ph-system</artifactId>
         </dependency>
         <dependency>
             <groupId>com.personalhub</groupId>
-            <artifactId>ph-note</artifactId>
+            <artifactId>ph-knowledge</artifactId>
         </dependency>
         <dependency>
             <groupId>com.personalhub</groupId>
-            <artifactId>ph-study</artifactId>
+            <artifactId>ph-planning</artifactId>
         </dependency>
         <dependency>
             <groupId>com.personalhub</groupId>
-            <artifactId>ph-todo</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.personalhub</groupId>
-            <artifactId>ph-file</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.personalhub</groupId>
-            <artifactId>ph-diary</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.personalhub</groupId>
-            <artifactId>ph-bookmark</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.personalhub</groupId>
-            <artifactId>ph-studyplan</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.personalhub</groupId>
-            <artifactId>ph-reading</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.personalhub</groupId>
-            <artifactId>ph-tag</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.personalhub</groupId>
-            <artifactId>ph-notification</artifactId>
+            <artifactId>ph-resource</artifactId>
         </dependency>
         <dependency>
             <groupId>com.personalhub</groupId>

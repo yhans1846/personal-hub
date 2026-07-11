@@ -1,0 +1,67 @@
+import request from '@/api/request'
+import type { Result, PageResult } from '@/types/common'
+import type { BookmarkVO, BookmarkCreateDTO, BookmarkQuery, BookmarkCategoryVO, BookmarkCategoryDTO } from '@/types/bookmark'
+import type { FileVO, FileQuery, FileCategory } from '@/types/file'
+
+// ====== 书签 ======
+export function getBookmarkList(params: BookmarkQuery) {
+  return request.get<Result<PageResult<BookmarkVO>>>('/bookmarks', { params })
+}
+export function getBookmarkById(id: number) {
+  return request.get<Result<BookmarkVO>>(`/bookmarks/${id}`)
+}
+export function createBookmark(data: BookmarkCreateDTO) {
+  return request.post<Result<BookmarkVO>>('/bookmarks', data)
+}
+export function updateBookmark(id: number, data: BookmarkCreateDTO) {
+  return request.put<Result<BookmarkVO>>(`/bookmarks/${id}`, data)
+}
+export function deleteBookmark(id: number) {
+  return request.delete<Result<void>>(`/bookmarks/${id}`)
+}
+export function getBookmarkCategories() {
+  return request.get<Result<BookmarkCategoryVO[]>>('/bookmark-categories')
+}
+export function createBookmarkCategory(data: BookmarkCategoryDTO) {
+  return request.post<Result<BookmarkCategoryVO>>('/bookmark-categories', data)
+}
+export function updateBookmarkCategory(id: number, data: BookmarkCategoryDTO) {
+  return request.put<Result<BookmarkCategoryVO>>(`/bookmark-categories/${id}`, data)
+}
+export function deleteBookmarkCategory(id: number) {
+  return request.delete<Result<void>>(`/bookmark-categories/${id}`)
+}
+
+// ====== 文件 ======
+export function getFileList(params: FileQuery) {
+  return request.get<Result<PageResult<FileVO>>>('/files', { params })
+}
+export function getFileById(id: number) {
+  return request.get<Result<FileVO>>(`/files/${id}`)
+}
+export function uploadFile(file: File, categoryId?: number) {
+  const form = new FormData()
+  form.append('file', file)
+  if (categoryId) form.append('categoryId', String(categoryId))
+  return request.post<Result<FileVO>>('/files/upload', form, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })
+}
+export function getFileDownloadUrl(id: number) {
+  return `/api/files/${id}/download`
+}
+export function deleteFile(id: number) {
+  return request.delete<Result<void>>(`/files/${id}`)
+}
+export function getFileCategories() {
+  return request.get<Result<FileCategory[]>>('/file-categories')
+}
+export function createFileCategory(data: { name: string; sortOrder?: number }) {
+  return request.post<Result<FileCategory>>('/file-categories', data)
+}
+export function updateFileCategory(id: number, data: { name: string; sortOrder?: number }) {
+  return request.put<Result<FileCategory>>(`/file-categories/${id}`, data)
+}
+export function deleteFileCategory(id: number) {
+  return request.delete<Result<void>>(`/file-categories/${id}`)
+}

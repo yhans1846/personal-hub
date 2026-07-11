@@ -1,12 +1,2 @@
-import request from './request'
-import type { Result } from '@/types/common'
-
-/**
- * 登录接口
- */
-export function loginApi(username: string, password: string) {
-  return request.post<Result<{ token: string; user: any }>>('/auth/login', {
-    username,
-    password
-  })
-}
+// 向后兼容：重新导出系统模块 API
+export * from '@/modules/system/api'

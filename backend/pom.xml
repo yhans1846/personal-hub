@@ -20,17 +20,10 @@
 
     <modules>
         <module>ph-common</module>
-        <module>ph-auth</module>
-        <module>ph-note</module>
-        <module>ph-study</module>
-        <module>ph-todo</module>
-        <module>ph-file</module>
-        <module>ph-diary</module>
-        <module>ph-bookmark</module>
-        <module>ph-studyplan</module>
-        <module>ph-reading</module>
-        <module>ph-tag</module>
-        <module>ph-notification</module>
+        <module>ph-system</module>
+        <module>ph-knowledge</module>
+        <module>ph-planning</module>
+        <module>ph-resource</module>
         <module>ph-dashboard</module>
         <module>ph-boot</module>
     </modules>
@@ -55,57 +48,22 @@
             </dependency>
             <dependency>
                 <groupId>com.personalhub</groupId>
-                <artifactId>ph-auth</artifactId>
+                <artifactId>ph-system</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.personalhub</groupId>
-                <artifactId>ph-note</artifactId>
+                <artifactId>ph-knowledge</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.personalhub</groupId>
-                <artifactId>ph-study</artifactId>
+                <artifactId>ph-planning</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.personalhub</groupId>
-                <artifactId>ph-todo</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.personalhub</groupId>
-                <artifactId>ph-file</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.personalhub</groupId>
-                <artifactId>ph-diary</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.personalhub</groupId>
-                <artifactId>ph-bookmark</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.personalhub</groupId>
-                <artifactId>ph-studyplan</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.personalhub</groupId>
-                <artifactId>ph-reading</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.personalhub</groupId>
-                <artifactId>ph-tag</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.personalhub</groupId>
-                <artifactId>ph-notification</artifactId>
+                <artifactId>ph-resource</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
