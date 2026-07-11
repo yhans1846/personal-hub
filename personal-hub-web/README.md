@@ -22,7 +22,7 @@ src/
 ├── api/              # API 接口封装
 ├── components/       # 共享组件（PageHeader / EmptyState / StatCard 等）
 ├── modules/          # 领域模块
-│   ├── system/       # 登录
+│   ├── system/       # 登录 / 系统设置（布局自定义）
 │   ├── knowledge/    # 笔记 / 日记 / 学习记录 / 阅读记录 / 标签
 │   ├── planning/     # Todo / 学习计划
 │   ├── resource/     # 收藏夹 / 文件管理

@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### 2026-07-11 第七阶段：工作台自定义布局
+- `user_layout` 表 + 布局配置 CRUD API
+- layoutStore（Pinia + localStorage 离线缓存）
+- 侧边栏数据驱动（显示/隐藏/拖拽排序）
+- Dashboard 卡片数据驱动（显示/隐藏/拖拽排序）
+- 系统设置页（tabs 切换 + SortableJS 拖拽 + 恢复默认）
+- 登录后自动同步用户布局配置
+
 ### 2026-07-11 第六阶段：体验打磨 + 后端优化 + 通知系统
 - 搜索栏 Ctrl+K 快捷键提示
 - 学习统计 SQL 聚合优化（SUM + DISTINCT 替代全量加载）

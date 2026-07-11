@@ -306,3 +306,19 @@ SELECT `id`, `user_id`, `name`, '#409eff' FROM `note_tag`;
 
 INSERT IGNORE INTO `tag_rel` (`tag_id`, `entity_type`, `entity_id`)
 SELECT `tag_id`, 'note', `note_id` FROM `note_tag_rel`;
+
+-- ========================================
+-- 19. 用户布局配置表
+-- ========================================
+CREATE TABLE IF NOT EXISTS `user_layout` (
+    `id`          BIGINT      NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `user_id`     BIGINT      NOT NULL COMMENT '所属用户',
+    `layout_type` VARCHAR(30) NOT NULL COMMENT '类型: menu / dashboard',
+    `layout_json` TEXT        NOT NULL COMMENT '布局配置 JSON',
+    `created_at`  DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_at`  DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    `is_deleted`  TINYINT     NOT NULL DEFAULT 0 COMMENT '逻辑删除',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_user_layout` (`user_id`, `layout_type`),
+    INDEX `idx_user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户布局配置表';

@@ -247,6 +247,23 @@
 
 ---
 
+---
+
+## 第五阶段 — 布局配置
+
+### 19. `user_layout` 用户布局配置表
+| 字段 | 类型 | 说明 | 约束 |
+|------|------|------|------|
+| id | BIGINT | 主键 | PK |
+| user_id | BIGINT | 所属用户 | NOT NULL, INDEX |
+| layout_type | VARCHAR(30) | 类型: menu / dashboard | NOT NULL |
+| layout_json | TEXT | 布局配置 JSON（items: [{code, visible, order}]）| NOT NULL |
+| created_at | DATETIME | 创建时间 | NOT NULL |
+| updated_at | DATETIME | 更新时间 | NOT NULL |
+| is_deleted | TINYINT | 逻辑删除 | DEFAULT 0 |
+
+UNIQUE KEY `uk_user_layout` (`user_id`, `layout_type`)
+
 ## ER 关系
 
 ```
@@ -260,6 +277,7 @@ sys_user ── note_note ── note_category_rel ── note_category
      ├── study_plan ── tag_rel ── tag
      ├── reading_record ── tag_rel ── tag
      └── sys_notification（独立，定时任务自动生成）
+    └── user_layout（独立，布局配置持久化）
 ```
 
 ## 索引策略
@@ -283,4 +301,6 @@ sys_user ── note_note ── note_category_rel ── note_category
 | tag_rel | uk_tag_entity | UNIQUE | 标签-实体唯一 |
 | tag_rel | idx_entity | NORMAL | 按实体查询标签 |
 | tag_rel | idx_tag_id | NORMAL | 按标签查询实体 |
+| user_layout | uk_user_layout | UNIQUE | 用户+类型唯一 |
+| user_layout | idx_user_id | NORMAL | 用户查询 |
 

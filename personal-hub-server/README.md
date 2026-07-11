@@ -17,7 +17,7 @@ Personal Hub 后端 — Spring Boot 3 + Java 21。
 ```
 ph-boot          # 启动入口（spring-boot-maven-plugin）
 ph-common        # 公共组件（Result / 异常处理 / JWT / 配置）
-ph-system        # 用户认证(JWT) / 个人信息 / 通知系统
+ph-system        # 用户认证(JWT) / 个人信息 / 通知系统 / 布局配置
 ph-knowledge     # 笔记 / 日记 / 学习记录 / 阅读记录 / 标签
 ph-planning      # Todo / 学习计划
 ph-resource      # 收藏夹 / 文件管理

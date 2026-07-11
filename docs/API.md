@@ -327,6 +327,26 @@
 }
 ```
 
+### 十八、布局配置 `/api/layout`
+| 方法 | 路径 | 说明 | 认证 |
+|------|------|------|------|
+| GET | /api/layout | 获取用户所有布局配置 | 是 |
+| GET | /api/layout/{type} | 获取指定类型布局配置 | 是 |
+| PUT | /api/layout | 保存或更新布局配置 | 是 |
+| POST | /api/layout/import | 导入布局配置 | 是 |
+| DELETE | /api/layout/{type} | 删除恢复默认布局 | 是 |
+
+**layout_type**: menu / dashboard
+
+**PUT /api/layout**
+```json
+{"layoutType":"menu","layoutJson":"{\"items\":[{\"code\":\"dashboard\",\"visible\":true,\"order\":1}]}"}
+```
+
+**GET /api/layout** — 返回用户所有布局类型配置列表
+
+---
+
 ### 标签关联实体类型
 | entityType | 说明 |
 |-----------|------|
