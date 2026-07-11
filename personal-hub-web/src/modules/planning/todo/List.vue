@@ -1,14 +1,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
-import { useRouter } from 'vue-router'
 import { getTodoList, deleteTodo, toggleDone } from '@/api/todoApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, CheckCircle, Pencil, Trash2, Calendar, GripVertical } from 'lucide-vue-next'
 import { EmptyState, PageHeader, ListToolbar, ListPagination } from '@/components'
+import TodoDialog from './TodoDialog.vue'
 import type { TodoVO, TodoQuery } from '@/types/todo'
 import Sortable from 'sortablejs'
-
-const router = useRouter()
 const list = ref<TodoVO[]>([])
 const total = ref(0)
 const loading = ref(false)
@@ -16,6 +14,19 @@ const query = ref<TodoQuery>({ page: 1, size: 9999, keyword: '' })
 const showDone = ref(false)
 const listRef = ref<HTMLElement | null>(null)
 let sortable: Sortable | null = null
+
+const dialogVisible = ref(false)
+const editId = ref<number | undefined>()
+
+function openCreate() {
+  editId.value = undefined
+  dialogVisible.value = true
+}
+
+function openEdit(id: number) {
+  editId.value = id
+  dialogVisible.value = true
+}
 
 onMounted(async () => {
   await fetchList()
@@ -52,8 +63,8 @@ const doneList = computed(() => list.value.filter(t => t.isDone === 1))
 function onSearch() { query.value.page = 1; fetchList() }
 function onPageChange(page: number) { query.value.page = page; fetchList() }
 function onFilterChange() { query.value.page = 1; fetchList() }
-function goCreate() { router.push('/todos/new') }
-function goEdit(id: number) { router.push(`/todos/${id}/edit`) }
+function goCreate() { openCreate() }
+function goEdit(id: number) { openEdit(id) }
 
 async function handleToggleDone(id: number) {
   await toggleDone(id)
@@ -160,6 +171,8 @@ const doneOptions = [
     </div>
 
     <ListPagination v-if="total > query.size" :total="total" :page="query.page" :size="query.size" @update:page="onPageChange" />
+
+    <TodoDialog v-model="dialogVisible" :entity-id="editId" @saved="fetchList" />
   </div>
 </template>
 
