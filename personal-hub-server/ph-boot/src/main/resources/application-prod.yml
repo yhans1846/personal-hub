@@ -3,8 +3,8 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/personal_hub?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
     driver-class-name: com.mysql.cj.jdbc.Driver
-    username: ${DB_USERNAME:personal_hub}
-    password: ${DB_PASSWORD:change-me}
+    username: al_user
+    password: 123456
     hikari:
       minimum-idle: 10
       maximum-pool-size: 50
@@ -14,9 +14,9 @@ spring:
 
   data:
     redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:}
+      host: localhost
+      port: 6379
+      password: 123456
       database: 0
       timeout: 3000
       lettuce:
@@ -32,7 +32,7 @@ mybatis-plus:
 
 # JWT（生产必须更换密钥）
 jwt:
-  secret: ${JWT_SECRET:change-me-to-a-long-random-string}
+  secret: personal-hub-prod-jwt-secret-change-me-in-production
   expiration: 86400000
 
 # 文件存储（Linux 服务器路径）

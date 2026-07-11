@@ -14,7 +14,7 @@ spring:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: Asia/Shanghai
 
-# MyBatis-Plus 配置
+# MyBatis-Plus 公共配置
 mybatis-plus:
   mapper-locations: classpath*:/mapper/**/*.xml
   type-aliases-package: com.personalhub.**.entity
@@ -26,25 +26,14 @@ mybatis-plus:
       logic-not-delete-value: 0
   configuration:
     map-underscore-to-camel-case: true
-    # 开发环境打印 SQL，生产环境关闭
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
-# JWT 配置
-jwt:
-  secret: personal-hub-jwt-secret-key-2026-please-change-in-production
-  expiration: 86400000
-
-# SpringDoc OpenAPI 配置
+# SpringDoc OpenAPI 配置（默认关闭，仅在 dev 环境开启）
 springdoc:
+  api-docs:
+    enabled: false
+    path: /v3/api-docs
   swagger-ui:
+    enabled: false
     path: /swagger-ui.html
     tags-sorter: alpha
     operations-sorter: alpha
-  api-docs:
-    path: /v3/api-docs
-
-# 文件存储配置
-personal-hub:
-  storage:
-    location: D:/PersonalHub/uploads
-    max-size: 52428800

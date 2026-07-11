@@ -46,6 +46,12 @@
             <artifactId>ph-storage</artifactId>
         </dependency>
 
+        <!-- SpringDoc OpenAPI (Swagger) -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+        </dependency>
+
         <!-- MySQL（仅运行时需要） -->
         <dependency>
             <groupId>com.mysql</groupId>
