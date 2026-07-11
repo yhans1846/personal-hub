@@ -2,7 +2,8 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { PageHeader, EmptyState, ListToolbar, ListPagination } from '@/components'
-import { getBookmarkList, deleteBookmark, getBookmarkCategories } from '@/api/bookmarkApi'
+import { getBookmarkList, deleteBookmark } from '@/api/bookmarkApi'
+import { getCategories } from '@/api/categoryApi'
 import { getTags } from '@/api/tagApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Pencil, Trash2, FolderOpen, Tag, Bookmark } from 'lucide-vue-next'
@@ -35,7 +36,7 @@ onMounted(() => { fetchCategories(); fetchTags(); fetchList() })
 
 async function fetchCategories() {
   try {
-    const res = await getBookmarkCategories()
+    const res = await getCategories('bookmark')
     categories.value = res.data.data
   } catch { /* ignore */ }
 }

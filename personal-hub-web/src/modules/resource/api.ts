@@ -1,7 +1,7 @@
 import request from '@/api/request'
 import type { Result, PageResult } from '@/types/common'
-import type { BookmarkVO, BookmarkCreateDTO, BookmarkQuery, BookmarkCategoryVO, BookmarkCategoryDTO } from '@/types/bookmark'
-import type { FileVO, FileQuery, FileCategory } from '@/types/file'
+import type { BookmarkVO, BookmarkCreateDTO, BookmarkQuery } from '@/types/bookmark'
+import type { FileVO, FileQuery } from '@/types/file'
 
 // ====== 书签 ======
 export function getBookmarkList(params: BookmarkQuery) {
@@ -18,18 +18,6 @@ export function updateBookmark(id: number, data: BookmarkCreateDTO) {
 }
 export function deleteBookmark(id: number) {
   return request.delete<Result<void>>(`/bookmarks/${id}`)
-}
-export function getBookmarkCategories() {
-  return request.get<Result<BookmarkCategoryVO[]>>('/bookmark-categories')
-}
-export function createBookmarkCategory(data: BookmarkCategoryDTO) {
-  return request.post<Result<BookmarkCategoryVO>>('/bookmark-categories', data)
-}
-export function updateBookmarkCategory(id: number, data: BookmarkCategoryDTO) {
-  return request.put<Result<BookmarkCategoryVO>>(`/bookmark-categories/${id}`, data)
-}
-export function deleteBookmarkCategory(id: number) {
-  return request.delete<Result<void>>(`/bookmark-categories/${id}`)
 }
 
 // ====== 文件 ======
@@ -52,16 +40,4 @@ export function getFileDownloadUrl(id: number) {
 }
 export function deleteFile(id: number) {
   return request.delete<Result<void>>(`/files/${id}`)
-}
-export function getFileCategories() {
-  return request.get<Result<FileCategory[]>>('/file-categories')
-}
-export function createFileCategory(data: { name: string; sortOrder?: number }) {
-  return request.post<Result<FileCategory>>('/file-categories', data)
-}
-export function updateFileCategory(id: number, data: { name: string; sortOrder?: number }) {
-  return request.put<Result<FileCategory>>(`/file-categories/${id}`, data)
-}
-export function deleteFileCategory(id: number) {
-  return request.delete<Result<void>>(`/file-categories/${id}`)
 }

@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { createBookmark, updateBookmark, getBookmarkById, getBookmarkCategories } from '@/api/bookmarkApi'
+import { createBookmark, updateBookmark, getBookmarkById } from '@/api/bookmarkApi'
+import { getCategories } from '@/api/categoryApi'
 import { getTags } from '@/api/tagApi'
 import { ElMessage } from 'element-plus'
 import { UiDialog, UiInput, UiTextarea, UiSelect, UiButton } from '@/components/ui'
 import { FolderOpen } from 'lucide-vue-next'
-import type { BookmarkCategoryVO } from '@/types/bookmark'
+import type { CategoryVO } from '@/types/category'
 import type { TagVO } from '@/types/tag'
 
 const props = withDefaults(defineProps<{
@@ -19,14 +20,14 @@ const emit = defineEmits<{
 }>()
 
 const form = ref({ title: '', url: '', description: '', categoryId: null as number | null, tagIds: [] as number[] })
-const categories = ref<BookmarkCategoryVO[]>([])
+const categories = ref<CategoryVO[]>([])
 const tags = ref<TagVO[]>([])
 const saving = ref(false)
 
 watch(() => props.modelValue, async (val) => {
   if (!val) return
   try {
-    const [catRes, tagRes] = await Promise.all([getBookmarkCategories(), getTags()])
+    const [catRes, tagRes] = await Promise.all([getCategories('bookmark'), getTags()])
     categories.value = catRes.data.data
     tags.value = tagRes.data.data
   } catch { /* ignore */ }

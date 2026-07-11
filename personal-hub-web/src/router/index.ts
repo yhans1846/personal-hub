@@ -17,7 +17,7 @@ const router = createRouter({
         { path: 'notes', name: 'NoteList', component: () => import('@/modules/knowledge/note/List.vue') },
         { path: 'notes/new', name: 'NoteCreate', component: () => import('@/modules/knowledge/note/Editor.vue') },
         { path: 'notes/:id/edit', name: 'NoteEdit', component: () => import('@/modules/knowledge/note/Editor.vue') },
-        { path: 'notes/categories', name: 'NoteCategories', component: () => import('@/modules/knowledge/note/CategoryManage.vue') },
+        { path: 'notes/categories', name: 'NoteCategories', component: () => import('@/modules/category/CategoryManage.vue') },
         { path: 'notes/tags', name: 'NoteTags', component: () => import('@/modules/knowledge/tag/Manage.vue') },
         { path: 'tags', name: 'TagManage', component: () => import('@/modules/knowledge/tag/Manage.vue') },
         { path: 'stats', name: 'Stats', component: () => import('@/modules/stats/StatsView.vue') },
@@ -27,11 +27,11 @@ const router = createRouter({
         { path: 'todos', name: 'TodoList', component: () => import('@/modules/planning/todo/List.vue') },
         { path: 'diaries', name: 'DiaryList', component: () => import('@/modules/knowledge/diary/List.vue') },
         { path: 'bookmarks', name: 'BookmarkList', component: () => import('@/modules/resource/bookmark/List.vue') },
-        { path: 'bookmarks/categories', name: 'BookmarkCategories', component: () => import('@/modules/resource/bookmark/CategoryManage.vue') },
+        { path: 'bookmarks/categories', name: 'BookmarkCategories', component: () => import('@/modules/category/CategoryManage.vue') },
         { path: 'study-plans', name: 'StudyPlanList', component: () => import('@/modules/planning/studyplan/List.vue') },
         { path: 'readings', name: 'ReadingList', component: () => import('@/modules/knowledge/reading/List.vue') },
         { path: 'files', name: 'FileList', component: () => import('@/modules/resource/file/List.vue') },
-        { path: 'files/categories', name: 'FileCategories', component: () => import('@/modules/resource/file/CategoryManage.vue') },
+        { path: 'files/categories', name: 'FileCategories', component: () => import('@/modules/category/CategoryManage.vue') },
         { path: 'settings', name: 'Settings', component: () => import('@/modules/system/settings/SettingsView.vue') }
       ]
     }

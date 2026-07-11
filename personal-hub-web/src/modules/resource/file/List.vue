@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { getFileList, uploadFile, deleteFile, getFileDownloadUrl, getFileCategories } from '@/api/fileApi'
+import { getFileList, uploadFile, deleteFile, getFileDownloadUrl } from '@/api/fileApi'
+import { getCategories } from '@/api/categoryApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Upload, FileIcon, ImageIcon, FileText, Archive, Download, Trash2, Plus } from 'lucide-vue-next'
-import type { FileVO, FileQuery, FileCategory } from '@/types/file'
+import type { FileVO, FileQuery } from '@/types/file'
+import type { CategoryVO } from '@/types/category'
 import { PageHeader, EmptyState, ListToolbar, ListPagination } from '@/components'
 
 const router = useRouter()
@@ -13,7 +15,7 @@ const total = ref(0)
 const loading = ref(false)
 const uploadLoading = ref(false)
 const query = ref<FileQuery>({ page: 1, size: 20, keyword: '' })
-const categories = ref<FileCategory[]>([])
+const categories = ref<CategoryVO[]>([])
 const showUpload = ref(false)
 const typeOptions = [
   { value: '', label: '全部' },
@@ -41,7 +43,7 @@ async function fetchList() {
 
 async function fetchCategories() {
   try {
-    const res = await getFileCategories()
+    const res = await getCategories('file')
     categories.value = res.data.data
   } catch { /* ignore */ }
 }

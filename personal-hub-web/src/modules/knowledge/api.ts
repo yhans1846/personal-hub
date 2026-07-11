@@ -34,24 +34,6 @@ export function restoreNote(id: number) {
 export function permanentDeleteNote(id: number) {
   return request.delete<Result<void>>(`/notes/${id}/permanent`)
 }
-export function getNoteCategories() {
-  return request.get<Result<any[]>>('/note-categories')
-}
-export function createNoteCategory(data: { name: string; sortOrder?: number }) {
-  return request.post<Result<any>>('/note-categories', data)
-}
-export function updateNoteCategory(id: number, data: { name: string; sortOrder?: number }) {
-  return request.put<Result<any>>(`/note-categories/${id}`, data)
-}
-export function deleteNoteCategory(id: number) {
-  return request.delete<Result<void>>(`/note-categories/${id}`)
-}
-
-// 向后兼容别名
-export const getCategories = getNoteCategories
-export const createCategory = createNoteCategory
-export const updateCategory = updateNoteCategory
-export const deleteCategory = deleteNoteCategory
 
 // ====== 日记 ======
 export function getDiaryList(params: DiaryQuery) {
