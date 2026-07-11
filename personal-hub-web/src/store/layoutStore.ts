@@ -28,7 +28,7 @@ function toLayoutItem(item: MenuItem | CardItem): LayoutItem {
  */
 export const useLayoutStore = defineStore('layout', () => {
   // --- State ---
-  const menuItems = ref<MenuItem[]>(loadFromStorage<MenuItem>(STORAGE_KEY_MENU, DEFAULT_MENU_ITEMS))
+  const menuItems = ref<MenuItem[]>(migrateMenuItems(loadFromStorage<MenuItem>(STORAGE_KEY_MENU, DEFAULT_MENU_ITEMS)))
   const dashboardCards = ref<CardItem[]>(loadFromStorage<CardItem>(STORAGE_KEY_DASHBOARD, DEFAULT_DASHBOARD_ITEMS))
   const loaded = ref(false)
 
@@ -69,6 +69,7 @@ export const useLayoutStore = defineStore('layout', () => {
           const parsed = JSON.parse(layout.layoutJson)
           if (parsed.items) {
             mergeMenuItems(parsed.items)
+            menuItems.value = migrateMenuItems(menuItems.value)
             saveToStorage(STORAGE_KEY_MENU, menuItems.value)
           }
         }
@@ -128,6 +129,23 @@ export const useLayoutStore = defineStore('layout', () => {
   }
 
   // --- Helpers ---
+  /** 迁移旧菜单：移除已废弃的菜单项 code */
+  function migrateMenuItems(items: MenuItem[]): MenuItem[] {
+    const validCodes = new Set(DEFAULT_MENU_ITEMS.map(m => m.code))
+    const migrated = items.filter(item => validCodes.has(item.code))
+    // 如果有废弃项被移除，补充默认中缺失的项
+    if (migrated.length !== items.length) {
+      const existingCodes = new Set(migrated.map(m => m.code))
+      for (const def of DEFAULT_MENU_ITEMS) {
+        if (!existingCodes.has(def.code)) {
+          migrated.push({ ...def })
+        }
+      }
+      saveToStorage(STORAGE_KEY_MENU, migrated)
+    }
+    return migrated
+  }
+
   function mergeMenuItems(items: LayoutItem[]) {
     for (const incoming of items) {
       const existing = menuItems.value.find(m => m.code === incoming.code)

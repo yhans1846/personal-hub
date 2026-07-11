@@ -36,9 +36,9 @@ const iconMap: Record<string, Component> = {
 function isActiveRoute(item: MenuItem): boolean {
   const path = route.path
   if (item.code === 'dashboard') return path === '/dashboard'
-  if (item.code === 'notes') return path.startsWith('/notes') && !path.includes('/categories') && !path.includes('/tags') && !path.includes('/recycle')
-  if (item.code === 'bookmarks') return path.startsWith('/bookmarks') && path !== '/bookmarks/categories'
-  if (item.code === 'files') return path.startsWith('/files') && path !== '/files/categories'
+  if (item.code === 'notes') return path.startsWith('/notes') && !path.includes('/tags') && !path.includes('/recycle')
+  if (item.code === 'bookmarks') return path.startsWith('/bookmarks')
+  if (item.code === 'files') return path.startsWith('/files')
   if (item.route) return path.startsWith(item.route)
   return false
 }
