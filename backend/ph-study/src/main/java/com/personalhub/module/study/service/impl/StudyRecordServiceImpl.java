@@ -105,31 +105,16 @@ public class StudyRecordServiceImpl implements StudyRecordService {
 
     @Override
     public StudyStatsVO stats(Long userId) {
-        // 获取全部有效记录（个人项目数据量小）
-        LambdaQueryWrapper<StudyRecord> all = new LambdaQueryWrapper<>();
-        all.eq(StudyRecord::getUserId, userId);
-        java.util.List<StudyRecord> records = mapper.selectList(all);
-
         java.time.LocalDate today = java.time.LocalDate.now();
         java.time.LocalDate weekStart = today.with(java.time.DayOfWeek.MONDAY);
 
-        long todayDuration = 0;
-        long weekDuration = 0;
-        java.util.Set<java.time.LocalDate> uniqueDates = new java.util.HashSet<>();
+        long todayDuration = mapper.sumDurationByDate(userId, today);
+        long weekDuration = mapper.sumDurationSince(userId, weekStart);
 
-        for (StudyRecord r : records) {
-            if (r.getDate() != null) {
-                if (r.getDate().equals(today)) todayDuration += r.getDuration();
-                if (!r.getDate().isBefore(weekStart)) weekDuration += r.getDuration();
-                uniqueDates.add(r.getDate());
-            }
-        }
-
-        // 连续天数：按日期倒序，从今天开始数连续
-        java.util.List<java.time.LocalDate> sorted = uniqueDates.stream()
-                .sorted(java.util.Comparator.reverseOrder()).toList();
+        // 连续天数：查询所有学习过的日期，倒序计算
+        java.util.List<java.time.LocalDate> dates = mapper.listDistinctDates(userId);
         long streak = 0;
-        for (java.time.LocalDate d : sorted) {
+        for (java.time.LocalDate d : dates) {
             if (d.equals(today) || d.equals(today.minusDays(streak))) {
                 streak++;
             } else break;
