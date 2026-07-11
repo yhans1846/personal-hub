@@ -5,9 +5,9 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.personalhub.common.exception.NotFoundException;
 import com.personalhub.resource.dto.FileQueryDTO;
-import com.personalhub.resource.entity.FileCategory;
+import com.personalhub.knowledge.entity.Category;
+import com.personalhub.knowledge.mapper.CategoryMapper;
 import com.personalhub.resource.entity.FileResource;
-import com.personalhub.resource.mapper.FileCategoryMapper;
 import com.personalhub.resource.mapper.FileResourceMapper;
 import com.personalhub.resource.service.FileResourceService;
 import com.personalhub.resource.vo.FileVO;
@@ -33,7 +33,7 @@ import java.util.UUID;
 public class FileResourceServiceImpl implements FileResourceService {
 
     private final FileResourceMapper fileResourceMapper;
-    private final FileCategoryMapper fileCategoryMapper;
+    private final CategoryMapper categoryMapper;
     private final StorageService storageService;
     private final StorageProperties storageProperties;
 
@@ -59,7 +59,7 @@ public class FileResourceServiceImpl implements FileResourceService {
         return filePage.convert(file -> {
             FileVO vo = FileVO.from(file);
             if (file.getCategoryId() != null) {
-                FileCategory cat = fileCategoryMapper.selectById(file.getCategoryId());
+                Category cat = categoryMapper.selectById(file.getCategoryId());
                 if (cat != null) vo.setCategoryName(cat.getName());
             }
             return vo;
@@ -74,7 +74,7 @@ public class FileResourceServiceImpl implements FileResourceService {
         }
         FileVO vo = FileVO.from(file);
         if (file.getCategoryId() != null) {
-            FileCategory cat = fileCategoryMapper.selectById(file.getCategoryId());
+            Category cat = categoryMapper.selectById(file.getCategoryId());
             if (cat != null) vo.setCategoryName(cat.getName());
         }
         return vo;

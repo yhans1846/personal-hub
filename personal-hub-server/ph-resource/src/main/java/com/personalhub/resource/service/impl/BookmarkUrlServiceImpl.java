@@ -6,9 +6,9 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.personalhub.common.exception.NotFoundException;
 import com.personalhub.resource.dto.BookmarkCreateDTO;
 import com.personalhub.resource.dto.BookmarkQueryDTO;
-import com.personalhub.resource.entity.BookmarkCategory;
+import com.personalhub.knowledge.entity.Category;
+import com.personalhub.knowledge.mapper.CategoryMapper;
 import com.personalhub.resource.entity.BookmarkUrl;
-import com.personalhub.resource.mapper.BookmarkCategoryMapper;
 import com.personalhub.resource.mapper.BookmarkUrlMapper;
 import com.personalhub.resource.service.BookmarkUrlService;
 import com.personalhub.resource.vo.BookmarkVO;
@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 public class BookmarkUrlServiceImpl implements BookmarkUrlService {
 
     private final BookmarkUrlMapper bookmarkUrlMapper;
-    private final BookmarkCategoryMapper bookmarkCategoryMapper;
+    private final CategoryMapper categoryMapper;
     private final TagService tagService;
 
     /**
@@ -119,10 +119,11 @@ public class BookmarkUrlServiceImpl implements BookmarkUrlService {
     }
 
     private Map<Long, String> loadCategoryNames(Long userId) {
-        LambdaQueryWrapper<BookmarkCategory> cw = new LambdaQueryWrapper<>();
-        cw.eq(BookmarkCategory::getUserId, userId);
-        return bookmarkCategoryMapper.selectList(cw).stream()
-                .collect(Collectors.toMap(BookmarkCategory::getId, BookmarkCategory::getName));
+        LambdaQueryWrapper<Category> cw = new LambdaQueryWrapper<Category>()
+                .eq(Category::getUserId, userId)
+                .eq(Category::getType, "bookmark");
+        return categoryMapper.selectList(cw).stream()
+                .collect(Collectors.toMap(Category::getId, Category::getName));
     }
 
     @Override
@@ -134,7 +135,7 @@ public class BookmarkUrlServiceImpl implements BookmarkUrlService {
         }
         BookmarkVO vo = BookmarkVO.from(url);
         if (url.getCategoryId() != null) {
-            BookmarkCategory cat = bookmarkCategoryMapper.selectById(url.getCategoryId());
+            Category cat = categoryMapper.selectById(url.getCategoryId());
             if (cat != null) vo.setCategoryName(cat.getName());
         }
         vo.setTags(tagService.getTags("bookmark", id));
@@ -161,7 +162,7 @@ public class BookmarkUrlServiceImpl implements BookmarkUrlService {
 
         BookmarkVO vo = BookmarkVO.from(url);
         if (url.getCategoryId() != null) {
-            BookmarkCategory cat = bookmarkCategoryMapper.selectById(url.getCategoryId());
+            Category cat = categoryMapper.selectById(url.getCategoryId());
             if (cat != null) vo.setCategoryName(cat.getName());
         }
         vo.setTags(tagService.getTags("bookmark", url.getId()));
@@ -189,7 +190,7 @@ public class BookmarkUrlServiceImpl implements BookmarkUrlService {
 
         BookmarkVO vo = BookmarkVO.from(url);
         if (url.getCategoryId() != null) {
-            BookmarkCategory cat = bookmarkCategoryMapper.selectById(url.getCategoryId());
+            Category cat = categoryMapper.selectById(url.getCategoryId());
             if (cat != null) vo.setCategoryName(cat.getName());
         }
         vo.setTags(tagService.getTags("bookmark", id));

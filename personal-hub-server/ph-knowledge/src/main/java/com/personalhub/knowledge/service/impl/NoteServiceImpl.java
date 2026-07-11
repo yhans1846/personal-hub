@@ -7,8 +7,8 @@ import com.personalhub.common.exception.NotFoundException;
 import com.personalhub.knowledge.dto.NoteCreateDTO;
 import com.personalhub.knowledge.dto.NoteQueryDTO;
 import com.personalhub.knowledge.entity.Note;
-import com.personalhub.knowledge.entity.NoteCategory;
-import com.personalhub.knowledge.mapper.NoteCategoryMapper;
+import com.personalhub.knowledge.entity.Category;
+import com.personalhub.knowledge.mapper.CategoryMapper;
 import com.personalhub.knowledge.mapper.NoteMapper;
 import com.personalhub.knowledge.service.NoteService;
 import com.personalhub.knowledge.service.TagService;
@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 public class NoteServiceImpl implements NoteService {
 
     private final NoteMapper noteMapper;
-    private final NoteCategoryMapper categoryMapper;
+    private final CategoryMapper categoryMapper;
     private final TagService tagService;
     private final JdbcTemplate jdbcTemplate;
     private final StorageService storageService;
@@ -243,9 +243,9 @@ public class NoteServiceImpl implements NoteService {
 
     private List<NoteVO.CategoryItem> getCategories(Long noteId) {
         List<Map<String, Object>> rows = jdbcTemplate.queryForList(
-                "SELECT c.id, c.name FROM note_category c " +
+                "SELECT c.id, c.name FROM category c " +
                 "INNER JOIN note_category_rel r ON c.id = r.category_id " +
-                "WHERE r.note_id = ?", noteId);
+                "WHERE r.note_id = ? AND c.type = 'note'", noteId);
         if (rows.isEmpty()) return Collections.emptyList();
         return rows.stream().map(row -> {
             NoteVO.CategoryItem item = new NoteVO.CategoryItem();
