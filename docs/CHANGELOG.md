@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### 2026-07-12 代码清理与配置优化
+- 配置文件分层：application.yml（公共）+ application-dev.yml + application-prod.yml
+- 补充 springdoc-openapi 依赖，修复 Swagger 403（/swagger-ui.html 白名单）
+- Swagger 仅 dev 环境开启，prod 默认关闭
+- 删除废弃文件：test_data.sql、孤立 POM（ph-resource/ph-resource）、note/TagManage.vue
+- 删除死类型：BookmarkCategoryVO/DTO、FileCategory
+- 删除 5 个未使用 API 函数 + 冗余路由 /notes/tags
+- 修复 Editor.vue getCategories 缺少 type 参数
+
 ### 2026-07-11 第八阶段：CRUD UI 优化 + 分类系统合并
 - 统一 UI 组件库（UiDialog/UiInput/UiSelect/UiButton/UiSection/UiCard 等 8 个）
 - 全部主实体 CRUD 改为 Dialog/Drawer（Todo/Bookmark/日记/Reading/Study/StudyPlan）

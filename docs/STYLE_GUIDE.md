@@ -102,49 +102,22 @@ public class XxxServiceImpl implements XxxService {
 
 ### Maven 多模块结构
 
-#### 当前结构（14 模块）
+#### 当前结构（领域聚合，7+1 模块）
 
 ```
 personal-hub-server/
-├── pom.xml                          # 父 POM（Spring Boot parent）
-├── ph-common/                       # 公共组件
-│   └── src/main/java/com/personalhub/common/
-│       ├── config/                  # MyBatis-Plus/Jackson/Redis/Security/Swagger
-│       ├── exception/               # 全局异常处理 + 自定义异常
-│       ├── filter/                  # JWT 认证过滤器
-│       ├── result/                  # Result / PageResult
-│       └── util/                    # JwtUtil
-├── ph-auth/                         # 认证 + 用户模块
-├── ph-note/                         # 笔记模块
-├── ph-study/                        # 学习记录模块
-├── ph-todo/                         # 待办任务模块
-├── ph-file/                         # 文件管理模块
-├── ph-diary/                        # 日记模块
-├── ph-bookmark/                     # 收藏夹模块
-├── ph-studyplan/                    # 学习计划模块
-├── ph-reading/                      # 阅读记录模块
-├── ph-tag/                          # 统一标签模块
-├── ph-dashboard/                    # Dashboard + 数据统计 + 全局搜索模块
-└── ph-boot/                         # Spring Boot 启动入口
+├── pom.xml                # 父 POM（Spring Boot parent + 依赖版本管理）
+├── ph-common/             # 公共组件（config/exception/filter/result/util）
+├── ph-system/             # 用户 + 认证 + 通知
+├── ph-knowledge/          # 笔记 + 日记 + 学习记录 + 阅读记录 + 标签 + 分类
+├── ph-planning/           # Todo + 学习计划
+├── ph-resource/           # 收藏夹 + 文件管理 + 笔记资源
+├── ph-dashboard/          # 聚合查询 + 全局搜索
+├── ph-storage/            # 文件存储引擎
+└── ph-boot/               # Spring Boot 启动入口
     └── src/main/
         ├── java/com/personalhub/PersonalHubApplication.java
-        └── resources/               # application.yml + application-dev.yml
-```
-
-#### 目标结构（领域聚合，7 模块）
-
-后续重构逐步合并为领域模块：
-
-```
-personal-hub-server/
-├── ph-common        # 公共能力
-├── ph-system        # 用户 + 认证 + 通知       <- ph-auth + ph-notification
-├── ph-knowledge     # 笔记 + 日记 + 学习记录    <- ph-note + ph-diary + ph-study
-│                    # + 阅读记录 + 标签         <- + ph-reading + ph-tag
-├── ph-planning      # Todo + 学习计划           <- ph-todo + ph-studyplan
-├── ph-resource      # 收藏夹 + 文件管理         <- ph-bookmark + ph-file
-├── ph-dashboard     # 聚合查询 + 全局搜索       <- ph-dashboard
-└── ph-boot          # 启动入口
+        └── resources/     # application.yml + application-dev.yml + application-prod.yml
 ```
 
 每模块内部按分层组织：`controller/ dto/ entity/ mapper/ service/ vo/`
@@ -167,81 +140,61 @@ personal-hub-server/
 
 ### 目录结构
 
-#### 当前：按页面类型组织
+采用 `modules/` 按业务领域组织，与后端模块对齐：
 
 ```
 personal-hub-web/src/
-├── api/           # Axios实例 + 各模块接口
-├── router/        # 路由配置
-├── stores/        # Pinia（按模块拆分）
-├── types/         # TS 类型定义
-├── views/         # 页面组件（按页面一级目录）
-├── components/    # 公共组件
-│   ├── common/    # 通用组件（EmptyState / PageHeader 等）
-│   ├── business/  # 业务组件
-│   └── charts/    # ECharts 图表
-├── composables/   # 组合式函数
-├── layouts/       # 布局组件
-├── styles/        # 全局样式
-└── utils/         # 工具函数
+├── api/              # 按模块聚合的 API 文件（如 categoryApi.ts, tagApi.ts）
+├── components/       # 公共组件
+│   ├── ui/           # Ui-* 基础组件（UiDialog/UiInput/UiSelect 等）
+│   └── index.ts      # 共享组件导出
+├── composables/      # 组合式函数
+├── layouts/          # AppLayout 布局组件
+├── modules/          # 按业务领域组织页面
+│   ├── category/     # CategoryManage（统一分类管理）
+│   ├── dashboard/    # Dashboard 首页
+│   ├── knowledge/
+│   │   ├── diary/    # 日记列表 + DiaryDialog
+│   │   ├── note/     # 笔记列表 / Editor / RecycleBin
+│   │   ├── reading/  # 阅读记录列表 + ReadingDrawer
+│   │   ├── study/    # 学习记录列表 + StudyDrawer
+│   │   └── tag/      # 统一标签管理
+│   ├── planning/
+│   │   ├── studyplan/ # 学习计划列表 + StudyPlanDrawer
+│   │   └── todo/      # 待办列表 + TodoDialog
+│   ├── resource/
+│   │   ├── bookmark/  # 收藏夹列表 + BookmarkDialog
+│   │   └── file/      # 文件管理列表
+│   ├── search/        # 全局搜索
+│   ├── stats/         # 数据统计趋势图
+│   └── system/
+│       ├── login/     # 登录页
+│       └── settings/  # 系统设置（布局自定义）
+├── router/           # 路由配置
+├── stores/           # Pinia（auth / theme / layout / notification）
+├── styles/           # 全局样式 + 设计令牌
+├── types/            # TS 类型定义
+└── utils/            # 工具函数
 ```
-
-#### 目标：按业务领域组织（推荐）
-
-随着模块增多，`views/` 一级目录膨胀，推荐重组为 `modules/` 结构，与后端领域对齐：
-
-```
-personal-hub-web/src/
-├── api/               # 按领域聚合的 API 文件
-├── components/        # 公共组件（common / business / charts）
-├── composables/
-├── layouts/
-├── router/
-├── stores/            # 仅全局状态（user / theme / dashboard）
-├── styles/
-├── types/
-├── utils/
-└── modules/           # 按业务领域组织页面
-    ├── dashboard/
-    │   ├── Dashboard.vue
-    │   ├── components/     # Greeting / StatCards / QuickActions 等
-    │   └── api.ts
-    ├── knowledge/
-    │   ├── note/           # List / Detail / Edit + components/
-    │   ├── diary/
-    │   ├── study/
-    │   ├── reading/
-    │   └── tag/
-    ├── planning/
-    │   ├── todo/
-    │   └── studyplan/
-    ├── resource/
-    │   ├── bookmark/
-    │   └── file/
-    ├── search/
-    └── system/
-        └── login/
-```
-
-> 每个模块内部按功能分层：页面级组件（List / Detail / Edit）+ 私有 `components/` + `api.ts`。
-> Dashboard.vue 只负责布局和数据组装，子模块拆分到 `dashboard/components/`。
 
 ### 组件 / API / Store
 - 全部 `<script setup lang="ts">` + TypeScript，Props/Emits 类型推断
 - Pinia 按模块拆分 Store，简单状态组件内管理
 - API 请求统一封装在 `api/` 目录
-- **API 文件按领域聚合**，与后端模块命名保持一致：
+- **API 文件按模块聚合**，与后端模块命名保持一致：
 
   ```
-  api/
-  ├── request.ts         # Axios 实例 + 拦截器
-  ├── auth.ts            # 认证相关
-  ├── knowledge.ts       # 笔记/日记/学习/阅读/标签
-  ├── planning.ts        # Todo / 学习计划
-  ├── resource.ts        # 收藏夹 / 文件
-  ├── dashboard.ts       # 首页统计 + 趋势
-  ├── notification.ts    # 通知
-  └── search.ts          # 全局搜索
+  src/api/                    # 对外暴露层（组件从这里导入）
+  ├── request.ts              # Axios 实例 + 拦截器
+  ├── authApi.ts / noteApi.ts / diaryApi.ts / ...
+  └── ...
+
+  src/modules/
+  ├── knowledge/api.ts        # 笔记/日记/学习/阅读/标签
+  ├── planning/api.ts         # Todo / 学习计划
+  ├── resource/api.ts         # 收藏夹 / 文件
+  ├── dashboard/api.ts        # Dashboard 聚合 + 搜索
+  └── system/api.ts           # 认证 / 通知 / 布局
   ```
 
   禁止每张表一个 api 文件（如 `note.ts` / `study.ts` / `reading.ts` 各写一个），同一领域放一起。

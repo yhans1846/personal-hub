@@ -28,3 +28,6 @@
 | 22 | 工作台自定义布局（user_layout + 侧边栏/Dashboard 数据驱动 + 设置页） | ✅ |
 | 23 | CRUD UI 优化（Ui 组件库 + Dialog/Drawer 重构） | ✅ |
 | 24 | 分类系统合并（category 表 + CategoryManage + 废弃代码清理） | ✅ |
+| 25 | 冗余代码清理（死类型/未使用API/废弃组件/孤立POM/过期SQL） | ✅ |
+| 26 | 配置文件分层（application.yml + dev/prod profile） | ✅ |
+| 27 | SpringDoc + Swagger 修复（依赖引入/白名单/环境开关） | ✅ |

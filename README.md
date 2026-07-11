@@ -1,118 +1,147 @@
-# Personal Hub
+<p align="center">
+  <h1 align="center">Personal Hub</h1>
+  <p align="center">
+    个人知识管理系统 · 简洁、专注、长期陪伴
+  </p>
+</p>
 
-个人知识管理系统 — Spring Boot 3 + Vue 3 前后端分离。
+---
 
-**设计理念**：Notion 的简洁 + Linear 的精致 + Raycast 的现代感 + Apple 的克制。不是企业后台，是长期陪伴自己的知识空间。
+## ✨ 设计哲学
 
-## 技术栈
+> **Notion 的简洁 × Linear 的精致 × Raycast 的现代感 × Apple 的克制**
 
-| 端 | 技术 |
-|------|------|
-| 后端 | Spring Boot 3.3.5 / Java 21 / MyBatis-Plus / MySQL 8 / Redis 5 |
-| 前端 | Vue 3 / Vite / TypeScript / Element Plus / Pinia / ECharts |
-| 认证 | JWT + Spring Security |
-| 文档 | SpringDoc OpenAPI (Swagger) |
+不是企业后台，是属于自己的知识空间——安静、高效、审美在线。
 
-## 项目结构
+---
 
-```
-personal-hub
-├── personal-hub-server/  # Spring Boot 后端（6+1 领域模块）
-├── personal-hub-web/     # Vue 3 前端
-├── sql/                  # 数据库脚本
-├── docs/                 # 项目文档
-└── README.md
-```
+## 🛠 技术架构
 
-### 后端领域模块
+| 层级 | 技术选型 |
+|------|----------|
+| **后端** | Spring Boot 3.3 · Java 21 · MyBatis-Plus · MySQL 8 · Redis 5 |
+| **前端** | Vue 3 · TypeScript · Vite · Element Plus · Pinia |
+| **认证** | Spring Security + JWT（无状态会话） |
+| **文档** | SpringDoc OpenAPI 2.6（Swagger） |
+| **可视化** | ECharts（Dashboard 趋势分析） |
+| **编辑器** | md-editor-v3（Markdown 写作） |
+
+---
+
+## 🧩 项目结构
+
+### 后端 · 领域驱动设计（7+1 模块）
 
 ```
 personal-hub-server/
-├── ph-boot          # 启动入口
-├── ph-common        # 公共能力（JWT/异常/Result/配置）
-├── ph-system        # 用户 / 认证(JWT) / 通知
-├── ph-knowledge     # 笔记 / 日记 / 学习记录 / 阅读记录 / 标签
-├── ph-planning      # Todo / 学习计划
-├── ph-resource      # 收藏夹 / 文件管理
-└── ph-dashboard     # Dashboard 聚合 + 全局搜索
+├── ph-boot          启动入口
+├── ph-common        公共能力   Result / JWT / Security / 全局异常
+├── ph-system        用户系统   登录认证 / 通知中心 / 自定义布局
+├── ph-knowledge     知识引擎   笔记 / 日记 / 学习 / 阅读 / 标签 / 分类
+├── ph-planning      规划系统   Todo / 学习计划
+├── ph-resource      资源管理   收藏夹 / 文件管理 / 笔记附件
+├── ph-storage       存储引擎   文件系统抽象层
+└── ph-dashboard     数据聚合   Dashboard / 全局搜索 / 统计趋势
 ```
 
-### 前端领域模块
+### 前端 · 领域模块（Composition API）
 
 ```
 personal-hub-web/src/modules/
-├── system/          # 登录
-├── knowledge/       # note / diary / study / reading / tag
-├── planning/        # todo / studyplan
-├── resource/        # bookmark / file
-├── dashboard/       # Dashboard 首页
-└── search/          # 全局搜索
+├── dashboard/       首页仪表盘     8 项统计卡片 + 趋势图
+├── knowledge/       知识模块       笔记 · 日记 · 学习 · 阅读 · 标签
+├── planning/        规划模块       Todo · 学习计划
+├── resource/        资源模块       收藏夹 · 文件管理
+├── category/        分类管理       笔记 / 收藏夹 / 文件 统一分类
+├── search/          全局搜索       跨 8 模块全文检索
+├── stats/           数据统计       ECharts 可视化
+└── system/          系统模块       登录 · 工作台设置
 ```
 
-## 功能
+---
 
-| 模块 | 功能 |
-|------|------|
-| **用户认证** | JWT 登录/退出、个人信息、修改密码 |
-| **笔记** | Markdown 编辑器（md-editor-v3）、分类/标签、搜索/收藏/回收站、导出 Markdown |
-| **学习记录** | 时长/主题 CRUD、日周月统计、连续学习天数 |
-| **待办** | 优先级/截止日期、拖拽排序（sortablejs）、已完成折叠 |
-| **文件管理** | 上传/下载/预览、分类管理、搜索 |
-| **日记** | Markdown 编辑、月视图、心情/天气/地点/配图 |
-| **收藏夹** | 网址 CRUD、分类管理、搜索 |
-| **学习计划** | 进度跟踪、剩余天数/超期标记、关联学习记录 |
-| **阅读记录** | 章节进度、评分（1-5星）、阅读时长、笔记 |
-| **统一标签系统** | 全模块多态关联、颜色标记、使用次数统计 |
-| **统一分类系统** | 笔记/收藏夹/文件分类合并管理、Tab 切换 |
-| **Dashboard** | 8 项统计卡片、ECharts 趋势图（7/30/90 天） |
-| **全局搜索** | 跨 8 模块统一搜索、关键词高亮、结果分组 |
-| **通知系统** | 自动检测（待办超期/计划截止/完成）、定时任务、Bell 红标下拉面板 |
-| **UI 优化** | 响应式布局、深色模式、5 种强调色切换、Command Palette（Ctrl+K）、侧边栏三段分组 |
-| **统一 UI 组件库** | UiDialog/UiInput/UiSelect/UiButton/UiSection/UiCard 等 8 个封装组件 |
-| **CRUD 交互模式** | Dialog/Drawer 替代路由跳转表单（Todo/Bookmark/日记/Reading/Study/StudyPlan） |
-| **工作台自定义** | 菜单/Dashboard 卡片显示隐藏、拖拽排序、每个用户独立布局 |
+## 🚀 功能矩阵
 
-## 快速启动
+| 模块 | 核心能力 |
+|------|----------|
+| **📝 笔记** | Markdown 写作 · 分类/标签关联 · 收藏/回收站 · 一键导出 `.md` |
+| **📖 学习记录** | 主题/时长追踪 · 日/周/月统计 · 连续学习天数 · 关联学习计划 |
+| **✅ 待办** | 优先级 · 截止日期 · 拖拽排序 · 已完成自动折叠 |
+| **📅 日记** | 日历月视图 · 心情/天气/地点 · 配图上传 · Markdown 正文 |
+| **🔖 收藏夹** | 网址收藏 · 分类/标签 · 域名提取 · 模糊搜索 |
+| **📚 阅读记录** | 章节进度 · 1-5 星评分 · 阅读时长 · 笔记沉淀 |
+| **🎯 学习计划** | 目标/进度百分比 · 开始/截止日期 · 超期标记 · 学习记录关联 |
+| **📁 文件管理** | 上传/下载/预览 · MIME 类型识别 · 分类管理 · 多来源追踪 |
+| **🏷 多态标签** | 全模块统一关联 · 颜色标记 · 使用频次统计 |
+| **📊 Dashboard** | 实时统计卡片 · 7/30/90 天趋势 · ECharts 可视化 |
+| **🔍 全局搜索** | 跨 8 模块检索 · 关键词高亮 · 结果分组展示 |
+| **🔔 通知中心** | 待办超期 · 计划截止 · 完成提醒 · Bell 红标下拉 |
+| **🎨 主题系统** | 浅色/深色 · 5 种强调色 · CSS 变量驱动 · 跟随系统 |
+| **⌨️ 效率工具** | Command Palette（Ctrl+K）· 响应式布局 · 骨架屏加载 |
 
-### 前置要求
+---
 
-- JDK 21 LTS、Maven 3.8+
-- MySQL 8.0+、Redis 5.0+
-- Node.js 22 LTS、pnpm
+## 🎯 设计系统亮点
 
-### 启动后端
+- **统一 UI 组件库** — 8 个 Ui-* 基础组件封装 Element Plus，全局一致
+- **CRUD 交互规范** — Dialog / Drawer 替代页面跳转，新增编辑共用组件
+- **CSS 设计令牌** — 全站 `--accent` / `--bg-card` / `--text-primary` 驱动
+- **空状态设计** — 9 套 SVG 插画 + 引导文案，拒绝"暂无数据"
+- **侧边栏三段分组** — 工作区 / 管理 / 统计，数据驱动可自定义
+
+---
+
+## 🚦 快速开始
+
+### 环境要求
+
+**JDK 21** · **Maven 3.8+** · **MySQL 8.0+** · **Redis 5+** · **Node.js 22** · **pnpm**
+
+### 后端
 
 ```bash
 cd personal-hub-server
-# 初始化数据库（首次）
-mysql -u root -p < ../sql/init.sql
-# 启动
-mvn spring-boot:run -pl ph-boot -am
+mysql -u root -p < ../sql/init.sql     # 首次初始化
+mvn spring-boot:run -pl ph-boot -am    # 启动 → :8080
 ```
 
-### 启动前端
+### 前端
 
 ```bash
 cd personal-hub-web
 pnpm install
-pnpm dev
+pnpm dev                               # 启动 → :3000
 ```
 
-### 访问
+### 环境配置
 
-- 应用地址：`http://localhost:5173`
-- API 地址：`http://localhost:8080`
-- API 文档：`http://localhost:8080/swagger-ui.html`
+| Profile | Swagger | SQL 日志 | 适用场景 |
+|---------|---------|----------|----------|
+| `dev`（默认） | ✅ 开启 | ✅ 打印 | 本地开发 |
+| `prod` | ❌ 关闭 | ❌ 关闭 | 生产部署 |
 
-## 文档
+```bash
+# 切换生产环境
+mvn spring-boot:run -pl ph-boot -am -Dspring-boot.run.profiles=prod
+```
 
-| 文档 | 内容 |
+---
+
+## 📚 文档索引
+
+| 文档 | 说明 |
 |------|------|
-| [PROJECT.md](docs/PROJECT.md) | 项目定位、领域模块设计、架构原则 |
-| [TECH_STACK.md](docs/TECH_STACK.md) | 技术栈版本与环境要求 |
-| [DATABASE.md](docs/DATABASE.md) | 表结构、ER、索引 |
-| [API.md](docs/API.md) | RESTful 接口规范 |
-| [STYLE_GUIDE.md](docs/STYLE_GUIDE.md) | 编码规范、UI 设计系统、共享组件 |
-| [ROADMAP.md](docs/ROADMAP.md) | 开发路线与后续规划 |
-| [CHANGELOG.md](docs/CHANGELOG.md) | 版本变更记录 |
-| [DEVELOPMENT_PLAN.md](docs/DEVELOPMENT_PLAN.md) | 分步开发计划 |
+| [`PROJECT.md`](docs/PROJECT.md) | 项目定位 · 架构设计 · 核心原则 |
+| [`TECH_STACK.md`](docs/TECH_STACK.md) | 技术栈版本 · 环境配置 |
+| [`DATABASE.md`](docs/DATABASE.md) | 15 张表结构 · ER 图 · 索引策略 |
+| [`API.md`](docs/API.md) | RESTful 接口规范 · 请求/响应示例 |
+| [`STYLE_GUIDE.md`](docs/STYLE_GUIDE.md) | 编码规范 · UI 设计系统 · 共享组件 |
+| [`ROADMAP.md`](docs/ROADMAP.md) | 开发路线图 · 未来规划 |
+| [`CHANGELOG.md`](docs/CHANGELOG.md) | 版本变更记录 |
+| [`DEVELOPMENT_PLAN.md`](docs/DEVELOPMENT_PLAN.md) | 27 步开发计划（已全部完成） |
+
+---
+
+<p align="center">
+  <sub>Built with care. Not an enterprise dashboard — a personal space that grows with you.</sub>
+</p>

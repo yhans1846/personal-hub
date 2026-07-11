@@ -1,6 +1,6 @@
 # Personal Hub Server
 
-Personal Hub 后端 — Spring Boot 3 + Java 21。
+Personal Hub 后端 — Spring Boot 3 + Java 21 + MyBatis-Plus。
 
 ## 技术栈
 
@@ -9,20 +9,31 @@ Personal Hub 后端 — Spring Boot 3 + Java 21。
 - **ORM**: MyBatis-Plus
 - **数据库**: MySQL 8.x / Redis 5.x
 - **安全**: Spring Security + JWT
-- **文档**: SpringDoc OpenAPI 2.6 (Swagger)
+- **文档**: SpringDoc OpenAPI 2.6（仅 dev 环境开启）
 - **构建**: Maven 3.8+
 
-## 领域模块
+## 领域模块（7+1）
 
 ```
 ph-boot          # 启动入口（spring-boot-maven-plugin）
-ph-common        # 公共组件（Result / 异常处理 / JWT / 配置）
+ph-common        # 公共组件（Result / 异常处理 / JWT / Security 配置）
 ph-system        # 用户认证(JWT) / 个人信息 / 通知系统 / 布局配置
-ph-knowledge     # 笔记 / 日记 / 学习记录 / 阅读记录 / 标签
+ph-knowledge     # 笔记 / 日记 / 学习记录 / 阅读记录 / 标签 / 分类
 ph-planning      # Todo / 学习计划
-ph-resource      # 收藏夹 / 文件管理
+ph-resource      # 收藏夹 / 文件管理 / 笔记资源
+ph-storage       # 文件存储引擎
 ph-dashboard     # Dashboard 聚合统计 + 全局搜索 + 趋势图
 ```
+
+## 环境配置
+
+```
+application.yml            # 公共配置
+application-dev.yml        # 开发环境（激活：spring.profiles.active=dev）
+application-prod.yml       # 生产环境（激活：spring.profiles.active=prod）
+```
+
+主要差异：SQL 日志（dev 打印 / prod 关闭）、Swagger（dev 开启 / prod 关闭）、连接池大小、文件存储路径。
 
 ## 快速启动
 
@@ -38,11 +49,11 @@ ph-dashboard     # Dashboard 聚合统计 + 全局搜索 + 趋势图
 # 初始化数据库（首次）
 mysql -u root -p < ../sql/init.sql
 
-# 启动应用
+# 启动应用（默认 dev 环境）
 mvn spring-boot:run -pl ph-boot -am
 ```
 
-启动后：`http://localhost:8080` | API 文档：`http://localhost:8080/swagger-ui.html`
+启动后：`http://localhost:8080` | API 文档（dev）：`http://localhost:8080/swagger-ui.html`
 
 ## 文档
 
