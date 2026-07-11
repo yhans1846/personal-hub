@@ -7,6 +7,7 @@ import { ElMessage } from 'element-plus'
 import { ArrowLeft, Download } from 'lucide-vue-next'
 import { MdEditor } from 'md-editor-v3'
 import 'md-editor-v3/lib/style.css'
+import { UiButton } from '@/components/ui'
 
 const route = useRoute()
 const router = useRouter()
@@ -118,9 +119,9 @@ function handleExport() {
         <el-tooltip content="导出 Markdown" placement="top">
           <button v-if="form.content" class="icon-btn" @click="handleExport"><Download :size="14" /></button>
         </el-tooltip>
-        <el-button :loading="saving" type="primary" size="small" @click="handleSave">
+        <UiButton :loading="saving" type="primary" size="small" @click="handleSave">
           {{ isEdit ? '保存更新' : '发布' }}
-        </el-button>
+        </UiButton>
       </div>
     </div>
 

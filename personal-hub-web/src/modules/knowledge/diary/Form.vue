@@ -5,6 +5,7 @@ import { createDiary, updateDiary, getDiaryById } from '@/api/diaryApi'
 import { uploadFile } from '@/api/fileApi'
 import { ElMessage } from 'element-plus'
 import { ArrowLeft, Smile, Meh, Frown, Upload, X } from 'lucide-vue-next'
+import { UiInput, UiTextarea, UiSelect, UiDatePicker, UiButton, UiSection, UiCard } from '@/components/ui'
 
 const route = useRoute()
 const router = useRouter()
@@ -89,61 +90,65 @@ function removeImage() { form.value.imageFileId = undefined }
       <h2>{{ isEdit ? '编辑日记' : '写日记' }}</h2>
     </div>
 
-    <div class="form-card">
+    <UiCard>
       <el-form label-position="top" style="max-width: 640px">
-        <el-form-item label="日期">
-          <el-date-picker v-model="form.date" type="date" value-format="YYYY-MM-DD" placeholder="选择日期" style="width:100%" />
-        </el-form-item>
+        <UiSection title="日记信息">
+          <el-form-item label="日期">
+            <UiDatePicker v-model="form.date" type="date" value-format="YYYY-MM-DD" placeholder="选择日期" style="width:100%" />
+          </el-form-item>
 
-        <el-form-item label="标题">
-          <el-input v-model="form.title" placeholder="日记标题（可选）" maxlength="200" show-word-limit />
-        </el-form-item>
+          <el-form-item label="标题">
+            <UiInput v-model="form.title" placeholder="日记标题（可选）" maxlength="200" show-word-limit />
+          </el-form-item>
 
-        <el-form-item label="心情">
-          <el-radio-group v-model="form.mood">
-            <el-radio v-for="item in moodOptions" :key="item.value" :value="item.value" class="mood-radio">
-              <component :is="item.icon" :size="16" :color="item.color" />
-              <span :style="{ color: item.color }">{{ item.label }}</span>
-            </el-radio>
-          </el-radio-group>
-        </el-form-item>
+          <el-form-item label="心情">
+            <el-radio-group v-model="form.mood">
+              <el-radio v-for="item in moodOptions" :key="item.value" :value="item.value" class="mood-radio">
+                <component :is="item.icon" :size="16" :color="item.color" />
+                <span :style="{ color: item.color }">{{ item.label }}</span>
+              </el-radio>
+            </el-radio-group>
+          </el-form-item>
 
-        <el-row :gutter="16">
-          <el-col :span="12">
-            <el-form-item label="天气">
-              <el-select v-model="form.weather" placeholder="选择天气" clearable style="width:100%">
-                <el-option v-for="w in weatherOptions" :key="w" :value="w" :label="w" />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="地点">
-              <el-input v-model="form.location" placeholder="记录地点（可选）" maxlength="200" />
-            </el-form-item>
-          </el-col>
-        </el-row>
+          <el-row :gutter="16">
+            <el-col :span="12">
+              <el-form-item label="天气">
+                <UiSelect v-model="form.weather" placeholder="选择天气" clearable style="width:100%">
+                  <el-option v-for="w in weatherOptions" :key="w" :value="w" :label="w" />
+                </UiSelect>
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="地点">
+                <UiInput v-model="form.location" placeholder="记录地点（可选）" maxlength="200" />
+              </el-form-item>
+            </el-col>
+          </el-row>
 
-        <el-form-item label="配图">
-          <div v-if="form.imageFileId" class="image-preview">
-            <img :src="`/api/files/${form.imageFileId}/download`" class="preview-img" />
-            <button class="image-remove" @click="removeImage"><X :size="14" /></button>
-          </div>
-          <div v-else>
-            <input type="file" accept="image/*" @change="onFileChange" class="file-input" />
-          </div>
-        </el-form-item>
+          <el-form-item label="配图">
+            <div v-if="form.imageFileId" class="image-preview">
+              <img :src="`/api/files/${form.imageFileId}/download`" class="preview-img" />
+              <button class="image-remove" @click="removeImage"><X :size="14" /></button>
+            </div>
+            <div v-else>
+              <input type="file" accept="image/*" @change="onFileChange" class="file-input" />
+            </div>
+          </el-form-item>
+        </UiSection>
 
-        <el-form-item label="内容">
-          <el-input v-model="form.content" type="textarea" :rows="12" placeholder="开始写吧...（支持 Markdown 格式）" />
-          <div class="form-hint">支持 Markdown 格式：标题、列表、加粗、代码等</div>
-        </el-form-item>
+        <UiSection title="正文">
+          <el-form-item label="内容">
+            <UiTextarea v-model="form.content" placeholder="开始写吧...（支持 Markdown 格式）" />
+            <div class="form-hint">支持 Markdown 格式：标题、列表、加粗、代码等</div>
+          </el-form-item>
+        </UiSection>
 
         <el-form-item>
-          <el-button @click="router.push('/diaries')">取消</el-button>
-          <el-button type="primary" :loading="saving" @click="handleSave">保存</el-button>
+          <UiButton @click="router.push('/diaries')">取消</UiButton>
+          <UiButton type="primary" :loading="saving" @click="handleSave">保存</UiButton>
         </el-form-item>
       </el-form>
-    </div>
+    </UiCard>
   </div>
 </template>
 
