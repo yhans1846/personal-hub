@@ -11,22 +11,19 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>ph-resource</artifactId>
-    <name>ph-resource</name>
-    <description>资源管理模块（书签/文件）</description>
+    <artifactId>ph-storage</artifactId>
+    <name>ph-storage</name>
+    <description>统一存储抽象层（本地文件/MinIO/OSS）</description>
 
     <dependencies>
         <dependency>
-            <groupId>com.personalhub</groupId>
-            <artifactId>ph-common</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.personalhub</groupId>
-            <artifactId>ph-knowledge</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.personalhub</groupId>
-            <artifactId>ph-storage</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
         </dependency>
     </dependencies>
 </project>

@@ -6,6 +6,8 @@ import com.personalhub.common.result.PageResult;
 import com.personalhub.common.result.Result;
 import com.personalhub.knowledge.dto.NoteCreateDTO;
 import com.personalhub.knowledge.dto.NoteQueryDTO;
+import com.personalhub.knowledge.service.MarkdownImportService;
+import com.personalhub.knowledge.service.NoteExportService;
 import com.personalhub.knowledge.service.NoteService;
 import com.personalhub.knowledge.vo.NoteVO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -13,19 +15,30 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 /**
  * 笔记控制器
  */
-@Tag(name = "Markdown 笔记", description = "笔记的增删改查、收藏、回收站")
+@Tag(name = "Markdown 笔记", description = "笔记的增删改查、收藏、回收站、导入导出")
 @RestController
 @RequestMapping("/api/notes")
 @RequiredArgsConstructor
 public class NoteController {
 
     private final NoteService noteService;
+    private final MarkdownImportService markdownImportService;
+    private final NoteExportService noteExportService;
 
     @Operation(summary = "笔记列表", description = "分页查询笔记，支持关键词搜索、分类/标签/收藏/回收站筛选")
     @GetMapping
@@ -113,5 +126,33 @@ public class NoteController {
         Long userId = Long.valueOf(authentication.getName());
         noteService.permanentDelete(id, userId);
         return Result.success();
+    }
+
+    @Operation(summary = "导入 Markdown", description = "上传 .md 文件，自动本地化资源")
+    @PostMapping("/import")
+    public Result<Long> importMarkdown(
+            @Parameter(hidden = true) Authentication authentication,
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "title", required = false) String title,
+            @RequestParam(value = "categoryIds", required = false) List<Long> categoryIds,
+            @RequestParam(value = "tagIds", required = false) List<Long> tagIds) {
+        Long userId = Long.valueOf(authentication.getName());
+        Long noteId = markdownImportService.importMarkdown(userId, title, categoryIds, tagIds, file);
+        return Result.success(noteId);
+    }
+
+    @Operation(summary = "导出笔记", description = "导出笔记为 ZIP，包含 Markdown 和资源")
+    @GetMapping("/{id}/export")
+    public ResponseEntity<byte[]> export(
+            @Parameter(hidden = true) Authentication authentication,
+            @PathVariable Long id) {
+        Long userId = Long.valueOf(authentication.getName());
+        byte[] zipData = noteExportService.exportNote(id, userId);
+        String encodedName = URLEncoder.encode("笔记导出", StandardCharsets.UTF_8).replace("+", "%20");
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename*=UTF-8''" + encodedName + ".zip")
+                .body(zipData);
     }
 }

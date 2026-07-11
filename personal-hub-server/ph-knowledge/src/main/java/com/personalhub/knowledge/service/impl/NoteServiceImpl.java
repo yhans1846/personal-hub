@@ -14,6 +14,7 @@ import com.personalhub.knowledge.service.NoteService;
 import com.personalhub.knowledge.service.TagService;
 import com.personalhub.knowledge.vo.NoteVO;
 import com.personalhub.knowledge.vo.TagVO;
+import com.personalhub.storage.StorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -38,6 +39,7 @@ public class NoteServiceImpl implements NoteService {
     private final NoteCategoryMapper categoryMapper;
     private final TagService tagService;
     private final JdbcTemplate jdbcTemplate;
+    private final StorageService storageService;
 
     @Override
     public IPage<NoteVO> listNotes(Long userId, NoteQueryDTO query) {
@@ -87,6 +89,14 @@ public class NoteServiceImpl implements NoteService {
             throw new NotFoundException("笔记不存在");
         }
         NoteVO vo = NoteVO.from(note);
+        // 优先从文件读取 content
+        if (note.getMdPath() != null && storageService.exists(note.getMdPath())) {
+            try {
+                vo.setContent(storageService.read(note.getMdPath()));
+            } catch (Exception e) {
+                log.warn("读取 note.md 失败，使用 DB 内容: id={}", id);
+            }
+        }
         vo.setCategories(getCategories(id));
         vo.setTags(getTags(id));
         return vo;
@@ -101,6 +111,14 @@ public class NoteServiceImpl implements NoteService {
         note.setContent(dto.getContent());
         noteMapper.insert(note);
         log.info("新建笔记: id={}, userId={}, title={}", note.getId(), userId, dto.getTitle());
+
+        // 创建笔记资源目录和 note.md
+        String mdPath = "notes/" + note.getId() + "/note.md";
+        if (dto.getContent() != null && !dto.getContent().isBlank()) {
+            storageService.write(mdPath, dto.getContent());
+        }
+        note.setMdPath(mdPath);
+        noteMapper.updateById(note);
 
         // 保存分类关联
         saveCategoryRels(note.getId(), dto.getCategoryIds());
@@ -121,6 +139,12 @@ public class NoteServiceImpl implements NoteService {
         note.setTitle(dto.getTitle());
         note.setContent(dto.getContent());
         noteMapper.updateById(note);
+
+        // 同步写入 note.md
+        if (note.getMdPath() != null && dto.getContent() != null) {
+            storageService.write(note.getMdPath(), dto.getContent());
+        }
+
         log.info("编辑笔记: id={}, userId={}", id, userId);
 
         // 重建关联
@@ -164,6 +188,11 @@ public class NoteServiceImpl implements NoteService {
         // 清除关联
         jdbcTemplate.update("DELETE FROM note_category_rel WHERE note_id = ?", id);
         tagService.unbindAll("note", id);
+        // 删除笔记资源目录
+        if (note.getMdPath() != null) {
+            String noteDir = note.getMdPath().substring(0, note.getMdPath().indexOf("/note.md"));
+            storageService.delete(noteDir);
+        }
         // 物理删除
         noteMapper.deleteById(id);
         log.info("笔记永久删除: id={}, userId={}", id, userId);

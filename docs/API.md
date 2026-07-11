@@ -85,6 +85,27 @@
 
 **POST /api/notes** — `{"title":"...","content":"# MD...","categoryIds":[1,2],"tagIds":[1,3]}`
 
+### 笔记资源 `/api/notes/{noteId}`
+| 方法 | 路径 | 说明 | 认证 |
+|------|------|------|------|
+| POST | /api/notes/{noteId}/images | 上传笔记配图 | 是 |
+| POST | /api/notes/{noteId}/attachments | 上传笔记附件 | 是 |
+| GET | /api/notes/{noteId}/images/{filename} | 获取笔记图片 | 是 |
+| GET | /api/notes/{noteId}/attachments/{filename} | 获取笔记附件 | 是 |
+
+**POST /api/notes/{noteId}/images** — multipart/form-data: file(File必填)
+```json
+{"url":"images/xxx.png","name":"xxx.png"}
+```
+
+### 笔记导入导出
+| 方法 | 路径 | 说明 | 认证 |
+|------|------|------|------|
+| POST | /api/notes/import | 导入 Markdown（自动本地化资源）| 是 |
+| GET | /api/notes/{id}/export | 导出笔记为 ZIP | 是 |
+
+**POST /api/notes/import** — multipart/form-data: file(File必填), title(String可选), categoryIds(String可选), tagIds(String可选)
+
 ### 四、笔记分类 `/api/note-categories`
 | 方法 | 路径 | 说明 | 认证 |
 |------|------|------|------|
@@ -131,6 +152,7 @@
 | GET | /api/files/{id} | 详情 | 是 |
 | POST | /api/files/upload | 上传（multipart）| 是 |
 | GET | /api/files/{id}/download | 下载 | 是 |
+| GET | /api/files/{id}/preview | 预览（inline）| 是 |
 | DELETE | /api/files/{id} | 删除 | 是 |
 
 **POST /api/files/upload** — multipart/form-data: file(File必填), categoryId(Long可选)

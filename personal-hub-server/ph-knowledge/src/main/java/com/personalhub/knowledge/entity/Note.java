@@ -25,6 +25,9 @@ public class Note {
     /** Markdown内容 */
     private String content;
 
+    /** 笔记MD文件路径(notes/{id}/note.md) */
+    private String mdPath;
+
     /** 是否收藏 0-否 1-是 */
     private Integer isFavorite;
 

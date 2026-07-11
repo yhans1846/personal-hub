@@ -41,6 +41,10 @@
             <groupId>com.personalhub</groupId>
             <artifactId>ph-dashboard</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.personalhub</groupId>
+            <artifactId>ph-storage</artifactId>
+        </dependency>
 
         <!-- MySQL（仅运行时需要） -->
         <dependency>

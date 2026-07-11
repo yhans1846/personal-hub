@@ -6,12 +6,12 @@ import com.personalhub.common.result.Result;
 import com.personalhub.resource.dto.FileQueryDTO;
 import com.personalhub.resource.service.FileResourceService;
 import com.personalhub.resource.vo.FileVO;
+import com.personalhub.storage.StorageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -20,23 +20,20 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 /**
  * 文件资源控制器
  */
-@Tag(name = "文件管理", description = "文件的上传、下载、列表、删除")
+@Tag(name = "文件管理", description = "文件的上传、下载、列表、删除、预览")
 @RestController
 @RequestMapping("/api/files")
 @RequiredArgsConstructor
 public class FileController {
 
     private final FileResourceService fileResourceService;
+    private final StorageService storageService;
 
     @Operation(summary = "文件列表", description = "分页查询文件，支持关键词搜索、类型筛选、分类筛选")
     @GetMapping
@@ -74,37 +71,43 @@ public class FileController {
             @PathVariable Long id) {
         Long userId = Long.valueOf(authentication.getName());
         var fileEntity = fileResourceService.getFileResource(id, userId);
+        Resource resource = storageService.load(fileEntity.getPath());
 
-        try {
-            Path filePath = Paths.get(fileEntity.getPath());
-            java.io.File file = filePath.toFile();
+        String encodedName = URLEncoder.encode(fileEntity.getName(), StandardCharsets.UTF_8)
+                .replace("+", "%20");
 
-            if (!file.exists()) {
-                // 尝试在 uploadDir 下查找
-                filePath = Paths.get("uploads", fileEntity.getPath());
-                file = filePath.toFile();
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename*=UTF-8''" + encodedName)
+                .body(resource);
+    }
+
+    @Operation(summary = "预览文件", description = "inline 预览（图片/PDF 等浏览器支持的类型）")
+    @GetMapping("/{id}/preview")
+    public ResponseEntity<Resource> preview(
+            @Parameter(hidden = true) Authentication authentication,
+            @PathVariable Long id) {
+        Long userId = Long.valueOf(authentication.getName());
+        var fileEntity = fileResourceService.getFileResource(id, userId);
+        Resource resource = storageService.load(fileEntity.getPath());
+
+        MediaType mediaType = MediaType.APPLICATION_OCTET_STREAM;
+        if (fileEntity.getMimeType() != null) {
+            try {
+                mediaType = MediaType.parseMediaType(fileEntity.getMimeType());
+            } catch (Exception ignored) {
             }
-
-            if (!file.exists()) {
-                throw new FileNotFoundException("文件不存在于存储中");
-            }
-
-            InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
-
-            String encodedName = URLEncoder.encode(fileEntity.getName(), StandardCharsets.UTF_8)
-                    .replace("+", "%20");
-
-            return ResponseEntity.ok()
-                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                    .contentLength(file.length())
-                    .header(HttpHeaders.CONTENT_DISPOSITION,
-                            "attachment; filename*=UTF-8''" + encodedName)
-                    .body(resource);
-        } catch (java.io.FileNotFoundException e) {
-            throw new com.personalhub.common.exception.NotFoundException("文件不存在于存储中");
-        } catch (Exception e) {
-            throw new RuntimeException("文件下载失败", e);
         }
+
+        String encodedName = URLEncoder.encode(fileEntity.getName(), StandardCharsets.UTF_8)
+                .replace("+", "%20");
+
+        return ResponseEntity.ok()
+                .contentType(mediaType)
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "inline; filename*=UTF-8''" + encodedName)
+                .body(resource);
     }
 
     @Operation(summary = "删除文件")

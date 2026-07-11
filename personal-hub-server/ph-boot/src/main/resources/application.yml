@@ -42,3 +42,9 @@ springdoc:
     operations-sorter: alpha
   api-docs:
     path: /v3/api-docs
+
+# 文件存储配置
+personal-hub:
+  storage:
+    location: D:/PersonalHub/uploads
+    max-size: 52428800
