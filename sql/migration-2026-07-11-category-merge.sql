@@ -47,9 +47,13 @@ INNER JOIN category c ON c.user_id = fc.user_id AND c.name = fc.name AND c.type 
 SET f.category_id = c.id
 WHERE f.category_id IS NOT NULL;
 
--- 7. 删除旧表
+-- 7. 删除旧表（分类）
 DROP TABLE IF EXISTS `note_category`;
 DROP TABLE IF EXISTS `bookmark_category`;
 DROP TABLE IF EXISTS `file_category`;
+
+-- 8. 删除废弃表（旧标签系统，已由统一 tag + tag_rel 替代）
+DROP TABLE IF EXISTS `note_tag_rel`;
+DROP TABLE IF EXISTS `note_tag`;
 
 COMMIT;
