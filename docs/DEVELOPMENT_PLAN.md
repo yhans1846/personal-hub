@@ -31,3 +31,4 @@
 | 25 | 冗余代码清理（死类型/未使用API/废弃组件/孤立POM/过期SQL） | ✅ |
 | 26 | 配置文件分层（application.yml + dev/prod profile） | ✅ |
 | 27 | SpringDoc + Swagger 修复（依赖引入/白名单/环境开关） | ✅ |
+| 28 | 笔记回收站改造 + 审计日志（deleted_at/audit_log/预览/回收站重构） | ✅ |

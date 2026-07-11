@@ -32,7 +32,7 @@ personal-hub
 ──────────────────────────────────────────────────
 ph-boot       # 启动入口
 ph-common     # 公共能力            —
-ph-system     # 用户/认证/通知      system/
+ph-system     # 用户/认证/通知/审计  system/
 ph-knowledge  # 笔记/日记/学习/      knowledge/
               # 阅读/标签/分类       category/
 ph-planning   # Todo/学习计划       planning/

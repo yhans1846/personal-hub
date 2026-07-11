@@ -36,7 +36,7 @@
 personal-hub-server/
 ├── ph-boot          启动入口
 ├── ph-common        公共能力   Result / JWT / Security / 全局异常
-├── ph-system        用户系统   登录认证 / 通知中心 / 自定义布局
+├── ph-system        用户系统   登录认证 / 通知中心 / 自定义布局 / 审计日志
 ├── ph-knowledge     知识引擎   笔记 / 日记 / 学习 / 阅读 / 标签 / 分类
 ├── ph-planning      规划系统   Todo / 学习计划
 ├── ph-resource      资源管理   收藏夹 / 文件管理 / 笔记附件
@@ -64,7 +64,7 @@ personal-hub-web/src/modules/
 
 | 模块 | 核心能力 |
 |------|----------|
-| **📝 笔记** | Markdown 写作 · 分类/标签关联 · 收藏/回收站 · 一键导出 `.md` |
+| **📝 笔记** | Markdown 写作 · 分类/标签关联 · 收藏/回收站 · 一键导出 `.md` · 只读预览 · 标题大纲导航 |
 | **📖 学习记录** | 主题/时长追踪 · 日/周/月统计 · 连续学习天数 · 关联学习计划 |
 | **✅ 待办** | 优先级 · 截止日期 · 拖拽排序 · 已完成自动折叠 |
 | **📅 日记** | 日历月视图 · 心情/天气/地点 · 配图上传 · Markdown 正文 |
@@ -83,6 +83,8 @@ personal-hub-web/src/modules/
 
 ## 🎯 设计系统亮点
 
+- **回收站增强** — 删除时间/原因追踪 · 分类标签保留 · 审计日志可追溯
+- **只读预览** — 新标签页打开 · Markdown 渲染 · 左侧标题大纲可拖拽 · 可恢复
 - **统一 UI 组件库** — 8 个 Ui-* 基础组件封装 Element Plus，全局一致
 - **CRUD 交互规范** — Dialog / Drawer 替代页面跳转，新增编辑共用组件
 - **CSS 设计令牌** — 全站 `--accent` / `--bg-card` / `--text-primary` 驱动
@@ -133,12 +135,12 @@ mvn spring-boot:run -pl ph-boot -am -Dspring-boot.run.profiles=prod
 |------|------|
 | [`PROJECT.md`](docs/PROJECT.md) | 项目定位 · 架构设计 · 核心原则 |
 | [`TECH_STACK.md`](docs/TECH_STACK.md) | 技术栈版本 · 环境配置 |
-| [`DATABASE.md`](docs/DATABASE.md) | 15 张表结构 · ER 图 · 索引策略 |
+| [`DATABASE.md`](docs/DATABASE.md) | 16 张表结构 · ER 图 · 索引策略 |
 | [`API.md`](docs/API.md) | RESTful 接口规范 · 请求/响应示例 |
 | [`STYLE_GUIDE.md`](docs/STYLE_GUIDE.md) | 编码规范 · UI 设计系统 · 共享组件 |
 | [`ROADMAP.md`](docs/ROADMAP.md) | 开发路线图 · 未来规划 |
 | [`CHANGELOG.md`](docs/CHANGELOG.md) | 版本变更记录 |
-| [`DEVELOPMENT_PLAN.md`](docs/DEVELOPMENT_PLAN.md) | 27 步开发计划（已全部完成） |
+| [`DEVELOPMENT_PLAN.md`](docs/DEVELOPMENT_PLAN.md) | 28 步开发计划（已全部完成） |
 
 ---
 

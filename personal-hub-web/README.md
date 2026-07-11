@@ -26,7 +26,7 @@ src/
 ├── modules/          # 领域模块
 │   ├── category/     # 统一分类管理（Tab 切换）
 │   ├── system/       # 登录 / 系统设置（布局自定义）
-│   ├── knowledge/    # 笔记 / 日记 / 学习记录 / 阅读记录 / 标签
+│   ├── knowledge/    # 笔记 / 笔记回收站 / 只读预览（MdPreview）/ 日记 / 学习记录 / 阅读记录 / 标签
 │   ├── planning/     # Todo / 学习计划
 │   ├── resource/     # 收藏夹 / 文件管理
 │   ├── dashboard/    # Dashboard 首页

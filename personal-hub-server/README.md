@@ -17,8 +17,8 @@ Personal Hub 后端 — Spring Boot 3 + Java 21 + MyBatis-Plus。
 ```
 ph-boot          # 启动入口（spring-boot-maven-plugin）
 ph-common        # 公共组件（Result / 异常处理 / JWT / Security 配置）
-ph-system        # 用户认证(JWT) / 个人信息 / 通知系统 / 布局配置
-ph-knowledge     # 笔记 / 日记 / 学习记录 / 阅读记录 / 标签 / 分类
+ph-system        # 用户认证(JWT) / 个人信息 / 通知系统 / 布局配置 / 审计日志
+ph-knowledge     # 笔记 / 笔记回收站 / 只读预览 / 日记 / 学习记录 / 阅读记录 / 标签 / 分类
 ph-planning      # Todo / 学习计划
 ph-resource      # 收藏夹 / 文件管理 / 笔记资源
 ph-storage       # 文件存储引擎
