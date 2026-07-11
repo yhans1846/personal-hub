@@ -89,13 +89,16 @@ public class NoteServiceImpl implements NoteService {
             throw new NotFoundException("笔记不存在");
         }
         NoteVO vo = NoteVO.from(note);
-        // 优先从文件读取 content
+        // 从文件读取 content
         if (note.getMdPath() != null && storageService.exists(note.getMdPath())) {
             try {
                 vo.setContent(storageService.read(note.getMdPath()));
             } catch (Exception e) {
-                log.warn("读取 note.md 失败，使用 DB 内容: id={}", id);
+                log.warn("读取 note.md 失败: id={}", id);
+                vo.setContent("");
             }
+        } else {
+            vo.setContent("");
         }
         vo.setCategories(getCategories(id));
         vo.setTags(getTags(id));
@@ -108,11 +111,10 @@ public class NoteServiceImpl implements NoteService {
         Note note = new Note();
         note.setUserId(userId);
         note.setTitle(dto.getTitle());
-        note.setContent(dto.getContent());
         noteMapper.insert(note);
         log.info("新建笔记: id={}, userId={}, title={}", note.getId(), userId, dto.getTitle());
 
-        // 创建笔记资源目录和 note.md
+        // 笔记正文存文件，DB 只存路径
         String mdPath = "notes/" + note.getId() + "/note.md";
         if (dto.getContent() != null && !dto.getContent().isBlank()) {
             storageService.write(mdPath, dto.getContent());
@@ -137,10 +139,9 @@ public class NoteServiceImpl implements NoteService {
             throw new NotFoundException("笔记不存在");
         }
         note.setTitle(dto.getTitle());
-        note.setContent(dto.getContent());
         noteMapper.updateById(note);
 
-        // 同步写入 note.md
+        // 正文只写文件，不同步 DB
         if (note.getMdPath() != null && dto.getContent() != null) {
             storageService.write(note.getMdPath(), dto.getContent());
         }

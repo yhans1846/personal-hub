@@ -99,10 +99,9 @@ public class MarkdownImportService {
         String mdPath = noteDir + "/note.md";
         storageService.write(mdPath, updatedContent);
 
-        // 更新 DB 中的 content 和 mdPath
+        // 更新 DB 中的 mdPath（正文只存文件，不同步 DB）
         Note note = noteMapper.selectById(noteId);
         note.setMdPath(mdPath);
-        note.setContent(updatedContent);
         noteMapper.updateById(note);
 
         log.info("Markdown 导入完成: noteId={}, 资源数量={}", noteId, replacements.size());
