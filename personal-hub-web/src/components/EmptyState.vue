@@ -123,8 +123,10 @@ const currentIllustration = computed(() => {
     </div>
     <p class="empty-state__text">{{ text }}</p>
     <el-button v-if="actionLabel" type="primary" @click="emit('action')">
-      <component :is="actionIcon" v-if="actionIcon" :size="14" style="margin-right: 4px" />
-      {{ actionLabel }}
+      <span>
+        <component :is="actionIcon" v-if="actionIcon" :size="14" style="margin-right: 4px" />
+        {{ actionLabel }}
+      </span>
     </el-button>
   </div>
 </template>

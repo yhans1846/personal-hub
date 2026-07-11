@@ -65,6 +65,10 @@ async function handleDelete(id: number) {
     ElMessage.error(e.response?.data?.message || '删除失败')
   }
 }
+
+function onColorInput(e: Event) {
+  form.value.color = (e.target as HTMLInputElement).value
+}
 </script>
 
 <template>
@@ -103,11 +107,25 @@ async function handleDelete(id: number) {
           <div class="color-picker">
             <button
               v-for="c in COLORS" :key="c"
+              type="button"
               class="color-btn"
               :class="{ active: form.color === c }"
               :style="{ background: c }"
               @click="form.color = c"
             />
+            <label
+              class="color-btn color-btn--custom"
+              :style="{ background: form.color }"
+              title="自定义颜色"
+            >
+              自定义
+              <input
+                type="color"
+                class="color-input-abs"
+                :value="form.color"
+                @input="onColorInput"
+              />
+            </label>
           </div>
         </el-form-item>
       </el-form>
@@ -151,4 +169,16 @@ async function handleDelete(id: number) {
 }
 .color-btn:hover { transform: scale(1.15); }
 .color-btn.active { border-color: var(--text-primary); transform: scale(1.15); }
+.color-btn--custom {
+  position: relative; width: auto; padding: 0 10px; border-radius: 6px;
+  font-size: 11px; color: #fff; font-weight: 500; line-height: 28px;
+  border: 1px solid rgba(255,255,255,.25); letter-spacing: .5px;
+  cursor: pointer; transition: all var(--transition);
+}
+.color-btn--custom:hover { transform: none; filter: brightness(1.15); }
+.color-btn--custom.active { border-color: var(--text-primary); }
+.color-input-abs {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer;
+  width: 100%; height: 100%; border: none;
+}
 </style>

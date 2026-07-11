@@ -38,7 +38,7 @@ const emit = defineEmits<{
       <slot name="actions" />
     </div>
     <el-button v-if="createLabel" type="primary" @click="emit('create')">
-      <Plus :size="14" v-if="createIcon !== false" /> {{ createLabel }}
+      <span><Plus :size="14" v-if="createIcon !== false" /> {{ createLabel }}</span>
     </el-button>
   </div>
 </template>
