@@ -275,7 +275,7 @@ personal-hub-web/src/
 
 #### ① Dialog（推荐）
 
-适用于简单实体（字段少、操作快）：Todo、标签、分类、收藏夹、文件分类等。
+适用于简单实体（字段少、操作快）：Todo、标签、分类、收藏夹、文件分类、日记等。
 
 特点：不跳转页面、保留当前列表状态、操作完成立即关闭。
 
@@ -293,7 +293,7 @@ personal-hub-web/src/
 
 #### ③ Full Page（独立页面）
 
-仅适用于需要专注编辑的场景：Markdown 编辑器、日记编辑、Dashboard 自定义、大型配置页面。
+仅适用于需要专注编辑的场景：Markdown 编辑器、Dashboard 自定义、大型配置页面。
 
 不要使用 Dialog。
 
@@ -434,7 +434,7 @@ Card
 | Study Record | Drawer |
 | Study Plan | Drawer |
 | Markdown 编辑器 | Full Page |
-| 日记编辑 | Full Page |
+| 日记编辑 | Dialog |
 
 禁止独立 Create/Edit 页面，新增/编辑共用一个 Dialog/Drawer 组件。
 

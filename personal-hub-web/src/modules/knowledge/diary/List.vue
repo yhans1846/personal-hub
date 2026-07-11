@@ -1,17 +1,32 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import { getDiaryList, getDiaryByMonth, deleteDiary } from '@/api/diaryApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Pencil, Trash2, PenLine, Sun, Cloud, CloudRain, Smile, Frown, Meh, MapPin, ImageIcon, CalendarDays } from 'lucide-vue-next'
 import { EmptyState, PageHeader, ListToolbar, ListPagination } from '@/components'
+import DiaryDialog from './DiaryDialog.vue'
 import type { DiaryVO, DiaryQuery } from '@/types/diary'
 
-const router = useRouter()
 const list = ref<DiaryVO[]>([])
 const total = ref(0)
 const loading = ref(false)
 const query = ref<DiaryQuery>({ page: 1, size: 20, keyword: '' })
+
+const dialogVisible = ref(false)
+const editId = ref<number | undefined>()
+const initialDate = ref('')
+
+function openCreate(date?: string) {
+  editId.value = undefined
+  initialDate.value = date || ''
+  dialogVisible.value = true
+}
+
+function openEdit(id: number) {
+  editId.value = id
+  initialDate.value = ''
+  dialogVisible.value = true
+}
 const showCalendar = ref(false)
 const calendarMonth = ref(new Date())
 const calendarEntries = ref<DiaryVO[]>([])
@@ -56,8 +71,8 @@ function nextMonth() { calendarMonth.value = new Date(calendarMonth.value.getFul
 function goDate(day: number) {
   const d = `${calendarMonth.value.getFullYear()}-${String(calendarMonth.value.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
   const existing = calendarEntries.value.find(e => e.date === d)
-  if (existing) router.push(`/diaries/${existing.id}/edit`)
-  else router.push(`/diaries/new?date=${d}`)
+  if (existing) openEdit(existing.id)
+  else openCreate(d)
 }
 
 onMounted(() => fetchList())
@@ -76,8 +91,8 @@ async function fetchList() {
 function onSearch() { query.value.page = 1; fetchList() }
 function onPageChange(page: number) { query.value.page = page; fetchList() }
 function onFilterChange() { query.value.page = 1; fetchList() }
-function goCreate() { router.push('/diaries/new') }
-function goEdit(id: number) { router.push(`/diaries/${id}/edit`) }
+function goCreate() { openCreate() }
+function goEdit(id: number) { openEdit(id) }
 
 async function handleDelete(id: number) {
   await ElMessageBox.confirm('确定删除这篇日记？', '提示', { type: 'warning' })
@@ -190,6 +205,8 @@ const moodOptions = [
     </div>
 
     <ListPagination v-if="total > (query.size ?? 20)" :total="total" :page="query.page" :size="query.size" @update:page="onPageChange" />
+
+    <DiaryDialog v-model="dialogVisible" :entity-id="editId" :initial-date="initialDate" @saved="fetchList" />
   </div>
 </template>
 
