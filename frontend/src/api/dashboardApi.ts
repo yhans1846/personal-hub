@@ -16,6 +16,9 @@ export interface DashboardStats {
   diaryCountThisMonth: number
   bookmarkCount: number
   readingCount: number
+  readingInProgress: number
+  readingCompleted: number
+  readingDurationTotal: number
   studyPlanCount: number
 }
 

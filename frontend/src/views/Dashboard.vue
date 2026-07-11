@@ -92,7 +92,8 @@ const statCards = [
   { key: 'fileCount' as const, icon: File, label: '文件', color: 'var(--success)', onClick: () => router.push('/files') },
   { key: 'diaryCount' as const, icon: Bookmark, label: '日记', color: 'var(--info)', onClick: () => router.push('/diaries') },
   { key: 'bookmarkCount' as const, icon: Bookmark, label: '收藏', color: 'var(--warning)', onClick: () => router.push('/bookmarks') },
-  { key: 'readingCount' as const, icon: BookMarked, label: '阅读', color: 'var(--success)', onClick: () => router.push('/readings') },
+  { key: 'readingCount' as const, icon: BookMarked, label: '阅读', color: 'var(--success)', onClick: () => router.push('/readings'),
+    append: (s: DashboardStats) => s.readingInProgress > 0 ? ` ${s.readingInProgress} 在读` : '' },
   { key: 'studyPlanCount' as const, icon: Target, label: '学习计划', color: 'var(--text-secondary)', onClick: () => router.push('/study-plans') },
 ]
 </script>

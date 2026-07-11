@@ -49,6 +49,15 @@ public class DashboardStatsVO {
     @Schema(description = "阅读记录总数")
     private Long readingCount;
 
+    @Schema(description = "在读数量")
+    private Long readingInProgress;
+
+    @Schema(description = "读完数量")
+    private Long readingCompleted;
+
+    @Schema(description = "阅读总时长（分钟）")
+    private Long readingDurationTotal;
+
     @Schema(description = "学习计划总数")
     private Long studyPlanCount;
 }

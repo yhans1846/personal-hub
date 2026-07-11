@@ -82,6 +82,9 @@ public class DashboardServiceImpl implements DashboardService {
 
         // 阅读
         stats.setReadingCount(countReadings(userId));
+        stats.setReadingInProgress(countReadingsByStatus(userId, 1));
+        stats.setReadingCompleted(countReadingsByStatus(userId, 2));
+        stats.setReadingDurationTotal(sumReadingDuration(userId));
 
         // 学习计划
         stats.setStudyPlanCount(countStudyPlans(userId));
@@ -324,6 +327,23 @@ public class DashboardServiceImpl implements DashboardService {
         return readingRecordMapper.selectCount(
                 new LambdaQueryWrapper<ReadingRecord>()
                         .eq(ReadingRecord::getUserId, userId));
+    }
+
+    private Long countReadingsByStatus(Long userId, Integer status) {
+        return readingRecordMapper.selectCount(
+                new LambdaQueryWrapper<ReadingRecord>()
+                        .eq(ReadingRecord::getUserId, userId)
+                        .eq(ReadingRecord::getStatus, status));
+    }
+
+    private Long sumReadingDuration(Long userId) {
+        var list = readingRecordMapper.selectList(
+                new LambdaQueryWrapper<ReadingRecord>()
+                        .eq(ReadingRecord::getUserId, userId)
+                        .select(ReadingRecord::getTotalDuration));
+        return list.stream()
+                .mapToLong(r -> r.getTotalDuration() != null ? r.getTotalDuration() : 0L)
+                .sum();
     }
 
     private Long countStudyPlans(Long userId) {
