@@ -40,6 +40,7 @@
 | Element Plus | 最新 | UI 组件库 |
 | lucide-vue-next / @lucide/vue | 最新 | 图标库（统一图标源） |
 | md-editor-v3 | 最新 | Markdown 编辑器组件 |
+| sortablejs | 最新 | 拖拽排序 |
 | ECharts | 6.x | 数据可视化图表 |
 
 ### 前端约定

@@ -69,5 +69,11 @@ ph-studyplan 模块 + sql 新表 + 前端 StudyPlanList/StudyPlanForm
 ### Step 14 — 阅读记录模块
 ph-reading 模块 + sql 新表 + 前端 ReadingList/ReadingForm
 
-### 后续（第三阶段）
-Dashboard & 数据统计 / 全局搜索 / 标签系统
+### 第四阶段：UI 优化
+设计令牌刷新、侧边栏分组、共享组件、Dashboard 扩展、Topbar 增强、过渡动画、响应式适配、Accent Color、Command Palette、Markdown 编辑器
+
+### 第五阶段：功能增强
+笔记标签颜色/阅读时间/MD图标/编辑标识、待办拖拽排序/已完成折叠、学习记录统计、日记地点/配图、阅读记录评分/时长、学习计划剩余天数
+
+### 第六阶段：后端优化 + 代码重构
+学习统计 SQL 聚合、待办今日任务 API、阅读数据联动 Dashboard、抽离 ListToolbar/ListPagination 共享组件
