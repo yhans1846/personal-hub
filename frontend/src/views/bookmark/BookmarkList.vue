@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import PageHeader from '@/components/PageHeader.vue'
-import EmptyState from '@/components/EmptyState.vue'
+import { PageHeader, EmptyState, ListToolbar, ListPagination } from '@/components'
 import { getBookmarkList, deleteBookmark, getBookmarkCategories } from '@/api/bookmarkApi'
 import { getTags } from '@/api/tagApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Plus, Pencil, Trash2, FolderOpen, Tag, Bookmark } from 'lucide-vue-next'
+import { Plus, Pencil, Trash2, FolderOpen, Tag, Bookmark } from 'lucide-vue-next'
 import type { BookmarkVO, BookmarkQuery, BookmarkCategoryVO } from '@/types/bookmark'
 import type { TagVO } from '@/types/tag'
 
@@ -75,15 +74,12 @@ function getFaviconUrl(url: string) {
   <div>
     <PageHeader title="收藏夹" subtitle="共 {{ total }} 个收藏" />
 
-    <div class="toolbar">
-      <div class="toolbar-left">
-        <el-input v-model="query.keyword" placeholder="搜索标题/网址..." style="width:200px" clearable @clear="onSearch" @keyup.enter="onSearch">
-          <template #prefix><Search :size="14" style="color: var(--text-tertiary)" /></template>
-        </el-input>
-        <el-select v-model="query.categoryId" placeholder="全部分类" style="width:130px" clearable @change="onFilterChange">
-          <el-option v-for="c in categories" :key="c.id" :value="c.id" :label="c.name" />
+    <ListToolbar :search="query.keyword" search-placeholder="搜索标题/网址..." search-width="200px" create-label="新建收藏" @update:search="query.keyword = $event" @search="onSearch" @create="goCreate">
+      <template #filters>
+        <el-select v-model="query.categoryId" placeholder="分类" style="width:130px" clearable @change="onFilterChange">
+          <el-option v-for="c in categories" :key="c.id" :label="c.name" :value="c.id" />
         </el-select>
-        <el-select v-model="query.tagId" placeholder="全部标签" style="width:130px" clearable @change="onFilterChange">
+        <el-select v-model="query.tagId" placeholder="标签" style="width:130px" clearable @change="onFilterChange">
           <el-option v-for="t in tags" :key="t.id" :value="t.id" :label="t.name">
             <span style="display:flex;align-items:center;gap:6px">
               <span class="tag-dot" :style="{ background: t.color }" />
@@ -91,17 +87,11 @@ function getFaviconUrl(url: string) {
             </span>
           </el-option>
         </el-select>
-      </div>
-      <div class="toolbar-right">
-        <el-button @click="goCategories">
-          <FolderOpen :size="14" /> 分类管理
-        </el-button>
-        <el-button type="primary" @click="goCreate">
-          <Plus :size="14" /> 新建收藏
-        </el-button>
-      </div>
-    </div>
-
+      </template>
+      <template #actions>
+        <el-button @click="goCategories">分类管理</el-button>
+      </template>
+    </ListToolbar>
     <div v-if="loading" class="loading-skeleton">
       <div v-for="i in 6" :key="i" class="skeleton-card" />
     </div>
@@ -133,14 +123,7 @@ function getFaviconUrl(url: string) {
       </div>
     </div>
 
-    <el-pagination
-      v-if="total > (query.size ?? 20)"
-      v-model:current-page="query.page"
-      :total="total" :page-size="query.size"
-      layout="total, prev, pager, next"
-      style="margin-top: var(--sp-6); justify-content: flex-end"
-      @current-change="onPageChange"
-    />
+    <ListPagination v-if="total > (query.size ?? 20)" :total="total" :page="query.page" :size="query.size" @update:page="onPageChange" />
   </div>
 </template>
 

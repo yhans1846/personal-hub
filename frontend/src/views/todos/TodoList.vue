@@ -3,8 +3,8 @@ import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { getTodoList, deleteTodo, toggleDone } from '@/api/todoApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Plus, CheckCircle, Pencil, Trash2, Calendar, GripVertical } from 'lucide-vue-next'
-import { EmptyState, PageHeader } from '@/components'
+import { Plus, CheckCircle, Pencil, Trash2, Calendar, GripVertical } from 'lucide-vue-next'
+import { EmptyState, PageHeader, ListToolbar, ListPagination } from '@/components'
 import type { TodoVO, TodoQuery } from '@/types/todo'
 import Sortable from 'sortablejs'
 
@@ -86,22 +86,16 @@ const doneOptions = [
   <div>
     <PageHeader title="待办任务" subtitle="管理日常任务" />
 
-    <div class="toolbar">
-      <div class="toolbar-left">
-        <el-input v-model="query.keyword" placeholder="搜索任务..." style="width:200px" clearable @clear="onSearch" @keyup.enter="onSearch">
-          <template #prefix><Search :size="14" style="color: var(--text-tertiary)" /></template>
-        </el-input>
+    <ListToolbar :search="query.keyword" search-placeholder="搜索任务..." search-width="200px" create-label="新建任务" @update:search="query.keyword = $event" @search="onSearch" @create="goCreate">
+      <template #filters>
         <el-select v-model="query.priority" placeholder="优先级" style="width:100px" clearable @change="onFilterChange">
           <el-option v-for="item in priorityOptions" :key="item.label" :value="item.value" :label="item.label" />
         </el-select>
         <el-select v-model="query.isDone" placeholder="状态" style="width:120px" clearable @change="onFilterChange">
           <el-option v-for="item in doneOptions" :key="item.label" :value="item.value" :label="item.label" />
         </el-select>
-      </div>
-      <el-button type="primary" @click="goCreate">
-        <Plus :size="14" /> 新建任务
-      </el-button>
-    </div>
+      </template>
+    </ListToolbar>
 
     <div v-if="loading" class="loading-skeleton">
       <div v-for="i in 5" :key="i" class="skeleton-todo" />
@@ -165,14 +159,7 @@ const doneOptions = [
       </div>
     </div>
 
-    <el-pagination
-      v-if="total > query.size"
-      v-model:current-page="query.page"
-      :total="total" :page-size="query.size"
-      layout="total, prev, pager, next"
-      style="margin-top: var(--sp-6); justify-content: flex-end"
-      @current-change="onPageChange"
-    />
+    <ListPagination v-if="total > query.size" :total="total" :page="query.page" :size="query.size" @update:page="onPageChange" />
   </div>
 </template>
 

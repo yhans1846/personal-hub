@@ -3,8 +3,8 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getDiaryList, getDiaryByMonth, deleteDiary } from '@/api/diaryApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Plus, Pencil, Trash2, PenLine, Sun, Cloud, CloudRain, Smile, Frown, Meh, MapPin, ImageIcon, CalendarDays } from 'lucide-vue-next'
-import { EmptyState, PageHeader } from '@/components'
+import { Plus, Pencil, Trash2, PenLine, Sun, Cloud, CloudRain, Smile, Frown, Meh, MapPin, ImageIcon, CalendarDays } from 'lucide-vue-next'
+import { EmptyState, PageHeader, ListToolbar, ListPagination } from '@/components'
 import type { DiaryVO, DiaryQuery } from '@/types/diary'
 
 const router = useRouter()
@@ -119,31 +119,17 @@ const moodOptions = [
   <div>
     <PageHeader title="日记" subtitle="记录每天的生活" />
 
-    <div class="toolbar">
-      <div class="toolbar-left">
-        <el-input v-model="query.keyword" placeholder="搜索日记..." style="width:200px" clearable @clear="onSearch" @keyup.enter="onSearch">
-          <template #prefix><Search :size="14" style="color: var(--text-tertiary)" /></template>
-        </el-input>
+    <ListToolbar :search="query.keyword" search-placeholder="搜索日记..." search-width="200px" create-label="写日记" @update:search="query.keyword = $event" @search="onSearch" @create="goCreate">
+      <template #filters>
         <el-select v-model="query.mood" placeholder="心情" style="width:120px" clearable @change="onFilterChange">
           <el-option v-for="item in moodOptions" :key="item.label" :value="item.value" :label="item.label" />
         </el-select>
-        <el-date-picker
-          v-model="query.month"
-          type="month"
-          value-format="YYYY-MM"
-          placeholder="按月筛选"
-          style="width:140px"
-          clearable
-          @change="onFilterChange"
-        />
-      </div>
-      <el-button :type="showCalendar ? 'default' : 'primary'" @click="toggleCalendar">
-        <CalendarDays :size="14" /> {{ showCalendar ? '列表' : '月历' }}
-      </el-button>
-      <el-button type="primary" @click="goCreate">
-        <Plus :size="14" /> 写日记
-      </el-button>
-    </div>
+        <el-date-picker v-model="query.month" type="month" value-format="YYYY-MM" placeholder="按月筛选" style="width:140px" clearable @change="onFilterChange" />
+        <el-button :type="showCalendar ? 'default' : 'primary'" @click="toggleCalendar">
+          <CalendarDays :size="14" /> {{ showCalendar ? '列表' : '月历' }}
+        </el-button>
+      </template>
+    </ListToolbar>
 
     <!-- 日历视图 -->
     <div v-if="showCalendar" class="calendar-view">
@@ -203,14 +189,7 @@ const moodOptions = [
       </div>
     </div>
 
-    <el-pagination
-      v-if="total > (query.size ?? 20)"
-      v-model:current-page="query.page"
-      :total="total" :page-size="query.size"
-      layout="total, prev, pager, next"
-      style="margin-top: var(--sp-6); justify-content: flex-end"
-      @current-change="onPageChange"
-    />
+    <ListPagination v-if="total > (query.size ?? 20)" :total="total" :page="query.page" :size="query.size" @update:page="onPageChange" />
   </div>
 </template>
 

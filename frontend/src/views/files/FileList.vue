@@ -3,10 +3,9 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getFileList, uploadFile, deleteFile, getFileDownloadUrl, getFileCategories } from '@/api/fileApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Upload, FileIcon, ImageIcon, FileText, Archive, Download, Trash2, Plus } from 'lucide-vue-next'
+import { Upload, FileIcon, ImageIcon, FileText, Archive, Download, Trash2, Plus } from 'lucide-vue-next'
 import type { FileVO, FileQuery, FileCategory } from '@/types/file'
-import PageHeader from '@/components/PageHeader.vue'
-import EmptyState from '@/components/EmptyState.vue'
+import { PageHeader, EmptyState, ListToolbar, ListPagination } from '@/components'
 
 const router = useRouter()
 const list = ref<FileVO[]>([])
@@ -16,6 +15,13 @@ const uploadLoading = ref(false)
 const query = ref<FileQuery>({ page: 1, size: 20, keyword: '' })
 const categories = ref<FileCategory[]>([])
 const showUpload = ref(false)
+const typeOptions = [
+  { value: '', label: '全部' },
+  { value: 'image', label: '图片' },
+  { value: 'pdf', label: 'PDF' },
+  { value: 'doc', label: '文档' },
+  { value: 'archive', label: '压缩包' },
+]
 
 onMounted(() => {
   fetchList()
@@ -85,26 +91,16 @@ function getFileIcon(icon: string) {
   <div>
     <PageHeader title="文件" subtitle="共 {{ total }} 个文件" />
 
-    <div class="toolbar">
-      <div class="toolbar-left">
-        <el-input v-model="query.keyword" placeholder="搜索文件名..." style="width:200px" clearable @clear="onSearch" @keyup.enter="onSearch">
-          <template #prefix><Search :size="14" style="color: var(--text-tertiary)" /></template>
-        </el-input>
-        <el-select v-model="query.type" placeholder="文件类型" style="width:110px" clearable @change="onSearch">
-          <el-option label="全部" value="" />
-          <el-option label="图片" value="image" />
-          <el-option label="PDF" value="pdf" />
-          <el-option label="文档" value="doc" />
-          <el-option label="压缩包" value="archive" />
+    <ListToolbar :search="query.keyword" search-placeholder="搜索文件..." search-width="200px" @update:search="query.keyword = $event" @search="onSearch">
+      <template #filters>
+        <el-select v-model="query.type" placeholder="类型" style="width:110px" clearable @change="onSearch">
+          <el-option v-for="t in typeOptions" :key="t.value" :value="t.value" :label="t.label" />
         </el-select>
         <el-select v-model="query.categoryId" placeholder="分类" style="width:130px" clearable @change="onSearch">
           <el-option v-for="c in categories" :key="c.id" :label="c.name" :value="c.id" />
         </el-select>
-      </div>
-      <el-button type="primary" @click="showUpload = true">
-        <Upload :size="14" /> 上传文件
-      </el-button>
-    </div>
+      </template>
+    </ListToolbar>
 
     <!-- 上传区域 -->
     <div v-if="showUpload" class="upload-zone" @drop.prevent="handleUpload(($event as any).dataTransfer.files)" @dragover.prevent>
@@ -145,14 +141,7 @@ function getFileIcon(icon: string) {
       </div>
     </div>
 
-    <el-pagination
-      v-if="total > query.size"
-      v-model:current-page="query.page"
-      :total="total" :page-size="query.size"
-      layout="total, prev, pager, next"
-      style="margin-top: var(--sp-6); justify-content: flex-end"
-      @current-change="onPageChange"
-    />
+    <ListPagination v-if="total > query.size" :total="total" :page="query.page" :size="query.size" @update:page="onPageChange" />
   </div>
 </template>
 

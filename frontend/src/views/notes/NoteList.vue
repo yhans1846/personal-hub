@@ -3,8 +3,8 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getNoteList, deleteNote, toggleFavorite } from '@/api/noteApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Plus, FileText, Star, Trash2, Clock } from 'lucide-vue-next'
-import { EmptyState, PageHeader } from '@/components'
+import { Plus, FileText, Star, Trash2, Clock } from 'lucide-vue-next'
+import { EmptyState, PageHeader, ListToolbar, ListPagination } from '@/components'
 import type { NoteVO, NoteQuery } from '@/types/note'
 import { estimateReadingTime, formatRelativeTime, isRecentlyEdited } from '@/utils/readingTime'
 
@@ -48,16 +48,7 @@ async function handleToggleFavorite(note: NoteVO) {
   <div>
     <PageHeader title="笔记" subtitle="记录想法与知识" />
 
-    <div class="toolbar">
-      <div class="toolbar-left">
-        <el-input v-model="query.keyword" placeholder="搜索笔记标题..." style="width: 240px" clearable @clear="onSearch" @keyup.enter="onSearch">
-          <template #prefix><Search :size="14" style="color: var(--text-tertiary)" /></template>
-        </el-input>
-      </div>
-      <el-button type="primary" @click="goCreate">
-        <Plus :size="14" /> 新建笔记
-      </el-button>
-    </div>
+    <ListToolbar :search="query.keyword" search-placeholder="搜索笔记标题..." search-width="240px" create-label="新建笔记" @update:search="query.keyword = $event" @search="onSearch" @create="goCreate" />
 
     <div v-if="loading" class="card-grid-skeleton">
       <div v-for="i in 6" :key="i" class="skeleton-note-card" />
@@ -99,14 +90,7 @@ async function handleToggleFavorite(note: NoteVO) {
       </div>
     </div>
 
-    <el-pagination
-      v-if="total > query.size"
-      v-model:current-page="query.page"
-      :total="total" :page-size="query.size"
-      layout="total, prev, pager, next"
-      style="margin-top: var(--sp-6); justify-content: flex-end"
-      @current-change="onPageChange"
-    />
+    <ListPagination v-if="total > query.size" :total="total" :page="query.page" :size="query.size" @update:page="onPageChange" />
   </div>
   </div>
 </template>

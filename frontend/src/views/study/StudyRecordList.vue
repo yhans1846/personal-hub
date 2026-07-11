@@ -4,10 +4,9 @@ import { useRouter } from 'vue-router'
 import { getStudyRecordList, deleteStudyRecord, getStudyStats } from '@/api/studyApi'
 import type { StudyStats } from '@/api/studyApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Plus, BookOpen, Pencil, Trash2 } from 'lucide-vue-next'
+import { BookOpen, Pencil, Trash2, Plus } from 'lucide-vue-next'
 import type { StudyRecordVO, StudyRecordQuery } from '@/types/study'
-import PageHeader from '@/components/PageHeader.vue'
-import EmptyState from '@/components/EmptyState.vue'
+import { PageHeader, EmptyState, ListToolbar, ListPagination } from '@/components'
 
 const router = useRouter()
 const list = ref<StudyRecordVO[]>([])
@@ -81,16 +80,7 @@ watch(list, (val) => { groupedList.value = groupByDate(val) }, { immediate: true
       <div class="stat-item"><span class="stat-num">{{ stats.streak }}</span> 天 <span class="stat-label">连续学习</span></div>
     </div>
 
-    <div class="toolbar">
-      <div class="toolbar-left">
-        <el-input v-model="query.keyword" placeholder="搜索主题或内容..." style="width: 240px" clearable @clear="onSearch" @keyup.enter="onSearch">
-          <template #prefix><Search :size="14" style="color: var(--text-tertiary)" /></template>
-        </el-input>
-      </div>
-      <el-button type="primary" @click="goCreate">
-        <Plus :size="14" /> 新建记录
-      </el-button>
-    </div>
+    <ListToolbar :search="query.keyword" search-placeholder="搜索学习记录..." search-width="240px" create-label="新建记录" @update:search="query.keyword = $event" @search="onSearch" @create="goCreate" />
 
     <div v-if="loading" class="loading-skeleton">
       <div v-for="i in 5" :key="i" class="skeleton-study" />
@@ -125,14 +115,7 @@ watch(list, (val) => { groupedList.value = groupByDate(val) }, { immediate: true
       </div>
     </div>
 
-    <el-pagination
-      v-if="total > query.size"
-      v-model:current-page="query.page"
-      :total="total" :page-size="query.size"
-      layout="total, prev, pager, next"
-      style="margin-top: var(--sp-6); justify-content: flex-end"
-      @current-change="onPageChange"
-    />
+    <ListPagination v-if="total > query.size" :total="total" :page="query.page" :size="query.size" @update:page="onPageChange" />
   </div>
 </template>
 
