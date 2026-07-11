@@ -63,10 +63,13 @@ personal-hub-web/src/modules/
 | **学习计划** | 进度跟踪、剩余天数/超期标记、关联学习记录 |
 | **阅读记录** | 章节进度、评分（1-5星）、阅读时长、笔记 |
 | **统一标签系统** | 全模块多态关联、颜色标记、使用次数统计 |
+| **统一分类系统** | 笔记/收藏夹/文件分类合并管理、Tab 切换 |
 | **Dashboard** | 8 项统计卡片、ECharts 趋势图（7/30/90 天） |
 | **全局搜索** | 跨 8 模块统一搜索、关键词高亮、结果分组 |
 | **通知系统** | 自动检测（待办超期/计划截止/完成）、定时任务、Bell 红标下拉面板 |
 | **UI 优化** | 响应式布局、深色模式、5 种强调色切换、Command Palette（Ctrl+K）、侧边栏三段分组 |
+| **统一 UI 组件库** | UiDialog/UiInput/UiSelect/UiButton/UiSection/UiCard 等 8 个封装组件 |
+| **CRUD 交互模式** | Dialog/Drawer 替代路由跳转表单（Todo/Bookmark/日记/Reading/Study/StudyPlan） |
 | **工作台自定义** | 菜单/Dashboard 卡片显示隐藏、拖拽排序、每个用户独立布局 |
 
 ## 快速启动
