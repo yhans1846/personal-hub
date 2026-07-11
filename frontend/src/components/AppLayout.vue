@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { useAuthStore } from '@/store/authStore'
 import { useRouter } from 'vue-router'
-import { LayoutDashboard, FileText, BookOpen, CheckSquare, PenLine, Bookmark, Target, BookMarked, FolderOpen, Grid3X3, Tags, Trash2, Search, BarChart3, Plus, Github, Sun, Moon, Bell, Palette, Menu, X } from 'lucide-vue-next'
+import { LayoutDashboard, FileText, BookOpen, CheckSquare, PenLine, Bookmark, Target, BookMarked, FolderOpen, Grid3X3, Tags, Trash2, Search, BarChart3, Plus, Github, Sun, Moon, Palette, Menu, X } from 'lucide-vue-next'
 import { ref, onMounted } from 'vue'
 import CommandPalette from './CommandPalette.vue'
+import NotificationBell from './NotificationBell.vue'
 
 const authStore = useAuthStore()
 const router = useRouter()
@@ -100,7 +101,7 @@ function handleQuickCreate(cmd: string) {
         </el-dropdown>
 
         <!-- GitHub -->
-        <a href="https://github.com" target="_blank" class="topbar-icon-btn" title="GitHub">
+        <a href="https://github.com/yhans1846/personal-hub" target="_blank" class="topbar-icon-btn" title="GitHub">
           <Github :size="18" />
         </a>
 
@@ -133,9 +134,7 @@ function handleQuickCreate(cmd: string) {
         </el-dropdown>
 
         <!-- 通知 -->
-        <button class="topbar-icon-btn" title="通知">
-          <Bell :size="18" />
-        </button>
+        <NotificationBell />
       </div>
 
       <div class="topbar-right">

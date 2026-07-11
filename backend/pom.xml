@@ -30,6 +30,7 @@
         <module>ph-studyplan</module>
         <module>ph-reading</module>
         <module>ph-tag</module>
+        <module>ph-notification</module>
         <module>ph-dashboard</module>
         <module>ph-boot</module>
     </modules>
@@ -100,6 +101,11 @@
             <dependency>
                 <groupId>com.personalhub</groupId>
                 <artifactId>ph-tag</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.personalhub</groupId>
+                <artifactId>ph-notification</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

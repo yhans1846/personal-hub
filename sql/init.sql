@@ -277,6 +277,24 @@ CREATE TABLE IF NOT EXISTS `tag_rel` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='标签关联表';
 
 -- ========================================
+-- 18. 系统通知表
+-- ========================================
+CREATE TABLE IF NOT EXISTS `sys_notification` (
+    `id`           BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `user_id`      BIGINT       NOT NULL COMMENT '所属用户',
+    `type`         VARCHAR(50)  NOT NULL COMMENT '通知类型(TODO_OVERDUE/PLAN_DEADLINE/PLAN_COMPLETED)',
+    `title`        VARCHAR(200) NOT NULL COMMENT '通知标题',
+    `content`      TEXT         DEFAULT NULL COMMENT '通知内容',
+    `is_read`      TINYINT      NOT NULL DEFAULT 0 COMMENT '是否已读 0-未读 1-已读',
+    `related_id`   BIGINT       DEFAULT NULL COMMENT '关联实体ID',
+    `related_type` VARCHAR(50)  DEFAULT NULL COMMENT '关联实体类型',
+    `created_at`   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`id`),
+    INDEX `idx_user_read` (`user_id`, `is_read`),
+    INDEX `idx_created_at` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统通知表';
+
+-- ========================================
 -- 迁移：笔记标签 → 统一标签系统
 -- ========================================
 INSERT IGNORE INTO `tag` (`id`, `user_id`, `name`, `color`)
