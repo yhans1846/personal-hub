@@ -72,7 +72,7 @@ function getFaviconUrl(url: string) {
 
 <template>
   <div>
-    <PageHeader title="收藏夹" subtitle="共 {{ total }} 个收藏" />
+    <PageHeader title="收藏夹" :subtitle="`共 ${total} 个收藏`" />
 
     <ListToolbar :search="query.keyword" search-placeholder="搜索标题/网址..." search-width="200px" create-label="新建收藏" @update:search="query.keyword = $event" @search="onSearch" @create="goCreate">
       <template #filters>

@@ -69,7 +69,7 @@ watch(list, (val) => { groupedList.value = groupByDate(val) }, { immediate: true
 
 <template>
   <div>
-    <PageHeader title="学习记录" subtitle="共 {{ total }} 条记录" />
+    <PageHeader title="学习记录" :subtitle="`共 ${total} 条记录`" />
 
     <!-- 统计条 -->
     <div v-if="stats" class="study-stats">

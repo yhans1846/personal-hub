@@ -67,7 +67,7 @@ const statusOptions = [
 
 <template>
   <div>
-    <PageHeader title="学习计划" subtitle="共 {{ total }} 个计划" />
+    <PageHeader title="学习计划" :subtitle="`共 ${total} 个计划`" />
 
     <div class="toolbar">
       <div class="toolbar-left">

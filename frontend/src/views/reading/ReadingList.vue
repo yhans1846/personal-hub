@@ -41,7 +41,7 @@ const statusOptions = [
 
 <template>
   <div>
-    <PageHeader title="阅读记录" subtitle="共 {{ total }} 本" />
+    <PageHeader title="阅读记录" :subtitle="`共 ${total} 本`" />
     <ListToolbar :search="query.keyword" search-placeholder="搜索书名/作者..." search-width="220px" create-label="添加书籍" @update:search="query.keyword = $event" @search="onSearch" @create="goCreate">
       <template #filters>
         <el-select v-model="query.status" placeholder="状态" style="width:120px" clearable @change="onFilterChange">

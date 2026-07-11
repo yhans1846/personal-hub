@@ -62,7 +62,7 @@ async function handleDelete(item: BookmarkCategoryVO) {
 
 <template>
   <div>
-    <PageHeader title="收藏夹分类" subtitle="共 {{ list.length }} 个分类" />
+    <PageHeader title="收藏夹分类" :subtitle="`共 ${list.length} 个分类`" />
 
     <div v-if="loading" class="loading-skeleton">
       <div v-for="i in 3" :key="i" class="skeleton-row" />

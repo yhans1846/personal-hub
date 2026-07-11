@@ -89,7 +89,7 @@ function getFileIcon(icon: string) {
 
 <template>
   <div>
-    <PageHeader title="文件" subtitle="共 {{ total }} 个文件" />
+    <PageHeader title="文件" :subtitle="`共 ${total} 个文件`" />
 
     <ListToolbar :search="query.keyword" search-placeholder="搜索文件..." search-width="200px" @update:search="query.keyword = $event" @search="onSearch">
       <template #filters>
