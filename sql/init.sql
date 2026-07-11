@@ -4,8 +4,6 @@ CREATE DATABASE IF NOT EXISTS personal_hub DEFAULT CHARACTER SET utf8mb4;
 
 
 
-*/
-
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
@@ -372,6 +370,6 @@ CREATE TABLE `user_layout`  (
 -- Records of user_layout
 -- ----------------------------
 INSERT INTO `user_layout` VALUES (1, 1, 'dashboard', '{\"items\":[{\"code\":\"today_plan\",\"visible\":true,\"order\":1},{\"code\":\"pending_todos\",\"visible\":true,\"order\":2},{\"code\":\"recent_notes\",\"visible\":true,\"order\":3},{\"code\":\"recent_studies\",\"visible\":true,\"order\":4},{\"code\":\"recent_bookmarks\",\"visible\":false,\"order\":5},{\"code\":\"recent_reading\",\"visible\":false,\"order\":6}]}', '2026-07-11 12:43:52', '2026-07-11 12:43:52', 0);
-INSERT INTO `user_layout` VALUES (2, 1, 'menu', '{\"items\":[{\"code\":\"dashboard\",\"visible\":true,\"order\":1},{\"code\":\"todos\",\"visible\":true,\"order\":2},{\"code\":\"notes\",\"visible\":true,\"order\":3},{\"code\":\"diaries\",\"visible\":true,\"order\":4},{\"code\":\"readings\",\"visible\":true,\"order\":5},{\"code\":\"study-records\",\"visible\":true,\"order\":6},{\"code\":\"study-plans\",\"visible\":true,\"order\":7},{\"code\":\"bookmarks\",\"visible\":true,\"order\":8},{\"code\":\"files\",\"visible\":true,\"order\":9},{\"code\":\"note-categories\",\"visible\":true,\"order\":10},{\"code\":\"tags\",\"visible\":true,\"order\":11},{\"code\":\"file-categories\",\"visible\":true,\"order\":12},{\"code\":\"bookmark-categories\",\"visible\":true,\"order\":13},{\"code\":\"settings\",\"visible\":true,\"order\":14},{\"code\":\"recycle\",\"visible\":true,\"order\":15},{\"code\":\"stats\",\"visible\":true,\"order\":16}]}', '2026-07-11 12:44:02', '2026-07-11 12:44:02', 0);
+INSERT INTO `user_layout` VALUES (2, 1, 'menu', '{\"items\":[{\"code\":\"dashboard\",\"visible\":true,\"order\":1},{\"code\":\"todos\",\"visible\":true,\"order\":2},{\"code\":\"notes\",\"visible\":true,\"order\":3},{\"code\":\"diaries\",\"visible\":true,\"order\":4},{\"code\":\"readings\",\"visible\":true,\"order\":5},{\"code\":\"study-records\",\"visible\":true,\"order\":6},{\"code\":\"study-plans\",\"visible\":true,\"order\":7},{\"code\":\"bookmarks\",\"visible\":true,\"order\":8},{\"code\":\"files\",\"visible\":true,\"order\":9},{\"code\":\"categories\",\"visible\":true,\"order\":10},{\"code\":\"tags\",\"visible\":true,\"order\":11},{\"code\":\"settings\",\"visible\":true,\"order\":12},{\"code\":\"recycle\",\"visible\":true,\"order\":15},{\"code\":\"stats\",\"visible\":true,\"order\":16}]}', '2026-07-11 12:44:02', '2026-07-11 12:44:02', 0);
 
 SET FOREIGN_KEY_CHECKS = 1;

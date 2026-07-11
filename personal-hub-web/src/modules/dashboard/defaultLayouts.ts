@@ -13,10 +13,8 @@ export const DEFAULT_MENU_ITEMS: MenuItem[] = [
   { code: 'readings', title: '阅读记录', section: 'workspace', route: '/readings', order: 8, visible: true },
   { code: 'files', title: '文件', section: 'workspace', route: '/files', order: 9, visible: true },
   // ===== 管理 =====
-  { code: 'note-categories', title: '分类管理', section: 'manage', route: '/notes/categories', order: 10, visible: true },
+  { code: 'categories', title: '分类管理', section: 'manage', route: '/notes/categories', order: 10, visible: true },
   { code: 'tags', title: '标签管理', section: 'manage', route: '/tags', order: 11, visible: true },
-  { code: 'file-categories', title: '文件分类', section: 'manage', route: '/files/categories', order: 12, visible: true },
-  { code: 'bookmark-categories', title: '收藏夹分类', section: 'manage', route: '/bookmarks/categories', order: 13, visible: true },
   { code: 'settings', title: '系统设置', section: 'manage', route: '/settings', order: 14, visible: true },
   { code: 'recycle', title: '回收站', section: 'manage', route: '/notes/recycle', order: 15, visible: true },
   // ===== 统计 =====
