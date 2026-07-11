@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### 2026-07-11 第八阶段：CRUD UI 优化 + 分类系统合并
+- 统一 UI 组件库（UiDialog/UiInput/UiSelect/UiButton/UiSection/UiCard 等 8 个）
+- 全部主实体 CRUD 改为 Dialog/Drawer（Todo/Bookmark/日记/Reading/Study/StudyPlan）
+- 笔记/日记编辑器使用 Ui 组件规范
+- 分类系统合并：note_category/bookmark_category/file_category → 统一 `category` 表
+- 废弃 note_tag 表及代码清理
+- 统一分类管理页面（Tab 切换笔记/收藏夹/文件）
+- 菜单迁移逻辑，自动过滤废弃菜单项
+
 ### 2026-07-11 第七阶段：工作台自定义布局
 - `user_layout` 表 + 布局配置 CRUD API
 - layoutStore（Pinia + localStorage 离线缓存）

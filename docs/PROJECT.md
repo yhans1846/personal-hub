@@ -54,6 +54,9 @@ personal-hub
 - **全局搜索**: 跨 8 模块、关键词高亮、结果分组
 - **通知系统**: 自动检测（超期/截止/完成）、定时任务、Bell 红标下拉
 - **UI**: 响应式、深色模式、5 种强调色、Command Palette、侧边栏三段分组
+- **统一 UI 组件库**: UiDialog/UiInput/UiSelect/UiButton/UiSection/UiCard 等 8 个封装组件
+- **CRUD 交互模式**: 全部模块使用 Dialog/Drawer（替代路由跳转表单页）
+- **统一分类系统**: 笔记/收藏夹/文件分类合并为单表管理（Tab 切换）
 - **工作台自定义**: 菜单/Dashboard 卡片显示隐藏、拖拽排序、每个用户独立布局
 
 ### 后续可扩展

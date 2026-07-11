@@ -26,3 +26,5 @@
 | 20 | UI 优化（设计令牌/侧边栏/共享组件/响应式/Command Palette） | ✅ |
 | 21 | 功能增强（拖拽/评分/时长/地点/配图/超期标记） | ✅ |
 | 22 | 工作台自定义布局（user_layout + 侧边栏/Dashboard 数据驱动 + 设置页） | ✅ |
+| 23 | CRUD UI 优化（Ui 组件库 + Dialog/Drawer 重构） | ✅ |
+| 24 | 分类系统合并（category 表 + CategoryManage + 废弃代码清理） | ✅ |

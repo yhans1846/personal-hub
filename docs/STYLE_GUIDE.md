@@ -466,6 +466,20 @@ UiDialog / UiInput / UiTextarea / UiSelect / UiDatePicker / UiButton / UiSection
 | `ProgressCard` | 进度卡片 | `value`, `max`, `label` |
 | `FileUploader` | 文件上传 | `accept`, `multiple?`, `maxSize?` |
 
+#### UI 基础组件（`src/components/ui/`）
+| 组件 | 封装自 | 用途 | 关键 Props |
+|------|--------|------|-----------|
+| `UiDialog` | el-dialog | 统一弹窗 | `modelValue`, `title`, `width`(默认520px) |
+| `UiInput` | el-input | 文本输入 | `modelValue`, 透传 el-input 属性 |
+| `UiTextarea` | el-input textarea | 多行输入 | `modelValue`, autoSize(4-12行) |
+| `UiSelect` | el-select | 选择器 | `modelValue`, `options` |
+| `UiDatePicker` | el-date-picker | 日期选择 | `modelValue`, 透传 el-date-picker 属性 |
+| `UiButton` | el-button | 按钮 | `type`(primary/default/danger), `loading` |
+| `UiSection` | 容器组件 | 表单区块 | `title`, `description?` |
+| `UiCard` | 容器组件 | 卡片容器 | `padding?`, `hoverable?` |
+
+业务页面禁止直接使用 Element Plus 原生组件进行页面布局，统一通过这些 Ui 组件封装。
+
 ### 工具函数（`src/utils/`）
 | 文件 | 函数 | 用途 |
 |------|------|------|

@@ -106,23 +106,26 @@
 
 **POST /api/notes/import** — multipart/form-data: file(File必填), title(String可选), categoryIds(String可选), tagIds(String可选)
 
-### 四、笔记分类 `/api/note-categories`
+### 四、统一分类 `/api/categories`
 | 方法 | 路径 | 说明 | 认证 |
 |------|------|------|------|
-| GET | /api/note-categories | 列表 | 是 |
-| POST | /api/note-categories | 新建 | 是 |
-| PUT | /api/note-categories/{id} | 修改 | 是 |
-| DELETE | /api/note-categories/{id} | 删除 | 是 |
+| GET | /api/categories?type=note | 按类型列表 | 是 |
+| POST | /api/categories | 新建（含 type 字段） | 是 |
+| PUT | /api/categories/{id} | 修改 | 是 |
+| DELETE | /api/categories/{id} | 删除 | 是 |
 
-### 五、笔记标签 `/api/note-tags`
-| 方法 | 路径 | 说明 | 认证 |
-|------|------|------|------|
-| GET | /api/note-tags | 列表 | 是 |
-| POST | /api/note-tags | 新建 | 是 |
-| PUT | /api/note-tags/{id} | 修改 | 是 |
-| DELETE | /api/note-tags/{id} | 删除 | 是 |
+**请求示例：**
+```json
+POST /api/categories
+{"name":"开发工具","type":"bookmark","sortOrder":0}
+```
 
-### 六、学习记录 `/api/study-records`
+**响应示例：**
+```json
+{"code":200,"message":"success","data":{"id":10,"name":"开发工具","type":"bookmark","sortOrder":0,"count":0,"createdAt":"2026-07-11T14:34:19"}}
+```
+
+### 五、学习记录 `/api/study-records`
 | 方法 | 路径 | 说明 | 认证 |
 |------|------|------|------|
 | GET | /api/study-records | 记录列表 | 是 |
@@ -158,14 +161,6 @@
 **POST /api/files/upload** — multipart/form-data: file(File必填), categoryId(Long可选)
 
 **GET /api/files** 参数: page, size, keyword, type(扩展名), categoryId
-
-### 九、文件分类 `/api/file-categories`
-| 方法 | 路径 | 说明 | 认证 |
-|------|------|------|------|
-| GET | /api/file-categories | 列表 | 是 |
-| POST | /api/file-categories | 新建 | 是 |
-| PUT | /api/file-categories/{id} | 修改 | 是 |
-| DELETE | /api/file-categories/{id} | 删除 | 是 |
 
 ---
 
@@ -208,15 +203,7 @@
 {"title":"GitHub","url":"https://github.com","description":"","categoryId":1,"tagIds":[1,2]}
 ```
 
-### 十二、收藏夹分类 `/api/bookmark-categories`
-| 方法 | 路径 | 说明 | 认证 |
-|------|------|------|------|
-| GET | /api/bookmark-categories | 列表 | 是 |
-| POST | /api/bookmark-categories | 新建 | 是 |
-| PUT | /api/bookmark-categories/{id} | 编辑 | 是 |
-| DELETE | /api/bookmark-categories/{id} | 删除 | 是 |
-
-### 十三、学习计划 `/api/study-plans`
+### 十二、学习计划 `/api/study-plans`
 | 方法 | 路径 | 说明 | 认证 |
 |------|------|------|------|
 | GET | /api/study-plans | 计划列表（分页）| 是 |
