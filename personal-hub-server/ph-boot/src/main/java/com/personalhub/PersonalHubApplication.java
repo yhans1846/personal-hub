@@ -1,9 +1,11 @@
 package com.personalhub;
 
+import com.personalhub.storage.StorageProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
@@ -12,6 +14,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  */
 @Slf4j
 @SpringBootApplication
+@EnableConfigurationProperties(StorageProperties.class)
 @EnableScheduling
 public class PersonalHubApplication {
 
