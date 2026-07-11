@@ -37,7 +37,7 @@
 | id | BIGINT | 主键 | PK |
 | user_id | BIGINT | 所属用户 | NOT NULL, INDEX |
 | title | VARCHAR(200) | 笔记标题 | NOT NULL |
-| content | LONGTEXT | Markdown 内容 | |
+| md_path | VARCHAR(500) | 笔记MD文件路径 | |
 | is_favorite | TINYINT | 是否收藏 | DEFAULT 0 |
 | is_deleted | TINYINT | 逻辑删除 | DEFAULT 0 |
 | created_at | DATETIME | 创建时间 | NOT NULL |

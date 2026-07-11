@@ -35,12 +35,10 @@ public class NoteExportService {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
         try (ZipOutputStream zos = new ZipOutputStream(baos, StandardCharsets.UTF_8)) {
-            String mdContent;
-            String mdPath = noteDir + "/note.md";
-            if (storageService.exists(mdPath)) {
-                mdContent = storageService.read(mdPath);
-            } else {
-                mdContent = note.getContent() != null ? note.getContent() : "";
+            String mdContent = "";
+            String mdFilePath = noteDir + "/note.md";
+            if (storageService.exists(mdFilePath)) {
+                mdContent = storageService.read(mdFilePath);
             }
 
             // 写入 note.md（使用标题作为文件名）

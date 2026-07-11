@@ -22,9 +22,6 @@ public class Note {
     /** 笔记标题 */
     private String title;
 
-    /** Markdown内容 */
-    private String content;
-
     /** 笔记MD文件路径(notes/{id}/note.md) */
     private String mdPath;
 

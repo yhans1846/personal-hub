@@ -102,11 +102,11 @@ https://example.com/...
 
 ## 2.4 DB 配合
 
-`note_note` 表新增字段：
+`note_note` 表字段变更（正文存文件，`md_path` 替代 `content`）：
 
 ```sql
 ALTER TABLE note_note
-    ADD COLUMN md_path VARCHAR(500) DEFAULT NULL COMMENT '笔记MD文件相对路径(notes/{id}/note.md)';
+    CHANGE COLUMN content md_path VARCHAR(500) DEFAULT NULL COMMENT '笔记MD文件路径(notes/{id}/note.md)';
 ```
 
 笔记正文读写策略：

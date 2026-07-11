@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS `note_note` (
     `id`          BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
     `user_id`     BIGINT       NOT NULL COMMENT '所属用户',
     `title`       VARCHAR(200) NOT NULL COMMENT '笔记标题',
-    `content`     LONGTEXT     DEFAULT NULL COMMENT 'Markdown内容',
+    `md_path`     VARCHAR(500) DEFAULT NULL COMMENT '笔记MD文件路径(notes/{id}/note.md)',
     `is_favorite` TINYINT      NOT NULL DEFAULT 0 COMMENT '是否收藏',
     `is_deleted`  TINYINT      NOT NULL DEFAULT 0 COMMENT '逻辑删除',
     `created_at`  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',

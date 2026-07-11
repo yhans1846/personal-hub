@@ -62,7 +62,7 @@ public class NoteVO {
         NoteVO vo = new NoteVO();
         vo.setId(note.getId());
         vo.setTitle(note.getTitle());
-        vo.setContent(note.getContent());
+        // content 从文件读取，在 service 层填充
         vo.setIsFavorite(note.getIsFavorite());
         vo.setCreatedAt(note.getCreatedAt());
         vo.setUpdatedAt(note.getUpdatedAt());
