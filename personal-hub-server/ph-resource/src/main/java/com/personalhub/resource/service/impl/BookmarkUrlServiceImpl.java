@@ -18,8 +18,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
-
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -79,28 +77,8 @@ public class BookmarkUrlServiceImpl implements BookmarkUrlService {
 
     @Override
     public IPage<BookmarkVO> list(Long userId, BookmarkQueryDTO query) {
-        LambdaQueryWrapper<BookmarkUrl> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(BookmarkUrl::getUserId, userId);
-
-        // 关键词搜索（标题/网址/描述）
-        if (StringUtils.hasText(query.getKeyword())) {
-            wrapper.and(w -> w.like(BookmarkUrl::getTitle, query.getKeyword())
-                    .or().like(BookmarkUrl::getUrl, query.getKeyword())
-                    .or().like(BookmarkUrl::getDescription, query.getKeyword()));
-        }
-        // 分类筛选
-        if (query.getCategoryId() != null) {
-            wrapper.eq(BookmarkUrl::getCategoryId, query.getCategoryId());
-        }
-        // 标签筛选（通过 tag_rel 子查询）
-        if (query.getTagId() != null) {
-            wrapper.exists("SELECT 1 FROM tag_rel WHERE entity_id = id AND entity_type = 'bookmark' AND tag_id = " + query.getTagId());
-        }
-
-        wrapper.orderByDesc(BookmarkUrl::getCreatedAt);
-
         Page<BookmarkUrl> page = new Page<>(query.getPage(), query.getSize());
-        IPage<BookmarkUrl> urlPage = bookmarkUrlMapper.selectPage(page, wrapper);
+        IPage<BookmarkUrl> urlPage = bookmarkUrlMapper.selectBookmarkPage(page, userId, query);
 
         // 批量加载分类名称和标签
         Map<Long, String> categoryMap = loadCategoryNames(userId);

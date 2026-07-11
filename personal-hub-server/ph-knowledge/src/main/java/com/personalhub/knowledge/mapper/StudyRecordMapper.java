@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.personalhub.knowledge.entity.StudyRecord;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Select;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -15,12 +14,12 @@ import java.util.List;
 @Mapper
 public interface StudyRecordMapper extends BaseMapper<StudyRecord> {
 
-    @Select("SELECT COALESCE(SUM(duration), 0) FROM study_record WHERE user_id = #{userId} AND date = #{date} AND is_deleted = 0")
+    /** 查询指定日期的学习时长 */
     long sumDurationByDate(@Param("userId") Long userId, @Param("date") LocalDate date);
 
-    @Select("SELECT COALESCE(SUM(duration), 0) FROM study_record WHERE user_id = #{userId} AND date >= #{startDate} AND is_deleted = 0")
+    /** 查询指定日期以来的学习时长 */
     long sumDurationSince(@Param("userId") Long userId, @Param("startDate") LocalDate startDate);
 
-    @Select("SELECT DISTINCT date FROM study_record WHERE user_id = #{userId} AND is_deleted = 0 ORDER BY date DESC")
+    /** 查询所有学习日期（去重） */
     List<LocalDate> listDistinctDates(@Param("userId") Long userId);
 }

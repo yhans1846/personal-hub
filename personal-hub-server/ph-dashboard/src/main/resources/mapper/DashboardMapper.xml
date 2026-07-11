@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.personalhub.module.dashboard.mapper.DashboardMapper">
+
+    <!-- ====== 趋势查询 ====== -->
+
+    <select id="selectStudyTrend" resultType="map">
+        SELECT date AS date_str, COALESCE(SUM(duration), 0) AS value
+        FROM study_record
+        WHERE user_id = #{userId} AND date >= #{since} AND is_deleted = 0
+        GROUP BY date ORDER BY date
+    </select>
+
+    <select id="selectNoteTrend" resultType="map">
+        SELECT DATE(created_at) AS date_str, COUNT(*) AS value
+        FROM note_note
+        WHERE user_id = #{userId} AND created_at >= #{since} AND is_deleted = 0
+        GROUP BY DATE(created_at) ORDER BY DATE(created_at)
+    </select>
+
+    <select id="selectTodoTrend" resultType="map">
+        SELECT DATE(created_at) AS date_str, COUNT(*) AS value
+        FROM todo_task
+        WHERE user_id = #{userId} AND created_at >= #{since}
+        GROUP BY DATE(created_at) ORDER BY DATE(created_at)
+    </select>
+
+    <select id="selectReadingTrend" resultType="map">
+        SELECT DATE(created_at) AS date_str, COUNT(*) AS value
+        FROM reading_record
+        WHERE user_id = #{userId} AND created_at >= #{since} AND is_deleted = 0
+        GROUP BY DATE(created_at) ORDER BY DATE(created_at)
+    </select>
+
+    <!-- ====== 全文搜索 ====== -->
+
+    <select id="searchNotes" resultType="map">
+        SELECT id, title AS title, LEFT(content, 200) AS snippet, updated_at AS date_str
+        FROM note_note
+        WHERE user_id = #{userId} AND is_deleted = 0 AND (title LIKE CONCAT('%', #{keyword}, '%') OR content LIKE CONCAT('%', #{keyword}, '%'))
+        LIMIT 10
+    </select>
+
+    <select id="searchDiaries" resultType="map">
+        SELECT id, COALESCE(title, '') AS title, LEFT(content, 200) AS snippet, date AS date_str
+        FROM diary_entry
+        WHERE user_id = #{userId} AND is_deleted = 0 AND (title LIKE CONCAT('%', #{keyword}, '%') OR content LIKE CONCAT('%', #{keyword}, '%'))
+        LIMIT 10
+    </select>
+
+    <select id="searchTodos" resultType="map">
+        SELECT id, title, LEFT(content, 200) AS snippet, created_at AS date_str
+        FROM todo_task
+        WHERE user_id = #{userId} AND (title LIKE CONCAT('%', #{keyword}, '%') OR content LIKE CONCAT('%', #{keyword}, '%'))
+        LIMIT 10
+    </select>
+
+    <select id="searchStudies" resultType="map">
+        SELECT id, subject AS title, LEFT(content, 200) AS snippet, date AS date_str
+        FROM study_record
+        WHERE user_id = #{userId} AND is_deleted = 0 AND (subject LIKE CONCAT('%', #{keyword}, '%') OR content LIKE CONCAT('%', #{keyword}, '%'))
+        LIMIT 10
+    </select>
+
+    <select id="searchBookmarks" resultType="map">
+        SELECT id, title, LEFT(description, 200) AS snippet, created_at AS date_str
+        FROM bookmark_url
+        WHERE user_id = #{userId} AND is_deleted = 0 AND (title LIKE CONCAT('%', #{keyword}, '%') OR url LIKE CONCAT('%', #{keyword}, '%') OR description LIKE CONCAT('%', #{keyword}, '%'))
+        LIMIT 10
+    </select>
+
+    <select id="searchReadings" resultType="map">
+        SELECT id, book_title AS title, LEFT(notes, 200) AS snippet, created_at AS date_str
+        FROM reading_record
+        WHERE user_id = #{userId} AND is_deleted = 0 AND (book_title LIKE CONCAT('%', #{keyword}, '%') OR author LIKE CONCAT('%', #{keyword}, '%') OR notes LIKE CONCAT('%', #{keyword}, '%'))
+        LIMIT 10
+    </select>
+
+    <select id="searchFiles" resultType="map">
+        SELECT id, name AS title, CONCAT(type, ' - ', FORMAT(size, 0), 'B') AS snippet, created_at AS date_str
+        FROM file_resource
+        WHERE user_id = #{userId} AND is_deleted = 0 AND name LIKE CONCAT('%', #{keyword}, '%')
+        LIMIT 10
+    </select>
+
+    <select id="searchPlans" resultType="map">
+        SELECT id, name AS title, LEFT(goal, 200) AS snippet, created_at AS date_str
+        FROM study_plan
+        WHERE user_id = #{userId} AND is_deleted = 0 AND (name LIKE CONCAT('%', #{keyword}, '%') OR goal LIKE CONCAT('%', #{keyword}, '%'))
+        LIMIT 10
+    </select>
+
+    <!-- ====== 统计查询 ====== -->
+
+    <select id="sumStudyDuration" resultType="long">
+        SELECT COALESCE(SUM(duration), 0) FROM study_record WHERE user_id = #{userId} AND is_deleted = 0
+    </select>
+
+</mapper>

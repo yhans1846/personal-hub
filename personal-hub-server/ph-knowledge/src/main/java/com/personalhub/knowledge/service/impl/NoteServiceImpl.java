@@ -20,8 +20,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -43,34 +41,8 @@ public class NoteServiceImpl implements NoteService {
 
     @Override
     public IPage<NoteVO> listNotes(Long userId, NoteQueryDTO query) {
-        LambdaQueryWrapper<Note> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Note::getUserId, userId);
-
-        // 搜索关键词
-        if (StringUtils.hasText(query.getKeyword())) {
-            wrapper.like(Note::getTitle, query.getKeyword());
-        }
-        // 收藏筛选
-        if (query.getIsFavorite() != null && query.getIsFavorite()) {
-            wrapper.eq(Note::getIsFavorite, 1);
-        }
-        // 回收站筛选
-        boolean isDeleted = query.getIsDeleted() != null && query.getIsDeleted();
-        wrapper.eq(Note::getIsDeleted, isDeleted ? 1 : 0);
-
-        // 分类筛选：通过关联表子查询
-        if (query.getCategoryId() != null) {
-            wrapper.exists("SELECT 1 FROM note_category_rel WHERE note_id = id AND category_id = " + query.getCategoryId());
-        }
-        // 标签筛选
-        if (query.getTagId() != null) {
-            wrapper.exists("SELECT 1 FROM tag_rel WHERE entity_id = id AND entity_type = 'note' AND tag_id = " + query.getTagId());
-        }
-
-        wrapper.orderByDesc(Note::getUpdatedAt);
-
         Page<Note> page = new Page<>(query.getPage(), query.getSize());
-        IPage<Note> notePage = noteMapper.selectPage(page, wrapper);
+        IPage<Note> notePage = noteMapper.selectNotePage(page, userId, query);
 
         // 转换为 VO（批量填充分类和标签）
         return notePage.convert(note -> {
@@ -243,10 +215,7 @@ public class NoteServiceImpl implements NoteService {
     }
 
     private List<NoteVO.CategoryItem> getCategories(Long noteId) {
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList(
-                "SELECT c.id, c.name FROM category c " +
-                "INNER JOIN note_category_rel r ON c.id = r.category_id " +
-                "WHERE r.note_id = ? AND c.type = 'note'", noteId);
+        List<Map<String, Object>> rows = noteMapper.selectCategoriesByNoteId(noteId);
         if (rows.isEmpty()) return Collections.emptyList();
         return rows.stream().map(row -> {
             NoteVO.CategoryItem item = new NoteVO.CategoryItem();

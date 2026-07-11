@@ -12,7 +12,6 @@ import com.personalhub.system.service.NotificationService;
 import com.personalhub.system.vo.NotificationVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,7 +26,6 @@ import java.util.Map;
 public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationMapper notificationMapper;
-    private final JdbcTemplate jdbcTemplate;
 
     @Override
     public IPage<NotificationVO> list(Long userId, NotificationQueryDTO query) {
@@ -61,13 +59,13 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     @Transactional
     public void markAllAsRead(Long userId) {
-        notificationMapper.markAllAsRead(userId);
+        notificationMapper.markAllAsReadXml(userId);
     }
 
     @Override
     @Transactional
     public void clearAll(Long userId) {
-        notificationMapper.clearAll(userId);
+        notificationMapper.clearAllXml(userId);
         log.info("清空通知: userId={}", userId);
     }
 
@@ -95,9 +93,7 @@ public class NotificationServiceImpl implements NotificationService {
 
         try {
             // TODO_OVERDUE — 已过期未完成的待办
-            List<Map<String, Object>> overdueTodos = jdbcTemplate.queryForList(
-                    "SELECT id, title FROM todo_task WHERE user_id = ? AND is_done = 0 AND due_date < ?",
-                    userId, today);
+            List<Map<String, Object>> overdueTodos = notificationMapper.selectOverdueTodos(userId, today);
             for (Map<String, Object> row : overdueTodos) {
                 Long todoId = ((Number) row.get("id")).longValue();
                 String title = (String) row.get("title");
@@ -111,9 +107,7 @@ public class NotificationServiceImpl implements NotificationService {
             }
 
             // PLAN_DEADLINE — 未来3天内截止且未完成的计划
-            List<Map<String, Object>> deadlinePlans = jdbcTemplate.queryForList(
-                    "SELECT id, name FROM study_plan WHERE user_id = ? AND status NOT IN (2,3) AND end_date BETWEEN ? AND ?",
-                    userId, today, today.plusDays(3));
+            List<Map<String, Object>> deadlinePlans = notificationMapper.selectDeadlinePlans(userId, today, today.plusDays(3));
             for (Map<String, Object> row : deadlinePlans) {
                 Long planId = ((Number) row.get("id")).longValue();
                 String name = (String) row.get("name");
@@ -127,9 +121,7 @@ public class NotificationServiceImpl implements NotificationService {
             }
 
             // PLAN_COMPLETED — 已完成且进度100%
-            List<Map<String, Object>> completedPlans = jdbcTemplate.queryForList(
-                    "SELECT id, name FROM study_plan WHERE user_id = ? AND status = 2 AND progress = 100",
-                    userId);
+            List<Map<String, Object>> completedPlans = notificationMapper.selectCompletedPlans(userId);
             for (Map<String, Object> row : completedPlans) {
                 Long planId = ((Number) row.get("id")).longValue();
                 String name = (String) row.get("name");
@@ -153,8 +145,7 @@ public class NotificationServiceImpl implements NotificationService {
     public void scheduledGenerate() {
         log.info("定时任务: 开始生成系统通知");
         try {
-            List<Long> userIds = jdbcTemplate.queryForList(
-                    "SELECT DISTINCT id FROM sys_user", Long.class);
+            List<Long> userIds = notificationMapper.selectAllUserIds();
             for (Long userId : userIds) {
                 generateSystemNotifications(userId);
             }

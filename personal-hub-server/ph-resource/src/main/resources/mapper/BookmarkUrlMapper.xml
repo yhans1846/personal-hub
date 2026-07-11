@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.personalhub.resource.mapper.BookmarkUrlMapper">
+
+    <select id="selectBookmarkPage" resultType="com.personalhub.resource.entity.BookmarkUrl">
+        SELECT b.* FROM bookmark_url b
+        <where>
+            b.user_id = #{userId}
+            <if test="query.keyword != null and query.keyword != ''">
+                AND (b.title LIKE CONCAT('%', #{query.keyword}, '%')
+                     OR b.url LIKE CONCAT('%', #{query.keyword}, '%')
+                     OR b.description LIKE CONCAT('%', #{query.keyword}, '%'))
+            </if>
+            <if test="query.categoryId != null">
+                AND b.category_id = #{query.categoryId}
+            </if>
+            <if test="query.tagId != null">
+                AND EXISTS (SELECT 1 FROM tag_rel WHERE entity_id = b.id AND entity_type = 'bookmark' AND tag_id = #{query.tagId})
+            </if>
+        </where>
+        ORDER BY b.created_at DESC
+    </select>
+
+</mapper>

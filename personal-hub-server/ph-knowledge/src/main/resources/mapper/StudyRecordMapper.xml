@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.personalhub.knowledge.mapper.StudyRecordMapper">
+
+    <!-- 查询指定日期的学习时长 -->
+    <select id="sumDurationByDate" resultType="long">
+        SELECT COALESCE(SUM(duration), 0) FROM study_record
+        WHERE user_id = #{userId} AND date = #{date} AND is_deleted = 0
+    </select>
+
+    <!-- 查询指定日期以来的学习时长 -->
+    <select id="sumDurationSince" resultType="long">
+        SELECT COALESCE(SUM(duration), 0) FROM study_record
+        WHERE user_id = #{userId} AND date >= #{startDate} AND is_deleted = 0
+    </select>
+
+    <!-- 查询所有学习日期（去重） -->
+    <select id="listDistinctDates" resultType="java.time.LocalDate">
+        SELECT DISTINCT date FROM study_record
+        WHERE user_id = #{userId} AND is_deleted = 0 ORDER BY date DESC
+    </select>
+
+</mapper>

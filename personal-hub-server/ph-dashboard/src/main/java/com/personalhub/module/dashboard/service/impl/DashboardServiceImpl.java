@@ -1,6 +1,7 @@
 package com.personalhub.module.dashboard.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.personalhub.module.dashboard.mapper.DashboardMapper;
 import com.personalhub.module.dashboard.service.DashboardService;
 import com.personalhub.module.dashboard.vo.DashboardStatsVO;
 import com.personalhub.module.dashboard.vo.SearchVO;
@@ -24,7 +25,6 @@ import com.personalhub.planning.entity.TodoTask;
 import com.personalhub.planning.mapper.TodoTaskMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
@@ -32,6 +32,7 @@ import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Dashboard 服务实现
@@ -49,7 +50,7 @@ public class DashboardServiceImpl implements DashboardService {
     private final BookmarkUrlMapper bookmarkUrlMapper;
     private final ReadingRecordMapper readingRecordMapper;
     private final StudyPlanMapper studyPlanMapper;
-    private final JdbcTemplate jdbcTemplate;
+    private final DashboardMapper dashboardMapper;
 
     @Override
     public DashboardStatsVO getStats(Long userId) {
@@ -97,29 +98,10 @@ public class DashboardServiceImpl implements DashboardService {
         LocalDate since = LocalDate.now().minusDays(days);
         TrendVO trends = new TrendVO();
 
-        // 学习趋势（按日期分组时长）
-        trends.setStudyTrend(queryTrend(
-                "SELECT date, COALESCE(SUM(duration), 0) FROM study_record " +
-                "WHERE user_id = ? AND date >= ? AND is_deleted = 0 GROUP BY date ORDER BY date",
-                userId, since));
-
-        // 笔记趋势（按创建日期分组）
-        trends.setNoteTrend(queryTrend(
-                "SELECT DATE(created_at), COUNT(*) FROM note_note " +
-                "WHERE user_id = ? AND created_at >= ? AND is_deleted = 0 GROUP BY DATE(created_at) ORDER BY DATE(created_at)",
-                userId, since));
-
-        // 待办趋势（按创建日期分组）
-        trends.setTodoTrend(queryTrend(
-                "SELECT DATE(created_at), COUNT(*) FROM todo_task " +
-                "WHERE user_id = ? AND created_at >= ? GROUP BY DATE(created_at) ORDER BY DATE(created_at)",
-                userId, since));
-
-        // 阅读趋势（按创建日期分组）
-        trends.setReadingTrend(queryTrend(
-                "SELECT DATE(created_at), COUNT(*) FROM reading_record " +
-                "WHERE user_id = ? AND created_at >= ? AND is_deleted = 0 GROUP BY DATE(created_at) ORDER BY DATE(created_at)",
-                userId, since));
+        trends.setStudyTrend(queryTrend(dashboardMapper.selectStudyTrend(userId, since)));
+        trends.setNoteTrend(queryTrend(dashboardMapper.selectNoteTrend(userId, since)));
+        trends.setTodoTrend(queryTrend(dashboardMapper.selectTodoTrend(userId, since)));
+        trends.setReadingTrend(queryTrend(dashboardMapper.selectReadingTrend(userId, since)));
 
         return trends;
     }
@@ -130,87 +112,63 @@ public class DashboardServiceImpl implements DashboardService {
         List<SearchVO.SearchGroup> groups = new ArrayList<>();
         int total = 0;
 
-        // 笔记
-        List<SearchVO.SearchItem> notes = searchModule(
-                "SELECT id, title, LEFT(content, 200), updated_at FROM note_note " +
-                "WHERE user_id = ? AND is_deleted = 0 AND (title LIKE ? OR content LIKE ?) LIMIT 10",
-                userId, like, "%" + keyword + "%");
+        List<SearchVO.SearchItem> notes = mapSearchItems(
+                dashboardMapper.searchNotes(userId, keyword));
         if (!notes.isEmpty()) {
             notes.forEach(i -> i.setUrl("/notes/" + i.getId() + "/edit"));
             groups.add(new SearchVO.SearchGroup("note", "笔记", "FileText", notes.size(), notes));
             total += notes.size();
         }
 
-        // 日记
-        List<SearchVO.SearchItem> diaries = searchModule(
-                "SELECT id, COALESCE(title, ''), LEFT(content, 200), date FROM diary_entry " +
-                "WHERE user_id = ? AND is_deleted = 0 AND (title LIKE ? OR content LIKE ?) LIMIT 10",
-                userId, like, "%" + keyword + "%");
+        List<SearchVO.SearchItem> diaries = mapSearchItems(
+                dashboardMapper.searchDiaries(userId, keyword));
         if (!diaries.isEmpty()) {
             diaries.forEach(i -> i.setUrl("/diaries/" + i.getId() + "/edit"));
             groups.add(new SearchVO.SearchGroup("diary", "日记", "PenLine", diaries.size(), diaries));
             total += diaries.size();
         }
 
-        // 待办
-        List<SearchVO.SearchItem> todos = searchModule(
-                "SELECT id, title, LEFT(content, 200), created_at FROM todo_task " +
-                "WHERE user_id = ? AND (title LIKE ? OR content LIKE ?) LIMIT 10",
-                userId, like, "%" + keyword + "%");
+        List<SearchVO.SearchItem> todos = mapSearchItems(
+                dashboardMapper.searchTodos(userId, keyword));
         if (!todos.isEmpty()) {
             todos.forEach(i -> i.setUrl("/todos/" + i.getId() + "/edit"));
             groups.add(new SearchVO.SearchGroup("todo", "待办", "CheckSquare", todos.size(), todos));
             total += todos.size();
         }
 
-        // 学习记录
-        List<SearchVO.SearchItem> studies = searchModule(
-                "SELECT id, subject, LEFT(content, 200), date FROM study_record " +
-                "WHERE user_id = ? AND is_deleted = 0 AND (subject LIKE ? OR content LIKE ?) LIMIT 10",
-                userId, like, "%" + keyword + "%");
+        List<SearchVO.SearchItem> studies = mapSearchItems(
+                dashboardMapper.searchStudies(userId, keyword));
         if (!studies.isEmpty()) {
             studies.forEach(i -> i.setUrl("/study-records/" + i.getId() + "/edit"));
             groups.add(new SearchVO.SearchGroup("study", "学习记录", "BookOpen", studies.size(), studies));
             total += studies.size();
         }
 
-        // 收藏夹
-        List<SearchVO.SearchItem> bookmarks = searchModule(
-                "SELECT id, title, LEFT(description, 200), created_at FROM bookmark_url " +
-                "WHERE user_id = ? AND is_deleted = 0 AND (title LIKE ? OR url LIKE ? OR description LIKE ?) LIMIT 10",
-                userId, like, "%" + keyword + "%", "%" + keyword + "%");
+        List<SearchVO.SearchItem> bookmarks = mapSearchItems(
+                dashboardMapper.searchBookmarks(userId, keyword));
         if (!bookmarks.isEmpty()) {
             bookmarks.forEach(i -> i.setUrl("/bookmarks/" + i.getId() + "/edit"));
             groups.add(new SearchVO.SearchGroup("bookmark", "收藏夹", "Bookmark", bookmarks.size(), bookmarks));
             total += bookmarks.size();
         }
 
-        // 阅读记录
-        List<SearchVO.SearchItem> readings = searchModule(
-                "SELECT id, book_title, LEFT(notes, 200), created_at FROM reading_record " +
-                "WHERE user_id = ? AND is_deleted = 0 AND (book_title LIKE ? OR author LIKE ? OR notes LIKE ?) LIMIT 10",
-                userId, like, "%" + keyword + "%", "%" + keyword + "%");
+        List<SearchVO.SearchItem> readings = mapSearchItems(
+                dashboardMapper.searchReadings(userId, keyword));
         if (!readings.isEmpty()) {
             readings.forEach(i -> i.setUrl("/readings/" + i.getId() + "/edit"));
             groups.add(new SearchVO.SearchGroup("reading", "阅读记录", "BookMarked", readings.size(), readings));
             total += readings.size();
         }
 
-        // 文件
-        List<SearchVO.SearchItem> files = searchModule(
-                "SELECT id, name, CONCAT(type, ' - ', FORMAT(size, 0), 'B'), created_at FROM file_resource " +
-                "WHERE user_id = ? AND is_deleted = 0 AND name LIKE ? LIMIT 10",
-                userId, like);
+        List<SearchVO.SearchItem> files = mapSearchItems(
+                dashboardMapper.searchFiles(userId, keyword));
         if (!files.isEmpty()) {
             groups.add(new SearchVO.SearchGroup("file", "文件", "FolderOpen", files.size(), files));
             total += files.size();
         }
 
-        // 学习计划
-        List<SearchVO.SearchItem> plans = searchModule(
-                "SELECT id, name, LEFT(goal, 200), created_at FROM study_plan " +
-                "WHERE user_id = ? AND is_deleted = 0 AND (name LIKE ? OR goal LIKE ?) LIMIT 10",
-                userId, like, "%" + keyword + "%");
+        List<SearchVO.SearchItem> plans = mapSearchItems(
+                dashboardMapper.searchPlans(userId, keyword));
         if (!plans.isEmpty()) {
             plans.forEach(i -> i.setUrl("/study-plans/" + i.getId() + "/edit"));
             groups.add(new SearchVO.SearchGroup("study_plan", "学习计划", "Target", plans.size(), plans));
@@ -223,28 +181,23 @@ public class DashboardServiceImpl implements DashboardService {
         return result;
     }
 
-    private List<SearchVO.SearchItem> searchModule(String sql, Long userId, String... params) {
-        List<Object> args = new ArrayList<>();
-        args.add(userId);
-        for (String p : params) {
-            args.add(p);
-        }
-        return jdbcTemplate.query(sql, args.toArray(), (rs, rowNum) -> {
+    private List<SearchVO.SearchItem> mapSearchItems(List<Map<String, Object>> rows) {
+        return rows.stream().map(row -> {
             SearchVO.SearchItem item = new SearchVO.SearchItem();
-            item.setId(rs.getLong(1));
-            item.setTitle(rs.getString(2));
-            item.setSnippet(rs.getString(3));
-            item.setDate(rs.getString(4) != null ? rs.getString(4).substring(0, 10) : "");
+            item.setId(((Number) row.get("id")).longValue());
+            item.setTitle((String) row.get("title"));
+            item.setSnippet((String) row.get("snippet"));
+            Object dateObj = row.get("date_str");
+            item.setDate(dateObj != null ? dateObj.toString().substring(0, 10) : "");
             return item;
-        });
+        }).toList();
     }
 
-    private List<DataPoint> queryTrend(String sql, Long userId, LocalDate since) {
-        return jdbcTemplate.query(sql,
-                new Object[]{userId, java.sql.Date.valueOf(since)},
-                (rs, rowNum) -> new DataPoint(
-                        rs.getString(1),
-                        rs.getLong(2)));
+    private List<DataPoint> queryTrend(List<Map<String, Object>> rows) {
+        return rows.stream().map(row -> new DataPoint(
+                (String) row.get("date_str"),
+                row.get("value") instanceof Number ? ((Number) row.get("value")).longValue() : 0L))
+                .toList();
     }
 
     private Long countNotes(Long userId) {
@@ -261,9 +214,7 @@ public class DashboardServiceImpl implements DashboardService {
     }
 
     private Long sumDuration(Long userId) {
-        Long result = jdbcTemplate.queryForObject(
-                "SELECT COALESCE(SUM(duration), 0) FROM study_record WHERE user_id = ? AND is_deleted = 0",
-                Long.class, userId);
+        Long result = dashboardMapper.sumStudyDuration(userId);
         return result != null ? result : 0L;
     }
 

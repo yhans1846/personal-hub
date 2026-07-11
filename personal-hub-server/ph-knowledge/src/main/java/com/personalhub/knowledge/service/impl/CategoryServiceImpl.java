@@ -11,7 +11,6 @@ import com.personalhub.knowledge.service.CategoryService;
 import com.personalhub.knowledge.vo.CategoryVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,7 +26,6 @@ import java.util.stream.Collectors;
 public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryMapper categoryMapper;
-    private final JdbcTemplate jdbcTemplate;
 
     @Override
     public List<CategoryVO> listByType(Long userId, String type) {
@@ -44,13 +42,7 @@ public class CategoryServiceImpl implements CategoryService {
      * 统计某分类下关联的实体数量
      */
     private Integer getCount(Long categoryId, String type) {
-        String sql = switch (type) {
-            case "bookmark" -> "SELECT COUNT(*) FROM bookmark_url WHERE category_id = ?";
-            case "file" -> "SELECT COUNT(*) FROM file_resource WHERE category_id = ?";
-            default -> null;
-        };
-        if (sql == null) return 0;
-        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, categoryId);
+        Integer count = categoryMapper.countByType(categoryId, type);
         return count != null ? count : 0;
     }
 
@@ -113,7 +105,7 @@ public class CategoryServiceImpl implements CategoryService {
 
         // 清理关联（note 类型有关联表）
         if ("note".equals(category.getType())) {
-            jdbcTemplate.update("DELETE FROM note_category_rel WHERE category_id = ?", id);
+            categoryMapper.deleteNoteCategoryRels(id);
         }
 
         categoryMapper.deleteById(id);

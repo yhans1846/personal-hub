@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.personalhub.knowledge.mapper.CategoryMapper">
+
+    <!-- 统计分类下关联的实体数 -->
+    <select id="countByType" resultType="java.lang.Integer">
+        <choose>
+            <when test="type == 'bookmark'">
+                SELECT COUNT(*) FROM bookmark_url WHERE category_id = #{categoryId}
+            </when>
+            <when test="type == 'file'">
+                SELECT COUNT(*) FROM file_resource WHERE category_id = #{categoryId}
+            </when>
+            <otherwise>
+                SELECT 0
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 删除 note 分类关联 -->
+    <delete id="deleteNoteCategoryRels">
+        DELETE FROM note_category_rel WHERE category_id = #{categoryId}
+    </delete>
+
+</mapper>
