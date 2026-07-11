@@ -96,6 +96,11 @@ public class XxxServiceImpl implements XxxService {
 - **Mapper**: 继承 `BaseMapper<T>`，仅数据库操作
 - **DTO**: 接收请求（`@Valid`） | **VO**: 返回前端 | **Entity**: 不直接暴露
 
+### SQL 编写规范
+- 简单 CRUD 可使用 MyBatis-Plus 提供的 `BaseMapper` 内置方法（`insert`、`updateById`、`selectById`、`deleteById` 等）
+- **稍微复杂的 SQL（多表关联、子查询、聚合、动态条件等）必须写到 `mapper.xml` 中**，禁止在 Service 层拼接 SQL 或编写复杂 `LambdaQueryWrapper`
+- `mapper.xml` 放在对应模块 `src/main/resources/mapper/` 目录下
+
 ### 时间 & Lombok
 - 统一 `LocalDateTime`，不用 `java.util.Date`
 - `@Data`(Entity/DTO/VO) / `@RequiredArgsConstructor`(Controller/Service)
