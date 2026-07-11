@@ -34,6 +34,12 @@ export function restoreNote(id: number) {
 export function permanentDeleteNote(id: number) {
   return request.delete<Result<void>>(`/notes/${id}/permanent`)
 }
+export function getRecycleList(params: NoteQuery) {
+  return request.get<Result<PageResult<NoteVO>>>('/notes/recycle', { params })
+}
+export function getNotePreview(id: number) {
+  return request.get<Result<NoteVO>>(`/notes/${id}/preview`)
+}
 
 // ====== 日记 ======
 export function getDiaryList(params: DiaryQuery) {

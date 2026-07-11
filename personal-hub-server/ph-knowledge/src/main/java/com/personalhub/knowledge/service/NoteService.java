@@ -88,4 +88,22 @@ public interface NoteService {
      * @return 笔记分页数据
      */
     IPage<NoteVO> getRecent(Long userId, int page, int size);
+
+    /**
+     * 分页查询回收站（已删除笔记，按删除时间倒序）
+     *
+     * @param userId 用户ID
+     * @param query  查询参数（分页）
+     * @return 回收站笔记分页数据
+     */
+    IPage<NoteVO> getRecycleList(Long userId, NoteQueryDTO query);
+
+    /**
+     * 只读预览笔记（允许查看已删除笔记）
+     *
+     * @param id     笔记ID
+     * @param userId 用户ID
+     * @return 笔记详情VO
+     */
+    NoteVO getPreview(Long id, Long userId);
 }

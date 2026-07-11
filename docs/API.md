@@ -79,9 +79,15 @@
 | PUT | /api/notes/{id}/favorite | 切换收藏 | 是 |
 | GET | /api/notes/recent | 最近编辑 | 是 |
 | PATCH | /api/notes/{id}/restore | 恢复笔记 | 是 |
+| GET | /api/notes/recycle | 回收站列表 | 是 |
+| GET | /api/notes/{id}/preview | 只读预览（允许查看已删除笔记） | 是 |
 | DELETE | /api/notes/{id}/permanent | 永久删除 | 是 |
 
 **GET /api/notes** 参数: page(int), size(int), keyword, categoryId(long), tagId(long), isFavorite(bool), isDeleted(bool)
+
+**GET /api/notes/recycle** 参数: page(int), size(int), keyword  — 按 `deleted_at DESC` 排序
+
+**GET /api/notes/{id}/preview** — 返回笔记详情（含 content），不校验 `is_deleted`，只读不可修改
 
 **POST /api/notes** — `{"title":"...","content":"# MD...","categoryIds":[1,2],"tagIds":[1,3]}`
 

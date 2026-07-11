@@ -26,11 +26,20 @@ public class NoteVO {
     @Schema(description = "是否收藏 0-否 1-是")
     private Integer isFavorite;
 
+    @Schema(description = "逻辑删除 0-正常 1-删除")
+    private Integer isDeleted;
+
     @Schema(description = "创建时间")
     private LocalDateTime createdAt;
 
     @Schema(description = "更新时间")
     private LocalDateTime updatedAt;
+
+    @Schema(description = "删除时间")
+    private LocalDateTime deletedAt;
+
+    @Schema(description = "删除原因")
+    private String deleteReason;
 
     @Schema(description = "关联分类列表")
     private List<CategoryItem> categories;
@@ -64,8 +73,11 @@ public class NoteVO {
         vo.setTitle(note.getTitle());
         // content 从文件读取，在 service 层填充
         vo.setIsFavorite(note.getIsFavorite());
+        vo.setIsDeleted(note.getIsDeleted());
         vo.setCreatedAt(note.getCreatedAt());
         vo.setUpdatedAt(note.getUpdatedAt());
+        vo.setDeletedAt(note.getDeletedAt());
+        vo.setDeleteReason(note.getDeleteReason());
         return vo;
     }
 }

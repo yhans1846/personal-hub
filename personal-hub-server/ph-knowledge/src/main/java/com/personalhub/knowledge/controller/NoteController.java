@@ -141,6 +141,25 @@ public class NoteController {
         return Result.success(noteId);
     }
 
+    @Operation(summary = "回收站列表", description = "分页查询已删除笔记，按删除时间倒序")
+    @GetMapping("/recycle")
+    public Result<PageResult<NoteVO>> recycle(
+            @Parameter(hidden = true) Authentication authentication,
+            NoteQueryDTO query) {
+        Long userId = Long.valueOf(authentication.getName());
+        IPage<NoteVO> page = noteService.getRecycleList(userId, query);
+        return Result.success(PageResult.of(page));
+    }
+
+    @Operation(summary = "笔记预览", description = "只读预览，允许查看已删除笔记")
+    @GetMapping("/{id}/preview")
+    public Result<NoteVO> preview(
+            @Parameter(hidden = true) Authentication authentication,
+            @PathVariable Long id) {
+        Long userId = Long.valueOf(authentication.getName());
+        return Result.success(noteService.getPreview(id, userId));
+    }
+
     @Operation(summary = "导出笔记", description = "导出笔记为 ZIP，包含 Markdown 和资源")
     @GetMapping("/{id}/export")
     public ResponseEntity<byte[]> export(

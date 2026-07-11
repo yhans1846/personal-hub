@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getNoteList, deleteNote, toggleFavorite } from '@/api/noteApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, FileText, Star, Trash2, Clock } from 'lucide-vue-next'
+import { Plus, FileText, Star, Trash2, Clock, Eye } from 'lucide-vue-next'
 import { EmptyState, PageHeader, ListToolbar, ListPagination } from '@/components'
 import type { NoteVO, NoteQuery } from '@/types/note'
 import { estimateReadingTime, formatRelativeTime, isRecentlyEdited } from '@/utils/readingTime'
@@ -30,6 +30,7 @@ function onSearch() { query.value.page = 1; fetchList() }
 function onPageChange(page: number) { query.value.page = page; fetchList() }
 function goCreate() { router.push('/notes/new') }
 function goEdit(id: number) { router.push(`/notes/${id}/edit`) }
+function goPreview(id: number) { window.open(`/notes/${id}/preview`, '_blank') }
 
 async function handleDelete(id: number) {
   await ElMessageBox.confirm('确定将此笔记移入回收站？', '提示', { type: 'warning' })
@@ -46,7 +47,11 @@ async function handleToggleFavorite(note: NoteVO) {
 
 <template>
   <div>
-    <PageHeader title="笔记" subtitle="记录想法与知识" />
+    <PageHeader title="笔记" subtitle="记录想法与知识">
+      <el-link class="recycle-link" :underline="false" @click="router.push('/notes/recycle')">
+        <Trash2 :size="14" style="margin-right: 4px" /> 回收站
+      </el-link>
+    </PageHeader>
 
     <ListToolbar :search="query.keyword" search-placeholder="搜索笔记标题..." search-width="240px" create-label="新建笔记" @update:search="query.keyword = $event" @search="onSearch" @create="goCreate" />
 
@@ -83,6 +88,9 @@ async function handleToggleFavorite(note: NoteVO) {
           <div class="note-card-footer-right">
             <span v-if="isRecentlyEdited(note.updatedAt)" class="edited-dot" title="最近编辑" />
             <span class="edited-time">{{ formatRelativeTime(note.updatedAt) }}</span>
+            <button class="icon-btn" title="预览" @click.stop="goPreview(note.id)">
+              <Eye :size="14" />
+            </button>
             <button class="delete-btn" @click.stop="handleDelete(note.id)">
             <Trash2 :size="14" />
           </button>
@@ -96,6 +104,8 @@ async function handleToggleFavorite(note: NoteVO) {
 </template>
 
 <style scoped>
+.recycle-link { font-size: var(--text-xs); color: var(--text-tertiary); transition: color var(--transition); }
+.recycle-link:hover { color: var(--accent); }
 .note-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--sp-4); }
 .card-grid-skeleton { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--sp-4); }
 .skeleton-note-card { height: 180px; border-radius: var(--radius-lg); background: var(--bg-hover); animation: pulse 1.5s ease-in-out infinite; }
@@ -136,4 +146,6 @@ async function handleToggleFavorite(note: NoteVO) {
 .edited-time { font-size: 11px; color: var(--text-tertiary); white-space: nowrap; }
 .delete-btn { background: none; border: none; color: var(--text-tertiary); cursor: pointer; padding: 4px; border-radius: 4px; transition: all var(--transition); }
 .delete-btn:hover { color: var(--danger); background: var(--danger-light); }
+.icon-btn { background: none; border: none; color: var(--text-tertiary); cursor: pointer; padding: 4px; border-radius: 4px; transition: all var(--transition); display: inline-flex; align-items: center; }
+.icon-btn:hover { color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
 </style>

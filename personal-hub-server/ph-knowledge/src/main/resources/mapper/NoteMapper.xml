@@ -27,6 +27,18 @@
         ORDER BY n.updated_at DESC
     </select>
 
+    <!-- 分页查询回收站（按删除时间倒序） -->
+    <select id="selectRecyclePage" resultType="com.personalhub.knowledge.entity.Note">
+        SELECT n.* FROM note_note n
+        <where>
+            n.user_id = #{userId} AND n.is_deleted = 1
+            <if test="query.keyword != null and query.keyword != ''">
+                AND n.title LIKE CONCAT('%', #{query.keyword}, '%')
+            </if>
+        </where>
+        ORDER BY n.deleted_at DESC
+    </select>
+
     <!-- 查询笔记的分类列表 -->
     <select id="selectCategoriesByNoteId" resultType="map">
         SELECT c.id, c.name FROM category c

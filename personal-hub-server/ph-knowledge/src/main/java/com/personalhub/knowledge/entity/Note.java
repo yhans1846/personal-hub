@@ -31,6 +31,12 @@ public class Note {
     /** 逻辑删除 0-正常 1-删除 */
     private Integer isDeleted;
 
+    /** 删除时间（回收站排序/展示） */
+    private LocalDateTime deletedAt;
+
+    /** 删除原因（USER_DELETE/AUTO_ARCHIVE） */
+    private String deleteReason;
+
     /** 创建时间 */
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;

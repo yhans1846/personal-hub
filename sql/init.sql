@@ -142,6 +142,8 @@ CREATE TABLE `note_note`  (
                               `md_path` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '笔记MD文件路径(notes/{id}/note.md)',
                               `is_favorite` tinyint NOT NULL DEFAULT 0 COMMENT '是否收藏',
                               `is_deleted` tinyint NOT NULL DEFAULT 0 COMMENT '逻辑删除',
+                              `deleted_at` datetime NULL DEFAULT NULL COMMENT '删除时间',
+                              `delete_reason` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '删除原因（USER_DELETE/AUTO_ARCHIVE）',
                               `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
                               `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
                               PRIMARY KEY (`id`) USING BTREE,
@@ -371,5 +373,28 @@ CREATE TABLE `user_layout`  (
 -- ----------------------------
 INSERT INTO `user_layout` VALUES (1, 1, 'dashboard', '{\"items\":[{\"code\":\"today_plan\",\"visible\":true,\"order\":1},{\"code\":\"pending_todos\",\"visible\":true,\"order\":2},{\"code\":\"recent_notes\",\"visible\":true,\"order\":3},{\"code\":\"recent_studies\",\"visible\":true,\"order\":4},{\"code\":\"recent_bookmarks\",\"visible\":false,\"order\":5},{\"code\":\"recent_reading\",\"visible\":false,\"order\":6}]}', '2026-07-11 12:43:52', '2026-07-11 12:43:52', 0);
 INSERT INTO `user_layout` VALUES (2, 1, 'menu', '{\"items\":[{\"code\":\"dashboard\",\"visible\":true,\"order\":1},{\"code\":\"todos\",\"visible\":true,\"order\":2},{\"code\":\"notes\",\"visible\":true,\"order\":3},{\"code\":\"diaries\",\"visible\":true,\"order\":4},{\"code\":\"readings\",\"visible\":true,\"order\":5},{\"code\":\"study-records\",\"visible\":true,\"order\":6},{\"code\":\"study-plans\",\"visible\":true,\"order\":7},{\"code\":\"bookmarks\",\"visible\":true,\"order\":8},{\"code\":\"files\",\"visible\":true,\"order\":9},{\"code\":\"categories\",\"visible\":true,\"order\":10},{\"code\":\"tags\",\"visible\":true,\"order\":11},{\"code\":\"settings\",\"visible\":true,\"order\":12},{\"code\":\"recycle\",\"visible\":true,\"order\":15},{\"code\":\"stats\",\"visible\":true,\"order\":16}]}', '2026-07-11 12:44:02', '2026-07-11 12:44:02', 0);
+
+-- ----------------------------
+-- Table structure for audit_log
+-- ----------------------------
+DROP TABLE IF EXISTS `audit_log`;
+CREATE TABLE `audit_log`  (
+                              `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+                              `module` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '业务模块（NOTE/TODO/FILE/STUDY/READING/DIARY/BOOKMARK/TAG/USER）',
+                              `business_id` bigint NULL DEFAULT NULL COMMENT '业务ID',
+                              `action` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '操作类型（DELETE/RESTORE/CREATE/UPDATE/LOGIN/EXPORT...）',
+                              `content` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '操作描述',
+                              `operator_id` bigint NOT NULL COMMENT '操作用户ID',
+                              `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '操作时间',
+                              PRIMARY KEY (`id`) USING BTREE,
+                              INDEX `idx_module`(`module` ASC) USING BTREE,
+                              INDEX `idx_business`(`module` ASC, `business_id` ASC) USING BTREE,
+                              INDEX `idx_operator`(`operator_id` ASC) USING BTREE,
+                              INDEX `idx_created`(`created_at` ASC) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '统一审计日志' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of audit_log
+-- ----------------------------
 
 SET FOREIGN_KEY_CHECKS = 1;

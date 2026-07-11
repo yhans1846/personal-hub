@@ -9,6 +9,11 @@ const router = createRouter({
       component: () => import('@/modules/system/login/Login.vue')
     },
     {
+      path: '/notes/:id/preview',
+      name: 'NotePreview',
+      component: () => import('@/modules/knowledge/note/Preview.vue')
+    },
+    {
       path: '/',
       component: () => import('@/components/AppLayout.vue'),
       redirect: '/dashboard',

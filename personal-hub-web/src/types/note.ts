@@ -4,8 +4,11 @@ export interface NoteVO {
   title: string
   content: string
   isFavorite: number
+  isDeleted: number
   createdAt: string
   updatedAt: string
+  deletedAt?: string
+  deleteReason?: string
   categories: CategoryItem[]
   tags: TagItem[]
 }

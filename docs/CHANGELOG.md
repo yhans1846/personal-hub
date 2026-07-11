@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### 2026-07-12 笔记回收站改造 + 统一审计日志
+- note_note 表新增 `deleted_at` / `delete_reason` 字段，用于回收站排序和自动归档预留
+- 创建 `audit_log` 统一审计日志表，放入 ph-system 模块，所有业务模块可复用
+- 删除/恢复笔记：写入审计日志 + 事务保护 + 删除时间管理
+- 新增 `GET /api/notes/recycle` 回收站列表接口（按删除时间倒序）
+- 新增 `GET /api/notes/{id}/preview` 只读预览接口（跳过 is_deleted 校验）
+- 重写 RecycleBin.vue：展示分类/标签/时间列、分页搜索、查看按钮
+- 新建 Preview.vue：只读 Markdown 渲染、左侧可拖拽标题大纲、回收站/预览模式自适应提示
+- 笔记列表页增加预览按钮（新标签页打开）
+- 回收站入口链接加入笔记列表页 header
+
 ### 2026-07-12 代码清理与配置优化
 - 配置文件分层：application.yml（公共）+ application-dev.yml + application-prod.yml
 - 补充 springdoc-openapi 依赖，修复 Swagger 403（/swagger-ui.html 白名单）
