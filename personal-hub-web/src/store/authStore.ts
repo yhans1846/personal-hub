@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { loginApi } from '@/api/authApi'
+import { useLayoutStore } from '@/store/layoutStore'
 import router from '@/router'
 
 /**
@@ -26,6 +27,7 @@ export const useAuthStore = defineStore('auth', () => {
     const { token: t, user: u } = res.data.data
     setToken(t)
     setUser(u)
+    useLayoutStore().fetchLayout()
     router.push('/')
   }
 

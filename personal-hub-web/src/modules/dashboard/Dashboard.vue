@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/store/authStore'
+import { useLayoutStore } from '@/store/layoutStore'
 import { getTodoList, getTodayTodos } from '@/api/todoApi'
 import { getStudyRecordList } from '@/api/studyApi'
 import { getRecentNotes } from '@/api/noteApi'
@@ -21,6 +22,7 @@ import type { StudyPlanVO } from '@/types/studyplan'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const layoutStore = useLayoutStore()
 
 const stats = ref<DashboardStats | null>(null)
 const recentNotes = ref<NoteVO[]>([])
@@ -150,157 +152,159 @@ const statCards = [
         <span>{{ stats.todoOverdue }} 个待办已超期，点击查看</span>
       </div>
 
-      <!-- 内容模块 - 2列网格 -->
+      <!-- 内容模块 - 2列网格（数据驱动） -->
       <div class="dashboard-grid">
-        <!-- 今日计划 -->
-        <div class="dash-card">
-          <div class="dash-card-header">
-            <h3>今日计划</h3>
-            <router-link to="/study-plans" class="dash-card-more">查看全部</router-link>
-          </div>
-          <div v-if="todayPlans.length === 0 && todayTodos.length === 0" class="empty-state" style="padding: 32px 24px;">
-            <div class="empty-state__text">暂无今日计划 📋</div>
-          </div>
-          <div v-else class="dash-list">
-            <div v-for="todo in todayTodos" :key="'t'+todo.id" class="dash-list-item" @click="handleToggleDone(todo.id)">
-              <div class="todo-check" :class="{ checked: todo.isDone === 1 }">
-                <CheckCircle v-if="todo.isDone === 1" :size="12" stroke="#fff" />
+        <template v-for="card in layoutStore.visibleDashboardCards" :key="card.code">
+          <!-- 今日计划 -->
+          <div v-if="card.code === 'today_plan'" class="dash-card">
+            <div class="dash-card-header">
+              <h3>今日计划</h3>
+              <router-link to="/study-plans" class="dash-card-more">查看全部</router-link>
+            </div>
+            <div v-if="todayPlans.length === 0 && todayTodos.length === 0" class="empty-state" style="padding: 32px 24px;">
+              <div class="empty-state__text">暂无今日计划 📋</div>
+            </div>
+            <div v-else class="dash-list">
+              <div v-for="todo in todayTodos" :key="'t'+todo.id" class="dash-list-item" @click="handleToggleDone(todo.id)">
+                <div class="todo-check" :class="{ checked: todo.isDone === 1 }">
+                  <CheckCircle v-if="todo.isDone === 1" :size="12" stroke="#fff" />
+                </div>
+                <div class="dash-list-content">
+                  <span class="dash-list-title">{{ todo.title }}</span>
+                  <div class="dash-list-meta">
+                    <el-tag :type="todo.priority === 1 ? 'danger' : todo.priority === 2 ? 'warning' : 'info'" size="small">{{ todo.priorityLabel }}</el-tag>
+                  </div>
+                </div>
               </div>
-              <div class="dash-list-content">
-                <span class="dash-list-title">{{ todo.title }}</span>
-                <div class="dash-list-meta">
-                  <el-tag :type="todo.priority === 1 ? 'danger' : todo.priority === 2 ? 'warning' : 'info'" size="small">{{ todo.priorityLabel }}</el-tag>
+              <div v-for="plan in todayPlans" :key="plan.id" class="dash-list-item" @click="router.push(`/study-plans/${plan.id}/edit`)">
+                <Target :size="16" stroke="var(--info)" />
+                <div class="dash-list-content">
+                  <span class="dash-list-title">{{ plan.name }}</span>
+                  <div class="dash-list-meta">
+                    <span class="text-tertiary" v-if="plan.progress !== undefined">进度 {{ plan.progress }}%</span>
+                  </div>
                 </div>
               </div>
             </div>
-            <div v-for="plan in todayPlans" :key="plan.id" class="dash-list-item" @click="router.push(`/study-plans/${plan.id}/edit`)">
-              <Target :size="16" stroke="var(--info)" />
-              <div class="dash-list-content">
-                <span class="dash-list-title">{{ plan.name }}</span>
-                <div class="dash-list-meta">
-                  <span class="text-tertiary" v-if="plan.progress !== undefined">进度 {{ plan.progress }}%</span>
-                </div>
-              </div>
-            </div>
           </div>
-        </div>
 
-        <!-- 最近阅读 -->
-        <div class="dash-card">
-          <div class="dash-card-header">
-            <h3>最近阅读</h3>
-            <router-link to="/readings" class="dash-card-more">查看全部</router-link>
-          </div>
-          <div v-if="recentReadings.length === 0" class="empty-state" style="padding: 32px 24px;">
-            <div class="empty-state__text">还没有阅读记录 📖</div>
-          </div>
-          <div v-else class="dash-list">
-            <div v-for="r in recentReadings" :key="r.id" class="dash-list-item" @click="router.push(`/readings/${r.id}/edit`)">
-              <BookMarked :size="16" stroke="var(--success)" />
-              <div class="dash-list-content">
-                <span class="dash-list-title">{{ r.title }}</span>
-                <div class="dash-list-meta">
-                  <span class="text-tertiary" v-if="r.author">{{ r.author }}</span>
-                  <span class="text-tertiary">{{ formatRelative(r.updatedAt) }}</span>
+          <!-- 最近阅读 -->
+          <div v-if="card.code === 'recent_reading'" class="dash-card">
+            <div class="dash-card-header">
+              <h3>最近阅读</h3>
+              <router-link to="/readings" class="dash-card-more">查看全部</router-link>
+            </div>
+            <div v-if="recentReadings.length === 0" class="empty-state" style="padding: 32px 24px;">
+              <div class="empty-state__text">还没有阅读记录 📖</div>
+            </div>
+            <div v-else class="dash-list">
+              <div v-for="r in recentReadings" :key="r.id" class="dash-list-item" @click="router.push(`/readings/${r.id}/edit`)">
+                <BookMarked :size="16" stroke="var(--success)" />
+                <div class="dash-list-content">
+                  <span class="dash-list-title">{{ r.title }}</span>
+                  <div class="dash-list-meta">
+                    <span class="text-tertiary" v-if="r.author">{{ r.author }}</span>
+                    <span class="text-tertiary">{{ formatRelative(r.updatedAt) }}</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- 待办任务 -->
-        <div class="dash-card">
-          <div class="dash-card-header">
-            <h3>待办任务</h3>
-            <router-link to="/todos" class="dash-card-more">查看全部</router-link>
-          </div>
-          <div v-if="pendingTodos.length === 0" class="empty-state" style="padding: 32px 24px;">
-            <div class="empty-state__text">没有未完成的任务 🎉</div>
-          </div>
-          <div v-else class="dash-list">
-            <div v-for="todo in pendingTodos" :key="todo.id" class="dash-list-item" @click="handleToggleDone(todo.id)">
-              <div class="todo-check" :class="{ checked: todo.isDone === 1 }">
-                <CheckCircle v-if="todo.isDone === 1" :size="12" stroke="#fff" />
-              </div>
-              <div class="dash-list-content">
-                <span class="dash-list-title">{{ todo.title }}</span>
-                <div class="dash-list-meta">
-                  <el-tag :type="todo.priority === 1 ? 'danger' : todo.priority === 2 ? 'warning' : 'info'" size="small">{{ todo.priorityLabel }}</el-tag>
-                  <span v-if="todo.dueDate" class="text-tertiary" :class="{ 'text-danger': todo.isOverdue }">{{ todo.dueDate }}</span>
+          <!-- 待办任务 -->
+          <div v-if="card.code === 'pending_todos'" class="dash-card">
+            <div class="dash-card-header">
+              <h3>待办任务</h3>
+              <router-link to="/todos" class="dash-card-more">查看全部</router-link>
+            </div>
+            <div v-if="pendingTodos.length === 0" class="empty-state" style="padding: 32px 24px;">
+              <div class="empty-state__text">没有未完成的任务 🎉</div>
+            </div>
+            <div v-else class="dash-list">
+              <div v-for="todo in pendingTodos" :key="todo.id" class="dash-list-item" @click="handleToggleDone(todo.id)">
+                <div class="todo-check" :class="{ checked: todo.isDone === 1 }">
+                  <CheckCircle v-if="todo.isDone === 1" :size="12" stroke="#fff" />
+                </div>
+                <div class="dash-list-content">
+                  <span class="dash-list-title">{{ todo.title }}</span>
+                  <div class="dash-list-meta">
+                    <el-tag :type="todo.priority === 1 ? 'danger' : todo.priority === 2 ? 'warning' : 'info'" size="small">{{ todo.priorityLabel }}</el-tag>
+                    <span v-if="todo.dueDate" class="text-tertiary" :class="{ 'text-danger': todo.isOverdue }">{{ todo.dueDate }}</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- 最近笔记 -->
-        <div class="dash-card">
-          <div class="dash-card-header">
-            <h3>最近更新</h3>
-            <router-link to="/notes" class="dash-card-more">查看全部</router-link>
-          </div>
-          <div v-if="recentNotes.length === 0" class="empty-state" style="padding: 32px 24px;">
-            <div class="empty-state__text">还没有笔记，开始写第一篇吧 ✍️</div>
-          </div>
-          <div v-else class="dash-list">
-            <div v-for="note in recentNotes" :key="note.id" class="dash-list-item" @click="router.push(`/notes/${note.id}/edit`)">
-              <FileText :size="16" stroke="var(--accent)" />
-              <div class="dash-list-content">
-                <span class="dash-list-title">{{ note.title }}</span>
-                <div class="dash-list-meta">
-                  <span v-for="cat in note.categories" :key="cat.id" class="inline-tag">{{ cat.name }}</span>
-                  <span class="text-tertiary">{{ formatRelative(note.updatedAt) }}</span>
+          <!-- 最近笔记 -->
+          <div v-if="card.code === 'recent_notes'" class="dash-card">
+            <div class="dash-card-header">
+              <h3>最近更新</h3>
+              <router-link to="/notes" class="dash-card-more">查看全部</router-link>
+            </div>
+            <div v-if="recentNotes.length === 0" class="empty-state" style="padding: 32px 24px;">
+              <div class="empty-state__text">还没有笔记，开始写第一篇吧 ✍️</div>
+            </div>
+            <div v-else class="dash-list">
+              <div v-for="note in recentNotes" :key="note.id" class="dash-list-item" @click="router.push(`/notes/${note.id}/edit`)">
+                <FileText :size="16" stroke="var(--accent)" />
+                <div class="dash-list-content">
+                  <span class="dash-list-title">{{ note.title }}</span>
+                  <div class="dash-list-meta">
+                    <span v-for="cat in note.categories" :key="cat.id" class="inline-tag">{{ cat.name }}</span>
+                    <span class="text-tertiary">{{ formatRelative(note.updatedAt) }}</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- 最近收藏 -->
-        <div class="dash-card">
-          <div class="dash-card-header">
-            <h3>最近收藏</h3>
-            <router-link to="/bookmarks" class="dash-card-more">查看全部</router-link>
-          </div>
-          <div v-if="recentBookmarks.length === 0" class="empty-state" style="padding: 32px 24px;">
-            <div class="empty-state__text">还没有收藏 🔖</div>
-          </div>
-          <div v-else class="dash-list">
-            <div v-for="bm in recentBookmarks" :key="bm.id" class="dash-list-item" @click="router.push(`/bookmarks/${bm.id}/edit`)">
-              <Bookmark :size="16" stroke="var(--warning)" />
-              <div class="dash-list-content">
-                <span class="dash-list-title">{{ bm.title }}</span>
-                <div class="dash-list-meta">
-                  <span class="text-tertiary" v-if="bm.url">{{ bm.url }}</span>
-                  <span class="text-tertiary">{{ formatRelative(bm.updatedAt) }}</span>
+          <!-- 最近收藏 -->
+          <div v-if="card.code === 'recent_bookmarks'" class="dash-card">
+            <div class="dash-card-header">
+              <h3>最近收藏</h3>
+              <router-link to="/bookmarks" class="dash-card-more">查看全部</router-link>
+            </div>
+            <div v-if="recentBookmarks.length === 0" class="empty-state" style="padding: 32px 24px;">
+              <div class="empty-state__text">还没有收藏 🔖</div>
+            </div>
+            <div v-else class="dash-list">
+              <div v-for="bm in recentBookmarks" :key="bm.id" class="dash-list-item" @click="router.push(`/bookmarks/${bm.id}/edit`)">
+                <Bookmark :size="16" stroke="var(--warning)" />
+                <div class="dash-list-content">
+                  <span class="dash-list-title">{{ bm.title }}</span>
+                  <div class="dash-list-meta">
+                    <span class="text-tertiary" v-if="bm.url">{{ bm.url }}</span>
+                    <span class="text-tertiary">{{ formatRelative(bm.updatedAt) }}</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- 学习记录 -->
-        <div class="dash-card">
-          <div class="dash-card-header">
-            <h3>学习记录</h3>
-            <router-link to="/study-records" class="dash-card-more">查看全部</router-link>
-          </div>
-          <div v-if="recentStudies.length === 0" class="empty-state" style="padding: 32px 24px;">
-            <div class="empty-state__text">还没有学习记录 📚</div>
-          </div>
-          <div v-else class="dash-list">
-            <div v-for="s in recentStudies" :key="s.id" class="dash-list-item" @click="router.push(`/study-records/${s.id}/edit`)">
-              <BookOpen :size="16" stroke="var(--info)" />
-              <div class="dash-list-content">
-                <span class="dash-list-title">{{ s.subject }}</span>
-                <div class="dash-list-meta">
-                  <span class="text-tertiary">{{ s.duration }} 分钟</span>
-                  <span class="text-tertiary">{{ s.date }}</span>
+          <!-- 学习记录 -->
+          <div v-if="card.code === 'recent_studies'" class="dash-card">
+            <div class="dash-card-header">
+              <h3>学习记录</h3>
+              <router-link to="/study-records" class="dash-card-more">查看全部</router-link>
+            </div>
+            <div v-if="recentStudies.length === 0" class="empty-state" style="padding: 32px 24px;">
+              <div class="empty-state__text">还没有学习记录 📚</div>
+            </div>
+            <div v-else class="dash-list">
+              <div v-for="s in recentStudies" :key="s.id" class="dash-list-item" @click="router.push(`/study-records/${s.id}/edit`)">
+                <BookOpen :size="16" stroke="var(--info)" />
+                <div class="dash-list-content">
+                  <span class="dash-list-title">{{ s.subject }}</span>
+                  <div class="dash-list-meta">
+                    <span class="text-tertiary">{{ s.duration }} 分钟</span>
+                    <span class="text-tertiary">{{ s.date }}</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        </template>
       </div>
     </template>
   </div>

@@ -1,13 +1,47 @@
 <script setup lang="ts">
+import type { Component } from 'vue'
 import { useAuthStore } from '@/store/authStore'
-import { useRouter } from 'vue-router'
-import { LayoutDashboard, FileText, BookOpen, CheckSquare, PenLine, Bookmark, Target, BookMarked, FolderOpen, Grid3X3, Tags, Trash2, Search, BarChart3, Plus, Github, Sun, Moon, Palette, Menu, X } from 'lucide-vue-next'
+import { useLayoutStore } from '@/store/layoutStore'
+import { useRouter, useRoute } from 'vue-router'
+import { LayoutDashboard, FileText, BookOpen, CheckSquare, PenLine, Bookmark, Target, BookMarked, FolderOpen, Grid3X3, Tags, Settings, Trash2, Search, BarChart3, Plus, Github, Sun, Moon, Palette, Menu, X } from 'lucide-vue-next'
 import { ref, onMounted } from 'vue'
 import CommandPalette from './CommandPalette.vue'
 import NotificationBell from './NotificationBell.vue'
+import type { MenuItem } from '@/types/layout'
 
 const authStore = useAuthStore()
+const layoutStore = useLayoutStore()
 const router = useRouter()
+const route = useRoute()
+
+const iconMap: Record<string, Component> = {
+  dashboard: LayoutDashboard,
+  notes: FileText,
+  'study-records': BookOpen,
+  todos: CheckSquare,
+  diaries: PenLine,
+  bookmarks: Bookmark,
+  'study-plans': Target,
+  readings: BookMarked,
+  files: FolderOpen,
+  'note-categories': Grid3X3,
+  tags: Tags,
+  'file-categories': Grid3X3,
+  'bookmark-categories': Grid3X3,
+  recycle: Trash2,
+  stats: BarChart3,
+  settings: Settings,
+}
+
+function isActiveRoute(item: MenuItem): boolean {
+  const path = route.path
+  if (item.code === 'dashboard') return path === '/dashboard'
+  if (item.code === 'notes') return path.startsWith('/notes') && !path.includes('/categories') && !path.includes('/tags') && !path.includes('/recycle')
+  if (item.code === 'bookmarks') return path.startsWith('/bookmarks') && path !== '/bookmarks/categories'
+  if (item.code === 'files') return path.startsWith('/files') && path !== '/files/categories'
+  if (item.route) return path.startsWith(item.route)
+  return false
+}
 
 const sidebarOpen = ref(false)
 
@@ -42,6 +76,7 @@ function setAccent(key: string) {
 onMounted(() => {
   const saved = localStorage.getItem('accent-preference')
   if (saved) setAccent(saved)
+  if (!layoutStore.loaded) layoutStore.fetchLayout()
 })
 
 // 快捷创建
@@ -164,87 +199,16 @@ function handleQuickCreate(cmd: string) {
           <button class="sidebar-close" @click="closeSidebar"><X :size="18" /></button>
         </div>
         <nav class="sidebar-nav">
-          <div class="sidebar-section">
-            <div class="section-header">工作区</div>
-            <router-link to="/dashboard" class="nav-item" :class="{ active: $route.path === '/dashboard' }">
-              <LayoutDashboard :size="18" />
-              <span>首页</span>
-            </router-link>
-
-            <router-link to="/notes" class="nav-item" :class="{ active: $route.path.startsWith('/notes') && !$route.path.includes('/categories') && !$route.path.includes('/tags') && !$route.path.includes('/recycle') }">
-              <FileText :size="18" />
-              <span>笔记</span>
-            </router-link>
-
-            <router-link to="/study-records" class="nav-item" :class="{ active: $route.path.startsWith('/study-records') }">
-              <BookOpen :size="18" />
-              <span>学习记录</span>
-            </router-link>
-
-            <router-link to="/todos" class="nav-item" :class="{ active: $route.path.startsWith('/todos') }">
-              <CheckSquare :size="18" />
-              <span>待办任务</span>
-            </router-link>
-
-            <router-link to="/diaries" class="nav-item" :class="{ active: $route.path.startsWith('/diaries') }">
-              <PenLine :size="18" />
-              <span>日记</span>
-            </router-link>
-
-            <router-link to="/bookmarks" class="nav-item" :class="{ active: $route.path.startsWith('/bookmarks') && $route.path !== '/bookmarks/categories' }">
-              <Bookmark :size="18" />
-              <span>收藏夹</span>
-            </router-link>
-
-            <router-link to="/study-plans" class="nav-item" :class="{ active: $route.path.startsWith('/study-plans') }">
-              <Target :size="18" />
-              <span>学习计划</span>
-            </router-link>
-
-            <router-link to="/readings" class="nav-item" :class="{ active: $route.path.startsWith('/readings') }">
-              <BookMarked :size="18" />
-              <span>阅读记录</span>
-            </router-link>
-
-            <router-link to="/files" class="nav-item" :class="{ active: $route.path.startsWith('/files') && $route.path !== '/files/categories' }">
-              <FolderOpen :size="18" />
-              <span>文件</span>
-            </router-link>
-          </div>
-
-          <div class="sidebar-section">
-            <div class="section-header">管理</div>
-            <router-link to="/notes/categories" class="nav-item nav-item--sub" :class="{ active: $route.path === '/notes/categories' }">
-              <Grid3X3 :size="14" />
-              <span>分类管理</span>
-            </router-link>
-
-            <router-link to="/tags" class="nav-item nav-item--sub" :class="{ active: $route.path === '/tags' }">
-              <Tags :size="14" />
-              <span>标签管理</span>
-            </router-link>
-
-            <router-link to="/files/categories" class="nav-item nav-item--sub" :class="{ active: $route.path === '/files/categories' }">
-              <Grid3X3 :size="14" />
-              <span>文件分类</span>
-            </router-link>
-
-            <router-link to="/bookmarks/categories" class="nav-item nav-item--sub" :class="{ active: $route.path === '/bookmarks/categories' }">
-              <Grid3X3 :size="14" />
-              <span>收藏夹分类</span>
-            </router-link>
-
-            <router-link to="/notes/recycle" class="nav-item nav-item--sub" :class="{ active: $route.path === '/notes/recycle' }">
-              <Trash2 :size="14" />
-              <span>回收站</span>
-            </router-link>
-          </div>
-
-          <div class="sidebar-section">
-            <div class="section-header">统计</div>
-            <router-link to="/stats" class="nav-item nav-item--sub" :class="{ active: $route.path === '/stats' }">
-              <BarChart3 :size="14" />
-              <span>数据统计</span>
+          <div class="sidebar-section" v-for="section in layoutStore.visibleMenuSections" :key="section.key">
+            <div class="section-header">{{ section.title }}</div>
+            <router-link
+              v-for="item in section.items" :key="item.code"
+              :to="item.route || '/'"
+              class="nav-item"
+              :class="{ active: isActiveRoute(item), 'nav-item--sub': section.key !== 'workspace' }"
+            >
+              <component :is="iconMap[item.code] || LayoutDashboard" :size="section.key === 'workspace' ? 18 : 14" />
+              <span>{{ item.title }}</span>
             </router-link>
           </div>
         </nav>

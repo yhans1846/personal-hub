@@ -43,7 +43,8 @@ const router = createRouter({
         { path: 'readings/new', name: 'ReadingCreate', component: () => import('@/modules/knowledge/reading/Form.vue') },
         { path: 'readings/:id/edit', name: 'ReadingEdit', component: () => import('@/modules/knowledge/reading/Form.vue') },
         { path: 'files', name: 'FileList', component: () => import('@/modules/resource/file/List.vue') },
-        { path: 'files/categories', name: 'FileCategories', component: () => import('@/modules/resource/file/CategoryManage.vue') }
+        { path: 'files/categories', name: 'FileCategories', component: () => import('@/modules/resource/file/CategoryManage.vue') },
+        { path: 'settings', name: 'Settings', component: () => import('@/modules/system/settings/SettingsView.vue') }
       ]
     }
   ]
