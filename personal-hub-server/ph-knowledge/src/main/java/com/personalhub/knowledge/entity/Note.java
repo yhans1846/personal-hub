@@ -29,7 +29,6 @@ public class Note {
     private Integer isFavorite;
 
     /** 逻辑删除 0-正常 1-删除 */
-    @TableLogic
     private Integer isDeleted;
 
     /** 创建时间 */

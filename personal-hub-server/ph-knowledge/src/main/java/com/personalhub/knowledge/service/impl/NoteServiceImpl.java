@@ -84,7 +84,7 @@ public class NoteServiceImpl implements NoteService {
     @Override
     public NoteVO getById(Long id, Long userId) {
         Note note = noteMapper.selectById(id);
-        if (note == null || !note.getUserId().equals(userId)) {
+        if (note == null || !note.getUserId().equals(userId) || note.getIsDeleted() == 1) {
             log.warn("笔记不存在或无权访问: id={}, userId={}", id, userId);
             throw new NotFoundException("笔记不存在");
         }
@@ -134,7 +134,7 @@ public class NoteServiceImpl implements NoteService {
     @Transactional
     public NoteVO update(Long id, Long userId, NoteCreateDTO dto) {
         Note note = noteMapper.selectById(id);
-        if (note == null || !note.getUserId().equals(userId)) {
+        if (note == null || !note.getUserId().equals(userId) || note.getIsDeleted() == 1) {
             log.warn("编辑笔记不存在或无权访问: id={}, userId={}", id, userId);
             throw new NotFoundException("笔记不存在");
         }
@@ -163,7 +163,8 @@ public class NoteServiceImpl implements NoteService {
             log.warn("删除笔记不存在或无权访问: id={}, userId={}", id, userId);
             throw new NotFoundException("笔记不存在");
         }
-        noteMapper.deleteById(id); // MyBatis-Plus 逻辑删除
+        note.setIsDeleted(1);
+        noteMapper.updateById(note);
         log.info("笔记移入回收站: id={}, userId={}", id, userId);
     }
 
@@ -202,7 +203,7 @@ public class NoteServiceImpl implements NoteService {
     @Override
     public void toggleFavorite(Long id, Long userId) {
         Note note = noteMapper.selectById(id);
-        if (note == null || !note.getUserId().equals(userId)) {
+        if (note == null || !note.getUserId().equals(userId) || note.getIsDeleted() == 1) {
             log.warn("切换收藏笔记不存在或无权访问: id={}, userId={}", id, userId);
             throw new NotFoundException("笔记不存在");
         }
