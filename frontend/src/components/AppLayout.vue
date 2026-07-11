@@ -74,9 +74,10 @@ function handleQuickCreate(cmd: string) {
         </router-link>
       </div>
       <div class="topbar-center">
-        <div class="search-trigger" @click="router.push('/search')">
+        <div class="search-trigger" @click="router.push('/search')" title="Ctrl+K 打开命令面板">
           <Search :size="14" />
           <span class="search-hint">搜索...</span>
+          <kbd class="search-kbd">Ctrl+K</kbd>
         </div>
       </div>
 
@@ -304,6 +305,7 @@ function handleQuickCreate(cmd: string) {
 }
 .search-trigger:hover { border-color: var(--accent); color: var(--text-secondary); background: var(--bg-card); }
 .search-hint { color: var(--text-placeholder); }
+.search-kbd { margin-left: auto; font-size: 10px; padding: 1px 5px; border-radius: 4px; background: var(--bg-hover); color: var(--text-tertiary); border: 1px solid var(--border-color); font-family: var(--font-mono); }
 
 .topbar-actions { display: flex; align-items: center; gap: var(--sp-2); margin: 0 var(--sp-4); }
 .topbar-icon-btn {
