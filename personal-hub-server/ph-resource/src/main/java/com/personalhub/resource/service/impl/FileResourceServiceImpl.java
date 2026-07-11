@@ -11,18 +11,17 @@ import com.personalhub.resource.mapper.FileCategoryMapper;
 import com.personalhub.resource.mapper.FileResourceMapper;
 import com.personalhub.resource.service.FileResourceService;
 import com.personalhub.resource.vo.FileVO;
+import com.personalhub.storage.StorageService;
+import com.personalhub.storage.StorageProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
 /**
@@ -35,12 +34,8 @@ public class FileResourceServiceImpl implements FileResourceService {
 
     private final FileResourceMapper fileResourceMapper;
     private final FileCategoryMapper fileCategoryMapper;
-
-    @Value("${app.upload.dir:uploads}")
-    private String uploadDir;
-
-    @Value("${app.upload.max-size:52428800}")
-    private long maxSize;
+    private final StorageService storageService;
+    private final StorageProperties storageProperties;
 
     @Override
     public IPage<FileVO> list(Long userId, FileQueryDTO query) {
@@ -56,7 +51,6 @@ public class FileResourceServiceImpl implements FileResourceService {
         if (query.getCategoryId() != null) {
             wrapper.eq(FileResource::getCategoryId, query.getCategoryId());
         }
-
         wrapper.orderByDesc(FileResource::getCreatedAt);
 
         Page<FileResource> page = new Page<>(query.getPage(), query.getSize());
@@ -66,9 +60,7 @@ public class FileResourceServiceImpl implements FileResourceService {
             FileVO vo = FileVO.from(file);
             if (file.getCategoryId() != null) {
                 FileCategory cat = fileCategoryMapper.selectById(file.getCategoryId());
-                if (cat != null) {
-                    vo.setCategoryName(cat.getName());
-                }
+                if (cat != null) vo.setCategoryName(cat.getName());
             }
             return vo;
         });
@@ -78,15 +70,12 @@ public class FileResourceServiceImpl implements FileResourceService {
     public FileVO getById(Long id, Long userId) {
         FileResource file = fileResourceMapper.selectById(id);
         if (file == null || !file.getUserId().equals(userId)) {
-            log.warn("文件不存在或无权访问: id={}, userId={}", id, userId);
             throw new NotFoundException("文件不存在");
         }
         FileVO vo = FileVO.from(file);
         if (file.getCategoryId() != null) {
             FileCategory cat = fileCategoryMapper.selectById(file.getCategoryId());
-            if (cat != null) {
-                vo.setCategoryName(cat.getName());
-            }
+            if (cat != null) vo.setCategoryName(cat.getName());
         }
         return vo;
     }
@@ -97,7 +86,7 @@ public class FileResourceServiceImpl implements FileResourceService {
         if (multipartFile.isEmpty()) {
             throw new IllegalArgumentException("上传文件不能为空");
         }
-        if (multipartFile.getSize() > maxSize) {
+        if (multipartFile.getSize() > storageProperties.getMaxSize()) {
             throw new IllegalArgumentException("文件大小超过限制（最大 50MB）");
         }
 
@@ -112,41 +101,41 @@ public class FileResourceServiceImpl implements FileResourceService {
             ext = originalName.substring(dot + 1).toLowerCase();
         }
 
-        String storedName = UUID.randomUUID() + (ext.isEmpty() ? "" : "." + ext);
-        String relativePath = userId + "/" + storedName;
+        // 确定目录前缀（按扩展名自动归类）
+        String dirPrefix = getDirectoryPrefix(ext);
 
-        try {
-            Path targetDir = Paths.get(uploadDir, String.valueOf(userId));
-            Files.createDirectories(targetDir);
-            Path targetPath = targetDir.resolve(storedName);
-            multipartFile.transferTo(targetPath.toFile());
+        // 按年月分目录
+        LocalDate now = LocalDate.now();
+        String yearMonth = now.format(DateTimeFormatter.ofPattern("yyyy/MM"));
 
-            FileResource file = new FileResource();
-            file.setUserId(userId);
-            file.setName(originalName);
-            file.setStoredName(storedName);
-            file.setPath(relativePath);
-            file.setSize(multipartFile.getSize());
-            file.setType(ext);
-            file.setMimeType(multipartFile.getContentType());
-            file.setCategoryId(categoryId);
-            fileResourceMapper.insert(file);
+        String storedName = UUID.randomUUID().toString().replace("-", "")
+                + (ext.isEmpty() ? "" : "." + ext);
+        String relativePath = "uploads/" + dirPrefix + "/" + yearMonth + "/" + storedName;
 
-            log.info("文件上传成功: id={}, userId={}, name={}, size={}",
-                    file.getId(), userId, originalName, multipartFile.getSize());
+        // 存储文件
+        storageService.store(multipartFile, relativePath);
 
-            return FileVO.from(file);
-        } catch (IOException e) {
-            log.error("文件存储失败: name={}, userId={}", originalName, userId, e);
-            throw new RuntimeException("文件存储失败", e);
-        }
+        // 保存DB记录
+        FileResource file = new FileResource();
+        file.setUserId(userId);
+        file.setName(originalName);
+        file.setStoredName(storedName);
+        file.setPath(relativePath);
+        file.setSize(multipartFile.getSize());
+        file.setType(ext);
+        file.setMimeType(multipartFile.getContentType());
+        file.setCategoryId(categoryId);
+        file.setSource("upload");
+        fileResourceMapper.insert(file);
+
+        log.info("文件上传成功: id={}, userId={}, name={}", file.getId(), userId, originalName);
+        return FileVO.from(file);
     }
 
     @Override
     public FileResource getFileResource(Long id, Long userId) {
         FileResource file = fileResourceMapper.selectById(id);
         if (file == null || !file.getUserId().equals(userId)) {
-            log.warn("文件不存在或无权访问: id={}, userId={}", id, userId);
             throw new NotFoundException("文件不存在");
         }
         return file;
@@ -157,10 +146,26 @@ public class FileResourceServiceImpl implements FileResourceService {
     public void delete(Long id, Long userId) {
         FileResource file = fileResourceMapper.selectById(id);
         if (file == null || !file.getUserId().equals(userId)) {
-            log.warn("删除文件不存在或无权访问: id={}, userId={}", id, userId);
             throw new NotFoundException("文件不存在");
         }
+        // 删除物理文件
+        if (file.getPath() != null) {
+            storageService.delete(file.getPath());
+        }
+        // 逻辑删除DB记录
         fileResourceMapper.deleteById(id);
-        log.info("文件已删除: id={}, userId={}, name={}", id, userId, file.getName());
+        log.info("文件已删除: id={}, name={}", id, file.getName());
+    }
+
+    /**
+     * 根据扩展名确定上传目录前缀
+     */
+    private String getDirectoryPrefix(String ext) {
+        return switch (ext) {
+            case "jpg", "jpeg", "png", "gif", "svg", "webp", "bmp" -> "image";
+            case "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt" -> "document";
+            case "md" -> "markdown";
+            default -> "other";
+        };
     }
 }
