@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { getDiaryList, deleteDiary } from '@/api/diaryApi'
+import { getDiaryList, getDiaryByMonth, deleteDiary } from '@/api/diaryApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Plus, Pencil, Trash2, PenLine, Sun, Cloud, CloudRain, Smile, Frown, Meh, MapPin, ImageIcon } from 'lucide-vue-next'
+import { Search, Plus, Pencil, Trash2, PenLine, Sun, Cloud, CloudRain, Smile, Frown, Meh, MapPin, ImageIcon, CalendarDays } from 'lucide-vue-next'
 import { EmptyState, PageHeader } from '@/components'
 import type { DiaryVO, DiaryQuery } from '@/types/diary'
 
@@ -12,6 +12,53 @@ const list = ref<DiaryVO[]>([])
 const total = ref(0)
 const loading = ref(false)
 const query = ref<DiaryQuery>({ page: 1, size: 20, keyword: '' })
+const showCalendar = ref(false)
+const calendarMonth = ref(new Date())
+const calendarEntries = ref<DiaryVO[]>([])
+const calendarLoading = ref(false)
+
+const WEEKDAYS = ['日', '一', '二', '三', '四', '五', '六']
+
+const calendarDays = computed(() => {
+  const year = calendarMonth.value.getFullYear()
+  const month = calendarMonth.value.getMonth()
+  const firstDay = new Date(year, month, 1).getDay()
+  const daysInMonth = new Date(year, month + 1, 0).getDate()
+  const days: { date: number; entries: DiaryVO[] }[] = []
+
+  for (let i = 0; i < firstDay; i++) days.push({ date: 0, entries: [] })
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+    const entries = calendarEntries.value.filter(e => e.date === dateStr)
+    days.push({ date: d, entries })
+  }
+  return days
+})
+
+async function loadCalendar() {
+  calendarLoading.value = true
+  try {
+    const monthStr = `${calendarMonth.value.getFullYear()}-${String(calendarMonth.value.getMonth() + 1).padStart(2, '0')}`
+    const res = await getDiaryByMonth(monthStr)
+    calendarEntries.value = res.data.data || []
+  } catch { calendarEntries.value = [] }
+  finally { calendarLoading.value = false }
+}
+
+function toggleCalendar() {
+  showCalendar.value = !showCalendar.value
+  if (showCalendar.value) loadCalendar()
+}
+
+function prevMonth() { calendarMonth.value = new Date(calendarMonth.value.getFullYear(), calendarMonth.value.getMonth() - 1); loadCalendar() }
+function nextMonth() { calendarMonth.value = new Date(calendarMonth.value.getFullYear(), calendarMonth.value.getMonth() + 1); loadCalendar() }
+
+function goDate(day: number) {
+  const d = `${calendarMonth.value.getFullYear()}-${String(calendarMonth.value.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+  const existing = calendarEntries.value.find(e => e.date === d)
+  if (existing) router.push(`/diaries/${existing.id}/edit`)
+  else router.push(`/diaries/new?date=${d}`)
+}
 
 onMounted(() => fetchList())
 
@@ -90,9 +137,33 @@ const moodOptions = [
           @change="onFilterChange"
         />
       </div>
+      <el-button :type="showCalendar ? 'default' : 'primary'" @click="toggleCalendar">
+        <CalendarDays :size="14" /> {{ showCalendar ? '列表' : '月历' }}
+      </el-button>
       <el-button type="primary" @click="goCreate">
         <Plus :size="14" /> 写日记
       </el-button>
+    </div>
+
+    <!-- 日历视图 -->
+    <div v-if="showCalendar" class="calendar-view">
+      <div class="cal-header">
+        <button class="cal-nav" @click="prevMonth">&lt;</button>
+        <span class="cal-title">{{ calendarMonth.getFullYear() }} 年 {{ calendarMonth.getMonth() + 1 }} 月</span>
+        <button class="cal-nav" @click="nextMonth">&gt;</button>
+      </div>
+      <div v-if="calendarLoading" class="loading-skeleton" style="padding: 16px 0;">
+        <div v-for="i in 3" :key="i" class="skeleton-diary" style="height:60px" />
+      </div>
+      <div v-else class="cal-grid">
+        <div v-for="wd in WEEKDAYS" :key="wd" class="cal-weekday">{{ wd }}</div>
+        <div v-for="(day, idx) in calendarDays" :key="idx" class="cal-day" :class="{ 'cal-day--empty': day.date === 0, 'cal-day--has': day.entries.length > 0 }" @click="day.date > 0 && goDate(day.date)">
+          <span class="cal-day-num">{{ day.date || '' }}</span>
+          <div v-if="day.entries.length > 0" class="cal-day-dots">
+            <span v-for="e in day.entries.slice(0, 3)" :key="e.id" class="cal-dot" :style="{ background: e.mood && e.mood <= 2 ? 'var(--accent)' : e.mood === 3 ? 'var(--text-tertiary)' : 'var(--warning)' }" />
+          </div>
+        </div>
+      </div>
     </div>
 
     <div v-if="loading" class="loading-skeleton">
@@ -179,4 +250,20 @@ const moodOptions = [
 .icon-btn { background: none; border: none; cursor: pointer; padding: 6px; border-radius: var(--radius-sm); color: var(--text-tertiary); transition: all var(--transition); display: flex; align-items: center; }
 .icon-btn:hover { color: var(--accent); background: var(--accent-light); }
 .icon-btn--danger:hover { color: var(--danger); background: var(--danger-light); }
+
+.calendar-view { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: var(--sp-4); margin-bottom: var(--sp-5); }
+.cal-header { display: flex; align-items: center; justify-content: center; gap: var(--sp-4); margin-bottom: var(--sp-4); }
+.cal-nav { background: none; border: 1px solid var(--border-color); border-radius: var(--radius-sm); cursor: pointer; padding: 4px 12px; color: var(--text-secondary); font-size: var(--text-sm); transition: all var(--transition); }
+.cal-nav:hover { background: var(--bg-hover); color: var(--text-primary); }
+.cal-title { font-size: var(--text-base); font-weight: 600; min-width: 140px; text-align: center; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.cal-weekday { text-align: center; font-size: var(--text-xs); color: var(--text-tertiary); padding: 4px 0; font-weight: 500; }
+.cal-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: var(--radius-sm); cursor: pointer; transition: all var(--transition); position: relative; min-height: 48px; }
+.cal-day:hover { background: var(--bg-hover); }
+.cal-day--empty { cursor: default; }
+.cal-day--empty:hover { background: transparent; }
+.cal-day--has { font-weight: 600; }
+.cal-day-num { font-size: var(--text-sm); line-height: 1; }
+.cal-day-dots { display: flex; gap: 2px; margin-top: 4px; }
+.cal-dot { width: 5px; height: 5px; border-radius: 50%; }
 </style>

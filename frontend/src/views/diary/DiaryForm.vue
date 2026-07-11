@@ -14,10 +14,15 @@ const form = ref({ date: '', title: '', content: '', mood: 2, weather: '', locat
 const saving = ref(false)
 
 onMounted(async () => {
-  // 默认为今天
   if (!isEdit) {
-    const now = new Date()
-    form.value.date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+    // 优先使用查询参数中的日期（来自日历视图），否则默认今天
+    const queryDate = route.query.date as string
+    if (queryDate && /^\d{4}-\d{2}-\d{2}$/.test(queryDate)) {
+      form.value.date = queryDate
+    } else {
+      const now = new Date()
+      form.value.date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+    }
     return
   }
   const res = await getDiaryById(Number(route.params.id))
