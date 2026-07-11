@@ -155,16 +155,18 @@ CREATE TABLE IF NOT EXISTS `file_category` (
 -- 11. 日记表
 -- ========================================
 CREATE TABLE IF NOT EXISTS `diary_entry` (
-    `id`         BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
-    `user_id`    BIGINT       NOT NULL COMMENT '所属用户',
-    `date`       DATE         NOT NULL COMMENT '日记日期',
-    `title`      VARCHAR(200) DEFAULT NULL COMMENT '日记标题',
-    `content`    TEXT         DEFAULT NULL COMMENT '日记内容（Markdown）',
-    `mood`       TINYINT      DEFAULT NULL COMMENT '心情 1-很好 2-好 3-一般 4-不好 5-很差',
-    `weather`    VARCHAR(50)  DEFAULT NULL COMMENT '天气',
-    `is_deleted` TINYINT      NOT NULL DEFAULT 0 COMMENT '逻辑删除',
-    `created_at` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    `updated_at` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    `id`            BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `user_id`       BIGINT       NOT NULL COMMENT '所属用户',
+    `date`          DATE         NOT NULL COMMENT '日记日期',
+    `title`         VARCHAR(200) DEFAULT NULL COMMENT '日记标题',
+    `content`       TEXT         DEFAULT NULL COMMENT '日记内容（Markdown）',
+    `mood`          TINYINT      DEFAULT NULL COMMENT '心情 1-很好 2-好 3-一般 4-不好 5-很差',
+    `weather`       VARCHAR(50)  DEFAULT NULL COMMENT '天气',
+    `is_deleted`    TINYINT      NOT NULL DEFAULT 0 COMMENT '逻辑删除',
+    `created_at`    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_at`    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    `location`      VARCHAR(255) DEFAULT NULL COMMENT '地点',
+    `image_file_id` BIGINT       DEFAULT NULL COMMENT '配图文件ID',
     PRIMARY KEY (`id`),
     INDEX `idx_user_id_date` (`user_id`, `date`),
     INDEX `idx_date` (`date`)
@@ -242,6 +244,8 @@ CREATE TABLE IF NOT EXISTS `reading_record` (
     `is_deleted`      TINYINT      NOT NULL DEFAULT 0 COMMENT '逻辑删除',
     `created_at`      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_at`      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    `total_duration`  INT          DEFAULT 0 COMMENT '总阅读时长（分钟）',
+    `rating`          INT          DEFAULT NULL COMMENT '评分 1-5',
     PRIMARY KEY (`id`),
     INDEX `idx_user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='阅读记录表';
