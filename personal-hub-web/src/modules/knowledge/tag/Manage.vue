@@ -6,6 +6,7 @@ import { Tags, Plus, Pencil, Trash2 } from 'lucide-vue-next'
 import type { TagVO } from '@/types/tag'
 import PageHeader from '@/components/PageHeader.vue'
 import EmptyState from '@/components/EmptyState.vue'
+import { UiDialog, UiInput } from '@/components/ui'
 
 const list = ref<TagVO[]>([])
 const dialogVisible = ref(false)
@@ -93,10 +94,10 @@ async function handleDelete(id: number) {
       </div>
     </div>
 
-    <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑标签' : '新建标签'" width="420px" top="30vh">
+    <UiDialog v-model="dialogVisible" :title="isEdit ? '编辑标签' : '新建标签'">
       <el-form>
         <el-form-item label="名称">
-          <el-input v-model="form.name" placeholder="标签名称" maxlength="50" show-word-limit />
+          <UiInput v-model="form.name" placeholder="标签名称" maxlength="50" show-word-limit />
         </el-form-item>
         <el-form-item label="颜色">
           <div class="color-picker">
@@ -114,7 +115,7 @@ async function handleDelete(id: number) {
         <el-button @click="dialogVisible = false">取消</el-button>
         <el-button type="primary" @click="handleSave">保存</el-button>
       </template>
-    </el-dialog>
+    </UiDialog>
   </div>
 </template>
 

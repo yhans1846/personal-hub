@@ -5,6 +5,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { FolderPlus, Pencil, Trash2, Folder } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue'
 import EmptyState from '@/components/EmptyState.vue'
+import { UiDialog, UiInput } from '@/components/ui'
 
 const list = ref<any[]>([])
 const dialogVisible = ref(false)
@@ -78,10 +79,10 @@ async function handleDelete(id: number) {
       </div>
     </div>
 
-    <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑分类' : '新建分类'" width="400px" top="30vh">
+    <UiDialog v-model="dialogVisible" :title="isEdit ? '编辑分类' : '新建分类'">
       <el-form>
         <el-form-item label="名称">
-          <el-input v-model="form.name" />
+          <UiInput v-model="form.name" />
         </el-form-item>
         <el-form-item label="排序">
           <el-input-number v-model="form.sortOrder" :min="0" />
@@ -91,7 +92,7 @@ async function handleDelete(id: number) {
         <el-button @click="dialogVisible = false">取消</el-button>
         <el-button type="primary" @click="handleSave">保存</el-button>
       </template>
-    </el-dialog>
+    </UiDialog>
   </div>
 </template>
 

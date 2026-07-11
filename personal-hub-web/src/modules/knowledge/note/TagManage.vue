@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import { getTags, createTag, updateTag, deleteTag } from '@/api/tagApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Tags, Plus, Pencil, Trash2 } from 'lucide-vue-next'
+import { UiDialog, UiInput } from '@/components/ui'
 
 const list = ref<any[]>([])
 const dialogVisible = ref(false)
@@ -78,17 +79,17 @@ async function handleDelete(id: number) {
       </div>
     </div>
 
-    <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑标签' : '新建标签'" width="400px" top="30vh">
+    <UiDialog v-model="dialogVisible" :title="isEdit ? '编辑标签' : '新建标签'">
       <el-form>
         <el-form-item label="名称">
-          <el-input v-model="form.name" />
+          <UiInput v-model="form.name" />
         </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
         <el-button type="primary" @click="handleSave">保存</el-button>
       </template>
-    </el-dialog>
+    </UiDialog>
   </div>
 </template>
 

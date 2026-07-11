@@ -6,6 +6,7 @@ import { Plus, Pencil, Trash2, FolderOpen } from 'lucide-vue-next'
 import type { BookmarkCategoryVO } from '@/types/bookmark'
 import PageHeader from '@/components/PageHeader.vue'
 import EmptyState from '@/components/EmptyState.vue'
+import { UiDialog, UiInput } from '@/components/ui'
 
 const list = ref<BookmarkCategoryVO[]>([])
 const loading = ref(false)
@@ -84,22 +85,21 @@ async function handleDelete(item: BookmarkCategoryVO) {
     </div>
 
     <!-- 新建/编辑对话框 -->
-    <el-dialog
+    <UiDialog
       :model-value="showForm"
       :title="editing ? '编辑分类' : '新建分类'"
-      width="400px"
-      @close="closeForm"
+      @update:model-value="showForm = $event"
     >
       <el-form label-position="top">
         <el-form-item label="分类名称">
-          <el-input v-model="formName" placeholder="例如：开发工具" maxlength="50" @keyup.enter="handleSave" />
+          <UiInput v-model="formName" placeholder="例如：开发工具" maxlength="50" @keyup.enter="handleSave" />
         </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="closeForm">取消</el-button>
         <el-button type="primary" @click="handleSave">保存</el-button>
       </template>
-    </el-dialog>
+    </UiDialog>
 
     <el-button class="fab" type="primary" circle @click="openCreate">
       <Plus :size="16" />
