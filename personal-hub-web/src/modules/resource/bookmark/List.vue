@@ -64,7 +64,7 @@ function onFilterChange() { query.value.page = 1; fetchList() }
 function onPageChange(page: number) { query.value.page = page; fetchList() }
 function goCreate() { openCreate() }
 function goEdit(id: number) { openEdit(id) }
-function goCategories() { router.push('/bookmarks/categories') }
+function goCategories() { router.push('/categories') }
 
 async function handleDelete(id: number) {
   await ElMessageBox.confirm('确定删除该收藏？', '提示', { type: 'warning' })

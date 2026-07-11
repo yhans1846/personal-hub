@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, onMounted, computed, watch } from 'vue'
 import { getCategories, createCategory, updateCategory, deleteCategory } from '@/api/categoryApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Pencil, Trash2, FolderOpen, Folder, Bookmark } from 'lucide-vue-next'
@@ -9,19 +8,13 @@ import EmptyState from '@/components/EmptyState.vue'
 import { UiDialog, UiInput, UiButton } from '@/components/ui'
 import type { CategoryVO } from '@/types/category'
 
-const route = useRoute()
-const type = computed(() => {
-  const path = route.path
-  if (path.includes('/bookmarks/')) return 'bookmark'
-  if (path.includes('/files/')) return 'file'
-  return 'note'
-})
+const activeType = ref<'note' | 'bookmark' | 'file'>('note')
 
-const typeConfig: Record<string, { title: string; icon: any }> = {
-  note: { title: '笔记分类管理', icon: FolderOpen },
-  bookmark: { title: '收藏夹分类管理', icon: Bookmark },
-  file: { title: '文件分类管理', icon: Folder }
-}
+const tabs = [
+  { type: 'note' as const, label: '笔记分类', icon: FolderOpen },
+  { type: 'bookmark' as const, label: '收藏夹分类', icon: Bookmark },
+  { type: 'file' as const, label: '文件分类', icon: Folder }
+]
 
 const list = ref<CategoryVO[]>([])
 const loading = ref(false)
@@ -29,12 +22,13 @@ const dialogVisible = ref(false)
 const isEdit = ref(false)
 const form = ref({ id: 0, name: '' })
 
+watch(() => activeType.value, () => fetchList())
 onMounted(() => fetchList())
 
 async function fetchList() {
   loading.value = true
   try {
-    const res = await getCategories(type.value)
+    const res = await getCategories(activeType.value)
     list.value = res.data.data || []
   } finally { loading.value = false }
 }
@@ -54,7 +48,7 @@ async function handleSave() {
       await updateCategory(form.value.id, { name: form.value.name.trim() })
       ElMessage.success('已更新')
     } else {
-      await createCategory({ name: form.value.name.trim(), type: type.value })
+      await createCategory({ name: form.value.name.trim(), type: activeType.value })
       ElMessage.success('已创建')
     }
     dialogVisible.value = false; fetchList()
@@ -76,7 +70,21 @@ async function handleDelete(id: number) {
 
 <template>
   <div>
-    <PageHeader :title="typeConfig[type]?.title || '分类管理'" />
+    <PageHeader title="分类管理" subtitle="管理所有模块的分类" />
+
+    <!-- Tab 切换 -->
+    <div class="category-tabs">
+      <button
+        v-for="tab in tabs"
+        :key="tab.type"
+        class="tab-btn"
+        :class="{ active: activeType === tab.type }"
+        @click="activeType = tab.type"
+      >
+        <component :is="tab.icon" :size="14" />
+        {{ tab.label }}
+      </button>
+    </div>
 
     <div class="toolbar">
       <span class="text-secondary">{{ list.length }} 个分类</span>
@@ -89,12 +97,12 @@ async function handleDelete(id: number) {
       <div v-for="i in 3" :key="i" class="skeleton-row" />
     </div>
 
-    <EmptyState v-else-if="list.length === 0" :icon="typeConfig[type]?.icon || Folder" illustration="default" text="暂无分类，创建一个吧" action-label="新建分类" @action="openCreate" />
+    <EmptyState v-else-if="list.length === 0" :icon="tabs.find(t => t.type === activeType)?.icon || Folder" illustration="default" text="暂无分类，创建一个吧" action-label="新建分类" @action="openCreate" />
 
     <div v-else class="manage-list">
       <div v-for="item in list" :key="item.id" class="manage-item">
         <div class="manage-item-left">
-          <component :is="typeConfig[type]?.icon || Folder" :size="16" class="text-tertiary" />
+          <component :is="tabs.find(t => t.type === activeType)?.icon || Folder" :size="16" class="text-tertiary" />
           <span class="manage-item-name">{{ item.name }}</span>
           <span class="manage-item-meta" v-if="item.count">({{ item.count }})</span>
           <span class="manage-item-meta">排序 {{ item.sortOrder }}</span>
@@ -106,7 +114,7 @@ async function handleDelete(id: number) {
       </div>
     </div>
 
-    <UiDialog v-model="dialogVisible" :title="isEdit ? '编辑分类' : '新建分类'">
+    <UiDialog v-model="dialogVisible" :title="isEdit ? '编辑分类' : `新建${tabs.find(t => t.type === activeType)?.label || '分类'}`">
       <el-form label-position="top">
         <el-form-item label="名称">
           <UiInput v-model="form.name" placeholder="分类名称" maxlength="50" show-word-limit @keyup.enter="handleSave" />
@@ -123,6 +131,17 @@ async function handleDelete(id: number) {
 <style scoped>
 .loading-skeleton { display: flex; flex-direction: column; gap: var(--sp-2); }
 .skeleton-row { height: 52px; border-radius: var(--radius-md); background: var(--bg-hover); animation: pulse 1.5s ease-in-out infinite; }
+
+.category-tabs { display: flex; gap: var(--sp-2); margin-bottom: var(--sp-5); }
+.tab-btn {
+  display: flex; align-items: center; gap: var(--sp-1);
+  padding: 8px 16px; border-radius: var(--radius-md);
+  border: 1px solid var(--border-color); background: var(--bg-card);
+  font-size: var(--text-sm); color: var(--text-secondary); cursor: pointer;
+  transition: all var(--transition);
+}
+.tab-btn:hover { border-color: var(--accent-border); color: var(--text-primary); }
+.tab-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
 
 .manage-list { display: flex; flex-direction: column; gap: var(--sp-2); max-width: 480px; }
 .manage-item {
