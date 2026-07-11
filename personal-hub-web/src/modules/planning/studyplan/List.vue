@@ -1,18 +1,30 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import PageHeader from '@/components/PageHeader.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import { getStudyPlanList, deleteStudyPlan } from '@/api/studyplanApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Plus, Pencil, Trash2, Calendar, Target, BookOpen } from 'lucide-vue-next'
+import StudyPlanDrawer from './StudyPlanDrawer.vue'
 import type { StudyPlanVO, StudyPlanQuery } from '@/types/studyplan'
 
-const router = useRouter()
 const list = ref<StudyPlanVO[]>([])
 const total = ref(0)
 const loading = ref(false)
 const query = ref<StudyPlanQuery>({ page: 1, size: 20, keyword: '' })
+
+const drawerVisible = ref(false)
+const editId = ref<number | undefined>()
+
+function openCreate() {
+  editId.value = undefined
+  drawerVisible.value = true
+}
+
+function openEdit(id: number) {
+  editId.value = id
+  drawerVisible.value = true
+}
 
 onMounted(() => fetchList())
 
@@ -28,8 +40,8 @@ async function fetchList() {
 function onSearch() { query.value.page = 1; fetchList() }
 function onFilterChange() { query.value.page = 1; fetchList() }
 function onPageChange(page: number) { query.value.page = page; fetchList() }
-function goCreate() { router.push('/study-plans/new') }
-function goEdit(id: number) { router.push(`/study-plans/${id}/edit`) }
+function goCreate() { openCreate() }
+function goEdit(id: number) { openEdit(id) }
 
 async function handleDelete(id: number) {
   await ElMessageBox.confirm('确定删除该计划？', '提示', { type: 'warning' })
@@ -126,6 +138,8 @@ const statusOptions = [
       style="margin-top: var(--sp-6); justify-content: flex-end"
       @current-change="onPageChange"
     />
+
+    <StudyPlanDrawer v-model="drawerVisible" :entity-id="editId" @saved="fetchList" />
   </div>
 </template>
 
