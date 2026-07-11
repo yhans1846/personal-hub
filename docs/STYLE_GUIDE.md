@@ -269,6 +269,95 @@ personal-hub-web/src/
 - **内容优先** — 笔记、学习、阅读体验是核心，功能性控件退后
 - **禁止** 传统 Admin 模板风格（灰底白卡、密集表格、深色大菜单）
 
+### CRUD 交互模式
+
+整个系统只保留三种编辑方式：
+
+#### ① Dialog（推荐）
+
+适用于简单实体（字段少、操作快）：Todo、标签、分类、收藏夹、文件分类等。
+
+特点：不跳转页面、保留当前列表状态、操作完成立即关闭。
+
+流程：点击新增 → Dialog 弹出 → 填写 → 保存 → 关闭 → 刷新列表
+
+**禁止：** 列表 → 跳转新页面 → 填写 → 返回列表
+
+#### ② Drawer（侧边抽屉）
+
+适用于中等复杂度实体（需预览上下文）：学习记录、阅读记录、学习计划、文件详情等。
+
+特点：保留列表、支持快速切换、阅读体验更好。类似 Linear Issue / GitHub Issue。
+
+流程：列表 → 打开 Drawer → 编辑 → 关闭
+
+#### ③ Full Page（独立页面）
+
+仅适用于需要专注编辑的场景：Markdown 编辑器、日记编辑、Dashboard 自定义、大型配置页面。
+
+不要使用 Dialog。
+
+### Dialog 设计规范
+
+所有 Dialog 保持统一。
+
+#### 尺寸
+- 默认：520px
+- 复杂：600px
+- 最大：720px
+- 不超过 800px
+
+#### 圆角
+统一 16px
+
+#### Padding
+统一 24px
+
+#### Header
+只保留标题 + 关闭按钮，不要图标/彩色背景/渐变
+
+示例标题：「新建待办」「编辑标签」「新增分类」
+
+#### Footer
+永远：取消(Default) + 保存(Primary)，按钮右对齐，不超过两个按钮
+
+### 表单设计规范
+
+不要使用传统后台表单（Label → Input 连续堆砌）。每个字段是独立内容块。
+
+#### Label
+- 字号：14px
+- 字重：500
+- 颜色：`--text-primary`
+
+#### 输入框
+- 高度统一：40px
+- Textarea：自动高度或 4~6 行
+
+#### 字段间距
+- 字段之间：20px
+- Label 与 Input：6px
+- Section 之间：24px
+- 整个 Dialog padding：24px
+
+### 页面布局规范
+
+页面层级：Page → Card → Section → Field
+
+而不是：Page → Form → 几十个 FormItem
+
+推荐结构示例：
+```
+Card
+    基本信息
+        标题
+        描述
+    时间
+        截止日期
+    其它
+        标签
+```
+
 ### 整体布局
 ```
 ┌──────────────────────────────────────┐
@@ -332,6 +421,33 @@ personal-hub-web/src/
 - 危险按钮：红色
 - 禁止使用 Element Plus 默认蓝色
 
+### CRUD 页面映射规范
+
+| 功能 | UI 模式 |
+|------|---------|
+| Todo | Dialog |
+| Tag | Dialog |
+| Category（笔记/收藏夹/文件） | Dialog |
+| Bookmark | Dialog |
+| File Category | Dialog |
+| Reading Record | Drawer |
+| Study Record | Drawer |
+| Study Plan | Drawer |
+| Markdown 编辑器 | Full Page |
+| 日记编辑 | Full Page |
+
+禁止独立 Create/Edit 页面，新增/编辑共用一个 Dialog/Drawer 组件。
+
+### 组件封装要求
+
+业务页面禁止直接大量使用 Element Plus 原生组件进行页面布局。统一封装以下组件：
+
+```
+UiDialog / UiInput / UiTextarea / UiSelect / UiDatePicker / UiButton / UiSection / UiCard
+```
+
+业务页面只负责组合业务，不负责样式。以后修改 UI 只改一处。
+
 ### 共享组件（`src/components/`）
 | 组件 | 用途 | Props |
 |------|------|-------|
@@ -357,8 +473,10 @@ personal-hub-web/src/
 | | `formatRelativeTime()` | 相对时间格式化（刚刚/X分钟前） |
 | | `isRecentlyEdited()` | 24 小时内编辑检测 |
 
-### 新页面模板
+### 新页面模板（CRUD 列表页）
 `PageHeader` → `ListToolbar`（`#filters` 插槽）→ loading skeleton → `EmptyState` → 内容 → `ListPagination`
+
+CRUD 操作遵循：Dialog（简单实体）或 Drawer（中等实体），不跳转独立页面。
 
 ### 图标规范
 - 统一使用 **lucide-vue-next**（已迁移为 `@lucide/vue`）
@@ -414,6 +532,8 @@ personal-hub-web/src/
 5. ✅ 响应式适配（768px 断点）
 6. ✅ 骨架屏加载状态
 7. ✅ 统一的页面结构（header → toolbar → list → pagination）
+8. ✅ Dialog/Drawer 替代独立路由表单页
+9. ✅ 新增/编辑共用一个 Dialog/Drawer 组件
 
 ### 相关文件
 - 设计 Token / Element Plus 覆盖：`personal-hub-web/src/styles/global.css`
