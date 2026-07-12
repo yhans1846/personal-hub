@@ -5,7 +5,7 @@ import { getNotePreview, restoreNote, exportNote } from '@/api/noteApi'
 import { ElMessage } from 'element-plus'
 import { MdPreview } from 'md-editor-v3'
 import 'md-editor-v3/lib/style.css'
-import { RotateCcw, Download, ArrowLeft } from 'lucide-vue-next'
+import { RotateCcw, Download, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import type { NoteVO } from '@/types/note'
 
 const route = useRoute()
@@ -18,8 +18,13 @@ const activeHeading = ref('')
 // 左侧目录栏宽度（可拖拽）
 const tocWidth = ref(220)
 const isResizing = ref(false)
+const tocCollapsed = ref(false)
 const TOC_MIN = 140
 const TOC_MAX = 500
+
+function toggleToc() {
+  tocCollapsed.value = !tocCollapsed.value
+}
 
 function startResize(e: MouseEvent) {
   isResizing.value = true
@@ -217,25 +222,31 @@ function handleClose() {
     <!-- 笔记内容 + 大纲 -->
     <div v-else-if="note" class="preview-body">
       <!-- 左侧大纲 -->
-      <aside v-if="toc.length > 0" class="preview-toc" :style="{ width: tocWidth + 'px' }">
-        <div class="toc-header">目录</div>
-        <nav class="toc-list">
-          <button
-            v-for="item in toc"
-            :key="item.id"
-            :class="['toc-item', `toc-level-${item.level}`, { active: activeHeading === item.id }]"
-            @click="scrollToHeading(item.id)"
-          >
-            <span class="toc-dot" />
-            <span class="toc-text">{{ item.text }}</span>
-          </button>
-        </nav>
-      </aside>
-      <!-- 占位（无大纲时） -->
-      <aside v-else class="preview-toc preview-toc--empty" :style="{ width: tocWidth + 'px' }">
-        <div class="toc-header">目录</div>
-        <p class="toc-empty">暂无标题</p>
-      </aside>
+      <div class="toc-wrapper" :class="{ collapsed: tocCollapsed }" :style="{ width: tocCollapsed ? '0px' : tocWidth + 'px' }">
+        <aside v-if="toc.length > 0" class="preview-toc">
+          <div class="toc-header">目录</div>
+          <nav class="toc-list">
+            <button
+              v-for="item in toc"
+              :key="item.id"
+              :class="['toc-item', `toc-level-${item.level}`, { active: activeHeading === item.id }]"
+              @click="scrollToHeading(item.id)"
+            >
+              <span class="toc-dot" />
+              <span class="toc-text">{{ item.text }}</span>
+            </button>
+          </nav>
+        </aside>
+        <!-- 占位（无大纲时） -->
+        <aside v-else class="preview-toc preview-toc--empty">
+          <div class="toc-header">目录</div>
+          <p class="toc-empty">暂无标题</p>
+        </aside>
+        <button class="toc-toggle" @click="toggleToc">
+          <ChevronLeft v-if="!tocCollapsed" :size="14" />
+          <ChevronRight v-else :size="14" />
+        </button>
+      </div>
       <!-- 拖拽分隔条 -->
       <div
         class="toc-resize-handle"
@@ -348,12 +359,74 @@ function handleClose() {
 }
 
 /* ====== 左侧大纲 ====== */
-.preview-toc {
+.toc-wrapper {
+  display: flex;
+  position: relative;
+  overflow: hidden;
   flex-shrink: 0;
+  transition: width 0.2s ease;
+}
+
+.toc-wrapper.collapsed {
+  border-right: none;
+}
+
+.preview-toc {
+  flex: 1;
   overflow-y: auto;
   padding: var(--sp-6) var(--sp-4);
   background: var(--bg-card);
-  position: relative;
+  scrollbar-width: none;
+}
+
+.preview-toc::-webkit-scrollbar {
+  display: none;
+}
+
+.toc-wrapper:hover .preview-toc {
+  scrollbar-width: thin;
+}
+
+.toc-wrapper:hover .preview-toc::-webkit-scrollbar {
+  display: block;
+  width: 4px;
+}
+
+.toc-wrapper:hover .preview-toc::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 2px;
+}
+
+.toc-toggle {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 48px;
+  border: none;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-right: none;
+  border-radius: 4px 0 0 4px;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: color var(--transition), background var(--transition);
+}
+
+.toc-wrapper.collapsed .toc-toggle {
+  right: -16px;
+  border: 1px solid var(--border-color);
+  border-radius: 0 4px 4px 0;
+}
+
+.toc-toggle:hover {
+  color: var(--accent);
+  background: var(--bg-hover);
 }
 
 .toc-resize-handle {
