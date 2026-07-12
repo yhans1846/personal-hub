@@ -190,7 +190,7 @@ async function handleResetAll() {
 }
 
 .tab-inner {
-  max-width: 720px;
+  max-width: 828px;
 }
 
 .spacer-top {

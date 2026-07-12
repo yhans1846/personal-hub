@@ -167,7 +167,7 @@ async function handleReset() {
 </template>
 
 <style scoped>
-.notification-settings { max-width: 520px; }
+.notification-settings { max-width: 598px; }
 
 .setting-section { margin-bottom: 28px; }
 

@@ -72,7 +72,7 @@ onMounted(() => { cacheSize.value = estimateCacheSize() })
 </template>
 
 <style scoped>
-.cache-settings { max-width: 520px; }
+.cache-settings { max-width: 598px; }
 .setting-section { margin-bottom: 28px; }
 .section-title {
   margin: 0 0 14px;

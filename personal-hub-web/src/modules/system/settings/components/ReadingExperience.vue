@@ -186,7 +186,7 @@ async function handleReset() {
 
 <style scoped>
 .reading-experience {
-  max-width: 520px;
+  max-width: 598px;
 }
 
 /* ─── 分区 ─── */
