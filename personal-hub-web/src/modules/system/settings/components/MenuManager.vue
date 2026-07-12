@@ -161,28 +161,30 @@ async function handleReset() {
 </template>
 
 <style scoped>
-.manager-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--sp-3); }
+.manager-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--sp-4); }
 .manager-hint { font-size: var(--text-xs); color: var(--text-tertiary); }
 
-.menu-groups { display: flex; flex-direction: column; gap: var(--sp-3); }
+.menu-groups { display: flex; flex-direction: column; gap: 32px; }
 
-/* 分组标题 */
+/* 分组标题 — Section 规范 */
 .group-header {
-  display: flex; align-items: center; gap: 4px;
-  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
-  color: var(--text-tertiary); padding: var(--sp-1) var(--sp-3);
-  cursor: pointer; user-select: none; border-radius: var(--radius-sm);
-  transition: color 150ms ease, background 150ms ease;
+  display: flex; align-items: center; gap: 6px;
+  font-size: 13px; font-weight: 600;
+  color: var(--text-secondary);
+  padding: 0 0 8px 0;
+  cursor: pointer; user-select: none;
+  border-bottom: 1px solid var(--border-light);
+  transition: color 150ms ease;
 }
-.group-header:hover { color: var(--text-primary); background: var(--bg-hover); }
+.group-header:hover { color: var(--text-primary); }
 .group-chevron {
-  flex-shrink: 0; transition: transform 200ms ease; opacity: 0.4;
+  flex-shrink: 0; transition: transform 200ms ease; opacity: 0.45;
 }
-.group-header:hover .group-chevron { opacity: 0.7; }
+.group-header:hover .group-chevron { opacity: 0.8; }
 .group-header.collapsed .group-chevron { transform: rotate(-90deg); }
 
 /* 分组内列表 */
-.group-items { display: flex; flex-direction: column; gap: var(--sp-1); }
+.group-items { display: flex; flex-direction: column; gap: var(--sp-1); padding-top: 8px; }
 
 .menu-item {
   display: flex; align-items: center; gap: var(--sp-3);
