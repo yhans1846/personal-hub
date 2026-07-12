@@ -1,0 +1,264 @@
+/* ============================================
+   Personal Hub — Markdown Prose 排版系统
+   统一笔记预览、文档、帮助中心、README 等内容排版
+   用法: 在内容容器上添加 class="markdown-prose"
+   ============================================ */
+
+.markdown-prose {
+  /* ---- 设计 Token（可被上层主题覆盖） ---- */
+  --prose-color: var(--preview-text, var(--text-primary));
+  --prose-heading-color: var(--preview-heading, var(--text-primary));
+  --prose-border-color: var(--preview-border, var(--border-color));
+  --prose-code-bg: var(--preview-code-bg, var(--bg-hover));
+  --prose-quote-bar: var(--preview-quote-bar, var(--accent));
+  --prose-quote-bg: color-mix(in srgb, var(--preview-quote-bar, var(--accent)) 6%, transparent);
+  --prose-code-header: var(--preview-code-header, var(--bg-hover));
+
+  color: var(--prose-color);
+  /* font-size / line-height 从父级 CSS 变量或 inline style 继承，不在此处硬编码 */
+  font-size: var(--prose-font-size);
+  line-height: var(--prose-line-height);
+}
+
+/* ====== 标题 ====== */
+
+.markdown-prose h1,
+.markdown-prose h2,
+.markdown-prose h3,
+.markdown-prose h4,
+.markdown-prose h5,
+.markdown-prose h6 {
+  position: relative;
+  color: var(--prose-heading-color);
+  font-weight: 600;
+  line-height: 1.3;
+  margin-top: 2em;
+  margin-bottom: 0.5em;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.markdown-prose h1 {
+  font-size: 2em;
+  margin-top: 0;
+  letter-spacing: -0.02em;
+}
+
+.markdown-prose h2 {
+  font-size: 1.5em;
+  border-bottom: 1px solid var(--prose-border-color);
+  padding-bottom: 0.3em;
+}
+
+.markdown-prose h3 { font-size: 1.25em; }
+.markdown-prose h4 { font-size: 1.1em; }
+.markdown-prose h5 { font-size: 1em; }
+.markdown-prose h6 { font-size: 0.9em; color: var(--text-tertiary); }
+
+/* ====== 段落 ====== */
+
+.markdown-prose p {
+  margin: 0.75em 0;
+  margin-left: 0;
+  margin-right: 0;
+  line-height: inherit;
+}
+
+.markdown-prose p:first-child {
+  margin-top: 0;
+}
+
+/* ====== 链接 ====== */
+
+.markdown-prose a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.markdown-prose a:hover {
+  text-decoration: underline;
+}
+
+/* ====== 代码 ====== */
+
+/* 行内代码 */
+.markdown-prose p code,
+.markdown-prose li code {
+  background: var(--prose-code-bg);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.85em;
+  border: 1px solid var(--prose-border-color);
+  font-family: var(--font-mono);
+}
+
+/* 代码块 */
+.markdown-prose pre {
+  background: var(--prose-code-bg) !important;
+  border-radius: 8px;
+  padding: 16px;
+  overflow-x: auto;
+  font-size: 0.875em;
+  line-height: 1.6;
+  border: 1px solid var(--prose-border-color);
+  position: relative;
+  margin: 1em 0;
+}
+
+.markdown-prose pre code {
+  background: none;
+  padding: 0;
+  border: none;
+  font-family: var(--font-mono);
+  font-size: inherit;
+}
+
+/* ====== 引用块 ====== */
+
+.markdown-prose blockquote {
+  margin: 1em 0;
+  padding: 0.5em 1em;
+  border-left: 3px solid var(--prose-quote-bar);
+  background: var(--prose-quote-bg);
+  border-radius: 0 6px 6px 0;
+  color: var(--prose-color);
+}
+
+.markdown-prose blockquote p {
+  margin: 0.3em 0;
+}
+
+.markdown-prose blockquote p:first-child {
+  margin-top: 0;
+}
+
+/* ====== 列表 ====== */
+
+.markdown-prose ul,
+.markdown-prose ol {
+  padding-left: 1.5em;
+  margin: 0.5em 0;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.markdown-prose li {
+  margin: 0.3em 0;
+}
+
+.markdown-prose li:first-child {
+  margin-top: 0;
+}
+
+.markdown-prose li:last-child {
+  margin-bottom: 0;
+}
+
+/* ====== 表格 ====== */
+
+.markdown-prose table {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.9em;
+  margin: 1em 0;
+}
+
+.markdown-prose th,
+.markdown-prose td {
+  padding: 8px 14px;
+  border: 1px solid var(--prose-border-color);
+  text-align: left;
+}
+
+.markdown-prose th {
+  background: var(--prose-code-bg);
+  font-weight: 600;
+  color: var(--prose-heading-color);
+}
+
+/* ====== 分割线 ====== */
+
+.markdown-prose hr {
+  border: none;
+  border-top: 1px solid var(--prose-border-color);
+  margin: 2em 0;
+}
+
+/* ====== 图片 ====== */
+
+.markdown-prose img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 1em 0;
+  cursor: zoom-in;
+  transition: opacity 200ms ease;
+}
+
+.markdown-prose img:hover {
+  opacity: 0.9;
+}
+
+/* ====== 任务列表 ====== */
+
+.markdown-prose input[type='checkbox'] {
+  margin-right: 6px;
+}
+
+/* ====== 标题锚点 ====== */
+
+.markdown-prose .heading-anchor {
+  position: absolute;
+  left: -1em;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--accent);
+  opacity: 0;
+  transition: opacity 150ms ease;
+  font-size: 0.75em;
+  font-weight: 400;
+  text-decoration: none !important;
+  line-height: 1;
+}
+
+.markdown-prose h1:hover .heading-anchor,
+.markdown-prose h2:hover .heading-anchor,
+.markdown-prose h3:hover .heading-anchor,
+.markdown-prose h4:hover .heading-anchor,
+.markdown-prose h5:hover .heading-anchor,
+.markdown-prose h6:hover .heading-anchor {
+  opacity: 0.6;
+}
+
+.markdown-prose .heading-anchor:hover {
+  opacity: 1 !important;
+}
+
+/* ====== 代码复制按钮 ====== */
+
+.markdown-prose pre .code-copy-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 3px 10px;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  background: var(--prose-code-bg);
+  border: 1px solid var(--prose-border-color);
+  border-radius: 4px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 150ms ease, color 150ms ease;
+  z-index: 1;
+}
+
+.markdown-prose pre:hover .code-copy-btn {
+  opacity: 1;
+}
+
+.markdown-prose pre .code-copy-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}

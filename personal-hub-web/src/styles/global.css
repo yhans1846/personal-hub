@@ -469,3 +469,57 @@ a:hover { color: var(--accent-hover); }
 }
 .accent-dot:hover { transform: scale(1.2); }
 .accent-dot.active { border-color: var(--text-primary); box-shadow: 0 0 0 2px var(--bg-card); }
+
+/* ============================================
+   预览页面阅读主题
+   data-preview-theme 作用域于预览页容器
+   ============================================ */
+
+/* Green 护眼主题 */
+[data-preview-theme='sepia'] {
+  --preview-bg: #F5FAF2;
+  --preview-text: #3C5C3C;
+  --preview-heading: #2D4A2D;
+  --preview-border: #D4E4CC;
+  --preview-code-bg: #EDF4E8;
+  --preview-quote-bar: #6BA368;
+  --preview-code-header: #E4F0DE;
+}
+
+/* Light 预览 */
+[data-preview-theme='light'] {
+  --preview-bg: #FFFFFF;
+  --preview-text: #1F2937;
+  --preview-heading: #111827;
+  --preview-border: #E5E7EB;
+  --preview-code-bg: #F9FAFB;
+  --preview-quote-bar: #D1D5DB;
+  --preview-code-header: #F3F4F6;
+}
+
+/* Dark 预览 — GitHub Dark 风格 */
+[data-preview-theme='dark'] {
+  --preview-bg: #0D1117;
+  --preview-text: #C9D1D9;
+  --preview-heading: #E6EDF3;
+  --preview-border: #30363D;
+  --preview-code-bg: #161B22;
+  --preview-quote-bar: #8B949E;
+  --preview-code-header: #161B22;
+}
+
+/* Follow 模式从系统继承 */
+[data-preview-theme='follow'] {
+  --preview-bg: var(--bg-body);
+  --preview-text: var(--text-primary);
+  --preview-heading: var(--text-primary);
+  --preview-border: var(--border-color);
+  --preview-code-bg: var(--bg-hover);
+  --preview-quote-bar: var(--accent);
+  --preview-code-header: var(--bg-hover);
+}
+
+/* 阅读设置弹窗层级高于 md-editor-code-head (z-index: 10000) */
+.preview-settings-popper {
+  z-index: 10001 !important;
+}

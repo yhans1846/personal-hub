@@ -1,75 +1,55 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick, watch } from 'vue'
+import { ref, computed, onMounted, nextTick, watch, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { getNotePreview, restoreNote, exportNote } from '@/api/noteApi'
 import { ElMessage } from 'element-plus'
 import { MdPreview } from 'md-editor-v3'
 import 'md-editor-v3/lib/style.css'
-import { RotateCcw, Download, ArrowLeft, ChevronLeft, ChevronRight, Clock } from 'lucide-vue-next'
+import mediumZoom from 'medium-zoom'
 import type { NoteVO } from '@/types/note'
+import { getNotePreview, restoreNote, exportNote } from '@/modules/knowledge/api'
+import { usePreviewSettings } from './preview/usePreviewSettings'
+import { usePreviewTheme } from './preview/usePreviewTheme'
+import DocLayout from '@/components/DocLayout.vue'
+import type { TocItem } from './preview/PreviewToc.vue'
+import ReadingSettings from './preview/ReadingSettings.vue'
 
 const route = useRoute()
+const { settings } = usePreviewSettings()
+const { theme, resolvedTheme, setTheme } = usePreviewTheme()
 
 const note = ref<NoteVO | null>(null)
 const loading = ref(true)
 const error = ref('')
 const activeHeading = ref('')
+const toc = ref<TocItem[]>([])
 
-// 左侧目录栏宽度（可拖拽）
-const tocWidth = ref(220)
-const isResizing = ref(false)
-const tocCollapsed = ref(false)
-const TOC_MIN = 140
-const TOC_MAX = 500
+/** 非空后的 note，用于 slot 内类型缩窄 */
+const loadedNote = computed(() => note.value as NoteVO)
 
-function toggleToc() {
-  tocCollapsed.value = !tocCollapsed.value
-}
-
-function startResize(e: MouseEvent) {
-  isResizing.value = true
-  document.body.style.cursor = 'col-resize'
-  document.body.style.userSelect = 'none'
-  const startX = e.clientX
-  const startW = tocWidth.value
-
-  const onMove = (ev: MouseEvent) => {
-    const delta = ev.clientX - startX
-    tocWidth.value = Math.min(TOC_MAX, Math.max(TOC_MIN, startW + delta))
-  }
-  const onUp = () => {
-    isResizing.value = false
-    document.body.style.cursor = ''
-    document.body.style.userSelect = ''
-    document.removeEventListener('mousemove', onMove)
-    document.removeEventListener('mouseup', onUp)
-  }
-  document.addEventListener('mousemove', onMove)
-  document.addEventListener('mouseup', onUp)
-}
-
-const editorTheme = computed(() =>
-  document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'
-)
+let observer: IntersectionObserver | null = null
+let zoomInstance: ReturnType<typeof mediumZoom> | null = null
 
 const isTrash = computed(() => note.value?.isDeleted === 1)
-const bannerText = computed(() =>
-  isTrash.value ? '该笔记位于回收站，仅支持查看。' : '预览模式'
-)
-const bannerType = computed(() => isTrash.value ? 'warning' : 'info')
+
+/** MdPreview 只接受 light/dark，sepia 映射为 light */
+const mdTheme = computed(() => resolvedTheme.value === 'sepia' ? 'light' : resolvedTheme.value)
 
 function formatTime(dateStr?: string) {
   if (!dateStr) return ''
   return dateStr.slice(0, 16).replace('T', ' ')
 }
 
-/** 从 Markdown 提取标题大纲 */
-interface TocItem {
-  text: string
-  level: number
-  id: string
+/** 估算阅读时间 */
+function estimateReadingTime(content?: string): string {
+  if (!content) return ''
+  const zhChars = (content.match(/[一-鿿]/g) || []).length
+  const words = content.replace(/[一-鿿]/g, '').split(/\s+/).filter(Boolean).length
+  const total = zhChars + words
+  const mins = Math.max(1, Math.round(total / 500))
+  return `${mins} 分钟`
 }
-const toc = ref<TocItem[]>([])
+
+// ====== 目录 ======
 
 function parseToc(content: string): TocItem[] {
   const items: TocItem[] = []
@@ -79,7 +59,6 @@ function parseToc(content: string): TocItem[] {
     if (match) {
       const level = match[1].length
       const text = match[2].trim()
-      // 用 text 本身作为 key，通过 DOM 查找
       const id = text.replace(/\s+/g, '-')
       items.push({ text, level, id })
     }
@@ -89,19 +68,12 @@ function parseToc(content: string): TocItem[] {
 
 function scrollToHeading(id: string) {
   activeHeading.value = id
-  const preview = document.querySelector('.md-editor-preview')
-  if (!preview) return
-  // 在渲染区域找到文本匹配的标题
-  const allHeadings = preview.querySelectorAll('h1, h2, h3, h4, h5, h6')
-  for (const h of allHeadings) {
-    if (h.textContent?.trim() === id.replace(/-/g, ' ')) {
-      h.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      break
-    }
+  // 直接用 id 查找（setupHeadingAnchors 阶段已设置 h.id）
+  const target = document.getElementById(id)
+  if (target) {
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 }
-
-let observer: IntersectionObserver | null = null
 
 function setupObserver() {
   if (!note.value?.content) return
@@ -125,9 +97,57 @@ function setupObserver() {
       },
       { rootMargin: '-64px 0px -60% 0px', threshold: 0 }
     )
-    headingEls.forEach(el => observer!.observe(el))
-  }, 100)
+    headingEls.forEach((el) => observer!.observe(el))
+  }, 200)
 }
+
+// ====== 图片缩放 ======
+
+function setupImageZoom() {
+  nextTick(() => {
+    const preview = document.querySelector('.md-editor-preview')
+    if (!preview) return
+
+    zoomInstance?.detach()
+    zoomInstance = mediumZoom(preview.querySelectorAll('img'), {
+      background: 'rgba(0, 0, 0, 0.6)',
+      margin: 40,
+    })
+  })
+}
+
+// ====== 代码复制 ======
+
+function setupCodeCopy() {
+  nextTick(() => {
+    const preview = document.querySelector('.md-editor-preview')
+    if (!preview) return
+
+    preview.querySelectorAll('pre').forEach((pre) => {
+      // 避免重复添加
+      if (pre.querySelector('.code-copy-btn')) return
+
+      const btn = document.createElement('button')
+      btn.className = 'code-copy-btn'
+      btn.textContent = '复制'
+      btn.addEventListener('click', async () => {
+        const code = pre.querySelector('code')
+        if (!code) return
+        try {
+          await navigator.clipboard.writeText(code.textContent || '')
+          btn.textContent = '已复制'
+          setTimeout(() => { btn.textContent = '复制' }, 2000)
+        } catch {
+          btn.textContent = '失败'
+        }
+      })
+      pre.style.position = 'relative'
+      pre.appendChild(btn)
+    })
+  })
+}
+
+// ====== 数据加载 ======
 
 onMounted(async () => {
   const id = Number(route.params.id)
@@ -152,13 +172,61 @@ onMounted(async () => {
   }
 })
 
-// 内容加载后延迟设置滚动观察器
+// ====== 链接新窗口打开 ======
+
+function setupExternalLinks() {
+  nextTick(() => {
+    const preview = document.querySelector('.md-editor-preview')
+    if (!preview) return
+    preview.querySelectorAll('a').forEach((a) => {
+      if (!a.getAttribute('target')) {
+        a.setAttribute('target', '_blank')
+        a.setAttribute('rel', 'noopener noreferrer')
+      }
+    })
+  })
+}
+
+// ====== 标题锚点 ======
+
+function setupHeadingAnchors() {
+  nextTick(() => {
+    const preview = document.querySelector('.md-editor-preview')
+    if (!preview) return
+    preview.querySelectorAll('h1, h2, h3, h4, h5, h6').forEach((h) => {
+      if (h.querySelector('.heading-anchor')) return
+      const id = h.textContent?.trim().replace(/\s+/g, '-') ?? ''
+      if (id) {
+        h.id = id
+        const anchor = document.createElement('a')
+        anchor.className = 'heading-anchor'
+        anchor.href = `#${id}`
+        anchor.textContent = '#'
+        anchor.setAttribute('aria-hidden', 'true')
+        h.insertBefore(anchor, h.firstChild)
+      }
+    })
+  })
+}
+
+// 内容加载后设置
 watch(() => note.value?.content, async () => {
   if (note.value?.content) {
     await nextTick()
-    setTimeout(setupObserver, 200)
+    setupObserver()
+    setupImageZoom()
+    setupCodeCopy()
+    setupExternalLinks()
+    setupHeadingAnchors()
   }
 })
+
+// 主题切换时重新绑定 zoom（zoom 需要新图片引用）
+watch(resolvedTheme, () => {
+  setupImageZoom()
+})
+
+// ====== 操作 ======
 
 async function handleExport() {
   if (!note.value) return
@@ -190,430 +258,181 @@ async function handleRestore() {
 function handleClose() {
   window.close()
 }
+
+onUnmounted(() => {
+  observer?.disconnect()
+  zoomInstance?.detach()
+})
 </script>
 
 <template>
-  <div class="preview-layout">
-    <!-- 顶部提示条 -->
-    <div class="preview-banner" :class="`banner--${bannerType}`">
-      <div class="banner-left">
-        <el-button size="small" text @click="handleClose">
-          <ArrowLeft :size="15" style="margin-right: 4px" /> 返回
-        </el-button>
-      </div>
-      <div class="banner-content">
-        <span class="banner-icon">{{ isTrash ? '⚠' : '👁' }}</span>
-        <span>{{ bannerText }}</span>
-      </div>
-      <div class="banner-actions">
-        <el-button size="small" :icon="Download" @click="handleExport">
-          导出
-        </el-button>
-        <el-button v-if="isTrash" size="small" type="warning" :icon="RotateCcw" @click="handleRestore">
-          恢复笔记
-        </el-button>
-      </div>
-    </div>
-
-    <!-- 加载态 -->
-    <div v-if="loading" class="state-message">加载中...</div>
-
-    <!-- 错误态 -->
-    <div v-else-if="error" class="state-message state-error">
-      <p>{{ error }}</p>
-      <el-button size="small" @click="handleClose">关闭页面</el-button>
-    </div>
-
-    <!-- 笔记内容 + 大纲 -->
-    <div v-else-if="note" class="preview-body">
-      <!-- 左侧大纲 -->
-      <div class="toc-wrapper" :class="{ collapsed: tocCollapsed }" :style="{ width: tocCollapsed ? '0px' : tocWidth + 'px' }">
-        <aside v-if="toc.length > 0" class="preview-toc">
-          <div class="toc-header">目录</div>
-          <nav class="toc-list">
-            <button
-              v-for="item in toc"
-              :key="item.id"
-              :class="['toc-item', `toc-level-${item.level}`, { active: activeHeading === item.id }]"
-              @click="scrollToHeading(item.id)"
-            >
-              <span class="toc-dot" />
-              <span class="toc-text">{{ item.text }}</span>
-            </button>
-          </nav>
-        </aside>
-        <!-- 占位（无大纲时） -->
-        <aside v-else class="preview-toc preview-toc--empty">
-          <div class="toc-header">目录</div>
-          <p class="toc-empty">暂无标题</p>
-        </aside>
-        <button class="toc-toggle" @click="toggleToc">
-          <ChevronLeft v-if="!tocCollapsed" :size="14" />
-          <ChevronRight v-else :size="14" />
-        </button>
-      </div>
-      <!-- 拖拽分隔条 -->
-      <div
-        class="toc-resize-handle"
-        :class="{ active: isResizing }"
-        @mousedown.prevent="startResize"
-      />
-
-      <!-- 右侧正文 -->
-      <main class="preview-main">
-        <article class="preview-article">
-          <h1 class="preview-title">{{ note.title }}</h1>
-
-          <div class="preview-meta">
-            <div class="preview-meta-left">
-              <span v-if="note.categories?.length" class="meta-block">
-                <span class="meta-label">分类</span>
-                <span v-for="c in note.categories" :key="c.id" class="meta-tag">{{ c.name }}</span>
-              </span>
-              <span v-if="note.tags?.length" class="meta-block">
-                <span class="meta-label">标签</span>
-                <span v-for="t in note.tags" :key="t.id" class="meta-tag" :style="t.color ? { '--tag-color': t.color } : undefined">{{ t.name }}</span>
-              </span>
-            </div>
-            <span class="meta-time">
-              <Clock :size="12" /> 最后编辑时间 {{ formatTime(note.updatedAt) }}
-            </span>
-          </div>
-
-          <div class="preview-divider" />
-
-          <div class="preview-content" v-if="note.content">
-            <MdPreview
-              :model-value="note.content"
-              :theme="editorTheme"
-              :show-code-row-number="false"
-            />
-          </div>
-          <div v-else class="empty-content">笔记内容为空</div>
-        </article>
-      </main>
-    </div>
+  <div v-if="loading" class="state-message">
+    <div class="loading-spinner" />
+    <span>加载中...</span>
   </div>
+
+  <div v-else-if="error" class="state-message state-error">
+    <p>{{ error }}</p>
+    <button class="back-btn" @click="handleClose">关闭页面</button>
+  </div>
+
+  <DocLayout v-else-if="note"
+      :title="loadedNote.title"
+      :toc-items="toc"
+      :active-heading="activeHeading"
+      :is-trash="isTrash"
+      :meta="{
+        updatedAt: formatTime(loadedNote.updatedAt),
+        readingTime: estimateReadingTime(loadedNote.content),
+      }"
+      @back="handleClose"
+      @scroll-to-heading="scrollToHeading"
+    >
+      <!-- Header 右侧操作区 -->
+      <template #header-actions>
+        <el-popover
+          placement="bottom-end"
+          :width="240"
+          trigger="click"
+          :show-arrow="false"
+          popper-class="preview-settings-popper"
+        >
+          <template #reference>
+            <button class="header-action-btn" title="阅读设置">Aa</button>
+          </template>
+          <ReadingSettings
+            :settings="settings"
+            :theme="theme"
+            @update:settings="Object.assign(settings, $event)"
+            @update:theme="setTheme($event as any)"
+          />
+        </el-popover>
+        <el-dropdown trigger="click" placement="bottom-end">
+          <button class="header-action-btn" title="更多">
+            <span style="letter-spacing: 2px">⋯</span>
+          </button>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item @click="handleExport">导出笔记</el-dropdown-item>
+              <el-dropdown-item v-if="isTrash" @click="handleRestore">恢复笔记</el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
+      </template>
+
+      <!-- 正文 -->
+      <div
+        class="preview-content-wrap"
+        :style="{
+          maxWidth: settings.readingWidth + 'px',
+          fontSize: settings.fontSize + 'px',
+          lineHeight: settings.lineHeight,
+          '--prose-font-size': settings.fontSize + 'px',
+          '--prose-line-height': settings.lineHeight,
+        }"
+      >
+        <!-- 分类/标签 -->
+        <div class="preview-taxonomies">
+          <span v-if="loadedNote.categories?.length" class="taxonomy-block">
+            <span v-for="c in loadedNote.categories" :key="c.id" class="taxonomy-tag">{{ c.name }}</span>
+          </span>
+          <span v-if="loadedNote.tags?.length" class="taxonomy-block">
+            <span
+              v-for="t in loadedNote.tags"
+              :key="t.id"
+              class="taxonomy-tag"
+              :style="t.color ? { '--tag-color': t.color } : undefined"
+            >{{ t.name }}</span>
+          </span>
+        </div>
+
+        <!-- Markdown 正文 -->
+        <div v-if="loadedNote.content" class="preview-content markdown-prose">
+          <MdPreview
+            :model-value="loadedNote.content"
+            :theme="mdTheme"
+            :show-code-row-number="false"
+          />
+        </div>
+        <div v-else class="empty-content">笔记内容为空</div>
+      </div>
+    </DocLayout>
 </template>
 
 <style scoped>
-/* ====== 整体布局 ====== */
-.preview-layout {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  overflow: hidden;
-}
-
-/* ====== 顶部提示条 ====== */
-.preview-banner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sp-4);
-  padding: var(--sp-3) var(--sp-5);
-  flex-shrink: 0;
-}
-
-.banner-left {
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-}
-
-.banner-left .el-button { color: var(--text-secondary); }
-.banner-left .el-button:hover { color: var(--text-primary); }
-
-.banner--warning {
-  background: color-mix(in srgb, var(--warning) 12%, transparent);
-  border-bottom: 1px solid color-mix(in srgb, var(--warning) 30%, transparent);
-}
-
-.banner--info {
-  background: color-mix(in srgb, var(--accent) 8%, transparent);
-  border-bottom: 1px solid color-mix(in srgb, var(--accent) 16%, transparent);
-}
-
-.banner-content {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-  font-size: var(--text-sm);
-  font-weight: 500;
-}
-
-.banner--warning .banner-content { color: var(--warning); }
-.banner--info .banner-content { color: var(--accent); }
-
-.banner-icon { font-size: 16px; }
-
-.banner-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-}
-
 /* ====== 状态消息 ====== */
 .state-message {
-  text-align: center;
-  padding: 64px 0;
-  color: var(--text-tertiary);
-}
-.state-error { color: var(--danger); }
-
-/* ====== 主体区域（大纲 + 正文） ====== */
-.preview-body {
   display: flex;
-  flex: 1;
-  overflow: hidden;
-}
-
-/* ====== 左侧大纲 ====== */
-.toc-wrapper {
-  display: flex;
-  position: relative;
-  overflow: hidden;
-  flex-shrink: 0;
-  transition: width 0.2s ease;
-}
-
-.toc-wrapper.collapsed {
-  border-right: none;
-}
-
-.preview-toc {
-  flex: 1;
-  overflow-y: auto;
-  padding: var(--sp-6) var(--sp-4);
-  background: var(--bg-card);
-  scrollbar-width: none;
-}
-
-.preview-toc::-webkit-scrollbar {
-  display: none;
-}
-
-.toc-wrapper:hover .preview-toc {
-  scrollbar-width: thin;
-}
-
-.toc-wrapper:hover .preview-toc::-webkit-scrollbar {
-  display: block;
-  width: 4px;
-}
-
-.toc-wrapper:hover .preview-toc::-webkit-scrollbar-thumb {
-  background: var(--border-color);
-  border-radius: 2px;
-}
-
-.toc-toggle {
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 2;
-  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 16px;
-  height: 48px;
-  border: none;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-right: none;
-  border-radius: 4px 0 0 4px;
+  gap: var(--sp-3);
+  flex: 1;
+  height: 100vh;
   color: var(--text-tertiary);
-  cursor: pointer;
-  transition: color var(--transition), background var(--transition);
-}
-
-.toc-wrapper.collapsed .toc-toggle {
-  right: -16px;
-  border: 1px solid var(--border-color);
-  border-radius: 0 4px 4px 0;
-}
-
-.toc-toggle:hover {
-  color: var(--accent);
-  background: var(--bg-hover);
-}
-
-.toc-resize-handle {
-  width: 4px;
-  cursor: col-resize;
-  flex-shrink: 0;
-  background: transparent;
-  transition: background 0.15s;
-  position: relative;
-  z-index: 1;
-}
-
-.toc-resize-handle:hover,
-.toc-resize-handle.active {
-  background: var(--accent);
-}
-
-.preview-toc--empty {
-  display: flex;
-  flex-direction: column;
-}
-
-.toc-header {
-  font-size: var(--text-xs);
-  font-weight: 600;
-  color: var(--text-tertiary);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: var(--sp-3);
-  padding: 0 var(--sp-2);
-}
-
-.toc-empty {
-  font-size: var(--text-xs);
-  color: var(--text-tertiary);
-  padding: 0 var(--sp-2);
-}
-
-.toc-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-
-.toc-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
-  padding: var(--sp-1) var(--sp-2);
   font-size: var(--text-sm);
-  line-height: 1.5;
-  color: var(--text-tertiary);
-  border: none;
-  background: none;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  text-align: left;
-  width: 100%;
-  transition: color var(--transition), background var(--transition);
+  background: var(--preview-bg);
 }
 
-.toc-item:hover {
-  color: var(--text-primary);
-  background: var(--bg-hover);
-}
+.state-error { color: var(--danger); }
 
-.toc-item.active {
-  color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 8%, transparent);
-}
-
-.toc-dot {
-  display: inline-block;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: currentColor;
-  margin-top: 6px;
-  flex-shrink: 0;
-}
-
-.toc-text {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* 缩进 */
-.toc-level-1 { padding-left: var(--sp-2); }
-.toc-level-2 { padding-left: calc(var(--sp-2) + var(--sp-3)); }
-.toc-level-3 { padding-left: calc(var(--sp-2) + var(--sp-6)); }
-.toc-level-4 { padding-left: calc(var(--sp-2) + var(--sp-9)); }
-.toc-level-5 { padding-left: calc(var(--sp-2) + var(--sp-12)); }
-.toc-level-6 { padding-left: calc(var(--sp-2) + var(--sp-15)); }
-
-/* ====== 右侧正文 ====== */
-.preview-main {
-  flex: 1;
-  overflow-y: auto;
-  padding: var(--sp-6);
-}
-
-.preview-article {
-  max-width: none;
-  margin: 0 auto;
-  background: var(--bg-card);
+.back-btn {
+  padding: 6px 16px;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: var(--sp-8);
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: color var(--transition), border-color var(--transition);
 }
 
-.preview-title {
-  font-size: 1.75rem;
-  font-weight: 700;
-  line-height: 1.3;
+.back-btn:hover {
   color: var(--text-primary);
-  margin: 0 0 var(--sp-4);
+  border-color: var(--text-tertiary);
 }
 
-.preview-meta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sp-4);
-  font-size: var(--text-xs);
-  margin-bottom: var(--sp-6);
+.loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border-color);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
 }
 
-.preview-meta-left {
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ==== 正文区域 ==== */
+.preview-content-wrap {
+  margin: 0 auto;
+  padding: 0;
+  color: var(--preview-text);
+}
+
+/* 安全区边距统一由 DocLayout .doc-content 提供 */
+
+/* 分类/标签行 */
+.preview-taxonomies {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: var(--sp-4);
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-5);
 }
 
-.meta-block {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.meta-label { color: var(--text-tertiary); }
-
-.meta-time {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: var(--text-tertiary);
-  flex-shrink: 0;
-}
-
-.meta-tag {
+.taxonomy-tag {
   display: inline-block;
-  padding: 0 6px;
+  padding: 1px 8px;
+  font-size: 12px;
   line-height: 1.6;
   background: color-mix(in srgb, var(--accent) 10%, transparent);
   color: var(--accent);
-  border-radius: var(--radius-sm);
+  border-radius: 4px;
 }
 
-.meta-tag[style] {
+.taxonomy-tag[style] {
   background: color-mix(in srgb, var(--tag-color) 15%, transparent);
   color: var(--tag-color);
-}
-
-.preview-divider {
-  height: 1px;
-  background: var(--border-color);
-  margin: var(--sp-5) 0;
-}
-
-.preview-content {
-  font-size: var(--text-sm);
-  line-height: 1.75;
-  color: var(--text-primary);
 }
 
 .empty-content {
@@ -622,8 +441,78 @@ function handleClose() {
   color: var(--text-tertiary);
 }
 
-/* 暗色模式下的 Markdown 预览调整 */
+/* Header 右侧操作按钮 */
+.header-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: none;
+  border-radius: 6px;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  font-size: var(--text-sm);
+  transition: color var(--transition), background var(--transition);
+}
+
+.header-action-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+/* MdPreview 根节点与内部容器：背景透明 / 边距 / 字号 / 颜色由阅读主题驱动 */
+:deep(.md-editor) {
+  background: transparent !important;
+}
+
 :deep(.md-editor-preview) {
   background: transparent !important;
+  padding-inline: 48px !important;
+  padding-block-start: 4px !important;
+  /* 基准字号 — 子元素的 em 单位会基于此缩放 */
+  font-size: var(--prose-font-size, 16px) !important;
+  word-break: break-word !important;
+  /* 正文与标题颜色跟随阅读主题 */
+  color: var(--prose-color) !important;
+}
+
+/* default-theme 内部元素硬编码了 line-height / word-break / 标题颜色，统一覆盖 */
+:deep(.md-editor-preview p),
+:deep(.md-editor-preview li),
+:deep(.md-editor-preview blockquote) {
+  line-height: inherit !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+:deep(.md-editor-preview h1),
+:deep(.md-editor-preview h2),
+:deep(.md-editor-preview h3),
+:deep(.md-editor-preview h4),
+:deep(.md-editor-preview h5),
+:deep(.md-editor-preview h6) {
+  word-break: break-word !important;
+  color: var(--prose-heading-color) !important;
+}
+
+/* === 宽元素突破正文宽度 ===
+   图片、Mermaid 可以撑满容器，通过负 margin 抵消父级 padding-inline: 48px */
+
+/* 行内代码不额外缩进 */
+:deep(.md-editor-preview code) {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+:deep(.md-editor-preview pre) {
+  padding: 0 !important;
+}
+
+:deep(.md-editor-preview figure) {
+  margin-left: -48px !important;
+  margin-right: -48px !important;
+  max-width: calc(100% + 96px) !important;
 }
 </style>
