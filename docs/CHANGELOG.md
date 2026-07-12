@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### 2026-07-12 系统设置 V2 Phase 1
+- 全面重写 SettingsView：自定义 Icon+Label Tab 导航（6个Tab），内容 fadeIn 切换动画，max-width 1080px
+- 新增外观设置模块：主题切换（浅色/深色）+ 强调色选择（5色），从 AppLayout 迁入设置页，双向状态同步
+- 新增缓存管理模块：localStorage 大小估算 + 清空缓存（保留登录态和主题偏好）
+- 新增通用占位 Tab 组件（PlaceholderTab），用于通知/实验功能占位
+- MenuManager / DashboardManager UI 对齐 Card/Section 规范（Section 分割线、13px/600w 标题、间距 32px）
+- ReadingExperience 扩展：段落间距（1.0/1.2/1.5em）、代码字体（系统/等宽）、代码字号（同正文/13px/14px）
+- readingConfigStore 新增 paragraphGap / codeFontSize / codeFontFamily 字段 + cssVars 导出
+- layoutStore 新增 appearanceConfig 状态 + saveAppearanceConfig / resetAppearanceConfig / fetchAppearanceFromBackend
+- 外观配置通过 `user_layout(layout_type='appearance')` 持久化，现有布局接口通用支持
+- 顶栏外观快捷操作（主题/强调色）保持保留，操作同步到设置页
+
 ### 2026-07-12 标签管理 & 分类管理页面全面优化
 - 分类管理：统计卡片（全部分类/正在使用/未使用）、Segment 风格模块切换、搜索+排序工具栏、Grid 卡片布局(300px+)、拖拽排序(SortableJS)、悬停阴影动画
   - 后端新增 `PUT /api/categories/sort` 批量排序接口 + `SortOrderDTO`
