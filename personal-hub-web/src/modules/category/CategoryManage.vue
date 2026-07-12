@@ -115,13 +115,9 @@ async function handleDelete(id: number) {
     </div>
 
     <UiDialog v-model="dialogVisible" :title="isEdit ? '编辑分类' : `新建${tabs.find(t => t.type === activeType)?.label || '分类'}`">
-      <el-form label-position="top">
-        <el-form-item label="名称">
-          <UiInput v-model="form.name" placeholder="分类名称" maxlength="50" show-word-limit @keyup.enter="handleSave" />
-        </el-form-item>
-      </el-form>
+      <UiInput v-model="form.name" placeholder="分类名称" maxlength="50" show-word-limit class="category-dialog-input" @keyup.enter="handleSave" />
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button text @click="dialogVisible = false">取消</el-button>
         <UiButton type="primary" @click="handleSave">保存</UiButton>
       </template>
     </UiDialog>
@@ -133,6 +129,18 @@ async function handleDelete(id: number) {
 .skeleton-row { height: 52px; border-radius: var(--radius-md); background: var(--bg-hover); animation: pulse 1.5s ease-in-out infinite; }
 
 .category-tabs { display: flex; gap: var(--sp-2); margin-bottom: var(--sp-5); }
+.category-dialog-input :deep(input) {
+  font-size: var(--text-lg) !important;
+  font-weight: 600;
+  border: none !important;
+  padding-left: 0 !important;
+  background: transparent !important;
+}
+.category-dialog-input :deep(input)::placeholder {
+  color: var(--text-placeholder);
+  font-weight: 400;
+}
+
 .tab-btn {
   display: flex; align-items: center; gap: var(--sp-1);
   padding: 8px 16px; border-radius: var(--radius-md);

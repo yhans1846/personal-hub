@@ -1,0 +1,514 @@
+<script setup lang="ts">
+import { ref, watch, computed } from 'vue'
+import { createReading, updateReading, getReadingById } from '@/api/readingApi'
+import { ElMessage } from 'element-plus'
+import { Star, Calendar, BookOpen } from 'lucide-vue-next'
+import { UiDialog, UiInput, UiButton } from '@/components/ui'
+
+const props = withDefaults(defineProps<{
+  modelValue: boolean
+  entityId?: number
+}>(), { entityId: undefined })
+
+const emit = defineEmits<{
+  'update:modelValue': [value: boolean]
+  'saved': []
+}>()
+
+const form = ref({
+  bookTitle: '', author: '', coverUrl: '', totalChapters: 0, currentChapter: 0,
+  progress: 0, rating: undefined as number | undefined, totalDuration: undefined as number | undefined,
+  status: 0, notes: '', startDate: null as string | null, endDate: null as string | null
+})
+const saving = ref(false)
+
+const statusOptions = [
+  { value: 0, label: '未读', emoji: '📋' },
+  { value: 1, label: '在读', emoji: '📖' },
+  { value: 2, label: '读完', emoji: '✅' }
+]
+
+const dialogTitle = computed(() => props.entityId ? '编辑阅读记录' : '添加书籍')
+const dialogSubtitle = computed(() => props.entityId ? '' : '记录一本值得回顾的书')
+
+const progressColor = computed(() => {
+  if (form.value.progress >= 100) return 'var(--success)'
+  if (form.value.progress >= 50) return 'var(--accent)'
+  return 'var(--warning)'
+})
+
+watch(() => props.modelValue, async (val) => {
+  if (!val) return
+  if (props.entityId) {
+    const r = (await getReadingById(props.entityId)).data.data
+    form.value = {
+      bookTitle: r.bookTitle, author: r.author || '', coverUrl: r.coverUrl || '',
+      totalChapters: r.totalChapters, currentChapter: r.currentChapter, progress: r.progress,
+      rating: r.rating, totalDuration: r.totalDuration, status: r.status,
+      notes: r.notes || '', startDate: r.startDate, endDate: r.endDate
+    }
+  } else {
+    form.value = {
+      bookTitle: '', author: '', coverUrl: '', totalChapters: 0, currentChapter: 0,
+      progress: 0, rating: undefined, totalDuration: undefined, status: 0,
+      notes: '', startDate: null, endDate: null
+    }
+  }
+})
+
+async function handleSave() {
+  if (!form.value.bookTitle.trim()) { ElMessage.warning('请输入书名'); return }
+  saving.value = true
+  try {
+    if (props.entityId) {
+      await updateReading(props.entityId, form.value)
+      ElMessage.success('已更新')
+    } else {
+      await createReading(form.value)
+      ElMessage.success('已创建')
+    }
+    emit('update:modelValue', false)
+    emit('saved')
+  } finally { saving.value = false }
+}
+
+function onProgressChange(e: Event) {
+  const val = Number((e.target as HTMLInputElement).value)
+  form.value.progress = val
+  if (val >= 100) form.value.status = 2
+  else if (val > 0 && form.value.status === 0) form.value.status = 1
+}
+
+function toggleRating(r: number) {
+  form.value.rating = form.value.rating === r ? undefined : r
+}
+</script>
+
+<template>
+  <UiDialog
+    :model-value="modelValue"
+    :title="dialogTitle"
+    :subtitle="dialogSubtitle"
+    @update:model-value="emit('update:modelValue', $event)"
+  >
+    <!-- 书名 -->
+    <UiInput
+      v-model="form.bookTitle"
+      placeholder="书名"
+      class="title-input"
+      maxlength="255"
+    />
+
+    <!-- 作者 + 封面 — 双栏 -->
+    <div class="row-duo">
+      <div class="duo-item">
+        <span class="inline-label">作者</span>
+        <UiInput v-model="form.author" placeholder="（可选）" maxlength="200" class="mini-input" />
+      </div>
+      <div class="duo-item">
+        <span class="inline-label">封面</span>
+        <UiInput v-model="form.coverUrl" placeholder="图片 URL（可选）" class="mini-input" />
+      </div>
+    </div>
+
+    <div class="section-divider" />
+
+    <!-- 阅读状态 -->
+    <div class="section-label">阅读状态</div>
+    <div class="status-row">
+      <button
+        v-for="s in statusOptions"
+        :key="s.value"
+        type="button"
+        class="status-card"
+        :class="{ active: form.status === s.value }"
+        @click="form.status = s.value"
+      >
+        <span class="status-emoji">{{ s.emoji }}</span>
+        <span class="status-label">{{ s.label }}</span>
+      </button>
+    </div>
+
+    <!-- 进度 -->
+    <div class="section-label">阅读进度</div>
+    <div class="progress-row">
+      <input
+        type="range"
+        :min="0"
+        :max="100"
+        :value="form.progress"
+        class="progress-slider"
+        :style="{ '--progress-color': progressColor }"
+        @input="onProgressChange"
+      />
+      <span class="progress-value" :style="{ color: progressColor }">{{ form.progress }}%</span>
+    </div>
+
+    <!-- 章节 -->
+    <div class="chapter-row">
+      <div class="chapter-field">
+        <span class="inline-label">总章节</span>
+        <input
+          type="number"
+          :min="0"
+          :value="form.totalChapters"
+          class="number-input"
+          @input="form.totalChapters = Number(($event.target as HTMLInputElement).value)"
+        />
+      </div>
+      <div class="chapter-divider">/</div>
+      <div class="chapter-field">
+        <span class="inline-label">当前</span>
+        <input
+          type="number"
+          :min="0"
+          :max="form.totalChapters || 9999"
+          :value="form.currentChapter"
+          class="number-input"
+          @input="form.currentChapter = Number(($event.target as HTMLInputElement).value)"
+        />
+      </div>
+    </div>
+
+    <!-- 评分 + 时长 -->
+    <div class="section-label">评分 · 时长</div>
+    <div class="rating-duration-row">
+      <div class="rating-group">
+        <button
+          v-for="i in 5"
+          :key="i"
+          type="button"
+          class="star-btn"
+          :class="{ active: i <= (form.rating || 0) }"
+          @click="toggleRating(i)"
+        >
+          <Star
+            :size="20"
+            :fill="i <= (form.rating || 0) ? 'var(--warning)' : 'none'"
+            :color="i <= (form.rating || 0) ? 'var(--warning)' : 'var(--text-tertiary)'"
+          />
+        </button>
+        <span v-if="!form.rating" class="rating-hint">点击评分</span>
+      </div>
+      <div class="duration-field">
+        <span class="inline-label">时长（分钟）</span>
+        <input
+          type="number"
+          :min="0"
+          :step="10"
+          :value="form.totalDuration"
+          class="number-input"
+          placeholder="0"
+          @input="form.totalDuration = Number(($event.target as HTMLInputElement).value) || undefined"
+        />
+      </div>
+    </div>
+
+    <!-- 时间 -->
+    <div class="section-label">阅读时间</div>
+    <div class="date-range-row">
+      <button type="button" class="date-chip" :class="{ 'has-date': !!form.startDate }" @click="$refs.startInput?.showPicker ? $refs.startInput.showPicker() : $refs.startInput?.click()">
+        <Calendar :size="14" />
+        <span>{{ form.startDate || '开始日期' }}</span>
+        <input ref="startInput" type="date" class="date-input-abs" :value="form.startDate || ''" @change="form.startDate = ($event.target as HTMLInputElement).value || null" />
+      </button>
+      <span class="date-range-arrow">→</span>
+      <button type="button" class="date-chip" :class="{ 'has-date': !!form.endDate }" @click="$refs.endInput?.showPicker ? $refs.endInput.showPicker() : $refs.endInput?.click()">
+        <Calendar :size="14" />
+        <span>{{ form.endDate || '读完日期' }}</span>
+        <input ref="endInput" type="date" class="date-input-abs" :value="form.endDate || ''" @change="form.endDate = ($event.target as HTMLInputElement).value || null" />
+      </button>
+    </div>
+
+    <div class="section-divider" />
+
+    <!-- 阅读笔记 -->
+    <div class="content-section">
+      <textarea
+        v-model="form.notes"
+        class="content-editor"
+        placeholder="记录读后感、摘抄、精彩段落…"
+      />
+    </div>
+
+    <template #footer>
+      <el-button text @click="emit('update:modelValue', false)">取消</el-button>
+      <UiButton type="primary" :loading="saving" @click="handleSave">保存</UiButton>
+    </template>
+  </UiDialog>
+</template>
+
+<style scoped>
+.title-input {
+  margin-bottom: var(--sp-2);
+}
+.title-input :deep(input) {
+  font-size: var(--text-lg) !important;
+  font-weight: 600;
+  border: none !important;
+  padding-left: 0 !important;
+  background: transparent !important;
+}
+.title-input :deep(input)::placeholder {
+  color: var(--text-placeholder);
+  font-weight: 400;
+}
+
+/* 双栏 */
+.row-duo {
+  display: flex;
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-3);
+}
+.duo-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.mini-input :deep(input) {
+  border: none !important;
+  padding-left: 0 !important;
+  background: transparent !important;
+  font-size: var(--text-sm) !important;
+}
+.mini-input :deep(input)::placeholder {
+  color: var(--text-placeholder);
+}
+
+.inline-label {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+.section-divider {
+  height: 1px;
+  background: var(--border-light);
+  margin: var(--sp-4) 0;
+}
+
+.section-label {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  font-weight: 500;
+  margin-bottom: var(--sp-3);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+/* ---- 状态卡片 ---- */
+.status-row {
+  display: flex;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-5);
+}
+
+.status-card {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: var(--sp-2) var(--sp-4);
+  border-radius: var(--radius-md);
+  border: 2px solid transparent;
+  background: var(--bg-hover);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.status-card:hover {
+  border-color: var(--border-color);
+  background: var(--bg-card);
+}
+.status-card.active {
+  border-color: var(--accent);
+  background: var(--accent-light);
+}
+
+.status-emoji { font-size: 14px; line-height: 1; }
+.status-label {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+.status-card.active .status-label { color: var(--accent); }
+
+/* ---- 进度 ---- */
+.progress-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-3);
+}
+
+.progress-slider {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--bg-hover);
+  outline: none;
+  cursor: pointer;
+}
+.progress-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--progress-color, var(--accent));
+  border: 2px solid var(--bg-card);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: transform var(--transition);
+}
+.progress-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+.progress-value {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  min-width: 40px;
+  text-align: right;
+}
+
+/* ---- 章节 ---- */
+.chapter-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-5);
+}
+
+.chapter-field {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.chapter-divider {
+  color: var(--text-tertiary);
+  font-size: var(--text-lg);
+  font-weight: 300;
+}
+
+.number-input {
+  width: 72px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  background: var(--bg-card);
+  outline: none;
+  text-align: center;
+  transition: border-color var(--transition);
+}
+.number-input:focus {
+  border-color: var(--accent);
+}
+.number-input::placeholder { color: var(--text-placeholder); }
+
+/* ---- 评分 + 时长 ---- */
+.rating-duration-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-6);
+  margin-bottom: var(--sp-5);
+  flex-wrap: wrap;
+}
+
+.rating-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.star-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  transition: transform var(--transition);
+  display: flex;
+}
+.star-btn:hover { transform: scale(1.2); }
+.star-btn.active { transform: scale(1.05); }
+
+.rating-hint {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  margin-left: var(--sp-2);
+}
+
+.duration-field {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+/* ---- 日期 ---- */
+.date-range-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-5);
+}
+
+.date-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: var(--sp-2) var(--sp-4);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: all var(--transition);
+  position: relative;
+}
+.date-chip:hover {
+  border-color: var(--accent-border);
+  color: var(--text-primary);
+}
+.date-chip.has-date {
+  color: var(--text-primary);
+  border-color: var(--accent-border);
+  background: var(--accent-light);
+}
+
+.date-range-arrow { color: var(--text-tertiary); font-size: var(--text-sm); }
+
+.date-input-abs {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* ---- 笔记 ---- */
+.content-section {
+  margin-bottom: var(--sp-2);
+}
+
+.content-editor {
+  width: 100%;
+  min-height: 250px;
+  border: none;
+  outline: none;
+  resize: vertical;
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+  color: var(--text-primary);
+  background: transparent;
+  padding: 0;
+}
+.content-editor::placeholder {
+  color: var(--text-placeholder);
+}
+</style>

@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { createBookmark, updateBookmark, getBookmarkById } from '@/api/bookmarkApi'
 import { getCategories } from '@/api/categoryApi'
 import { getTags } from '@/api/tagApi'
 import { ElMessage } from 'element-plus'
-import { UiDialog, UiInput, UiTextarea, UiSelect, UiButton } from '@/components/ui'
-import { FolderOpen } from 'lucide-vue-next'
+import { FolderOpen, Link } from 'lucide-vue-next'
+import { UiDialog, UiInput, UiButton } from '@/components/ui'
 import type { CategoryVO } from '@/types/category'
 import type { TagVO } from '@/types/tag'
 
@@ -23,6 +23,11 @@ const form = ref({ title: '', url: '', description: '', categoryId: null as numb
 const categories = ref<CategoryVO[]>([])
 const tags = ref<TagVO[]>([])
 const saving = ref(false)
+
+const dialogTitle = computed(() => props.entityId ? '编辑收藏' : '新建收藏')
+const dialogSubtitle = computed(() => props.entityId ? '' : '收藏一个值得记录的页面')
+
+const selectedCategory = computed(() => categories.value.find(c => c.id === form.value.categoryId))
 
 watch(() => props.modelValue, async (val) => {
   if (!val) return
@@ -67,44 +72,212 @@ async function handleSave() {
 <template>
   <UiDialog
     :model-value="modelValue"
-    :title="entityId ? '编辑收藏' : '新建收藏'"
+    :title="dialogTitle"
+    :subtitle="dialogSubtitle"
     @update:model-value="emit('update:modelValue', $event)"
   >
-    <el-form label-position="top">
-      <el-form-item label="标题" required>
-        <UiInput v-model="form.title" placeholder="例如：GitHub" maxlength="255" show-word-limit />
-      </el-form-item>
-      <el-form-item label="网址" required>
-        <UiInput v-model="form.url" placeholder="例如：https://github.com" maxlength="2048" />
-      </el-form-item>
-      <el-form-item label="描述">
-        <UiTextarea v-model="form.description" placeholder="简要描述（可选）" />
-      </el-form-item>
-      <el-form-item label="分类">
-        <el-select v-model="form.categoryId" placeholder="选择分类" clearable style="width:100%">
-          <el-option v-for="c in categories" :key="c.id" :value="c.id" :label="c.name">
-            <span><FolderOpen :size="14" /> {{ c.name }}</span>
-          </el-option>
-        </el-select>
-      </el-form-item>
-      <el-form-item label="标签">
-        <el-select v-model="form.tagIds" multiple placeholder="选择标签" style="width:100%" clearable>
-          <el-option v-for="t in tags" :key="t.id" :value="t.id" :label="t.name">
-            <span class="tag-option"><span class="tag-dot" :style="{ background: t.color }" /> {{ t.name }}</span>
-          </el-option>
-        </el-select>
-        <div class="form-hint">选择已有标签，可在标签管理页面创建新标签</div>
-      </el-form-item>
-    </el-form>
+    <!-- 标题 -->
+    <UiInput
+      v-model="form.title"
+      placeholder="页面标题"
+      class="title-input"
+      maxlength="255"
+    />
+
+    <!-- URL -->
+    <div class="url-row">
+      <Link :size="14" class="url-icon" />
+      <input
+        v-model="form.url"
+        class="url-input"
+        placeholder="https://"
+        maxlength="2048"
+      />
+    </div>
+
+    <div class="section-divider" />
+
+    <!-- 分类 -->
+    <div class="section-label">分类</div>
+    <div class="chip-row">
+      <button
+        v-for="c in categories"
+        :key="c.id"
+        type="button"
+        class="chip"
+        :class="{ active: form.categoryId === c.id }"
+        @click="form.categoryId = form.categoryId === c.id ? null : c.id"
+      >
+        <FolderOpen :size="13" />
+        {{ c.name }}
+      </button>
+      <span v-if="categories.length === 0" class="chip-empty">暂无分类</span>
+    </div>
+
+    <!-- 标签 -->
+    <div class="section-label">标签</div>
+    <div class="chip-row">
+      <button
+        v-for="t in tags"
+        :key="t.id"
+        type="button"
+        class="chip tag-chip"
+        :class="{ active: form.tagIds.includes(t.id) }"
+        :style="form.tagIds.includes(t.id) ? { '--chip-color': t.color } : {}"
+        @click="form.tagIds = form.tagIds.includes(t.id) ? form.tagIds.filter(id => id !== t.id) : [...form.tagIds, t.id]"
+      >
+        <span class="tag-dot" :style="{ background: t.color }" />
+        {{ t.name }}
+      </button>
+      <span v-if="tags.length === 0" class="chip-empty">暂无标签</span>
+    </div>
+
+    <div class="section-divider" />
+
+    <!-- 描述 -->
+    <div class="content-section">
+      <textarea
+        v-model="form.description"
+        class="content-editor"
+        placeholder="简要描述这个收藏…"
+      />
+    </div>
+
     <template #footer>
-      <el-button @click="emit('update:modelValue', false)">取消</el-button>
-      <el-button type="primary" :loading="saving" @click="handleSave">保存</el-button>
+      <el-button text @click="emit('update:modelValue', false)">取消</el-button>
+      <UiButton type="primary" :loading="saving" @click="handleSave">保存</UiButton>
     </template>
   </UiDialog>
 </template>
 
 <style scoped>
-.tag-option { display: flex; align-items: center; gap: 6px; }
-.tag-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-.form-hint { font-size: var(--text-xs); color: var(--text-tertiary); margin-top: 4px; }
+.title-input {
+  margin-bottom: var(--sp-2);
+}
+.title-input :deep(input) {
+  font-size: var(--text-lg) !important;
+  font-weight: 600;
+  border: none !important;
+  padding-left: 0 !important;
+  background: transparent !important;
+}
+.title-input :deep(input)::placeholder {
+  color: var(--text-placeholder);
+  font-weight: 400;
+}
+
+/* ---- URL ---- */
+.url-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: var(--sp-3);
+}
+
+.url-icon {
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+}
+
+.url-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  outline: none;
+  padding: 4px 0;
+}
+.url-input::placeholder {
+  color: var(--text-placeholder);
+}
+.url-input:focus {
+  color: var(--text-primary);
+}
+
+.section-divider {
+  height: 1px;
+  background: var(--border-light);
+  margin: var(--sp-4) 0;
+}
+
+.section-label {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  font-weight: 500;
+  margin-bottom: var(--sp-3);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+/* ---- Chip 行 ---- */
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-5);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+.chip:hover {
+  border-color: var(--accent-border);
+  color: var(--text-primary);
+}
+.chip.active {
+  border-color: var(--chip-color, var(--accent));
+  color: var(--chip-color, var(--accent));
+  background: var(--accent-light);
+}
+
+.tag-chip.active {
+  background: color-mix(in srgb, var(--chip-color, var(--accent)) 12%, transparent);
+}
+
+.tag-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.chip-empty {
+  font-size: var(--text-xs);
+  color: var(--text-placeholder);
+}
+
+/* ---- 描述 ---- */
+.content-section {
+  margin-bottom: var(--sp-2);
+}
+
+.content-editor {
+  width: 100%;
+  min-height: 180px;
+  border: none;
+  outline: none;
+  resize: vertical;
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+  color: var(--text-primary);
+  background: transparent;
+  padding: 0;
+}
+.content-editor::placeholder {
+  color: var(--text-placeholder);
+}
 </style>

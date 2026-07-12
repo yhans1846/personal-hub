@@ -5,7 +5,7 @@ import EmptyState from '@/components/EmptyState.vue'
 import { getStudyPlanList, deleteStudyPlan } from '@/api/studyplanApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Plus, Pencil, Trash2, Calendar, Target, BookOpen } from 'lucide-vue-next'
-import StudyPlanDrawer from './StudyPlanDrawer.vue'
+import StudyPlanDialog from './StudyPlanDialog.vue'
 import type { StudyPlanVO, StudyPlanQuery } from '@/types/studyplan'
 
 const list = ref<StudyPlanVO[]>([])
@@ -139,7 +139,7 @@ const statusOptions = [
       @current-change="onPageChange"
     />
 
-    <StudyPlanDrawer v-model="drawerVisible" :entity-id="editId" @saved="fetchList" />
+    <StudyPlanDialog v-model="drawerVisible" :entity-id="editId" @saved="fetchList" />
   </div>
 </template>
 

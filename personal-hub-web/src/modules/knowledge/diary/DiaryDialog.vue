@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { createDiary, updateDiary, getDiaryById } from '@/api/diaryApi'
 import { uploadFile } from '@/api/fileApi'
 import { ElMessage } from 'element-plus'
-import { Smile, Meh, Frown, X } from 'lucide-vue-next'
-import { UiDialog, UiInput, UiTextarea, UiSelect, UiDatePicker, UiButton, UiSection } from '@/components/ui'
+import { ImagePlus, X, MapPin } from 'lucide-vue-next'
+import { UiDialog, UiInput, UiButton } from '@/components/ui'
 
 const props = withDefaults(defineProps<{
   modelValue: boolean
@@ -17,22 +17,41 @@ const emit = defineEmits<{
   'saved': []
 }>()
 
-const form = ref({ date: '', title: '', content: '', mood: 2, weather: '', location: '', imageFileId: undefined as number | undefined })
+const form = ref({
+  date: '',
+  title: '',
+  content: '',
+  mood: 3,
+  weather: '',
+  location: '',
+  imageFileId: undefined as number | undefined
+})
 const saving = ref(false)
-
-const moodOptions = [
-  { value: 1, label: '很好', icon: Smile, color: 'var(--success)' },
-  { value: 2, label: '好', icon: Smile, color: 'var(--accent)' },
-  { value: 3, label: '一般', icon: Meh, color: 'var(--text-secondary)' },
-  { value: 4, label: '不好', icon: Frown, color: 'var(--warning)' },
-  { value: 5, label: '很差', icon: Frown, color: 'var(--danger)' }
-]
-
-const weatherOptions = ['晴', '多云', '阴', '小雨', '大雨', '雷阵雨', '雪', '雾']
-
 const uploading = ref(false)
 const previewUrl = ref('')
-const fileInput = ref<HTMLInputElement | null>(null)
+const isDragging = ref(false)
+
+const moodOptions = [
+  { value: 1, emoji: '😊', label: '很好' },
+  { value: 2, emoji: '😄', label: '不错' },
+  { value: 3, emoji: '😐', label: '一般' },
+  { value: 4, emoji: '😔', label: '难过' },
+  { value: 5, emoji: '😭', label: '糟糕' }
+]
+
+const weatherOptions = [
+  { emoji: '☀️', label: '晴' },
+  { emoji: '🌤️', label: '多云' },
+  { emoji: '☁️', label: '阴' },
+  { emoji: '🌧️', label: '雨' },
+  { emoji: '⛈️', label: '雷阵雨' },
+  { emoji: '❄️', label: '雪' }
+]
+
+const dialogTitle = computed(() => props.entityId ? '编辑日记' : '今天')
+const dialogSubtitle = computed(() => props.entityId ? '' : '记录今天发生的事情')
+
+const selectedMood = computed(() => moodOptions.find(m => m.value === form.value.mood))
 
 watch(() => props.modelValue, async (val) => {
   if (!val) return
@@ -42,16 +61,20 @@ watch(() => props.modelValue, async (val) => {
     const r = res.data.data
     form.value = {
       date: r.date, title: r.title || '', content: r.content || '',
-      mood: r.mood || 2, weather: r.weather || '', location: r.location || '',
+      mood: r.mood || 3, weather: r.weather || '', location: r.location || '',
       imageFileId: r.imageFileId
+    }
+    if (r.imageFileId) {
+      previewUrl.value = `/api/files/${r.imageFileId}/download`
     }
   } else {
     const now = new Date()
     const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
     form.value = {
       date: props.initialDate || today,
-      title: '', content: '', mood: 2, weather: '', location: '', imageFileId: undefined
+      title: '', content: '', mood: 3, weather: '', location: '', imageFileId: undefined
     }
+    previewUrl.value = ''
   }
 })
 
@@ -70,11 +93,17 @@ async function handleSave() {
   } finally { saving.value = false }
 }
 
+// ---- Image Upload ----
 async function handleImageUpload(file: File) {
+  if (!file.type.startsWith('image/')) {
+    ElMessage.warning('请上传图片文件')
+    return
+  }
   uploading.value = true
   try {
     const res = await uploadFile(file)
     form.value.imageFileId = res.data.data.id
+    previewUrl.value = `/api/files/${form.value.imageFileId}/download`
   } finally { uploading.value = false }
 }
 
@@ -83,78 +112,405 @@ function onFileChange(e: Event) {
   if (file) handleImageUpload(file)
 }
 
-function removeImage() { form.value.imageFileId = undefined }
+function removeImage() {
+  form.value.imageFileId = undefined
+  previewUrl.value = ''
+}
+
+function onDragOver(e: DragEvent) {
+  e.preventDefault()
+  isDragging.value = true
+}
+
+function onDragLeave() {
+  isDragging.value = false
+}
+
+function onDrop(e: DragEvent) {
+  e.preventDefault()
+  isDragging.value = false
+  const file = e.dataTransfer?.files?.[0]
+  if (file) handleImageUpload(file)
+}
 </script>
 
 <template>
   <UiDialog
     :model-value="modelValue"
-    :title="entityId ? '编辑日记' : '写日记'"
-    width="600"
+    :title="dialogTitle"
+    :subtitle="dialogSubtitle"
     @update:model-value="emit('update:modelValue', $event)"
   >
-    <el-form label-position="top">
-      <UiSection title="日记信息">
-        <el-form-item label="日期">
-          <UiDatePicker v-model="form.date" type="date" value-format="YYYY-MM-DD" placeholder="选择日期" style="width:100%" />
-        </el-form-item>
-        <el-form-item label="标题">
-          <UiInput v-model="form.title" placeholder="日记标题（可选）" maxlength="200" show-word-limit />
-        </el-form-item>
-        <el-form-item label="心情">
-          <el-radio-group v-model="form.mood">
-            <el-radio v-for="item in moodOptions" :key="item.value" :value="item.value" class="mood-radio">
-              <component :is="item.icon" :size="16" :color="item.color" />
-              <span :style="{ color: item.color }">{{ item.label }}</span>
-            </el-radio>
-          </el-radio-group>
-        </el-form-item>
-        <el-row :gutter="16">
-          <el-col :span="12">
-            <el-form-item label="天气">
-              <UiSelect v-model="form.weather" placeholder="选择天气" clearable>
-                <el-option v-for="w in weatherOptions" :key="w" :value="w" :label="w" />
-              </UiSelect>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="地点">
-              <UiInput v-model="form.location" placeholder="记录地点（可选）" maxlength="200" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-form-item label="配图">
-          <div v-if="form.imageFileId" class="image-preview">
-            <img :src="`/api/files/${form.imageFileId}/download`" class="preview-img" />
-            <button class="image-remove" @click="removeImage"><X :size="14" /></button>
-          </div>
-          <div v-else>
-            <input type="file" accept="image/*" @change="onFileChange" class="file-input" />
-          </div>
-        </el-form-item>
-      </UiSection>
+    <!-- 日期 + 元数据行 -->
+    <div class="entry-meta">
+      <span class="entry-date">📅 {{ form.date }}</span>
+      <span v-if="selectedMood" class="entry-mood-chip">
+        {{ selectedMood.emoji }} {{ selectedMood.label }}
+      </span>
+      <span v-if="form.weather" class="entry-weather-chip">
+        {{ form.weather }}
+      </span>
+    </div>
 
-      <UiSection title="正文">
-        <el-form-item label="内容">
-          <UiTextarea v-model="form.content" placeholder="开始写吧...（支持 Markdown 格式）" />
-          <div class="form-hint">支持 Markdown 格式：标题、列表、加粗、代码等</div>
-        </el-form-item>
-      </UiSection>
-    </el-form>
+    <!-- 标题 -->
+    <UiInput
+      v-model="form.title"
+      placeholder="今天发生了什么？（可选的标题）"
+      class="title-input"
+      maxlength="200"
+    />
+
+    <div class="section-divider" />
+
+    <!-- 心情卡片 -->
+    <div class="section-label">此刻心情</div>
+    <div class="mood-row">
+      <button
+        v-for="m in moodOptions"
+        :key="m.value"
+        type="button"
+        class="mood-card"
+        :class="{ active: form.mood === m.value }"
+        @click="form.mood = m.value"
+      >
+        <span class="mood-emoji">{{ m.emoji }}</span>
+        <span class="mood-label">{{ m.label }}</span>
+      </button>
+    </div>
+
+    <!-- 天气 + 地点 行 -->
+    <div class="section-label">天气 · 地点</div>
+    <div class="meta-row">
+      <div class="weather-group">
+        <button
+          v-for="w in weatherOptions"
+          :key="w.label"
+          type="button"
+          class="weather-btn"
+          :class="{ active: form.weather === w.emoji }"
+          :title="w.label"
+          @click="form.weather = form.weather === w.emoji ? '' : w.emoji"
+        >
+          {{ w.emoji }}
+        </button>
+      </div>
+      <div class="location-input-wrapper">
+        <MapPin :size="14" class="location-icon" />
+        <input
+          v-model="form.location"
+          class="location-input"
+          placeholder="添加地点"
+          maxlength="200"
+        />
+      </div>
+    </div>
+
+    <!-- 配图 DropZone -->
+    <div class="section-label">配图</div>
+    <div v-if="previewUrl" class="image-preview-wrapper">
+      <img :src="previewUrl" class="preview-img" />
+      <button class="image-remove-btn" @click="removeImage" :disabled="uploading">
+        <X :size="16" />
+      </button>
+    </div>
+    <div
+      v-else
+      class="dropzone"
+      :class="{ 'dropzone--dragging': isDragging }"
+      @dragover="onDragOver"
+      @dragleave="onDragLeave"
+      @drop="onDrop"
+      @click="$refs.fileInput?.click()"
+    >
+      <ImagePlus :size="28" class="dropzone-icon" />
+      <span class="dropzone-text">拖拽图片到这里，或点击上传</span>
+      <span class="dropzone-hint">支持 JPG、PNG、WEBP</span>
+      <input
+        ref="fileInput"
+        type="file"
+        accept="image/*"
+        class="dropzone-input"
+        @change="onFileChange"
+      />
+    </div>
+
+    <div class="section-divider" />
+
+    <!-- 正文编辑器 -->
+    <div class="content-section">
+      <textarea
+        v-model="form.content"
+        class="content-editor"
+        placeholder="开始写吧… 支持 Markdown 格式"
+      />
+    </div>
 
     <template #footer>
-      <el-button @click="emit('update:modelValue', false)">取消</el-button>
+      <el-button text @click="emit('update:modelValue', false)">取消</el-button>
       <UiButton type="primary" :loading="saving" @click="handleSave">保存</UiButton>
     </template>
   </UiDialog>
 </template>
 
 <style scoped>
-.form-hint { font-size: var(--text-xs); color: var(--text-tertiary); margin-top: 4px; }
-.mood-radio { display: flex; align-items: center; gap: 4px; }
-.mood-radio :deep(.el-radio__label) { display: flex; align-items: center; gap: 4px; }
-.file-input { font-size: var(--text-sm); color: var(--text-secondary); }
-.image-preview { position: relative; display: inline-block; }
-.preview-img { max-width: 200px; max-height: 150px; border-radius: var(--radius-sm); object-fit: cover; }
-.image-remove { position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; border-radius: 50%; background: rgba(0,0,0,0.5); color: #fff; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+/* ---- 日期元数据行 ---- */
+.entry-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-5);
+  flex-wrap: wrap;
+}
+
+.entry-date {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.entry-mood-chip,
+.entry-weather-chip {
+  font-size: var(--text-xs);
+  padding: 2px 10px;
+  border-radius: var(--radius-full);
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+}
+
+/* ---- 标题 ---- */
+.title-input {
+  margin-bottom: var(--sp-2);
+}
+.title-input :deep(input) {
+  font-size: var(--text-lg) !important;
+  font-weight: 600;
+  border: none !important;
+  padding-left: 0 !important;
+  background: transparent !important;
+}
+.title-input :deep(input)::placeholder {
+  color: var(--text-placeholder);
+  font-weight: 400;
+}
+
+/* ---- 分割线 ---- */
+.section-divider {
+  height: 1px;
+  background: var(--border-light);
+  margin: var(--sp-4) 0;
+}
+
+/* ---- 区域标头 ---- */
+.section-label {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  font-weight: 500;
+  margin-bottom: var(--sp-3);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+/* ---- 心情卡片 ---- */
+.mood-row {
+  display: flex;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-5);
+}
+
+.mood-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--radius-md);
+  border: 2px solid transparent;
+  background: var(--bg-hover);
+  cursor: pointer;
+  transition: all var(--transition);
+  min-width: 56px;
+}
+.mood-card:hover {
+  border-color: var(--border-color);
+  background: var(--bg-card);
+}
+.mood-card.active {
+  border-color: var(--success);
+  background: var(--success-light);
+}
+
+.mood-emoji {
+  font-size: 24px;
+  line-height: 1;
+}
+.mood-label {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+.mood-card.active .mood-label {
+  color: var(--success);
+}
+
+/* ---- 天气 + 地点 ---- */
+.meta-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-5);
+  flex-wrap: wrap;
+}
+
+.weather-group {
+  display: flex;
+  gap: 4px;
+}
+
+.weather-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background: var(--bg-hover);
+  font-size: 18px;
+  cursor: pointer;
+  transition: all var(--transition);
+  line-height: 1;
+}
+.weather-btn:hover {
+  border-color: var(--border-color);
+  background: var(--bg-card);
+}
+.weather-btn.active {
+  border-color: var(--accent);
+  background: var(--accent-light);
+}
+
+.location-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.location-icon {
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+}
+
+.location-input {
+  border: none;
+  background: transparent;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  outline: none;
+  padding: 4px 0;
+  min-width: 100px;
+  width: auto;
+}
+.location-input::placeholder {
+  color: var(--text-placeholder);
+}
+.location-input:focus {
+  color: var(--text-primary);
+}
+
+/* ---- DropZone ---- */
+.dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: var(--sp-6);
+  border: 2px dashed var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition);
+  margin-bottom: var(--sp-5);
+}
+.dropzone:hover,
+.dropzone--dragging {
+  border-color: var(--accent);
+  background: var(--accent-light);
+}
+
+.dropzone-icon {
+  color: var(--text-tertiary);
+}
+.dropzone:hover .dropzone-icon,
+.dropzone--dragging .dropzone-icon {
+  color: var(--accent);
+}
+
+.dropzone-text {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+.dropzone-hint {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+.dropzone-input {
+  display: none;
+}
+
+/* ---- 图片预览 ---- */
+.image-preview-wrapper {
+  position: relative;
+  display: inline-block;
+  margin-bottom: var(--sp-5);
+}
+
+.preview-img {
+  max-width: 280px;
+  max-height: 200px;
+  border-radius: var(--radius-md);
+  object-fit: cover;
+  border: 1px solid var(--border-color);
+}
+
+.image-remove-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition);
+}
+.image-remove-btn:hover {
+  background: rgba(0, 0, 0, 0.75);
+}
+
+/* ---- 正文编辑器 ---- */
+.content-section {
+  margin-bottom: var(--sp-2);
+}
+
+.content-editor {
+  width: 100%;
+  min-height: 300px;
+  border: none;
+  outline: none;
+  resize: vertical;
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+  color: var(--text-primary);
+  background: transparent;
+  padding: 0;
+}
+.content-editor::placeholder {
+  color: var(--text-placeholder);
+}
 </style>

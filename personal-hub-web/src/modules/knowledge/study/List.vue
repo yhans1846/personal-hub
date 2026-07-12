@@ -6,7 +6,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { BookOpen, Pencil, Trash2, Plus } from 'lucide-vue-next'
 import type { StudyRecordVO, StudyRecordQuery } from '@/types/study'
 import { PageHeader, EmptyState, ListToolbar, ListPagination } from '@/components'
-import StudyDrawer from './StudyDrawer.vue'
+import StudyDialog from './StudyDialog.vue'
 
 const list = ref<StudyRecordVO[]>([])
 const total = ref(0)
@@ -129,7 +129,7 @@ watch(list, (val) => { groupedList.value = groupByDate(val) }, { immediate: true
 
     <ListPagination v-if="total > query.size" :total="total" :page="query.page" :size="query.size" @update:page="onPageChange" />
 
-    <StudyDrawer v-model="drawerVisible" :entity-id="editId" @saved="fetchList" />
+    <StudyDialog v-model="drawerVisible" :entity-id="editId" @saved="fetchList" />
   </div>
 </template>
 

@@ -10,7 +10,7 @@ import NotificationBell from './NotificationBell.vue'
 import TodoDialog from '@/modules/planning/todo/TodoDialog.vue'
 import DiaryDialog from '@/modules/knowledge/diary/DiaryDialog.vue'
 import BookmarkDialog from '@/modules/resource/bookmark/BookmarkDialog.vue'
-import StudyDrawer from '@/modules/knowledge/study/StudyDrawer.vue'
+import StudyDialog from '@/modules/knowledge/study/StudyDialog.vue'
 import type { MenuItem } from '@/types/layout'
 
 const authStore = useAuthStore()
@@ -262,7 +262,7 @@ function handleQuickCreate(cmd: string) {
     <TodoDialog v-model="todoVisible" @saved="todoVisible = false" />
     <DiaryDialog v-model="diaryVisible" @saved="diaryVisible = false" />
     <BookmarkDialog v-model="bookmarkVisible" @saved="bookmarkVisible = false" />
-    <StudyDrawer v-model="studyVisible" @saved="studyVisible = false" />
+    <StudyDialog v-model="studyVisible" @saved="studyVisible = false" />
   </div>
 </template>
 

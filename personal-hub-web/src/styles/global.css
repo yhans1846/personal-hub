@@ -281,11 +281,31 @@ a:hover { color: var(--accent-hover); }
 .el-dialog {
   border-radius: var(--radius-xl) !important;
   box-shadow: var(--shadow-xl) !important;
-  --el-dialog-padding-primary: var(--sp-6) !important;
 }
-.el-dialog__header { padding: var(--sp-5) var(--sp-6) var(--sp-3) !important; }
-.el-dialog__body { padding: var(--sp-4) var(--sp-6) var(--sp-6) !important; }
-.el-dialog__footer { padding: var(--sp-3) var(--sp-6) var(--sp-5) !important; }
+
+/* Dialog 弹出动画 — fade + scale */
+.dialog-fade-enter-active {
+  animation: dialog-fade-in 200ms ease-out;
+}
+.dialog-fade-leave-active {
+  animation: dialog-fade-in 200ms ease-in reverse;
+}
+@keyframes dialog-fade-in {
+  0% { opacity: 0; transform: scale(0.92) translateY(12px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Dialog 遮罩动画 */
+.dialog-fade-enter-active .el-overlay {
+  animation: dialog-mask-in 200ms ease-out;
+}
+.dialog-fade-leave-active .el-overlay {
+  animation: dialog-mask-in 200ms ease-in reverse;
+}
+@keyframes dialog-mask-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
 
 /* --- Table --- */
 .el-table {

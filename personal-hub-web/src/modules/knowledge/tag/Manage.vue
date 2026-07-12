@@ -99,38 +99,36 @@ function onColorInput(e: Event) {
     </div>
 
     <UiDialog v-model="dialogVisible" :title="isEdit ? '编辑标签' : '新建标签'">
-      <el-form>
-        <el-form-item label="名称">
-          <UiInput v-model="form.name" placeholder="标签名称" maxlength="50" show-word-limit />
-        </el-form-item>
-        <el-form-item label="颜色">
-          <div class="color-picker">
-            <button
-              v-for="c in COLORS" :key="c"
-              type="button"
-              class="color-btn"
-              :class="{ active: form.color === c }"
-              :style="{ background: c }"
-              @click="form.color = c"
-            />
-            <label
-              class="color-btn color-btn--custom"
-              :style="{ background: form.color }"
-              title="自定义颜色"
-            >
-              自定义
-              <input
-                type="color"
-                class="color-input-abs"
-                :value="form.color"
-                @input="onColorInput"
-              />
-            </label>
-          </div>
-        </el-form-item>
-      </el-form>
+      <!-- 名称 — 无 label -->
+      <UiInput v-model="form.name" placeholder="标签名称" maxlength="50" show-word-limit class="tag-dialog-title" />
+
+      <div class="tag-dialog-section-label">颜色</div>
+      <div class="color-picker">
+        <button
+          v-for="c in COLORS" :key="c"
+          type="button"
+          class="color-btn"
+          :class="{ active: form.color === c }"
+          :style="{ background: c }"
+          @click="form.color = c"
+        />
+        <label
+          class="color-btn color-btn--custom"
+          :style="{ background: form.color }"
+          title="自定义颜色"
+        >
+          自定义
+          <input
+            type="color"
+            class="color-input-abs"
+            :value="form.color"
+            @input="onColorInput"
+          />
+        </label>
+      </div>
+
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button text @click="dialogVisible = false">取消</el-button>
         <el-button type="primary" @click="handleSave">保存</el-button>
       </template>
     </UiDialog>
@@ -140,6 +138,32 @@ function onColorInput(e: Event) {
 <style scoped>
 .tag-grid { display: flex; flex-wrap: wrap; gap: var(--sp-3); }
 
+/* ---- Tag Dialog 内联样式 ---- */
+.tag-dialog-title {
+  margin-bottom: var(--sp-5);
+}
+.tag-dialog-title :deep(input) {
+  font-size: var(--text-lg) !important;
+  font-weight: 600;
+  border: none !important;
+  padding-left: 0 !important;
+  background: transparent !important;
+}
+.tag-dialog-title :deep(input)::placeholder {
+  color: var(--text-placeholder);
+  font-weight: 400;
+}
+
+.tag-dialog-section-label {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  font-weight: 500;
+  margin-bottom: var(--sp-3);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+/* ---- 卡片网格 ---- */
 .tag-card {
   display: flex; align-items: center; gap: var(--sp-3);
   padding: 10px 14px; background: var(--bg-card);

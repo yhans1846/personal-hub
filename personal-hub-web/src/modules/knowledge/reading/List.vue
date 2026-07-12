@@ -4,7 +4,7 @@ import { PageHeader, EmptyState, ListToolbar, ListPagination } from '@/component
 import { getReadingList, deleteReading } from '@/api/readingApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Pencil, Trash2, BookOpen, Book, BookCheck, Calendar, BookMarked, Star, Clock } from 'lucide-vue-next'
-import ReadingDrawer from './ReadingDrawer.vue'
+import ReadingDialog from './ReadingDialog.vue'
 import type { ReadingVO, ReadingQuery } from '@/types/reading'
 
 const list = ref<ReadingVO[]>([])
@@ -98,7 +98,7 @@ const statusOptions = [
     </div>
     <ListPagination v-if="total > (query.size ?? 20)" :total="total" :page="query.page" :size="query.size" @update:page="onPageChange" />
 
-    <ReadingDrawer v-model="drawerVisible" :entity-id="editId" @saved="fetchList" />
+    <ReadingDialog v-model="drawerVisible" :entity-id="editId" @saved="fetchList" />
   </div>
 </template>
 
