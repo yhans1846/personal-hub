@@ -3,7 +3,7 @@ import type { Component } from 'vue'
 import { useAuthStore } from '@/store/authStore'
 import { useLayoutStore } from '@/store/layoutStore'
 import { useRouter, useRoute } from 'vue-router'
-import { LayoutDashboard, FileText, BookOpen, CheckSquare, PenLine, Bookmark, Target, BookMarked, FolderOpen, Grid3X3, Tags, Settings, Trash2, Search, BarChart3, Plus, Github, Sun, Moon, Palette, Menu, X } from 'lucide-vue-next'
+import { LayoutDashboard, FileText, BookOpen, CheckSquare, PenLine, Bookmark, Target, BookMarked, FolderOpen, Grid3X3, Tags, Settings, Trash2, Search, BarChart3, Plus, Github, Sun, Moon, Palette, Menu, X, ChevronDown, Library, Archive, Cog, LogOut } from 'lucide-vue-next'
 import { ref, onMounted } from 'vue'
 import CommandPalette from './CommandPalette.vue'
 import NotificationBell from './NotificationBell.vue'
@@ -33,6 +33,14 @@ const iconMap: Record<string, Component> = {
   settings: Settings,
 }
 
+const sectionIconMap: Record<string, Component> = {
+  workspace: LayoutDashboard,
+  knowledge: Library,
+  resource: Archive,
+  manage: Cog,
+  stats: BarChart3,
+}
+
 function isActiveRoute(item: MenuItem): boolean {
   const path = route.path
   if (item.code === 'dashboard') return path === '/dashboard'
@@ -47,6 +55,21 @@ const sidebarOpen = ref(false)
 
 function toggleSidebar() { sidebarOpen.value = !sidebarOpen.value }
 function closeSidebar() { sidebarOpen.value = false }
+
+// 菜单分组折叠
+const COLLAPSE_KEY = 'sidebar-collapsed-sections'
+const collapsedSections = ref<Set<string>>(new Set(loadCollapsed()))
+function loadCollapsed(): string[] {
+  try { return JSON.parse(localStorage.getItem(COLLAPSE_KEY) || '[]') } catch { return [] }
+}
+function saveCollapsed() {
+  localStorage.setItem(COLLAPSE_KEY, JSON.stringify([...collapsedSections.value]))
+}
+function toggleSection(key: string) {
+  if (collapsedSections.value.has(key)) collapsedSections.value.delete(key)
+  else collapsedSections.value.add(key)
+  saveCollapsed()
+}
 
 // 主题切换
 const isDark = ref(document.documentElement.getAttribute('data-theme') === 'dark')
@@ -172,20 +195,6 @@ function handleQuickCreate(cmd: string) {
         <NotificationBell />
       </div>
 
-      <div class="topbar-right">
-        <span class="user-name">{{ authStore.user?.nickname || authStore.user?.username }}</span>
-        <el-dropdown trigger="click" @command="(cmd: string) => cmd === 'logout' && authStore.logout()">
-          <div class="avatar-circle">
-            {{ (authStore.user?.nickname || authStore.user?.username || '?')[0] }}
-          </div>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item command="profile">个人信息</el-dropdown-item>
-              <el-dropdown-item command="logout">退出登录</el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
-      </div>
     </header>
 
     <div class="app-body">
@@ -200,18 +209,37 @@ function handleQuickCreate(cmd: string) {
         </div>
         <nav class="sidebar-nav">
           <div class="sidebar-section" v-for="section in layoutStore.visibleMenuSections" :key="section.key">
-            <div class="section-header">{{ section.title }}</div>
-            <router-link
-              v-for="item in section.items" :key="item.code"
-              :to="item.route || '/'"
-              class="nav-item"
-              :class="{ active: isActiveRoute(item), 'nav-item--sub': section.key !== 'workspace' }"
-            >
-              <component :is="iconMap[item.code] || LayoutDashboard" :size="section.key === 'workspace' ? 18 : 14" />
-              <span>{{ item.title }}</span>
-            </router-link>
+            <div class="section-header" :class="{ collapsed: collapsedSections.has(section.key) }" @click="toggleSection(section.key)">
+              <ChevronDown :size="14" class="section-chevron" />
+              <component :is="sectionIconMap[section.key]" :size="14" class="section-icon" />
+              <span>{{ section.title }}</span>
+            </div>
+            <Transition name="section-collapse">
+              <div v-if="!collapsedSections.has(section.key)" class="section-items">
+                <router-link
+                  v-for="item in section.items" :key="item.code"
+                  :to="item.route || '/'"
+                  class="nav-item"
+                  :class="{ active: isActiveRoute(item), 'nav-item--secondary': section.key !== 'workspace', 'nav-item--primary': section.key === 'workspace' }"
+                >
+                  <component :is="iconMap[item.code] || LayoutDashboard" :size="18" />
+                  <span>{{ item.title }}</span>
+                </router-link>
+              </div>
+            </Transition>
           </div>
         </nav>
+        <div class="sidebar-footer">
+          <div class="sidebar-user">
+            <div class="sidebar-avatar">
+              {{ (authStore.user?.nickname || authStore.user?.username || '?')[0] }}
+            </div>
+            <span class="sidebar-user-name">{{ authStore.user?.nickname || authStore.user?.username }}</span>
+          </div>
+          <button class="sidebar-logout" title="退出登录" @click="authStore.logout()">
+            <LogOut :size="16" />
+          </button>
+        </div>
       </aside>
 
       <!-- 主内容 -->
@@ -281,15 +309,6 @@ function handleQuickCreate(cmd: string) {
 .topbar-icon-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
 .quick-create-btn { gap: 4px; height: 32px; }
 
-.topbar-right { display: flex; align-items: center; gap: var(--sp-3); }
-.user-name { font-size: var(--text-sm); color: var(--text-secondary); }
-.avatar-circle {
-  width: 30px; height: 30px; border-radius: 50%;
-  background: var(--accent-light); color: var(--accent);
-  display: flex; align-items: center; justify-content: center;
-  font-size: var(--text-sm); font-weight: 600; cursor: pointer; transition: background var(--transition);
-}
-.avatar-circle:hover { background: var(--accent-border); }
 
 /* ============ 主体区域 ============ */
 .app-body { display: flex; flex: 1; overflow: hidden; }
@@ -302,33 +321,143 @@ function handleQuickCreate(cmd: string) {
 .sidebar {
   width: var(--sidebar-width); background: var(--bg-sidebar);
   border-right: 1px solid var(--border-color);
-  overflow-y: auto; flex-shrink: 0; padding: var(--sp-4) 0;
+  flex-shrink: 0;
+  display: flex; flex-direction: column;
 }
 .sidebar-header { display: none; }
-.sidebar-nav { display: flex; flex-direction: column; }
+.sidebar-nav {
+  display: flex; flex-direction: column;
+  flex: 1; overflow-y: auto; padding: var(--sp-4) 0;
+}
 
-.sidebar-section { margin-bottom: var(--sp-2); }
+.sidebar-section { margin-bottom: var(--sp-4); }
+.sidebar-section:last-child { margin-bottom: 0; }
 .section-header {
-  padding: var(--sp-3) var(--sp-4) var(--sp-1) var(--sp-4);
+  display: flex; align-items: center; gap: 4px;
+  padding: var(--sp-2) var(--sp-4) var(--sp-2) var(--sp-4);
   font-size: 11px; font-weight: 600;
   color: var(--text-tertiary);
   text-transform: uppercase; letter-spacing: 0.5px;
   user-select: none;
+  cursor: pointer;
+  position: relative;
+  transition: color 150ms ease;
 }
+.section-header:hover { color: var(--text-primary); }
+/* 短分割线 */
+.section-header::after {
+  content: '';
+  position: absolute;
+  left: var(--sp-4);
+  bottom: 0;
+  width: 28px;
+  height: 1px;
+  background: var(--border-color);
+  opacity: 0.4;
+}
+.section-chevron {
+  flex-shrink: 0;
+  transition: transform 200ms ease;
+  opacity: 0.45;
+}
+.section-icon {
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+.section-header:hover .section-chevron { opacity: 0.8; }
+.section-header:hover .section-icon { opacity: 0.9; }
+.section-header.collapsed .section-chevron { transform: rotate(-90deg); }
+.section-items { overflow: hidden; }
+
+/* 菜单项基础 */
 .nav-item {
   display: flex; align-items: center; gap: var(--sp-3);
-  height: 40px; padding: 0 var(--sp-4); margin: 0 var(--sp-2);
+  position: relative;
+  height: 38px; padding: 0 var(--sp-4); margin: 0 var(--sp-2) 1px;
   border-radius: var(--radius-md);
   font-size: 14px; font-weight: 500; color: var(--text-secondary); text-decoration: none;
-  transition: all var(--transition);
+  transition: background 150ms ease, color 150ms ease;
 }
 .nav-item:hover { background: var(--bg-hover); color: var(--text-primary); }
-.nav-item.active {
-  background: var(--accent); color: #fff; font-weight: 500;
+.nav-item:hover :deep(svg) { color: var(--text-primary); }
+
+/* 首页 — 更突出 */
+.nav-item--primary {
+  font-weight: 600;
 }
-.nav-item.active :deep(svg) { color: #fff; }
-.nav-item--sub { font-size: 13px; color: var(--text-tertiary); font-weight: 400; padding-left: calc(var(--sp-4) + 24px); }
-.nav-item--sub :deep(svg) { width: 14px; height: 14px; opacity: 0.6; }
+
+/* 二级菜单 — 靠左对齐，仅字体/图标变轻 */
+.nav-item--secondary {
+  font-weight: 400;
+  color: var(--text-tertiary);
+}
+.nav-item--secondary :deep(svg) {
+  width: 16px; height: 16px; opacity: 0.55;
+}
+
+/* Active — 柔和 */
+.nav-item.active {
+  background: var(--accent-light);
+  color: var(--accent);
+  font-weight: 500;
+}
+.nav-item.active :deep(svg) { color: var(--accent); }
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 18px;
+  background: var(--accent);
+  border-radius: 0 3px 3px 0;
+  opacity: 0.5;
+}
+
+/* 侧边栏底部用户信息 */
+.sidebar-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: var(--sp-3) var(--sp-4);
+  border-top: 1px solid var(--border-color);
+}
+.sidebar-user {
+  display: flex; align-items: center; gap: var(--sp-2);
+  overflow: hidden;
+}
+.sidebar-avatar {
+  width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+  background: var(--accent-light); color: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600;
+}
+.sidebar-user-name {
+  font-size: var(--text-sm); color: var(--text-secondary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.sidebar-logout {
+  width: 28px; height: 28px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: none; border: none; color: var(--text-tertiary);
+  cursor: pointer; border-radius: var(--radius-sm);
+  transition: all 150ms ease;
+}
+.sidebar-logout:hover { background: var(--bg-hover); color: var(--danger); }
+.section-collapse-enter-active,
+.section-collapse-leave-active {
+  transition: max-height 200ms ease, opacity 200ms ease;
+  overflow: hidden;
+}
+.section-collapse-enter-from,
+.section-collapse-leave-to {
+  max-height: 0;
+  opacity: 0;
+}
+.section-collapse-enter-to,
+.section-collapse-leave-from {
+  max-height: 600px;
+  opacity: 1;
+}
 
 /* ============ 主内容 ============ */
 .main-content { flex: 1; overflow-y: auto; padding: var(--sp-8); }
@@ -337,7 +466,6 @@ function handleQuickCreate(cmd: string) {
 /* ============ 响应式：平板 ============ */
 @media (max-width: 1024px) {
   .quick-create-btn span { display: none; }
-  .user-name { display: none; }
 }
 
 /* ============ 响应式：移动端 ============ */
@@ -348,7 +476,6 @@ function handleQuickCreate(cmd: string) {
   .search-hint { display: none; }
   .topbar-actions { margin: 0 var(--sp-2); gap: var(--sp-1); }
   .quick-create-btn span { display: none; }
-  .user-name { display: none; }
   .brand-text { display: none; }
   .main-content { padding: var(--sp-4); }
 

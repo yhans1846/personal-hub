@@ -37,6 +37,8 @@ export const useLayoutStore = defineStore('layout', () => {
   const visibleMenuSections = computed(() => {
     const sections: { title: string; key: string; items: MenuItem[] }[] = [
       { title: '工作区', key: 'workspace', items: [] },
+      { title: '知识', key: 'knowledge', items: [] },
+      { title: '资源', key: 'resource', items: [] },
       { title: '管理', key: 'manage', items: [] },
       { title: '统计', key: 'stats', items: [] },
     ]
@@ -129,11 +131,22 @@ export const useLayoutStore = defineStore('layout', () => {
   }
 
   // --- Helpers ---
-  /** 迁移旧菜单：移除已废弃的菜单项 code */
+  /** 迁移旧菜单：检测旧 section 分配 → 静默重置默认；移除已废弃项 */
   function migrateMenuItems(items: MenuItem[]): MenuItem[] {
+    // 1) 检测旧 section 缓存（与默认分配不匹配即判定为旧数据）
+    const defaultSectionMap = new Map(DEFAULT_MENU_ITEMS.map(m => [m.code, m.section]))
+    const needsSectionReset = items.some(item => {
+      const expected = defaultSectionMap.get(item.code)
+      return expected && item.section !== expected
+    })
+    if (needsSectionReset) {
+      const defaults = DEFAULT_MENU_ITEMS.map(item => ({ ...item }))
+      saveToStorage(STORAGE_KEY_MENU, defaults)
+      return defaults
+    }
+    // 2) 移除已废弃的 code，补充默认中缺失的项
     const validCodes = new Set(DEFAULT_MENU_ITEMS.map(m => m.code))
     const migrated = items.filter(item => validCodes.has(item.code))
-    // 如果有废弃项被移除，补充默认中缺失的项
     if (migrated.length !== items.length) {
       const existingCodes = new Set(migrated.map(m => m.code))
       for (const def of DEFAULT_MENU_ITEMS) {

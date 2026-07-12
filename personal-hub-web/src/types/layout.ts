@@ -13,7 +13,7 @@ export interface LayoutItem {
 export interface MenuItem extends LayoutItem {
   title: string
   route?: string
-  section: 'workspace' | 'manage' | 'stats'
+  section: 'workspace' | 'knowledge' | 'planning' | 'resource' | 'manage' | 'stats'
   /** 首页不可隐藏 */
   fixed?: boolean
 }
