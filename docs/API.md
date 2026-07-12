@@ -132,6 +132,7 @@
 | POST | /api/categories | 新建（含 type 字段） | 是 |
 | PUT | /api/categories/{id} | 修改 | 是 |
 | DELETE | /api/categories/{id} | 删除 | 是 |
+| PUT | /api/categories/sort | 批量更新排序 | 是 |
 
 **请求示例：**
 ```json
@@ -142,6 +143,12 @@ POST /api/categories
 **响应示例：**
 ```json
 {"code":200,"message":"success","data":{"id":10,"name":"开发工具","type":"bookmark","sortOrder":0,"count":0,"createdAt":"2026-07-11T14:34:19"}}
+```
+
+**PUT /api/categories/sort** — 批量更新排序（拖拽后调用）
+```json
+// Request: [{"id":1,"sortOrder":1},{"id":2,"sortOrder":2}]
+// Response: {"code":200,"message":"success"}
 ```
 
 ### 五、学习记录 `/api/study-records`

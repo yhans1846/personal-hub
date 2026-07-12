@@ -5,6 +5,9 @@
     <!-- 统计分类下关联的实体数 -->
     <select id="countByType" resultType="java.lang.Integer">
         <choose>
+            <when test="type == 'note'">
+                SELECT COUNT(*) FROM note_category_rel WHERE category_id = #{categoryId}
+            </when>
             <when test="type == 'bookmark'">
                 SELECT COUNT(*) FROM bookmark_url WHERE category_id = #{categoryId}
             </when>

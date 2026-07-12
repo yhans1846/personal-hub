@@ -1,44 +1,134 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue'
-import { getCategories, createCategory, updateCategory, deleteCategory } from '@/api/categoryApi'
+import { ref, onMounted, onUnmounted, computed, watch, nextTick } from 'vue'
+import { getCategories, createCategory, updateCategory, deleteCategory, batchUpdateCategorySort } from '@/api/categoryApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Pencil, Trash2, FolderOpen, Folder, Bookmark } from 'lucide-vue-next'
+import { Plus, Pencil, Trash2, FolderOpen, Folder, Bookmark, GripVertical, Search, ArrowUpDown } from 'lucide-vue-next'
+import Sortable from 'sortablejs'
 import PageHeader from '@/components/PageHeader.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import { UiDialog, UiInput, UiButton } from '@/components/ui'
 import type { CategoryVO } from '@/types/category'
 
+// ============ 状态 ============
 const activeType = ref<'note' | 'bookmark' | 'file'>('note')
-
-const tabs = [
-  { type: 'note' as const, label: '笔记分类', icon: FolderOpen },
-  { type: 'bookmark' as const, label: '收藏夹分类', icon: Bookmark },
-  { type: 'file' as const, label: '文件分类', icon: Folder }
-]
-
 const list = ref<CategoryVO[]>([])
 const loading = ref(false)
+const searchQuery = ref('')
+const sortBy = ref<'name' | 'createdAt' | 'count'>('createdAt')
+const sortDir = ref<'asc' | 'desc'>('asc')
 const dialogVisible = ref(false)
 const isEdit = ref(false)
 const form = ref({ id: 0, name: '' })
+const gridRef = ref<HTMLElement | null>(null)
+let sortableInstance: Sortable | null = null
 
-watch(() => activeType.value, () => fetchList())
+const tabs = [
+  { type: 'note' as const, label: '笔记', icon: FolderOpen },
+  { type: 'bookmark' as const, label: '收藏', icon: Bookmark },
+  { type: 'file' as const, label: '文件', icon: Folder }
+]
+
+// ============ 计算属性 ============
+const stats = computed(() => {
+  const total = list.value.length
+  const inUse = list.value.filter(c => (c.count ?? 0) > 0).length
+  const unused = total - inUse
+  return { total, inUse, unused }
+})
+
+const filteredList = computed(() => {
+  let result = [...list.value]
+
+  // 搜索过滤
+  if (searchQuery.value.trim()) {
+    const q = searchQuery.value.trim().toLowerCase()
+    result = result.filter(c => c.name.toLowerCase().includes(q))
+  }
+
+  // 排序
+  result.sort((a, b) => {
+    let cmp = 0
+    if (sortBy.value === 'name') cmp = a.name.localeCompare(b.name)
+    else if (sortBy.value === 'createdAt') cmp = (a.createdAt || '').localeCompare(b.createdAt || '')
+    else if (sortBy.value === 'count') cmp = (a.count ?? 0) - (b.count ?? 0)
+    return sortDir.value === 'asc' ? cmp : -cmp
+  })
+
+  return result
+})
+
+// ============ 生命周期 ============
+watch(() => activeType.value, () => { fetchList(); destroySortable() })
 onMounted(() => fetchList())
+onUnmounted(() => destroySortable())
 
+// ============ 方法 ============
 async function fetchList() {
   loading.value = true
   try {
     const res = await getCategories(activeType.value)
     list.value = res.data.data || []
+    await nextTick()
+    initSortable()
   } finally { loading.value = false }
 }
 
+function initSortable() {
+  destroySortable()
+  if (!gridRef.value) return
+  sortableInstance = new Sortable(gridRef.value, {
+    handle: '.drag-handle',
+    animation: 200,
+    easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+    ghostClass: 'sortable-ghost',
+    dragClass: 'sortable-drag',
+    onEnd: handleSortEnd
+  })
+}
+
+function destroySortable() {
+  if (sortableInstance) {
+    sortableInstance.destroy()
+    sortableInstance = null
+  }
+}
+
+async function handleSortEnd() {
+  if (!gridRef.value) return
+  const items = [...gridRef.value.querySelectorAll('.category-card')] as HTMLElement[]
+  const idMap = new Map(list.value.map(c => [c.id, c]))
+  const sorted: { id: number; sortOrder: number }[] = []
+
+  items.forEach((el, idx) => {
+    const id = Number(el.dataset.id)
+    const cat = idMap.get(id)
+    if (cat) {
+      cat.sortOrder = idx + 1
+      sorted.push({ id, sortOrder: idx + 1 })
+    }
+  })
+
+  // 重新排序 list
+  list.value.sort((a, b) => a.sortOrder - b.sortOrder)
+
+  try {
+    await batchUpdateCategorySort(sorted)
+  } catch {
+    ElMessage.error('保存排序失败')
+    fetchList()
+  }
+}
+
 function openCreate() {
-  isEdit.value = false; form.value = { id: 0, name: '' }; dialogVisible.value = true
+  isEdit.value = false
+  form.value = { id: 0, name: '' }
+  dialogVisible.value = true
 }
 
 function openEdit(item: CategoryVO) {
-  isEdit.value = true; form.value = { id: item.id, name: item.name }; dialogVisible.value = true
+  isEdit.value = true
+  form.value = { id: item.id, name: item.name }
+  dialogVisible.value = true
 }
 
 async function handleSave() {
@@ -51,7 +141,8 @@ async function handleSave() {
       await createCategory({ name: form.value.name.trim(), type: activeType.value })
       ElMessage.success('已创建')
     }
-    dialogVisible.value = false; fetchList()
+    dialogVisible.value = false
+    fetchList()
   } catch (e: any) {
     ElMessage.error(e.response?.data?.message || '操作失败')
   }
@@ -61,60 +152,153 @@ async function handleDelete(id: number) {
   await ElMessageBox.confirm('确定删除该分类？', '提示', { type: 'warning' })
   try {
     await deleteCategory(id)
-    ElMessage.success('已删除'); fetchList()
+    ElMessage.success('已删除')
+    fetchList()
   } catch (e: any) {
     ElMessage.error(e.response?.data?.message || '删除失败')
   }
 }
+
+function toggleSortDir() {
+  sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc'
+}
+
+function formatDate(dateStr?: string) {
+  if (!dateStr) return ''
+  return dateStr.slice(0, 10)
+}
+
+function getTypeIcon(type: string) {
+  const tab = tabs.find(t => t.type === type)
+  return tab?.icon || FolderOpen
+}
 </script>
 
 <template>
-  <div>
-    <PageHeader title="分类管理" subtitle="管理所有模块的分类" />
+  <div class="category-manage">
+    <!-- ========== Header ========== -->
+    <PageHeader title="分类管理" subtitle="管理所有模块分类，可拖拽排序">
+      <span class="header-count">{{ stats.total }} 个分类</span>
+    </PageHeader>
 
-    <!-- Tab 切换 -->
-    <div class="category-tabs">
+    <!-- ========== 统计卡片 ========== -->
+    <div class="stats-row">
+      <div class="stat-card stat-card--total">
+        <span class="stat-value">{{ stats.total }}</span>
+        <span class="stat-label">全部分类</span>
+      </div>
+      <div class="stat-card stat-card--active">
+        <span class="stat-value">{{ stats.inUse }}</span>
+        <span class="stat-label">正在使用</span>
+      </div>
+      <div class="stat-card stat-card--inactive">
+        <span class="stat-value">{{ stats.unused }}</span>
+        <span class="stat-label">未使用</span>
+      </div>
+    </div>
+
+    <!-- ========== 模块切换 (Segment) ========== -->
+    <div class="segment-group">
       <button
         v-for="tab in tabs"
         :key="tab.type"
-        class="tab-btn"
+        class="segment-btn"
         :class="{ active: activeType === tab.type }"
         @click="activeType = tab.type"
       >
-        <component :is="tab.icon" :size="14" />
+        <component :is="tab.icon" :size="16" />
         {{ tab.label }}
+        <span class="segment-count">{{ activeType === tab.type ? list.length : '—' }}</span>
       </button>
     </div>
 
+    <!-- ========== 工具栏 ========== -->
     <div class="toolbar">
-      <span class="text-secondary">{{ list.length }} 个分类</span>
-      <el-button type="primary" size="small" @click="openCreate">
-        <Plus :size="14" /> 新建分类
+      <div class="toolbar-left">
+        <div class="search-box">
+          <Search :size="16" class="search-icon" />
+          <input
+            v-model="searchQuery"
+            type="text"
+            class="search-input"
+            placeholder="搜索分类..."
+          />
+          <button v-if="searchQuery" class="search-clear" @click="searchQuery = ''">✕</button>
+        </div>
+        <div class="sort-group">
+          <select v-model="sortBy" class="sort-select">
+            <option value="createdAt">创建时间</option>
+            <option value="name">名称</option>
+            <option value="count">使用次数</option>
+          </select>
+          <button class="sort-dir-btn" @click="toggleSortDir" :title="sortDir === 'asc' ? '正序' : '倒序'">
+            <ArrowUpDown :size="15" class="sort-icon" :class="{ reversed: sortDir === 'desc' }" />
+          </button>
+        </div>
+      </div>
+      <el-button type="primary" size="default" @click="openCreate">
+        <Plus :size="16" /> 新建分类
       </el-button>
     </div>
 
-    <div v-if="loading" class="loading-skeleton">
-      <div v-for="i in 3" :key="i" class="skeleton-row" />
+    <!-- ========== 内容区 ========== -->
+    <div v-if="loading" class="grid-skeleton">
+      <div v-for="i in 4" :key="i" class="skeleton-card" />
     </div>
 
-    <EmptyState v-else-if="list.length === 0" :icon="tabs.find(t => t.type === activeType)?.icon || Folder" illustration="default" text="暂无分类，创建一个吧" action-label="新建分类" @action="openCreate" />
+    <EmptyState
+      v-else-if="list.length === 0"
+      :icon="getTypeIcon(activeType)"
+      illustration="default"
+      text="暂无分类，创建一个吧"
+      action-label="新建分类"
+      @action="openCreate"
+    />
 
-    <div v-else class="manage-list">
-      <div v-for="item in list" :key="item.id" class="manage-item">
-        <div class="manage-item-left">
-          <component :is="tabs.find(t => t.type === activeType)?.icon || Folder" :size="16" class="text-tertiary" />
-          <span class="manage-item-name">{{ item.name }}</span>
-          <span class="manage-item-meta" v-if="item.count">({{ item.count }})</span>
-          <span class="manage-item-meta">排序 {{ item.sortOrder }}</span>
+    <EmptyState
+      v-else-if="filteredList.length === 0 && searchQuery"
+      :icon="Search"
+      text="没有匹配的分类"
+    />
+
+    <div v-else ref="gridRef" class="category-grid">
+      <div
+        v-for="item in filteredList"
+        :key="item.id"
+        :data-id="item.id"
+        class="category-card"
+      >
+        <!-- 拖拽手柄 -->
+        <div class="drag-handle" title="拖拽排序">
+          <GripVertical :size="16" />
         </div>
-        <div class="manage-item-actions">
-          <button class="icon-btn" @click="openEdit(item)"><Pencil :size="14" /></button>
-          <button class="icon-btn icon-btn--danger" @click="handleDelete(item.id)"><Trash2 :size="14" /></button>
+
+        <!-- 图标 -->
+        <div class="card-icon" :class="`card-icon--${activeType}`">
+          <component :is="getTypeIcon(activeType)" :size="22" />
+        </div>
+
+        <!-- 信息 -->
+        <div class="card-body">
+          <div class="card-name-row">
+            <span class="card-name">{{ item.name }}</span>
+            <span class="card-count" :class="{ 'count-zero': !item.count }">
+              {{ item.count || 0 }} 篇
+            </span>
+          </div>
+          <span class="card-date" v-if="item.createdAt">创建于 {{ formatDate(item.createdAt) }}</span>
+        </div>
+
+        <!-- 操作 -->
+        <div class="card-actions">
+          <button class="icon-btn" title="编辑" @click="openEdit(item)"><Pencil :size="15" /></button>
+          <button class="icon-btn icon-btn--danger" title="删除" @click="handleDelete(item.id)"><Trash2 :size="15" /></button>
         </div>
       </div>
     </div>
 
-    <UiDialog v-model="dialogVisible" :title="isEdit ? '编辑分类' : `新建${tabs.find(t => t.type === activeType)?.label || '分类'}`">
+    <!-- ========== 编辑弹窗 ========== -->
+    <UiDialog v-model="dialogVisible" :title="isEdit ? '编辑分类' : `新建${tabs.find(t => t.type === activeType)?.label || ''}分类`">
       <UiInput v-model="form.name" placeholder="分类名称" maxlength="50" show-word-limit class="category-dialog-input" @keyup.enter="handleSave" />
       <template #footer>
         <el-button text @click="dialogVisible = false">取消</el-button>
@@ -125,10 +309,326 @@ async function handleDelete(id: number) {
 </template>
 
 <style scoped>
-.loading-skeleton { display: flex; flex-direction: column; gap: var(--sp-2); }
-.skeleton-row { height: 52px; border-radius: var(--radius-md); background: var(--bg-hover); animation: pulse 1.5s ease-in-out infinite; }
+.category-manage {
+  max-width: 960px;
+}
 
-.category-tabs { display: flex; gap: var(--sp-2); margin-bottom: var(--sp-5); }
+/* ---- Header ---- */
+.header-count {
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+
+/* ---- 统计卡片 ---- */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-5);
+}
+
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--sp-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  transition: all var(--transition);
+}
+.stat-card:hover {
+  box-shadow: var(--shadow-sm);
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.stat-label {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+.stat-card--total .stat-value { color: var(--accent); }
+.stat-card--active .stat-value { color: var(--success); }
+.stat-card--inactive .stat-value { color: var(--text-tertiary); }
+
+/* ---- Segment 切换 ---- */
+.segment-group {
+  display: flex;
+  gap: 2px;
+  margin-bottom: var(--sp-5);
+  background: var(--bg-hover);
+  border-radius: var(--radius-lg);
+  padding: 3px;
+  width: fit-content;
+  border: 1px solid var(--border-color);
+}
+
+.segment-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 18px;
+  border-radius: var(--radius-md);
+  border: none;
+  background: transparent;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+.segment-btn:hover { color: var(--text-primary); }
+.segment-btn.active {
+  background: var(--bg-card);
+  color: var(--accent);
+  box-shadow: var(--shadow-sm);
+}
+
+.segment-count {
+  font-size: var(--text-xs);
+  opacity: 0.6;
+  font-weight: 400;
+  margin-left: 2px;
+}
+
+/* ---- 工具栏 ---- */
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-5);
+  flex-wrap: wrap;
+}
+
+.toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex: 1;
+}
+
+.search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  max-width: 280px;
+}
+.search-icon {
+  position: absolute;
+  left: 10px;
+  color: var(--text-tertiary);
+  pointer-events: none;
+}
+.search-input {
+  width: 100%;
+  padding: 8px 32px 8px 34px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color var(--transition);
+}
+.search-input:focus { border-color: var(--accent); }
+.search-input::placeholder { color: var(--text-placeholder); }
+.search-clear {
+  position: absolute;
+  right: 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-tertiary);
+  font-size: 13px;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.search-clear:hover { color: var(--text-primary); background: var(--bg-hover); }
+
+.sort-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.sort-select {
+  padding: 7px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  outline: none;
+  cursor: pointer;
+}
+.sort-select:focus { border-color: var(--accent); }
+.sort-dir-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  cursor: pointer;
+  color: var(--text-tertiary);
+  transition: all var(--transition);
+}
+.sort-dir-btn:hover { border-color: var(--accent); color: var(--accent); }
+.sort-icon { transition: transform var(--transition); }
+.sort-icon.reversed { transform: rotate(180deg); }
+
+/* ---- Grid 卡片布局 ---- */
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--sp-3);
+}
+
+.category-card {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  transition: all 0.2s ease;
+  cursor: default;
+  position: relative;
+}
+.category-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--accent-border);
+  transform: translateY(-2px);
+}
+
+.drag-handle {
+  display: flex;
+  align-items: center;
+  cursor: grab;
+  color: var(--text-tertiary);
+  opacity: 0;
+  transition: opacity var(--transition);
+  padding: 2px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.category-card:hover .drag-handle { opacity: 0.5; }
+.drag-handle:hover { opacity: 1 !important; color: var(--accent); background: var(--accent-light); }
+.drag-handle:active { cursor: grabbing; }
+
+.card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+}
+.card-icon--note { background: #e8f5e9; color: #43a047; }
+.card-icon--bookmark { background: #fff3e0; color: #ef6c00; }
+.card-icon--file { background: #e3f2fd; color: #1e88e5; }
+
+.card-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.card-name-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.card-name {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.card-count {
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--accent);
+  background: var(--accent-light);
+  padding: 1px 8px;
+  border-radius: 100px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.card-count.count-zero {
+  color: var(--text-tertiary);
+  background: var(--bg-hover);
+}
+.card-date {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+.card-actions {
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity var(--transition);
+  flex-shrink: 0;
+}
+.category-card:hover .card-actions { opacity: 1; }
+
+.icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  color: var(--text-tertiary);
+  transition: all var(--transition);
+  display: flex;
+  align-items: center;
+}
+.icon-btn:hover { color: var(--accent); background: var(--accent-light); }
+.icon-btn--danger:hover { color: var(--danger); background: var(--danger-light); }
+
+/* ---- Sortable 样式 ---- */
+.sortable-ghost {
+  opacity: 0.3;
+  border: 2px dashed var(--accent);
+  background: var(--accent-light);
+}
+.sortable-drag {
+  opacity: 0.85;
+  box-shadow: var(--shadow-lg);
+}
+
+/* ---- Skeleton ---- */
+.grid-skeleton {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--sp-3);
+}
+.skeleton-card {
+  height: 72px;
+  border-radius: var(--radius-lg);
+  background: var(--bg-hover);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* ---- Dialog ---- */
 .category-dialog-input :deep(input) {
   font-size: var(--text-lg) !important;
   font-weight: 600;
@@ -141,33 +641,9 @@ async function handleDelete(id: number) {
   font-weight: 400;
 }
 
-.tab-btn {
-  display: flex; align-items: center; gap: var(--sp-1);
-  padding: 8px 16px; border-radius: var(--radius-md);
-  border: 1px solid var(--border-color); background: var(--bg-card);
-  font-size: var(--text-sm); color: var(--text-secondary); cursor: pointer;
-  transition: all var(--transition);
+/* ---- Animation ---- */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
 }
-.tab-btn:hover { border-color: var(--accent-border); color: var(--text-primary); }
-.tab-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
-
-.manage-list { display: flex; flex-direction: column; gap: var(--sp-2); max-width: 480px; }
-.manage-item {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: var(--sp-3) var(--sp-4); background: var(--bg-card);
-  border: 1px solid var(--border-color); border-radius: var(--radius-md);
-  transition: all var(--transition);
-}
-.manage-item:hover { border-color: var(--accent-border); }
-.manage-item-left { display: flex; align-items: center; gap: var(--sp-2); }
-.manage-item-name { font-size: var(--text-sm); font-weight: 500; }
-.manage-item-meta { font-size: var(--text-xs); color: var(--text-tertiary); }
-.manage-item-actions { display: flex; gap: var(--sp-1); opacity: 0; transition: opacity var(--transition); }
-.manage-item:hover .manage-item-actions { opacity: 1; }
-
-.icon-btn { background: none; border: none; cursor: pointer; padding: 6px; border-radius: var(--radius-sm); color: var(--text-tertiary); transition: all var(--transition); display: flex; align-items: center; }
-.icon-btn:hover { color: var(--accent); background: var(--accent-light); }
-.icon-btn--danger:hover { color: var(--danger); background: var(--danger-light); }
-
-.toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--sp-5); }
 </style>

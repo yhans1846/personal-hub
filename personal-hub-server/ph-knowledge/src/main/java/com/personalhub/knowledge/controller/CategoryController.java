@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import com.personalhub.knowledge.dto.SortOrderDTO;
+
 /**
  * 统一分类控制器
  */
@@ -61,6 +63,13 @@ public class CategoryController {
             @PathVariable Long id) {
         Long userId = Long.valueOf(authentication.getName());
         categoryService.delete(id, userId);
+        return Result.success();
+    }
+
+    @Operation(summary = "批量更新排序")
+    @PutMapping("/sort")
+    public Result<Void> updateSort(@RequestBody List<SortOrderDTO> sortList) {
+        categoryService.updateSortOrder(sortList);
         return Result.success();
     }
 }

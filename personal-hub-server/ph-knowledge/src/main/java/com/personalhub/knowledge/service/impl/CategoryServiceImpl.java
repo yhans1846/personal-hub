@@ -17,6 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.personalhub.knowledge.dto.SortOrderDTO;
+
 /**
  * 统一分类服务实现
  */
@@ -110,5 +112,16 @@ public class CategoryServiceImpl implements CategoryService {
 
         categoryMapper.deleteById(id);
         log.info("删除分类: id={}, type={}, name={}", id, category.getType(), category.getName());
+    }
+
+    @Override
+    @Transactional
+    public void updateSortOrder(List<SortOrderDTO> list) {
+        for (SortOrderDTO dto : list) {
+            Category category = new Category();
+            category.setId(dto.getId());
+            category.setSortOrder(dto.getSortOrder());
+            categoryMapper.updateById(category);
+        }
     }
 }

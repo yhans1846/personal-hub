@@ -2,7 +2,12 @@
 
 ## [Unreleased]
 
-### 2026-07-12 统一所有编辑 Dialog 设计 — 内容优先、三段布局、Drawer→Dialog 迁移
+### 2026-07-12 标签管理 & 分类管理页面全面优化
+- 分类管理：统计卡片（全部分类/正在使用/未使用）、Segment 风格模块切换、搜索+排序工具栏、Grid 卡片布局(300px+)、拖拽排序(SortableJS)、悬停阴影动画
+  - 后端新增 `PUT /api/categories/sort` 批量排序接口 + `SortOrderDTO`
+  - 修复笔记分类计数始终返回 0 的 bug（CategoryMapper.xml note 分支缺失）
+- 标签管理：统计卡片（标签总数/引用总次数/本周新增）、热门标签条、搜索+颜色筛选+排序工具栏、Grid 卡片布局(240px)，左侧彩色色条、使用次数 Badge
+- 两个页面统一 max-width 约束、按资源管理中心的视觉语言设计
 - UiDialog 重写：新增三段固定布局（Header/Body/Footer），默认宽度 720px，16px 圆角，32px padding，fade+scale 弹出动画
 - DiaryDialog 全面重写：心情卡片（emoji+label，绿色选中）、天气图标点选、DropZone 图片上传、无 Label 大标题设计
 - TodoDialog 全面重写：优先级卡片、内联日期选择器、内容优先 layout

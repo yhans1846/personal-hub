@@ -2,6 +2,7 @@ package com.personalhub.knowledge.service;
 
 import com.personalhub.knowledge.dto.CategoryCreateDTO;
 import com.personalhub.knowledge.dto.CategoryUpdateDTO;
+import com.personalhub.knowledge.dto.SortOrderDTO;
 import com.personalhub.knowledge.vo.CategoryVO;
 
 import java.util.List;
@@ -30,4 +31,9 @@ public interface CategoryService {
      * 删除分类
      */
     void delete(Long id, Long userId);
+
+    /**
+     * 批量更新排序
+     */
+    void updateSortOrder(List<SortOrderDTO> list);
 }
