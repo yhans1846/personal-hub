@@ -83,6 +83,9 @@ function toggleTheme() {
   document.documentElement.setAttribute('data-theme', theme)
   localStorage.setItem('theme-preference', theme)
   ;(window as any).__themeUserOverride = true
+  // 同步外观配置
+  const appConfig = layoutStore.appearanceConfig
+  if (appConfig) layoutStore.saveAppearanceConfig({ ...appConfig, theme: theme as any })
 }
 
 // 强调色
@@ -98,7 +101,14 @@ function setAccent(key: string) {
   currentAccent.value = key
   document.documentElement.setAttribute('data-accent', key)
   localStorage.setItem('accent-preference', key)
+  // 同步外观配置
+  const appConfig = layoutStore.appearanceConfig
+  if (appConfig) layoutStore.saveAppearanceConfig({ ...appConfig, accent: key as any })
 }
+
+// 暴露全局钩子供 layoutStore 使用
+;(window as any).__setTheme = (theme: string) => { isDark.value = theme === 'dark' }
+;(window as any).__setAccent = (key: string) => { currentAccent.value = key }
 
 onMounted(() => {
   const saved = localStorage.getItem('accent-preference')
