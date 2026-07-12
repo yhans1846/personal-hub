@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { useLayoutStore } from '@/store/layoutStore'
 import { ElMessageBox, ElMessage } from 'element-plus'
-import { Settings, Menu, LayoutDashboard, RotateCcw } from 'lucide-vue-next'
+import { Settings, Menu, LayoutDashboard, BookOpen, RotateCcw } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue'
 import MenuManager from './components/MenuManager.vue'
 import DashboardManager from './components/DashboardManager.vue'
+import ReadingExperience from './components/ReadingExperience.vue'
 
 const layoutStore = useLayoutStore()
 
@@ -51,6 +52,15 @@ async function handleResetAll() {
             </span>
           </template>
           <DashboardManager />
+        </el-tab-pane>
+        <el-tab-pane>
+          <template #label>
+            <span class="tab-label">
+              <BookOpen :size="16" />
+              阅读体验
+            </span>
+          </template>
+          <ReadingExperience />
         </el-tab-pane>
       </el-tabs>
     </div>

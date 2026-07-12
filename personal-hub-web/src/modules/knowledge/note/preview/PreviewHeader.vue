@@ -1,8 +1,5 @@
 <script setup lang="ts">
 import { ArrowLeft, Download, RotateCcw, Clock, BookOpen } from 'lucide-vue-next'
-import type { PreviewSettings } from './usePreviewSettings'
-import type { PreviewTheme } from './usePreviewTheme'
-import ReadingSettings from './ReadingSettings.vue'
 
 export interface DocMeta {
   updatedAt?: string
@@ -12,22 +9,15 @@ export interface DocMeta {
 const props = withDefaults(defineProps<{
   title: string
   isTrash: boolean
-  settings?: PreviewSettings
-  theme?: PreviewTheme
-  resolvedTheme?: string
   meta?: DocMeta
 }>(), {
-  settings: undefined,
-  theme: 'follow',
-  resolvedTheme: 'light',
+  meta: undefined,
 })
 
 const emit = defineEmits<{
   (e: 'back'): void
   (e: 'export'): void
   (e: 'restore'): void
-  (e: 'update:settings', value: PreviewSettings): void
-  (e: 'update:theme', value: PreviewTheme): void
 }>()
 </script>
 
@@ -59,28 +49,6 @@ const emit = defineEmits<{
 
     <div class="header-actions">
       <slot name="actions">
-        <!-- Aa 阅读设置 -->
-        <template v-if="settings">
-        <el-popover
-          placement="bottom-end"
-          :width="240"
-          trigger="click"
-          :show-arrow="false"
-          popper-class="preview-settings-popper"
-        >
-          <template #reference>
-            <button class="header-btn" title="阅读设置">
-              Aa
-            </button>
-          </template>
-          <ReadingSettings
-            :settings="settings"
-            :theme="theme"
-            @update:settings="emit('update:settings', $event)"
-            @update:theme="emit('update:theme', $event)"
-          />
-        </el-popover>
-
         <!-- 更多 -->
         <el-dropdown trigger="click" placement="bottom-end">
           <button class="header-btn" title="更多">
@@ -97,7 +65,6 @@ const emit = defineEmits<{
             </el-dropdown-menu>
           </template>
         </el-dropdown>
-        </template>
       </slot>
     </div>
   </header>

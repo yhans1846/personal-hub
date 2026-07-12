@@ -118,7 +118,6 @@ async function handleToggleFavorite(note: NoteVO) {
 
   <el-dialog
     v-model="showImport"
-    title="导入 Markdown"
     width="520px"
     :close-on-click-modal="false"
   >

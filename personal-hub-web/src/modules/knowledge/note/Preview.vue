@@ -7,15 +7,16 @@ import 'md-editor-v3/lib/style.css'
 import mediumZoom from 'medium-zoom'
 import type { NoteVO } from '@/types/note'
 import { getNotePreview, restoreNote, exportNote } from '@/modules/knowledge/api'
-import { usePreviewSettings } from './preview/usePreviewSettings'
-import { usePreviewTheme } from './preview/usePreviewTheme'
+import { useReadingConfigStore } from '@/store/readingConfigStore'
+import { useReadingTheme } from './preview/useReadingTheme'
 import DocLayout from '@/components/DocLayout.vue'
 import type { TocItem } from './preview/PreviewToc.vue'
-import ReadingSettings from './preview/ReadingSettings.vue'
+import { storeToRefs } from 'pinia'
 
 const route = useRoute()
-const { settings } = usePreviewSettings()
-const { theme, resolvedTheme, setTheme } = usePreviewTheme()
+const readingStore = useReadingConfigStore()
+const { config } = storeToRefs(readingStore)
+const { resolvedTheme } = useReadingTheme()
 
 const note = ref<NoteVO | null>(null)
 const loading = ref(true)
@@ -32,7 +33,7 @@ let zoomInstance: ReturnType<typeof mediumZoom> | null = null
 const isTrash = computed(() => note.value?.isDeleted === 1)
 
 /** MdPreview 只接受 light/dark，sepia 映射为 light */
-const mdTheme = computed(() => resolvedTheme.value === 'sepia' ? 'light' : resolvedTheme.value)
+const mdTheme = computed(() => (resolvedTheme.value as string) === 'sepia' ? 'light' : resolvedTheme.value)
 
 function formatTime(dateStr?: string) {
   if (!dateStr) return ''
@@ -103,6 +104,25 @@ function setupObserver() {
 
 // ====== 图片缩放 ======
 
+function setupImageProxy() {
+  nextTick(() => {
+    const preview = document.querySelector('.md-editor-preview')
+    if (!preview || !note.value) return
+    const noteId = note.value.id
+    const token = localStorage.getItem('token')
+    if (!token) return
+
+    preview.querySelectorAll('img').forEach((img) => {
+      const src = img.getAttribute('src')
+      if (!src) return
+      // 只处理相对路径的图片（相对于笔记目录存储的 images/ 或 attachments/）
+      if (src.startsWith('images/') || src.startsWith('attachments/')) {
+        img.setAttribute('src', `/api/notes/${noteId}/${src}?token=${token}`)
+      }
+    })
+  })
+}
+
 function setupImageZoom() {
   nextTick(() => {
     const preview = document.querySelector('.md-editor-preview')
@@ -150,6 +170,8 @@ function setupCodeCopy() {
 // ====== 数据加载 ======
 
 onMounted(async () => {
+  readingStore.fetchFromBackend()
+
   const id = Number(route.params.id)
   if (!id) {
     error.value = '笔记ID无效'
@@ -213,6 +235,7 @@ function setupHeadingAnchors() {
 watch(() => note.value?.content, async () => {
   if (note.value?.content) {
     await nextTick()
+    setupImageProxy()
     setupObserver()
     setupImageZoom()
     setupCodeCopy()
@@ -290,23 +313,6 @@ onUnmounted(() => {
     >
       <!-- Header 右侧操作区 -->
       <template #header-actions>
-        <el-popover
-          placement="bottom-end"
-          :width="240"
-          trigger="click"
-          :show-arrow="false"
-          popper-class="preview-settings-popper"
-        >
-          <template #reference>
-            <button class="header-action-btn" title="阅读设置">Aa</button>
-          </template>
-          <ReadingSettings
-            :settings="settings"
-            :theme="theme"
-            @update:settings="Object.assign(settings, $event)"
-            @update:theme="setTheme($event as any)"
-          />
-        </el-popover>
         <el-dropdown trigger="click" placement="bottom-end">
           <button class="header-action-btn" title="更多">
             <span style="letter-spacing: 2px">⋯</span>
@@ -324,11 +330,12 @@ onUnmounted(() => {
       <div
         class="preview-content-wrap"
         :style="{
-          maxWidth: settings.readingWidth + 'px',
-          fontSize: settings.fontSize + 'px',
-          lineHeight: settings.lineHeight,
-          '--prose-font-size': settings.fontSize + 'px',
-          '--prose-line-height': settings.lineHeight,
+          maxWidth: config.readingWidth + 'px',
+          fontSize: config.fontSize + 'px',
+          lineHeight: config.lineHeight,
+          '--prose-font-size': config.fontSize + 'px',
+          '--prose-line-height': config.lineHeight,
+          '--image-max-width': config.imageMaxWidth + '%',
         }"
       >
         <!-- 分类/标签 -->
@@ -514,6 +521,11 @@ onUnmounted(() => {
   margin-left: -48px !important;
   margin-right: -48px !important;
   max-width: calc(100% + 96px) !important;
+}
+
+:deep(.md-editor-preview img) {
+  max-width: var(--image-max-width, 80%);
+  height: auto;
 }
 
 /* 代码块头部 sticky 导致滚动时跳动，改为自然跟随 */

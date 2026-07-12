@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getNoteById, toggleFavorite, deleteNote } from '@/api/noteApi'
 import { getCategories } from '@/api/categoryApi'
@@ -41,6 +41,27 @@ const {
 
 // ─── 编辑器模式 ───
 const { mode, togglePreview } = useEditorMode()
+
+// ─── 预览模式下改写图片 src（相对路径 → API 路径 + token）───
+function setupPreviewImageProxy() {
+  nextTick(() => {
+    const preview = document.querySelector('.md-editor-preview')
+    if (!preview || !noteId.value) return
+    const token = localStorage.getItem('token')
+    if (!token) return
+
+    preview.querySelectorAll('img').forEach((img) => {
+      const src = img.getAttribute('src')
+      if (!src) return
+      if (src.startsWith('images/') || src.startsWith('attachments/')) {
+        img.setAttribute('src', `/api/notes/${noteId.value}/${src}?token=${token}`)
+      }
+    })
+  })
+}
+watch(mode, (val) => {
+  if (val === 'preview') setupPreviewImageProxy()
+})
 
 // ─── 图片上传 ───
 const { uploading, handleUpload } = useImageUpload(noteId, forceSave)
@@ -479,6 +500,12 @@ const EDIT_TOOLBARS = [
 .preview-wrap :deep(.md-editor-preview) {
   background: transparent !important;
   padding: 0 !important;
+}
+
+/* 图片缩放 80% */
+.preview-wrap :deep(.md-editor-preview img) {
+  max-width: var(--image-max-width, 80%);
+  height: auto;
 }
 
 /* 代码块 pre 默认有 16px padding，去掉 */
