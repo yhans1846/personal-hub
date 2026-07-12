@@ -1,6 +1,6 @@
 import request from '@/api/request'
 import type { Result, PageResult } from '@/types/common'
-import type { NoteVO, NoteCreateDTO, NoteQuery } from '@/types/note'
+import type { NoteVO, NoteCreateDTO, NoteQuery, ImportReport } from '@/types/note'
 import type { DiaryVO, DiaryCreateDTO, DiaryQuery } from '@/types/diary'
 import type { StudyRecordVO, StudyRecordCreateDTO, StudyRecordQuery } from '@/types/study'
 import type { ReadingVO, ReadingCreateDTO, ReadingQuery } from '@/types/reading'
@@ -43,6 +43,35 @@ export function getNotePreview(id: number) {
 
 export function exportNote(id: number) {
   return request.get(`/notes/${id}/export`, { responseType: 'blob' })
+}
+
+/** 导入 Markdown 文件 */
+export function importMarkdownFile(
+  file: File,
+  title?: string,
+  categoryIds?: number[],
+  tagIds?: number[],
+  baseDir?: string,
+) {
+  const form = new FormData()
+  form.append('file', file)
+  if (title) form.append('title', title)
+  if (categoryIds?.length) categoryIds.forEach(id => form.append('categoryIds', String(id)))
+  if (tagIds?.length) tagIds.forEach(id => form.append('tagIds', String(id)))
+  if (baseDir) form.append('baseDir', baseDir)
+  return request.post<Result<ImportReport>>('/notes/import', form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+}
+
+/** 粘贴 Markdown 内容导入 */
+export function importMarkdownContent(data: {
+  content: string
+  title?: string
+  categoryIds?: number[]
+  tagIds?: number[]
+}) {
+  return request.post<Result<ImportReport>>('/notes/import-content', data)
 }
 
 export function uploadNoteImage(noteId: number, file: File) {

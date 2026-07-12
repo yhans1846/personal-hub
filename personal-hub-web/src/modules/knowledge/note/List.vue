@@ -3,16 +3,18 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getNoteList, deleteNote, toggleFavorite } from '@/api/noteApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, FileText, Star, Trash2, Clock, Eye } from 'lucide-vue-next'
+import { Plus, FileText, Star, Trash2, Clock, Eye, Upload, Download } from 'lucide-vue-next'
 import { EmptyState, PageHeader, ListToolbar, ListPagination } from '@/components'
 import type { NoteVO, NoteQuery } from '@/types/note'
 import { estimateReadingTime, formatRelativeTime, isRecentlyEdited } from '@/utils/readingTime'
+import ImportMarkdownDialog from './ImportMarkdownDialog.vue'
 
 const router = useRouter()
 const list = ref<NoteVO[]>([])
 const total = ref(0)
 const loading = ref(false)
 const query = ref<NoteQuery>({ page: 1, size: 20, keyword: '' })
+const showImport = ref(false)
 onMounted(() => fetchList())
 
 async function fetchList() {
@@ -53,7 +55,25 @@ async function handleToggleFavorite(note: NoteVO) {
       </el-link>
     </PageHeader>
 
-    <ListToolbar :search="query.keyword" search-placeholder="搜索笔记标题..." search-width="240px" create-label="新建笔记" @update:search="query.keyword = $event" @search="onSearch" @create="goCreate" />
+    <ListToolbar :search="query.keyword" search-placeholder="搜索笔记标题..." search-width="240px" create-label="新建笔记" @update:search="query.keyword = $event" @search="onSearch" @create="goCreate">
+      <template #actions>
+        <el-dropdown trigger="click" placement="bottom-start">
+          <button class="toolbar-import-btn">
+            <Upload :size="14" /> 导入
+          </button>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item @click="showImport = true">
+                <Upload :size="14" /> Markdown 文件
+              </el-dropdown-item>
+              <el-dropdown-item @click="showImport = true">
+                <FileText :size="14" /> Markdown 内容
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
+      </template>
+    </ListToolbar>
 
     <div v-if="loading" class="card-grid-skeleton">
       <div v-for="i in 6" :key="i" class="skeleton-note-card" />
@@ -99,6 +119,17 @@ async function handleToggleFavorite(note: NoteVO) {
     </div>
 
     <ListPagination v-if="total > query.size" :total="total" :page="query.page" :size="query.size" @update:page="onPageChange" />
+
+    <!-- 导入对话框 -->
+    <el-dialog
+      v-model="showImport"
+      title="导入 Markdown"
+      width="520px"
+      :close-on-click-modal="false"
+      @closed="showImport = false"
+    >
+      <ImportMarkdownDialog @done="showImport = false; fetchList()" />
+    </el-dialog>
   </div>
   </div>
 </template>
@@ -148,4 +179,24 @@ async function handleToggleFavorite(note: NoteVO) {
 .delete-btn:hover { color: var(--danger); background: var(--danger-light); }
 .icon-btn { background: none; border: none; color: var(--text-tertiary); cursor: pointer; padding: 4px; border-radius: 4px; transition: all var(--transition); display: inline-flex; align-items: center; }
 .icon-btn:hover { color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.toolbar-import-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+.toolbar-import-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-light);
+}
 </style>

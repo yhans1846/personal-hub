@@ -91,6 +91,18 @@
 
 **POST /api/notes** — `{"title":"...","content":"# MD...","categoryIds":[1,2],"tagIds":[1,3]}`
 
+| POST | /api/notes/import | 导入 Markdown 文件 | 是 |
+| POST | /api/notes/import-content | 粘贴 Markdown 内容导入 | 是 |
+
+**POST /api/notes/import** — multipart/form-data: file(File必填), title(String可选), categoryIds(List可选), tagIds(List可选), baseDir(String可选 — 用于解析相对路径)
+**Response** `ImportReport`:
+```json
+{"code":200,"message":"success","data":{"total":3,"success":2,"failed":1,"skipped":0,"resources":[{"originalRef":"img/demo.png","resolvedPath":"images/uuid-demo.png","success":true,"message":"导入成功"}],"noteId":123}}
+```
+
+**POST /api/notes/import-content** — `{"title":"...","content":"# MD内容...","categoryIds":[1,2],"tagIds":[1,3]}`
+**Response** 同上，另含 `warning`（检测到相对路径时）、`rewrittenContent`（重写后的内容）
+
 ### 笔记资源 `/api/notes/{noteId}`
 | 方法 | 路径 | 说明 | 认证 |
 |------|------|------|------|

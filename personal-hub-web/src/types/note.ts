@@ -32,6 +32,27 @@ export interface NoteCreateDTO {
   tagIds: number[]
 }
 
+/** 导入报告 */
+export interface ImportReport {
+  total: number
+  success: number
+  skipped: number
+  failed: number
+  resources: ImportResourceResult[]
+  noteId?: number
+  rewrittenContent?: string
+  warning?: string
+}
+
+/** 单条资源导入结果 */
+export interface ImportResourceResult {
+  originalRef: string
+  resolvedPath?: string
+  success: boolean
+  skipped: boolean
+  message: string
+}
+
 /** 笔记查询参数 */
 export interface NoteQuery {
   page?: number

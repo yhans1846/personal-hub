@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### 2026-07-12 Markdown 导入功能（文件 + 粘贴）
+- 新增 `ph-knowledge/imports/` 组件包：ResourceScanner（扫描）、ResourceResolver（解析）、ResourceDownloader（下载）、MarkdownRewriter（重写）、ImportReport（报告）
+- 方式一「从 Markdown 文件导入」：上传 .md 文件，自动下载网络图片/复制本地文件，支持 baseDir 参数解析相对路径
+- 方式二「粘贴 Markdown 内容导入」：粘贴文本，自动下载网络图片和 Base64 图片，检测到相对路径时给出提示
+- 导入后资源统一存储到 `notes/{noteId}/images/`，使用 UUID 文件名，自动重写 Markdown 引用
+- 新增前端 ImportMarkdownDialog 组件（双 Tab 切换），笔记列表页增加导入入口
+- 所有导入产生 ImportReport，记录成功/失败/跳过的资源明细
+
 ### 2026-07-12 预览页阅读体验全面重构
 - 新增 DocLayout 统一文档布局组件（Header + 可折叠 TOC + 正文区），可复用于帮助文档、README 等页面
 - 新增阅读设置面板：字号 A−/A+（14-22）、宽度三档（900/1100/1280）、行高滑块（1.4-2.0）、主题切换（浅色/深色/护眼绿）

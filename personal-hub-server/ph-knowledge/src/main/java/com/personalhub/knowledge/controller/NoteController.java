@@ -4,9 +4,11 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.personalhub.common.result.PageParam;
 import com.personalhub.common.result.PageResult;
 import com.personalhub.common.result.Result;
+import com.personalhub.knowledge.dto.ImportContentDTO;
 import com.personalhub.knowledge.dto.NoteCreateDTO;
 import com.personalhub.knowledge.dto.NoteQueryDTO;
-import com.personalhub.knowledge.service.MarkdownImportService;
+import com.personalhub.knowledge.imports.ImportReport;
+import com.personalhub.knowledge.imports.ImportService;
 import com.personalhub.knowledge.service.NoteExportService;
 import com.personalhub.knowledge.service.NoteService;
 import com.personalhub.knowledge.vo.NoteVO;
@@ -37,7 +39,7 @@ import java.util.List;
 public class NoteController {
 
     private final NoteService noteService;
-    private final MarkdownImportService markdownImportService;
+    private final ImportService importService;
     private final NoteExportService noteExportService;
 
     @Operation(summary = "笔记列表", description = "分页查询笔记，支持关键词搜索、分类/标签/收藏/回收站筛选")
@@ -128,17 +130,30 @@ public class NoteController {
         return Result.success();
     }
 
-    @Operation(summary = "导入 Markdown", description = "上传 .md 文件，自动本地化资源")
+    @Operation(summary = "导入 Markdown 文件", description = "上传 .md 文件，自动本地化资源。可选 baseDir 用于解析相对路径")
     @PostMapping("/import")
-    public Result<Long> importMarkdown(
+    public Result<ImportReport> importMarkdown(
             @Parameter(hidden = true) Authentication authentication,
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "title", required = false) String title,
             @RequestParam(value = "categoryIds", required = false) List<Long> categoryIds,
-            @RequestParam(value = "tagIds", required = false) List<Long> tagIds) {
+            @RequestParam(value = "tagIds", required = false) List<Long> tagIds,
+            @RequestParam(value = "baseDir", required = false) String baseDir) {
         Long userId = Long.valueOf(authentication.getName());
-        Long noteId = markdownImportService.importMarkdown(userId, title, categoryIds, tagIds, file);
-        return Result.success(noteId);
+        ImportReport report = importService.importFromFile(userId, title, categoryIds, tagIds, file, baseDir);
+        return Result.success(report);
+    }
+
+    @Operation(summary = "粘贴 Markdown 内容导入", description = "粘贴 Markdown 文本导入笔记，自动下载网络图片和 Base64 图片")
+    @PostMapping("/import-content")
+    public Result<ImportReport> importContent(
+            @Parameter(hidden = true) Authentication authentication,
+            @Valid @RequestBody ImportContentDTO dto) {
+        Long userId = Long.valueOf(authentication.getName());
+        ImportReport report = importService.importFromContent(
+                userId, dto.getTitle(), dto.getContent(),
+                dto.getCategoryIds(), dto.getTagIds());
+        return Result.success(report);
     }
 
     @Operation(summary = "回收站列表", description = "分页查询已删除笔记，按删除时间倒序")
