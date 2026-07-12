@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { getLayoutAll, saveLayout, resetLayout } from '@/api/layoutApi'
 import { DEFAULT_MENU_ITEMS, DEFAULT_DASHBOARD_ITEMS } from '@/modules/dashboard/defaultLayouts'
-import type { MenuItem, CardItem, LayoutItem } from '@/types/layout'
+import type { MenuItem, CardItem, LayoutItem, AppearanceConfig } from '@/types/layout'
 
 const STORAGE_KEY_MENU = 'layout-menu'
 const STORAGE_KEY_DASHBOARD = 'layout-dashboard'
@@ -85,9 +85,9 @@ export const useLayoutStore = defineStore('layout', () => {
       }
     } catch {
       console.warn('获取布局配置失败，使用本地缓存')
-    } finally {
-      loaded.value = true
     }
+    await fetchAppearanceFromBackend()
+    loaded.value = true
   }
 
   /** 保存菜单配置 */
@@ -128,6 +128,62 @@ export const useLayoutStore = defineStore('layout', () => {
   async function resetAll() {
     await resetMenuConfig()
     await resetDashboardConfig()
+  }
+
+  // ---- 外观配置 ----
+  const STORAGE_KEY_APPEARANCE = 'appearance-config'
+
+  const DEFAULT_APPEARANCE: AppearanceConfig = {
+    theme: 'light',
+    accent: 'blue',
+  }
+
+  const appearanceConfig = ref<AppearanceConfig>(loadAppearance())
+
+  function loadAppearance(): AppearanceConfig {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY_APPEARANCE)
+      if (stored) return { ...DEFAULT_APPEARANCE, ...JSON.parse(stored) }
+    } catch { /* ignore */ }
+    return { ...DEFAULT_APPEARANCE }
+  }
+
+  function saveAppearanceLocally(config: AppearanceConfig) {
+    localStorage.setItem(STORAGE_KEY_APPEARANCE, JSON.stringify(config))
+  }
+
+  async function fetchAppearanceFromBackend() {
+    try {
+      const res = await getLayoutAll()
+      const appLayout = (res.data.data as any[]).find((l: any) => l.layoutType === 'appearance')
+      if (appLayout?.layoutJson) {
+        const parsed = JSON.parse(appLayout.layoutJson)
+        Object.assign(appearanceConfig.value, { ...DEFAULT_APPEARANCE, ...parsed })
+        saveAppearanceLocally(appearanceConfig.value)
+        applyAppearanceToDOM(appearanceConfig.value)
+      }
+    } catch { /* ignore */ }
+  }
+
+  function applyAppearanceToDOM(config: AppearanceConfig) {
+    document.documentElement.setAttribute('data-theme', config.theme)
+    document.documentElement.setAttribute('data-accent', config.accent)
+    localStorage.setItem('theme-preference', config.theme)
+    localStorage.setItem('accent-preference', config.accent)
+  }
+
+  async function saveAppearanceConfig(config: AppearanceConfig) {
+    appearanceConfig.value = config
+    saveAppearanceLocally(config)
+    applyAppearanceToDOM(config)
+    await saveLayout({
+      layoutType: 'appearance',
+      layoutJson: JSON.stringify({ theme: config.theme, accent: config.accent }),
+    })
+  }
+
+  async function resetAppearanceConfig() {
+    await saveAppearanceConfig({ ...DEFAULT_APPEARANCE })
   }
 
   // --- Helpers ---
@@ -184,5 +240,7 @@ export const useLayoutStore = defineStore('layout', () => {
     visibleMenuSections, visibleDashboardCards,
     fetchLayout, saveMenuConfig, saveDashboardConfig,
     resetMenuConfig, resetDashboardConfig, resetAll,
+    appearanceConfig, DEFAULT_APPEARANCE,
+    saveAppearanceConfig, resetAppearanceConfig,
   }
 })
