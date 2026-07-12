@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### 2026-07-12 统一所有编辑 Dialog 设计 — 内容优先、三段布局、Drawer→Dialog 迁移
+- UiDialog 重写：新增三段固定布局（Header/Body/Footer），默认宽度 720px，16px 圆角，32px padding，fade+scale 弹出动画
+- DiaryDialog 全面重写：心情卡片（emoji+label，绿色选中）、天气图标点选、DropZone 图片上传、无 Label 大标题设计
+- TodoDialog 全面重写：优先级卡片、内联日期选择器、内容优先 layout
+- BookmarkDialog 全面重写：Chip 风格分类/标签选择、无 Label
+- Reading/StudyPlan/Study 从 el-drawer 迁移到 UiDialog，统一三段布局
+- Tag/Category 对话框消除 el-form Label，对齐统一设计语言
+- 删除旧文件：ReadingDrawer.vue、StudyDrawer.vue、StudyPlanDrawer.vue
+
 ### 2026-07-12 阅读配置迁移至系统设置 + 图片比例可调
 - 新增 `readingConfigStore` (Pinia) 统一管理字号/宽度/行高/主题/图片比例，localStorage + 后端双持久化
 - 系统设置页新增「阅读体验」Tab，替代预览页 popover 阅读设置

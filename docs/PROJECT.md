@@ -87,6 +87,7 @@ ph-system ─┬─ ph-knowledge
 | 九 | 预览页阅读体验优化 | ✅ |
 | 十 | 笔记编辑器 UI 重构（沉浸式编辑/自动保存/预览/专注模式） | ✅ |
 | 十一 | 阅读配置系统设置化 + 图片比例可调 + JWT token query 参数 | ✅ |
+| 十二 | 统一编辑 Dialog 设计（三段布局 + 内容优先 + Drawer→Dialog + 无 Label） | ✅ |
 
 ## 后续可扩展
 
@@ -127,3 +128,4 @@ ph-system ─┬─ ph-knowledge
 | 28 | 笔记回收站改造 + 审计日志（deleted_at/audit_log/预览/回收站重构） | 八 |
 | 29 | 预览页阅读体验重构（DocLayout + markdown-prose + 阅读设置 + 主题 + 目录导航） | 九 |
 | 30 | 阅读配置迁移到系统设置页 + 图片比例可调 + JWT token query 参数 + 旧代码清理 | 十一 |
+| 31 | 统一所有编辑 Dialog 设计（三段布局 + 内容优先 + Drawer→Dialog 迁移 + 无 Label） | 十一 |
