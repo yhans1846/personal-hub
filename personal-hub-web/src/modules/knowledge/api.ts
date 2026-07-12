@@ -45,6 +45,14 @@ export function exportNote(id: number) {
   return request.get(`/notes/${id}/export`, { responseType: 'blob' })
 }
 
+export function uploadNoteImage(noteId: number, file: File) {
+  const form = new FormData()
+  form.append('file', file)
+  return request.post<Result<Record<string, string>>>(`/notes/${noteId}/images`, form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+}
+
 // ====== 日记 ======
 export function getDiaryList(params: DiaryQuery) {
   return request.get<Result<PageResult<DiaryVO>>>('/diaries', { params })

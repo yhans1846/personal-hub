@@ -515,4 +515,9 @@ onUnmounted(() => {
   margin-right: -48px !important;
   max-width: calc(100% + 96px) !important;
 }
+
+/* 代码块头部 sticky 导致滚动时跳动，改为自然跟随 */
+:deep(.md-editor-code .md-editor-code-head) {
+  position: static !important;
+}
 </style>
