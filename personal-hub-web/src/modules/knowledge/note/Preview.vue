@@ -265,16 +265,18 @@ function handleClose() {
           <h1 class="preview-title">{{ note.title }}</h1>
 
           <div class="preview-meta">
-            <span class="meta-block meta-time">
-              <Clock :size="12" /> {{ formatTime(note.updatedAt) }}
-            </span>
-            <span v-if="note.categories?.length" class="meta-block">
-              <span class="meta-label">分类</span>
-              <span v-for="c in note.categories" :key="c.id" class="meta-tag">{{ c.name }}</span>
-            </span>
-            <span v-if="note.tags?.length" class="meta-block">
-              <span class="meta-label">标签</span>
-              <span v-for="t in note.tags" :key="t.id" class="meta-tag" :style="t.color ? { '--tag-color': t.color } : undefined">{{ t.name }}</span>
+            <div class="preview-meta-left">
+              <span v-if="note.categories?.length" class="meta-block">
+                <span class="meta-label">分类</span>
+                <span v-for="c in note.categories" :key="c.id" class="meta-tag">{{ c.name }}</span>
+              </span>
+              <span v-if="note.tags?.length" class="meta-block">
+                <span class="meta-label">标签</span>
+                <span v-for="t in note.tags" :key="t.id" class="meta-tag" :style="t.color ? { '--tag-color': t.color } : undefined">{{ t.name }}</span>
+              </span>
+            </div>
+            <span class="meta-time">
+              <Clock :size="12" /> 最后编辑时间 {{ formatTime(note.updatedAt) }}
             </span>
           </div>
 
@@ -558,9 +560,18 @@ function handleClose() {
 
 .preview-meta {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
   gap: var(--sp-4);
   font-size: var(--text-xs);
+  margin-bottom: var(--sp-6);
+}
+
+.preview-meta-left {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-4);
 }
 
 .meta-block {
@@ -576,7 +587,7 @@ function handleClose() {
   align-items: center;
   gap: 4px;
   color: var(--text-tertiary);
-  font-size: var(--text-xs);
+  flex-shrink: 0;
 }
 
 .meta-tag {
