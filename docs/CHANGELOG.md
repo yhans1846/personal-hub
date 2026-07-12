@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### 2026-07-12 预览页阅读体验全面重构
+- 新增 DocLayout 统一文档布局组件（Header + 可折叠 TOC + 正文区），可复用于帮助文档、README 等页面
+- 新增阅读设置面板：字号 A−/A+（14-22）、宽度三档（900/1100/1280）、行高滑块（1.4-2.0）、主题切换（浅色/深色/护眼绿）
+- 新增全局 Markdown 排版系统 `markdown-prose.css`，统一 h1-h6/p/blockquote/pre/table 等全部元素样式
+- 预览主题支持 4 套（跟随系统/浅色/深色/护眼绿），通过 CSS 变量桥接 md-editor-v3 内部颜色
+- 正文左右 48px 留白，代码块/表格保持与正文对齐，图片可突破至全宽
+- 标题 hover 显示 `#` 锚点链接，代码块 hover 显示复制按钮
+- 新增 medium-zoom 图片点击放大
+- 左侧目录默认展开、手动收起、可拖拽调整宽度（160-400px）
+- 修复 md-editor-v3 硬编码 font-size/line-height/color 导致阅读设置不生效的问题
+- 新增 `docs/PREVIEW_PAGE_SPEC.md` 开发规范文档
+
 ### 2026-07-12 笔记回收站改造 + 统一审计日志
 - note_note 表新增 `deleted_at` / `delete_reason` 字段，用于回收站排序和自动归档预留
 - 创建 `audit_log` 统一审计日志表，放入 ph-system 模块，所有业务模块可复用

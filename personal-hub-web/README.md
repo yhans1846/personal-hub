@@ -12,6 +12,7 @@ Personal Hub 前端 — Vue 3 + TypeScript + Vite + Element Plus。
 - **HTTP**: Axios
 - **图标**: lucide-vue-next
 - **Markdown**: md-editor-v3
+- **图片缩放**: medium-zoom
 - **图表**: ECharts
 - **拖拽**: sortablejs
 
@@ -22,7 +23,7 @@ src/
 ├── api/              # API 接口封装（按模块聚合）
 ├── components/
 │   ├── ui/           # Ui-* 基础组件（UiDialog/UiInput/UiButton 等 8 个）
-│   └── index.ts      # 共享组件导出（PageHeader/EmptyState/StatCard 等）
+│   └── index.ts      # 共享组件导出
 ├── modules/          # 领域模块
 │   ├── category/     # 统一分类管理（Tab 切换）
 │   ├── system/       # 登录 / 系统设置（布局自定义）
@@ -34,7 +35,7 @@ src/
 │   └── stats/        # 数据统计趋势图
 ├── router/           # 路由配置
 ├── stores/           # Pinia（auth / theme / layout / notification）
-├── styles/           # 全局样式 / CSS 设计令牌 / 深色模式 / 5 种强调色
+├── styles/           # 全局样式 / 设计令牌 / 深色模式 / 5 种强调色 / Markdown 排版系统
 ├── types/            # TypeScript 类型定义
 └── utils/            # 工具函数
 ```

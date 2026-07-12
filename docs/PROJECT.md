@@ -84,6 +84,7 @@ ph-system ─┬─ ph-knowledge
 | 六 | CRUD UI 优化（Ui 组件库 + Dialog/Drawer）+ 分类合并（category 表） | ✅ |
 | 七 | 代码清理（死代码删除）+ 配置文件分层（dev/prod） | ✅ |
 | 八 | 笔记回收站改造 + 统一审计日志 | ✅ |
+| 九 | 预览页阅读体验优化 | ✅ |
 
 ## 后续可扩展
 
@@ -118,3 +119,4 @@ ph-system ─┬─ ph-knowledge
 | 23-24 | CRUD UI 优化（Ui 组件库 + Dialog/Drawer）+ 分类系统合并 | 六 |
 | 25-27 | 代码清理 + 配置分层（dev/prod）+ Swagger 修复 | 七 |
 | 28 | 笔记回收站改造 + 审计日志（deleted_at/audit_log/预览/回收站重构） | 八 |
+| 29 | 预览页阅读体验重构（DocLayout + markdown-prose + 阅读设置 + 主题 + 目录导航） | 九 |
