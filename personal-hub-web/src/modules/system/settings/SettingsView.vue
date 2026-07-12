@@ -9,8 +9,9 @@ import MenuManager from './components/MenuManager.vue'
 import DashboardManager from './components/DashboardManager.vue'
 import ReadingExperience from './components/ReadingExperience.vue'
 import AppearanceSettings from './components/AppearanceSettings.vue'
-import CacheSettings from './components/CacheSettings.vue'
-import PlaceholderTab from './components/PlaceholderTab.vue'
+import NotificationSettings from './components/NotificationSettings.vue'
+import DataManagement from './components/DataManagement.vue'
+import ExperimentalFeatures from './components/ExperimentalFeatures.vue'
 
 const layoutStore = useLayoutStore()
 
@@ -101,35 +102,26 @@ async function handleResetAll() {
             </UiCard>
           </div>
 
-          <!-- 通知（占位） -->
+          <!-- 通知 -->
           <div v-else-if="activeTab === 'notification'" class="tab-inner">
             <UiCard>
-              <PlaceholderTab
-                icon="🔔"
-                title="通知设置即将上线"
-                description="你可以在这里管理桌面通知和提醒偏好。"
-                hint="Phase 2 规划中"
-              />
+              <h3 class="card-title">通知偏好</h3>
+              <NotificationSettings />
             </UiCard>
           </div>
 
           <!-- 数据 -->
           <div v-else-if="activeTab === 'data'" class="tab-inner">
             <UiCard>
-              <h3 class="card-title">缓存管理</h3>
-              <CacheSettings />
+              <DataManagement />
             </UiCard>
           </div>
 
-          <!-- 实验功能（占位） -->
+          <!-- 实验功能 -->
           <div v-else-if="activeTab === 'experimental'" class="tab-inner">
             <UiCard>
-              <PlaceholderTab
-                icon="🧪"
-                title="实验功能即将上线"
-                description="在这里开启和关闭正在实验中的 Beta 功能。"
-                hint="Phase 2 规划中"
-              />
+              <h3 class="card-title">实验功能</h3>
+              <ExperimentalFeatures />
             </UiCard>
           </div>
         </div>
