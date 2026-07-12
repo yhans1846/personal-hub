@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### 2026-07-12 系统设置 V2 Phase 2
+- 新增通知设置模块：桌面通知权限请求、通知类型多选 Chip（4类）、通知音效开关+选择、免打扰模式+时间段
+- 新增数据管理模块：缓存管理（清空缓存）+ 数据导出（模块选择+格式选择）+ 数据备份（立即备份/导入恢复）
+- 新增实验功能模块：Mermaid/KaTeX/AI 助手/Backlink 开关面板，Beta 提示横幅
+- 外观设置扩展：界面圆角（4档）、动画速度（4档）、界面密度（3档 舒适/标准/紧凑），通过 CSS 变量实时生效
+- 新增 notificationConfigStore（Pinia）：通知配置 localStorage + 后端双持久化，含桌面通知权限管理
+- 新增 featureFlagStore（Pinia）+ useFeatureFlag composable：实验功能开关响应式管理
+- 新增后端 ExportController + BackupController：导出/备份 RESTful 接口
+- 新增 systemApi.ts：前端导出/备份 API 调用封装
+- SettingsView 通知/实验功能 Tab 从 PlaceholderTab 替换为正式组件；数据 Tab 替换为 DataManagement
+
 ### 2026-07-12 系统设置 V2 Phase 1
 - 全面重写 SettingsView：自定义 Icon+Label Tab 导航（6个Tab），内容 fadeIn 切换动画，max-width 1080px
 - 新增外观设置模块：主题切换（浅色/深色）+ 强调色选择（5色），从 AppLayout 迁入设置页，双向状态同步
