@@ -34,3 +34,9 @@ export interface LayoutSaveRequest {
   layoutType: string
   layoutJson: string
 }
+
+/** 外观配置 */
+export interface AppearanceConfig {
+  theme: 'light' | 'dark'
+  accent: 'blue' | 'purple' | 'green' | 'orange' | 'cyan'
+}
