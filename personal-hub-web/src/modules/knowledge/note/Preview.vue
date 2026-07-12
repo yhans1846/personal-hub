@@ -5,7 +5,7 @@ import { getNotePreview, restoreNote, exportNote } from '@/api/noteApi'
 import { ElMessage } from 'element-plus'
 import { MdPreview } from 'md-editor-v3'
 import 'md-editor-v3/lib/style.css'
-import { RotateCcw, Download, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-vue-next'
+import { RotateCcw, Download, ArrowLeft, ChevronLeft, ChevronRight, Clock } from 'lucide-vue-next'
 import type { NoteVO } from '@/types/note'
 
 const route = useRoute()
@@ -57,6 +57,11 @@ const bannerText = computed(() =>
   isTrash.value ? '该笔记位于回收站，仅支持查看。' : '预览模式'
 )
 const bannerType = computed(() => isTrash.value ? 'warning' : 'info')
+
+function formatTime(dateStr?: string) {
+  if (!dateStr) return ''
+  return dateStr.slice(0, 16).replace('T', ' ')
+}
 
 /** 从 Markdown 提取标题大纲 */
 interface TocItem {
@@ -260,6 +265,9 @@ function handleClose() {
           <h1 class="preview-title">{{ note.title }}</h1>
 
           <div class="preview-meta">
+            <span class="meta-block meta-time">
+              <Clock :size="12" /> {{ formatTime(note.updatedAt) }}
+            </span>
             <span v-if="note.categories?.length" class="meta-block">
               <span class="meta-label">分类</span>
               <span v-for="c in note.categories" :key="c.id" class="meta-tag">{{ c.name }}</span>
@@ -562,6 +570,14 @@ function handleClose() {
 }
 
 .meta-label { color: var(--text-tertiary); }
+
+.meta-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-tertiary);
+  font-size: var(--text-xs);
+}
 
 .meta-tag {
   display: inline-block;
