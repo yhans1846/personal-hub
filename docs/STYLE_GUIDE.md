@@ -176,7 +176,7 @@ personal-hub-web/src/
 │       ├── login/     # 登录页
 │       └── settings/  # 系统设置（布局自定义）
 ├── router/           # 路由配置
-├── stores/           # Pinia（auth / theme / layout / notification）
+├── stores/           # Pinia（auth / theme / layout / readingConfig / notification）
 ├── styles/           # 全局样式 + 设计令牌
 ├── types/            # TS 类型定义
 └── utils/            # 工具函数

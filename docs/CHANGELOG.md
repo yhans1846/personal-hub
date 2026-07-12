@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### 2026-07-12 阅读配置迁移至系统设置 + 图片比例可调
+- 新增 `readingConfigStore` (Pinia) 统一管理字号/宽度/行高/主题/图片比例，localStorage + 后端双持久化
+- 系统设置页新增「阅读体验」Tab，替代预览页 popover 阅读设置
+- 阅读设置包含：字号(14-22)、宽度(900-1280)、行高(1.4-2.0)、4 主题(follow/light/dark/sepia)、图片显示比例(60%-100%)
+- 图片比例通过 CSS 变量 `--image-max-width` 动态控制，Preview.vue / Editor.vue 预览区同步生效
+- 删除旧 `usePreviewSettings.ts` / `usePreviewTheme.ts` / `ReadingSettings.vue`
+- 旧 localStorage key 自动迁移（`preview-reading-settings` + `preview-theme` → `reading-config`）
+- 后端 `user_layout` 表新增 `layout_type='preview'` 支持
+- JWT 过滤器支持 `?token=` 查询参数认证，解决 `<img>` 标签无法添加 Authorization header 的问题
+- Preview.vue 图片 src 通过 `setupImageProxy()` 自动改写为 API 路径 + token
+
 ### 2026-07-12 Markdown 导入功能（文件 + 粘贴）
 - 新增 `ph-knowledge/imports/` 组件包：ResourceScanner（扫描）、ResourceResolver（解析）、ResourceDownloader（下载）、MarkdownRewriter（重写）、ImportReport（报告）
 - 方式一「从 Markdown 文件导入」：上传 .md 文件，自动下载网络图片/复制本地文件，支持 baseDir 参数解析相对路径

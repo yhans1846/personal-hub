@@ -2,7 +2,7 @@
 
 > 面向 AI 代理与开发者
 
-**最后更新：** 2026-07-12
+**最后更新：** 2026-07-12 v2（阅读配置迁移至系统设置）
 
 ---
 
@@ -14,15 +14,15 @@ src/
 │   └── DocLayout.vue                          # 统一文档布局（Header + TOC + 正文）
 ├── styles/
 │   └── markdown-prose.css                     # 全局 Markdown 排版系统（全局导入）
+├── store/
+│   └── readingConfigStore.ts                  # 阅读配置 Pinia store（localStorage+后端双持久化）
 └── modules/knowledge/note/
     ├── Preview.vue                            # 预览页入口
     └── preview/
-        ├── PreviewHeader.vue                  # 顶栏（返回 / 标题 / meta / Aa / 更多）
+        ├── PreviewHeader.vue                  # 顶栏（返回 / 标题 / meta / 更多）
         ├── PreviewToc.vue                     # 左侧目录（可折叠 / 可拖拽）
-        ├── ReadingSettings.vue                # 阅读设置面板（字号 / 宽度 / 行高 / 主题）
-        ├── PreviewTheme.vue                   # 主题选择器（备用）
-        ├── usePreviewSettings.ts              # 阅读设置 composable（reactive + localStorage）
-        └── usePreviewTheme.ts                 # 主题 composable（data-preview-theme + MutationObserver）
+        ├── PreviewTheme.vue                   # 主题选择器（备用，未使用）
+        └── useReadingTheme.ts                 # 主题 DOM composable（data-preview-theme + MutationObserver）
 ```
 
 ---
@@ -59,18 +59,19 @@ src/
 - 正文区必须同时设 `fontSize` / `lineHeight` 和 `--prose-font-size` / `--prose-line-height` 两个 CSS 变量，否则 `markdown-prose` 内部拿不到变量值
 - `.doc-content` 只设垂直内边距（`padding: var(--sp-2) 0`），**水平留白由 `:deep(.md-editor-preview)` 的 `padding-inline: 48px` 控制**
 
-### 2.2 ReadingSettings
+### 2.2 阅读配置
+
+阅读配置已从预览页 popover 迁移至系统设置页（`SettingsView → 阅读体验`），通过 `readingConfigStore` 统一管理：
 
 ```html
-<ReadingSettings
-  :settings="settings"
-  :theme="theme"
-  @update:settings="Object.assign(settings, $event)"
-  @update:theme="setTheme($event as any)"
-/>
+<!-- 预览页不再需要传递 settings props，由 store 自动同步 -->
+<DocLayout :title="title" ...>
+  <template #header-actions>
+    <!-- 只有 el-dropdown（导出/恢复），阅读设置移到了系统设置页 -->
+  </template>
+  ...
+</DocLayout>
 ```
-
-**注意：** `settings` 必须是 `reactive` 对象，`Object.assign` 直接修改触发响应式更新。不要替换整个对象。
 
 ### 2.3 PreviewToc
 
@@ -142,22 +143,44 @@ src/
 
 ### 4.3 持久化
 
-| Key | 存储内容 |
-|-----|---------|
-| `preview-theme` | 主题偏好（follow/light/dark/sepia） |
-| `preview-reading-settings` | 字号/宽度/行高 JSON |
+阅读配置通过 `readingConfigStore`（Pinia）统一管理，双存储策略：
+
+| 存储层 | 方式 | 说明 |
+|--------|------|------|
+| localStorage | key=`reading-config` | 即时读写，确保离线可用 |
+| 后端 | `user_layout(layout_type='preview')` | 异步防抖(500ms)同步，跨设备共享 |
+
+**旧 key 迁移：** 首次加载时自动读取旧 `preview-theme` / `preview-reading-settings`，合并到新 key `reading-config` 后清理旧 key。`readingWidth=960` 自动修正为 `1100`。
+
+### 4.4 图片显示比例
+
+图片 `max-width` 通过 CSS 变量 `--image-max-width` 控制，Preview.vue 和 Editor.vue 预览区一致生效：
+
+```css
+/* 组件级 CSS，不再硬编码 80% */
+:deep(.md-editor-preview img) {
+  max-width: var(--image-max-width, 80%);
+  height: auto;
+}
+```
+
+缩放选项：60% / 70% / 80% / 90% / 100%，在系统设置「阅读体验 → 图片显示」中调节。
 
 ---
 
 ## 5. 注意事项
 
-### 5.1 `:deep()` 使用原则
+### 5.1 图片认证
+
+笔记图片存储在 `notes/{noteId}/images/` 目录，通过 API `/api/notes/{noteId}/images/{filename}` 访问。由于 `<img>` 标签无法添加 `Authorization` header，JWT 过滤器同时支持 `?token=xxx` 查询参数认证。前端 `setupImageProxy()` 自动将相对路径 `images/xxx.png` 改写为带 token 的完整 API 路径。
+
+### 5.2 `:deep()` 使用原则
 
 - **仅用于覆盖 md-editor-v3 和 @vavt/markdown-theme 的硬编码样式**
 - 排版规则统一写在 `markdown-prose.css`，不要写在 `:deep()` 里
 - 每个 `:deep()` 块必须注释说明为什么需要覆盖
 
-### 5.2 md-editor-v3 已知问题与修复
+### 5.3 md-editor-v3 已知问题与修复
 
 | 问题 | 源代码位置 | 修复 |
 |------|-----------|------|
@@ -169,14 +192,15 @@ src/
 | 白色背景 | `.md-editor` `background-color` | `:deep()` → `transparent !important` |
 | 代码块标题 `z-index: 10000` | `.md-editor-code-head` | 全局 `.preview-settings-popper { z-index: 10001 }` |
 
-### 5.3 目录定位
+### 5.4 目录定位
 
 `scrollToHeading(id)` 必须用 `document.getElementById(id)`，**禁止用 `textContent` 匹配**。`setupHeadingAnchors` 给每个标题插入了 `.heading-anchor`（`#` 文字），`textContent` 会包含它，导致匹配失败。
 
-### 5.4 内容加载顺序
+### 5.5 内容加载顺序
 
 ```
 onMounted → 加载数据 → watch(content) → nextTick → 
+  setupImageProxy()    (改写图片 src 为 API 路径)
   setupObserver()      (200ms 延迟)
   setupImageZoom()     (nextTick)
   setupCodeCopy()      (nextTick, 检查 .code-copy-btn 防重复)
@@ -186,7 +210,7 @@ onMounted → 加载数据 → watch(content) → nextTick →
 
 **主题切换时需重新调用 `setupImageZoom()`**，因为 MdPreview 重渲染会替换 DOM。
 
-### 5.5 其他页面复用
+### 5.6 其他页面复用
 
 帮助文档、README、笔记只读模式等页面复用 DocLayout + markdown-prose：
 

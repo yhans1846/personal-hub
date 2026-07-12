@@ -4,6 +4,7 @@
 
 - **基础路径**: `http://localhost:8080/api`
 - **Content-Type**: `application/json` | **Authorization**: `Bearer {token}`
+- **图片等静态资源**：支持 `?token=xxx` 查询参数认证（适用于 `<img>` 标签等无法添加 Authorization header 的场景）
 
 | 动作 | 方法 |
 |------|------|
@@ -363,7 +364,7 @@ POST /api/categories
 | POST | /api/layout/import | 导入布局配置 | 是 |
 | DELETE | /api/layout/{type} | 删除恢复默认布局 | 是 |
 
-**layout_type**: menu / dashboard
+**layout_type**: menu / dashboard / preview（用于阅读体验设置）
 
 **PUT /api/layout**
 ```json
