@@ -48,7 +48,7 @@ async function handleToggleFavorite(note: NoteVO) {
 <template>
   <div>
     <PageHeader title="笔记" subtitle="记录想法与知识">
-      <el-link class="recycle-link" :underline="false" @click="router.push('/notes/recycle')">
+      <el-link class="recycle-link" underline="never" @click="router.push('/notes/recycle')">
         <Trash2 :size="14" style="margin-right: 4px" /> 回收站
       </el-link>
     </PageHeader>
