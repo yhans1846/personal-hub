@@ -35,6 +35,7 @@ public class Note {
     private LocalDateTime deletedAt;
 
     /** 删除原因（USER_DELETE/AUTO_ARCHIVE） */
+    @TableField(insertStrategy = FieldStrategy.IGNORED)
     private String deleteReason;
 
     /** 创建时间 */

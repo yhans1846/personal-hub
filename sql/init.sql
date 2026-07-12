@@ -143,7 +143,7 @@ CREATE TABLE `note_note`  (
                               `is_favorite` tinyint NOT NULL DEFAULT 0 COMMENT '是否收藏',
                               `is_deleted` tinyint NOT NULL DEFAULT 0 COMMENT '逻辑删除',
                               `deleted_at` datetime NULL DEFAULT NULL COMMENT '删除时间',
-                              `delete_reason` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '删除原因（USER_DELETE/AUTO_ARCHIVE）',
+                              `delete_reason` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '删除原因（USER_DELETE/AUTO_ARCHIVE）',
                               `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
                               `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
                               PRIMARY KEY (`id`) USING BTREE,
