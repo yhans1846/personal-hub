@@ -124,6 +124,18 @@ function selectItem(item: { path?: string }) {
 function onOverlayClick() {
   visible.value = false
 }
+
+/** 外部调用的打开方法 */
+function open() {
+  visible.value = true
+  keyword.value = ''
+  activeIndex.value = 0
+  apiGroups.value = []
+  showApiResults.value = false
+  setTimeout(() => document.getElementById('cp-input')?.focus(), 50)
+}
+
+defineExpose({ open })
 </script>
 
 <template>

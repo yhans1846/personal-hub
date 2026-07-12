@@ -3,8 +3,8 @@ import type { Component } from 'vue'
 import { useAuthStore } from '@/store/authStore'
 import { useLayoutStore } from '@/store/layoutStore'
 import { useRouter, useRoute } from 'vue-router'
-import { LayoutDashboard, FileText, BookOpen, CheckSquare, PenLine, Bookmark, Target, BookMarked, FolderOpen, Grid3X3, Tags, Settings, Trash2, Search, BarChart3, Plus, Github, Sun, Moon, Palette, Menu, X, ChevronDown, Library, Archive, Cog, LogOut } from 'lucide-vue-next'
-import { ref, onMounted } from 'vue'
+import { LayoutDashboard, FileText, BookOpen, CheckSquare, PenLine, Bookmark, Target, BookMarked, FolderOpen, Grid3X3, Tags, Settings, Trash2, Search, BarChart3, Sun, Moon, Menu, X, ChevronDown, Library, Archive, Cog, LogOut } from 'lucide-vue-next'
+import { ref, computed, onMounted } from 'vue'
 import CommandPalette from './CommandPalette.vue'
 import NotificationBell from './NotificationBell.vue'
 import TodoDialog from '@/modules/planning/todo/TodoDialog.vue'
@@ -58,6 +58,36 @@ function isActiveRoute(item: MenuItem): boolean {
 const sidebarOpen = ref(false)
 
 function toggleSidebar() { sidebarOpen.value = !sidebarOpen.value }
+
+// 命令面板引用
+const commandPaletteRef = ref<InstanceType<typeof CommandPalette>>()
+function openCommandPalette() { commandPaletteRef.value?.open() }
+
+// 用户头像
+const userName = computed(() => authStore.user?.nickname || authStore.user?.username || '')
+const avatarInitial = computed(() => userName.value ? userName.value[0].toUpperCase() : '?')
+
+function handleUserCommand(cmd: string) {
+  if (cmd === 'settings') router.push('/settings')
+  else if (cmd === 'logout') authStore.logout()
+}
+
+// 面包屑导航
+const sectionMap: Record<string, string> = {
+  notes: '知识', todos: '工作台', diaries: '知识',
+  bookmarks: '资源', 'study-records': '知识', 'study-plans': '工作台',
+  readings: '知识', files: '资源', categories: '管理',
+  tags: '管理', stats: '统计', settings: '系统',
+}
+const breadcrumbItems = computed(() => {
+  if (route.path === '/dashboard') return [{ label: '首页' }]
+  const items: { label: string }[] = []
+  const seg = route.path.split('/')[1]
+  if (sectionMap[seg]) items.push({ label: sectionMap[seg] })
+  const title = route.meta?.title as string
+  if (title) items.push({ label: title })
+  return items.length ? items : [{ label: '首页' }]
+})
 function closeSidebar() { sidebarOpen.value = false }
 
 // 菜单分组折叠
@@ -141,64 +171,54 @@ function handleQuickCreate(cmd: string) {
           <Menu :size="20" />
         </button>
         <router-link to="/" class="topbar-brand">
-          <svg class="brand-logo" width="22" height="22" viewBox="0 0 22 22" fill="none">
-            <rect x="2" y="2" width="9" height="9" rx="2.5" fill="var(--accent)" opacity="0.55" />
-            <rect x="7" y="7" width="9" height="9" rx="2.5" fill="var(--accent)" opacity="0.75" />
-            <rect x="12" y="12" width="9" height="9" rx="2.5" fill="var(--accent)" />
-          </svg>
-          <span class="brand-text">Personal Hub</span>
+          <span class="brand-text">⚡ Personal Hub</span>
         </router-link>
       </div>
       <div class="topbar-center">
-        <div class="search-trigger" @click="router.push('/search')" title="Ctrl+K 打开命令面板">
+        <div class="search-trigger" @click="openCommandPalette" title="Ctrl+K 打开命令面板">
           <Search :size="14" />
-          <span class="search-hint">搜索...</span>
+          <span class="search-hint">搜索所有内容...</span>
           <kbd class="search-kbd">Ctrl+K</kbd>
         </div>
       </div>
 
       <div class="topbar-actions">
-        <!-- 快捷创建（暂隐藏） -->
-
-
-        <!-- GitHub -->
-        <a href="https://github.com/yhans1846/personal-hub" target="_blank" class="topbar-icon-btn" title="GitHub">
-          <Github :size="18" />
-        </a>
-
         <!-- 主题切换 -->
         <button class="topbar-icon-btn" :title="isDark ? '浅色模式' : '深色模式'" @click="toggleTheme">
           <Sun v-if="isDark" :size="18" />
           <Moon v-else :size="18" />
         </button>
 
-        <!-- 强调色 -->
-        <el-dropdown trigger="click" placement="bottom">
-          <button class="topbar-icon-btn" title="主题色">
-            <Palette :size="18" />
-          </button>
-          <template #dropdown>
-            <div class="accent-picker">
-              <span class="accent-picker__label">主题色</span>
-              <div class="accent-picker__colors">
-                <button
-                  v-for="ac in accentColors" :key="ac.key"
-                  class="accent-dot"
-                  :class="{ active: currentAccent === ac.key }"
-                  :style="{ background: ac.color }"
-                  :title="ac.key"
-                  @click="setAccent(ac.key)"
-                />
-              </div>
-            </div>
-          </template>
-        </el-dropdown>
-
         <!-- 通知 -->
         <NotificationBell />
+
+        <!-- 用户头像 -->
+        <el-dropdown trigger="click" placement="bottom-end" @command="handleUserCommand">
+          <button class="topbar-icon-btn topbar-avatar" :title="userName">
+            <span class="avatar-text">{{ avatarInitial }}</span>
+          </button>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item command="settings">
+                <Cog :size="14" style="margin-right: 6px; vertical-align: -2px;" />系统设置
+              </el-dropdown-item>
+              <el-dropdown-item command="logout" divided>
+                <LogOut :size="14" style="margin-right: 6px; vertical-align: -2px;" />退出登录
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
       </div>
 
     </header>
+
+    <!-- 面包屑导航 -->
+    <div class="header-breadcrumb">
+      <template v-for="(item, idx) in breadcrumbItems" :key="idx">
+        <span v-if="idx > 0" class="breadcrumb-sep">/</span>
+        <span class="breadcrumb-item">{{ item.label }}</span>
+      </template>
+    </div>
 
     <div class="app-body">
       <!-- 侧边栏遮罩（移动端） -->
@@ -252,7 +272,7 @@ function handleQuickCreate(cmd: string) {
         </div>
       </main>
     </div>
-    <CommandPalette />
+    <CommandPalette ref="commandPaletteRef" />
 
     <!-- 快捷创建弹窗 -->
     <TodoDialog v-model="todoVisible" @saved="todoVisible = false" />
@@ -268,11 +288,11 @@ function handleQuickCreate(cmd: string) {
 
 /* ============ 顶部栏 ============ */
 .topbar {
-  height: var(--topbar-height);
+  height: 64px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 var(--sp-6);
+  padding: 0 24px;
   border-bottom: 1px solid color-mix(in srgb, var(--border-color) 30%, transparent);
   background: var(--bg-card);
   flex-shrink: 0;
@@ -293,11 +313,11 @@ function handleQuickCreate(cmd: string) {
 }
 .brand-logo { flex-shrink: 0; }
 
-.topbar-center { flex: 1; display: flex; justify-content: center; max-width: 400px; margin: 0 auto; }
+.topbar-center { flex: 1; display: flex; justify-content: center; max-width: 480px; margin: 0 auto; }
 .search-trigger {
   display: flex; align-items: center; gap: var(--sp-2);
-  padding: 6px 14px; width: 100%;
-  border-radius: var(--radius-sm);
+  padding: 7px 16px; width: 100%;
+  border-radius: var(--radius-lg);
   border: 1px solid var(--border-color);
   color: var(--text-tertiary); font-size: var(--text-sm);
   cursor: pointer; transition: all var(--transition);
@@ -318,6 +338,45 @@ function handleQuickCreate(cmd: string) {
 .topbar-icon-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
 .quick-create-btn { gap: 4px; height: 32px; }
 
+/* ─── 面包屑导航 ─── */
+.header-breadcrumb {
+  display: flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 24px;
+  gap: 6px;
+  background: var(--bg-card);
+  border-bottom: 1px solid color-mix(in srgb, var(--border-color) 20%, transparent);
+  flex-shrink: 0;
+}
+.breadcrumb-item {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  line-height: 1;
+}
+.breadcrumb-sep {
+  font-size: 12px;
+  color: var(--border-color);
+  line-height: 1;
+}
+.breadcrumb-item:last-child {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* ─── 用户头像 ─── */
+.topbar-avatar {
+  width: 32px;
+  height: 32px;
+  background: var(--accent-light);
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 50%;
+}
+.topbar-avatar:hover {
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+}
 
 /* ============ 主体区域 ============ */
 .app-body { display: flex; flex: 1; overflow: hidden; }
@@ -485,8 +544,9 @@ function handleQuickCreate(cmd: string) {
   .search-hint { display: none; }
   .topbar-actions { margin: 0 var(--sp-2); gap: var(--sp-1); }
   .quick-create-btn span { display: none; }
-  .brand-text { display: none; }
+  .brand-text { font-size: 14px; }
   .main-content { padding: var(--sp-4); }
+  .header-breadcrumb { padding: 0 var(--sp-3); height: 28px; }
 
   .sidebar-overlay { display: block; opacity: 0; visibility: hidden; transition: all var(--transition); }
   .sidebar-overlay.open { opacity: 1; visibility: visible; }
