@@ -78,7 +78,7 @@ function onAutoSaved() {
       <Transition name="tab-fade" mode="out-in">
         <div class="tab-pane" :key="activeTab">
           <!-- 工作台 -->
-          <div v-if="activeTab === 'workspace'">
+          <div v-if="activeTab === 'workspace'" class="workspace-grid">
             <UiCard class="settings-card">
               <h3 class="card-title">菜单管理</h3>
               <MenuManager />
@@ -125,7 +125,7 @@ function onAutoSaved() {
 
 <style scoped>
 .settings-page {
-  max-width: 1080px;
+  max-width: 1200px;
   margin: 0 auto;
   width: 100%;
 }
@@ -189,10 +189,22 @@ function onAutoSaved() {
   width: 100%;
 }
 .card-title {
-  margin: 0 0 8px;
-  font-size: 16px;
-  font-weight: 600;
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-weight: 700;
   color: var(--text-primary);
+}
+
+/* ─── 两栏布局 ─── */
+.workspace-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+.workspace-grid > .settings-card {
+  margin-bottom: 0;
+  min-width: 0;
 }
 
 /* ─── 自动保存条 ─── */

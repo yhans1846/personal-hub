@@ -232,10 +232,10 @@ onMounted(() => {
 <style scoped>
 .data-management { }
 
-.setting-section { margin-bottom: 28px; }
+.setting-section { margin-bottom: 20px; }
 
 .section-title {
-  margin: 0 0 14px;
+  margin: 0 0 10px;
   font-size: 13px;
   font-weight: 600;
   color: var(--text-secondary);

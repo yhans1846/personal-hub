@@ -30,9 +30,9 @@ import ExperimentalFeatures from './ExperimentalFeatures.vue'
   margin-bottom: 20px;
 }
 .card-title {
-  margin: 0 0 8px;
-  font-size: 16px;
-  font-weight: 600;
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-weight: 700;
   color: var(--text-primary);
 }
 </style>

@@ -2,7 +2,7 @@
 withDefaults(defineProps<{
   padding?: string
   hoverable?: boolean
-}>(), { padding: 'var(--sp-6)', hoverable: false })
+}>(), { padding: '28px', hoverable: false })
 </script>
 
 <template>

@@ -164,16 +164,16 @@ async function handleReset() {
 .manager-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--sp-4); }
 .manager-hint { font-size: var(--text-xs); color: var(--text-tertiary); }
 
-.menu-groups { display: flex; flex-direction: column; gap: 32px; }
+.menu-groups { display: flex; flex-direction: column; gap: 20px; }
 
 /* 分组标题 — Section 规范 */
 .group-header {
   display: flex; align-items: center; gap: 6px;
-  font-size: 13px; font-weight: 600;
-  color: var(--text-secondary);
-  padding: 0 0 8px 0;
+  font-size: 14px; font-weight: 700;
+  color: var(--text-primary);
+  padding: 0 0 10px 0;
   cursor: pointer; user-select: none;
-  border-bottom: 1px solid var(--border-light);
+  border-bottom: 1.5px solid var(--border-color);
   transition: color 150ms ease;
 }
 .group-header:hover { color: var(--text-primary); }
@@ -184,11 +184,11 @@ async function handleReset() {
 .group-header.collapsed .group-chevron { transform: rotate(-90deg); }
 
 /* 分组内列表 */
-.group-items { display: flex; flex-direction: column; gap: var(--sp-1); padding-top: 8px; }
+.group-items { display: flex; flex-direction: column; gap: 2px; padding-top: 10px; }
 
 .menu-item {
   display: flex; align-items: center; gap: var(--sp-3);
-  padding: var(--sp-2) var(--sp-3) var(--sp-2) var(--sp-6);
+  padding: 6px var(--sp-3) 6px 28px;
   border-radius: var(--radius-sm);
   transition: background var(--transition);
   cursor: default;

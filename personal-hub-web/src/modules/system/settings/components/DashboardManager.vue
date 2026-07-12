@@ -80,7 +80,7 @@ async function handleReset() {
 .card-list { display: flex; flex-direction: column; gap: var(--sp-1); }
 .card-item {
   display: flex; align-items: center; gap: var(--sp-3);
-  padding: var(--sp-2) var(--sp-3);
+  padding: 6px var(--sp-3);
   border-radius: var(--radius-sm);
   transition: background var(--transition);
   cursor: default;

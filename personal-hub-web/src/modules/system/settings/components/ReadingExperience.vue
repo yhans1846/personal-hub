@@ -47,7 +47,13 @@ async function handleReset() {
   <div class="reading-experience">
     <!-- 阅读基础 -->
     <section class="setting-section">
-      <h3 class="section-title">阅读基础</h3>
+      <div class="section-title-row">
+        <h3 class="section-title">阅读基础</h3>
+        <button class="reset-link" @click="handleReset">
+          <RotateCcw :size="12" />
+          恢复默认
+        </button>
+      </div>
 
       <div class="setting-row">
         <label class="setting-label">字号</label>
@@ -173,14 +179,6 @@ async function handleReset() {
         >14px</button>
       </div>
     </section>
-
-    <!-- 恢复默认 -->
-    <div class="reset-area">
-      <button class="reset-btn" @click="handleReset">
-        <RotateCcw :size="14" />
-        恢复默认设置
-      </button>
-    </div>
   </div>
 </template>
 
@@ -189,14 +187,39 @@ async function handleReset() {
 
 /* ─── 分区 ─── */
 .setting-section {
-  margin-bottom: 28px;
+  margin-bottom: 20px;
+}
+
+.section-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
 }
 
 .section-title {
-  margin: 0 0 14px;
+  margin: 0;
   font-size: 13px;
   font-weight: 600;
   color: var(--text-secondary);
+}
+
+.reset-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: all 150ms ease;
+}
+.reset-link:hover {
+  color: var(--accent);
+  background: var(--accent-light);
 }
 
 .setting-row {
@@ -448,29 +471,4 @@ async function handleReset() {
   background: color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
-/* ─── 恢复默认 ─── */
-.reset-area {
-  padding-top: 12px;
-  border-top: 1px solid var(--border-light);
-}
-
-.reset-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  font-size: 13px;
-  color: var(--text-tertiary);
-  border: 1px solid var(--border-color);
-  background: var(--bg-card);
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 150ms ease;
-}
-
-.reset-btn:hover {
-  color: var(--danger);
-  border-color: var(--danger);
-  background: var(--danger-light);
-}
 </style>

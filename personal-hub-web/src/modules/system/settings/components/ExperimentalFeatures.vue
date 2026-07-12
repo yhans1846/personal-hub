@@ -27,7 +27,13 @@ function handleReset() {
     </div>
 
     <section class="setting-section">
-      <h3 class="section-title">功能开关</h3>
+      <div class="section-title-row">
+        <h3 class="section-title">功能开关</h3>
+        <button class="reset-link" @click="handleReset">
+          <RotateCcw :size="12" />
+          关闭全部
+        </button>
+      </div>
       <div class="flag-list">
         <div
           v-for="meta in FLAG_META"
@@ -64,13 +70,6 @@ function handleReset() {
       >前往 GitHub →</a>
     </section>
 
-    <!-- 恢复默认 -->
-    <div class="reset-area">
-      <button class="reset-btn" @click="handleReset">
-        <RotateCcw :size="14" />
-        关闭全部
-      </button>
-    </div>
   </div>
 </template>
 
@@ -88,13 +87,38 @@ function handleReset() {
   margin-bottom: 24px;
 }
 
-.setting-section { margin-bottom: 28px; }
+.setting-section { margin-bottom: 20px; }
+
+.section-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
 
 .section-title {
-  margin: 0 0 14px;
+  margin: 0;
   font-size: 13px;
   font-weight: 600;
   color: var(--text-secondary);
+}
+
+.reset-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: all 150ms ease;
+}
+.reset-link:hover {
+  color: var(--accent);
+  background: var(--accent-light);
 }
 
 /* 功能开关列表 */
@@ -140,13 +164,4 @@ function handleReset() {
 }
 .feedback-link:hover { text-decoration: underline; }
 
-/* 恢复默认 */
-.reset-area { padding-top: 12px; border-top: 1px solid var(--border-light); }
-.reset-btn {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 8px 16px; font-size: 13px; color: var(--text-tertiary);
-  border: 1px solid var(--border-color); background: var(--bg-card);
-  border-radius: 6px; cursor: pointer; transition: all 150ms ease;
-}
-.reset-btn:hover { color: var(--danger); border-color: var(--danger); background: var(--danger-light); }
 </style>
