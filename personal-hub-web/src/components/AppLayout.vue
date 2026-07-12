@@ -7,6 +7,10 @@ import { LayoutDashboard, FileText, BookOpen, CheckSquare, PenLine, Bookmark, Ta
 import { ref, onMounted } from 'vue'
 import CommandPalette from './CommandPalette.vue'
 import NotificationBell from './NotificationBell.vue'
+import TodoDialog from '@/modules/planning/todo/TodoDialog.vue'
+import DiaryDialog from '@/modules/knowledge/diary/DiaryDialog.vue'
+import BookmarkDialog from '@/modules/resource/bookmark/BookmarkDialog.vue'
+import StudyDrawer from '@/modules/knowledge/study/StudyDrawer.vue'
 import type { MenuItem } from '@/types/layout'
 
 const authStore = useAuthStore()
@@ -102,16 +106,19 @@ onMounted(() => {
   if (!layoutStore.loaded) layoutStore.fetchLayout()
 })
 
-// 快捷创建
+// 快捷创建 — 弹窗/跳转统一入口
+const todoVisible = ref(false)
+const diaryVisible = ref(false)
+const bookmarkVisible = ref(false)
+const studyVisible = ref(false)
+
 function handleQuickCreate(cmd: string) {
-  const routes: Record<string, string> = {
-    note: '/notes/new',
-    todo: '/todos/new',
-    diary: '/diaries/new',
-    bookmark: '/bookmarks/new',
-    'study-record': '/study-records/new'
-  }
-  router.push(routes[cmd] || '/notes/new')
+  if (cmd === 'note') { router.push('/notes/new'); return }
+  if (cmd === 'todo') { todoVisible.value = true; return }
+  if (cmd === 'diary') { diaryVisible.value = true; return }
+  if (cmd === 'bookmark') { bookmarkVisible.value = true; return }
+  if (cmd === 'study-record') { studyVisible.value = true; return }
+  router.push('/notes/new')
 }
 </script>
 
@@ -250,6 +257,12 @@ function handleQuickCreate(cmd: string) {
       </main>
     </div>
     <CommandPalette />
+
+    <!-- 快捷创建弹窗 -->
+    <TodoDialog v-model="todoVisible" @saved="todoVisible = false" />
+    <DiaryDialog v-model="diaryVisible" @saved="diaryVisible = false" />
+    <BookmarkDialog v-model="bookmarkVisible" @saved="bookmarkVisible = false" />
+    <StudyDrawer v-model="studyVisible" @saved="studyVisible = false" />
   </div>
 </template>
 
@@ -264,7 +277,7 @@ function handleQuickCreate(cmd: string) {
   align-items: center;
   justify-content: space-between;
   padding: 0 var(--sp-6);
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid color-mix(in srgb, var(--border-color) 30%, transparent);
   background: var(--bg-card);
   flex-shrink: 0;
   z-index: 100;
@@ -320,7 +333,7 @@ function handleQuickCreate(cmd: string) {
 }
 .sidebar {
   width: var(--sidebar-width); background: var(--bg-sidebar);
-  border-right: 1px solid var(--border-color);
+  border-right: 1px solid color-mix(in srgb, var(--border-color) 30%, transparent);
   flex-shrink: 0;
   display: flex; flex-direction: column;
 }
@@ -419,7 +432,7 @@ function handleQuickCreate(cmd: string) {
 .sidebar-footer {
   display: flex; align-items: center; justify-content: space-between;
   padding: var(--sp-3) var(--sp-4);
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid color-mix(in srgb, var(--border-color) 25%, transparent);
 }
 .sidebar-user {
   display: flex; align-items: center; gap: var(--sp-2);

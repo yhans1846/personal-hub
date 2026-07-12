@@ -2,7 +2,7 @@
 import { ref, watch, computed } from 'vue'
 import { createStudyPlan, updateStudyPlan, getStudyPlanById } from '@/api/studyplanApi'
 import { ElMessage } from 'element-plus'
-import { UiInput, UiTextarea, UiDatePicker, UiButton, UiSection } from '@/components/ui'
+import { UiDialog, UiInput, UiTextarea, UiDatePicker, UiButton, UiSection } from '@/components/ui'
 
 const props = withDefaults(defineProps<{
   modelValue: boolean
@@ -59,10 +59,9 @@ async function handleSave() {
 </script>
 
 <template>
-  <el-drawer
+  <UiDialog
     :model-value="modelValue"
     :title="entityId ? '编辑计划' : '新建计划'"
-    :size="480"
     @update:model-value="emit('update:modelValue', $event)"
   >
     <el-form label-position="top">
@@ -104,7 +103,7 @@ async function handleSave() {
       <el-button @click="emit('update:modelValue', false)">取消</el-button>
       <UiButton type="primary" :loading="saving" @click="handleSave">保存</UiButton>
     </template>
-  </el-drawer>
+  </UiDialog>
 </template>
 
 <style scoped>

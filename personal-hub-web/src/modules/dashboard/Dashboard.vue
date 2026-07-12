@@ -13,6 +13,7 @@ import { getReadingList } from '@/api/readingApi'
 import { getStudyPlanList } from '@/api/studyplanApi'
 import { Plus, BookOpen, FileText, CheckCircle, File, Bookmark, BookMarked, Target, Clock } from 'lucide-vue-next'
 import StatCard from '@/components/StatCard.vue'
+import TodoDialog from '@/modules/planning/todo/TodoDialog.vue'
 import type { TodoVO } from '@/types/todo'
 import type { StudyRecordVO } from '@/types/study'
 import type { NoteVO } from '@/types/note'
@@ -33,6 +34,7 @@ const todayTodos = ref<TodoVO[]>([])
 const recentReadings = ref<ReadingVO[]>([])
 const recentBookmarks = ref<BookmarkVO[]>([])
 const loading = ref(true)
+const todoDialogVisible = ref(false)
 
 const hour = new Date().getHours()
 const greeting = hour < 6 ? '夜深了' : hour < 12 ? '上午好' : hour < 14 ? '中午好' : hour < 18 ? '下午好' : '晚上好'
@@ -115,7 +117,7 @@ const statCards = [
           <Plus :size="14" />
           新建笔记
         </el-button>
-        <el-button size="small" @click="router.push('/todos/new')">
+        <el-button size="small" @click="todoDialogVisible = true">
           <CheckCircle :size="14" />
           新建任务
         </el-button>
@@ -308,6 +310,8 @@ const statCards = [
       </div>
     </template>
   </div>
+
+  <TodoDialog v-model="todoDialogVisible" @saved="todoDialogVisible = false" />
 </template>
 
 <style scoped>
