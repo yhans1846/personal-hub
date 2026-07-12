@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { getLayoutAll, saveLayout, resetLayout } from '@/api/layoutApi'
 import { DEFAULT_MENU_ITEMS, DEFAULT_DASHBOARD_ITEMS } from '@/modules/dashboard/defaultLayouts'
-import type { MenuItem, CardItem, LayoutItem, AppearanceConfig } from '@/types/layout'
+import type { MenuItem, CardItem, LayoutItem, AppearanceConfig, ExtendedAppearanceConfig } from '@/types/layout'
 
 const STORAGE_KEY_MENU = 'layout-menu'
 const STORAGE_KEY_DASHBOARD = 'layout-dashboard'
@@ -133,14 +133,17 @@ export const useLayoutStore = defineStore('layout', () => {
   // ---- 外观配置 ----
   const STORAGE_KEY_APPEARANCE = 'appearance-config'
 
-  const DEFAULT_APPEARANCE: AppearanceConfig = {
+  const DEFAULT_APPEARANCE: ExtendedAppearanceConfig = {
     theme: 'light',
     accent: 'blue',
+    borderRadius: 'lg',
+    animationSpeed: 'normal',
+    density: 'standard',
   }
 
-  const appearanceConfig = ref<AppearanceConfig>(loadAppearance())
+  const appearanceConfig = ref<ExtendedAppearanceConfig>(loadAppearance())
 
-  function loadAppearance(): AppearanceConfig {
+  function loadAppearance(): ExtendedAppearanceConfig {
     try {
       const stored = localStorage.getItem(STORAGE_KEY_APPEARANCE)
       if (stored) return { ...DEFAULT_APPEARANCE, ...JSON.parse(stored) }
@@ -172,13 +175,13 @@ export const useLayoutStore = defineStore('layout', () => {
     localStorage.setItem('accent-preference', config.accent)
   }
 
-  async function saveAppearanceConfig(config: AppearanceConfig) {
+  async function saveAppearanceConfig(config: ExtendedAppearanceConfig) {
     appearanceConfig.value = config
     saveAppearanceLocally(config)
     applyAppearanceToDOM(config)
     await saveLayout({
       layoutType: 'appearance',
-      layoutJson: JSON.stringify({ theme: config.theme, accent: config.accent }),
+      layoutJson: JSON.stringify(config),
     })
   }
 
