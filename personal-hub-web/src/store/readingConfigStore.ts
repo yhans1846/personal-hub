@@ -1,4 +1,4 @@
-import { reactive, ref, watch } from 'vue'
+import { reactive, ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { getLayoutAll, saveLayout, resetLayout } from '@/api/layoutApi'
 
@@ -12,6 +12,9 @@ export interface ReadingConfig {
   lineHeight: number        // 范围: 1.4 - 2.0, step 0.2
   theme: PreviewTheme       // follow / light / dark / sepia
   imageMaxWidth: number     // 可选: 60, 70, 80, 90, 100 (百分比)
+  paragraphGap: number      // 段距: 1.0 / 1.2 / 1.5 (em)
+  codeFontSize: string      // 代码字号: 'same' | '13px' | '14px'
+  codeFontFamily: string    // 代码字体: 'system' | 'monospace'
 }
 
 // ========== 常量 ==========
@@ -25,6 +28,9 @@ const DEFAULTS: ReadingConfig = {
   lineHeight: 1.8,
   theme: 'follow',
   imageMaxWidth: 80,
+  paragraphGap: 1.2,
+  codeFontSize: 'same',
+  codeFontFamily: 'monospace',
 }
 
 // ========== 工具函数 ==========
@@ -151,9 +157,17 @@ export const useReadingConfigStore = defineStore('readingConfig', () => {
   // 初始化时异步加载后端数据
   fetchFromBackend()
 
+  /** 生成 CSS 变量映射，供预览页使用 */
+  const cssVars = computed(() => ({
+    '--md-paragraph-gap': `${config.paragraphGap}em`,
+    '--md-code-font-size': config.codeFontSize === 'same' ? 'inherit' : config.codeFontSize,
+    '--md-code-font-family': config.codeFontFamily === 'system' ? 'inherit' : 'var(--font-mono)',
+  }))
+
   return {
     config,
     loaded,
+    cssVars,
     updateConfig,
     resetConfig,
     fetchFromBackend,
