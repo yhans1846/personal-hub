@@ -5,7 +5,7 @@ import { getNotePreview, restoreNote, exportNote } from '@/api/noteApi'
 import { ElMessage } from 'element-plus'
 import { MdPreview } from 'md-editor-v3'
 import 'md-editor-v3/lib/style.css'
-import { RotateCcw, X, Download } from 'lucide-vue-next'
+import { RotateCcw, Download, ArrowLeft } from 'lucide-vue-next'
 import type { NoteVO } from '@/types/note'
 
 const route = useRoute()
@@ -186,6 +186,11 @@ function handleClose() {
   <div class="preview-layout">
     <!-- 顶部提示条 -->
     <div class="preview-banner" :class="`banner--${bannerType}`">
+      <div class="banner-left">
+        <el-button size="small" text @click="handleClose">
+          <ArrowLeft :size="15" style="margin-right: 4px" /> 返回
+        </el-button>
+      </div>
       <div class="banner-content">
         <span class="banner-icon">{{ isTrash ? '⚠' : '👁' }}</span>
         <span>{{ bannerText }}</span>
@@ -196,9 +201,6 @@ function handleClose() {
         </el-button>
         <el-button v-if="isTrash" size="small" type="warning" :icon="RotateCcw" @click="handleRestore">
           恢复笔记
-        </el-button>
-        <el-button size="small" text @click="handleClose">
-          <X :size="15" style="margin-right: 4px" /> 关闭页面
         </el-button>
       </div>
     </div>
@@ -291,6 +293,15 @@ function handleClose() {
   padding: var(--sp-3) var(--sp-5);
   flex-shrink: 0;
 }
+
+.banner-left {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.banner-left .el-button { color: var(--text-secondary); }
+.banner-left .el-button:hover { color: var(--text-primary); }
 
 .banner--warning {
   background: color-mix(in srgb, var(--warning) 12%, transparent);
