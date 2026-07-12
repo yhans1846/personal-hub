@@ -75,7 +75,7 @@ async function handleReset() {
 </template>
 
 <style scoped>
-.manager-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--sp-3); }
+.manager-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--sp-4); }
 .manager-hint { font-size: var(--text-xs); color: var(--text-tertiary); }
 .card-list { display: flex; flex-direction: column; gap: var(--sp-1); }
 .card-item {
