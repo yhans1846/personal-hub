@@ -10,14 +10,12 @@
 
 | 文档 | 内容 |
 |------|------|
-| PROJECT.md | 功能规划、模块依赖、项目原则 |
+| PROJECT.md | 项目概览、路线图、开发历史 |
 | TECH_STACK.md | 技术栈版本与环境要求 |
-| ROADMAP.md | 开发阶段与进度 |
 | DATABASE.md | 表结构、ER、索引 |
 | API.md | RESTful 接口定义 |
 | STYLE_GUIDE.md | 编码规范 + UI 设计系统 + 共享组件（必读） |
 | CHANGELOG.md | 版本变更记录 |
-| DEVELOPMENT_PLAN.md | 分步开发计划与提交记录 |
 
 ---
 
