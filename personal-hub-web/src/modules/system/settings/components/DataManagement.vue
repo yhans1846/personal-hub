@@ -230,7 +230,7 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.data-management { max-width: 598px; }
+.data-management { }
 
 .setting-section { margin-bottom: 28px; }
 

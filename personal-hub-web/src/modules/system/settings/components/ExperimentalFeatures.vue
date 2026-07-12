@@ -75,7 +75,7 @@ function handleReset() {
 </template>
 
 <style scoped>
-.experimental-features { max-width: 598px; }
+.experimental-features { }
 
 .beta-notice {
   display: flex; align-items: center; gap: 8px;

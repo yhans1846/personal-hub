@@ -173,7 +173,7 @@ async function handleReset() {
 </template>
 
 <style scoped>
-.appearance-settings { max-width: 598px; }
+.appearance-settings { }
 
 .setting-section { margin-bottom: 28px; }
 

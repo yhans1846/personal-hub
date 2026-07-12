@@ -185,9 +185,7 @@ async function handleReset() {
 </template>
 
 <style scoped>
-.reading-experience {
-  max-width: 598px;
-}
+.reading-experience { }
 
 /* ─── 分区 ─── */
 .setting-section {

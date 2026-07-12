@@ -2,16 +2,14 @@
 import { ref } from 'vue'
 import { useLayoutStore } from '@/store/layoutStore'
 import { ElMessageBox, ElMessage } from 'element-plus'
-import { LayoutDashboard, BookOpen, Palette, Bell, HardDrive, FlaskConical, RotateCcw } from 'lucide-vue-next'
+import { LayoutDashboard, BookOpen, Palette, Settings2, RotateCcw } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue'
 import UiCard from '@/components/ui/UiCard.vue'
 import MenuManager from './components/MenuManager.vue'
 import DashboardManager from './components/DashboardManager.vue'
 import ReadingExperience from './components/ReadingExperience.vue'
 import AppearanceSettings from './components/AppearanceSettings.vue'
-import NotificationSettings from './components/NotificationSettings.vue'
-import DataManagement from './components/DataManagement.vue'
-import ExperimentalFeatures from './components/ExperimentalFeatures.vue'
+import AdvancedSettings from './components/AdvancedSettings.vue'
 
 const layoutStore = useLayoutStore()
 
@@ -23,14 +21,13 @@ interface TabItem {
 
 const tabs: TabItem[] = [
   { key: 'workspace', icon: LayoutDashboard, label: '工作台' },
-  { key: 'reading', icon: BookOpen, label: '阅读体验' },
+  { key: 'reading', icon: BookOpen, label: '阅读' },
   { key: 'appearance', icon: Palette, label: '外观' },
-  { key: 'notification', icon: Bell, label: '通知' },
-  { key: 'data', icon: HardDrive, label: '数据' },
-  { key: 'experimental', icon: FlaskConical, label: '实验功能' },
+  { key: 'advanced', icon: Settings2, label: '高级' },
 ]
 
 const activeTab = ref('workspace')
+const showSaveHint = ref(false)
 
 async function handleResetAll() {
   try {
@@ -43,6 +40,12 @@ async function handleResetAll() {
     await layoutStore.resetAppearanceConfig()
     ElMessage.success('已恢复所有默认设置')
   } catch { /* cancelled */ }
+}
+
+// 自动保存指示（其他组件修改后触发）
+function onAutoSaved() {
+  showSaveHint.value = true
+  setTimeout(() => { showSaveHint.value = false }, 2000)
 }
 </script>
 
@@ -75,63 +78,57 @@ async function handleResetAll() {
       <Transition name="tab-fade" mode="out-in">
         <div class="tab-pane" :key="activeTab">
           <!-- 工作台 -->
-          <div v-if="activeTab === 'workspace'" class="tab-inner">
-            <UiCard>
+          <div v-if="activeTab === 'workspace'">
+            <UiCard class="settings-card">
               <h3 class="card-title">菜单管理</h3>
               <MenuManager />
             </UiCard>
-            <UiCard class="spacer-top">
+            <UiCard class="settings-card">
               <h3 class="card-title">Dashboard 卡片</h3>
               <DashboardManager />
             </UiCard>
           </div>
 
-          <!-- 阅读体验 -->
-          <div v-else-if="activeTab === 'reading'" class="tab-inner">
-            <UiCard>
+          <!-- 阅读 -->
+          <div v-else-if="activeTab === 'reading'">
+            <UiCard class="settings-card">
               <h3 class="card-title">阅读设置</h3>
               <ReadingExperience />
             </UiCard>
           </div>
 
           <!-- 外观 -->
-          <div v-else-if="activeTab === 'appearance'" class="tab-inner">
-            <UiCard>
+          <div v-else-if="activeTab === 'appearance'">
+            <UiCard class="settings-card">
               <h3 class="card-title">外观</h3>
               <AppearanceSettings />
             </UiCard>
           </div>
 
-          <!-- 通知 -->
-          <div v-else-if="activeTab === 'notification'" class="tab-inner">
-            <UiCard>
-              <h3 class="card-title">通知偏好</h3>
-              <NotificationSettings />
-            </UiCard>
-          </div>
-
-          <!-- 数据 -->
-          <div v-else-if="activeTab === 'data'" class="tab-inner">
-            <UiCard>
-              <DataManagement />
-            </UiCard>
-          </div>
-
-          <!-- 实验功能 -->
-          <div v-else-if="activeTab === 'experimental'" class="tab-inner">
-            <UiCard>
-              <h3 class="card-title">实验功能</h3>
-              <ExperimentalFeatures />
-            </UiCard>
+          <!-- 高级 -->
+          <div v-else-if="activeTab === 'advanced'">
+            <AdvancedSettings />
           </div>
         </div>
       </Transition>
     </div>
+
+    <!-- 底部自动保存指示 -->
+    <Transition name="save-fade">
+      <div v-if="showSaveHint" class="auto-save-bar">
+        <span class="auto-save-dot" />
+        已自动保存
+      </div>
+    </Transition>
   </div>
 </template>
 
 <style scoped>
-.settings-page { max-width: 1080px; }
+.settings-page {
+  max-width: 1080px;
+  margin: 0 auto;
+  width: 100%;
+}
 
 /* ─── Tab 导航 ─── */
 .settings-tabs-nav {
@@ -160,17 +157,11 @@ async function handleResetAll() {
   transition: all 150ms ease;
   position: relative;
 }
-
-.tab-btn:hover {
-  color: var(--text-secondary);
-  background: var(--bg-hover);
-}
-
+.tab-btn:hover { color: var(--text-secondary); background: var(--bg-hover); }
 .tab-btn.active {
   color: var(--accent);
   background: color-mix(in srgb, var(--accent) 8%, transparent);
 }
-
 .tab-btn.active::after {
   content: '';
   position: absolute;
@@ -189,20 +180,38 @@ async function handleResetAll() {
   min-height: 300px;
 }
 
-.tab-inner {
-  max-width: 828px;
+.settings-card {
+  margin-bottom: 20px;
 }
 
-.spacer-top {
-  margin-top: 24px;
+/* Card 标题（去掉下边距，内容直接跟上） */
+.card-header {
+  width: 100%;
 }
-
-/* UiCard 内的标题 */
 .card-title {
-  margin: 0 0 var(--sp-4);
-  font-size: 15px;
+  margin: 0 0 8px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--text-primary);
+}
+
+/* ─── 自动保存条 ─── */
+.auto-save-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: center;
+  padding: 10px 0;
+  margin-top: 24px;
+  font-size: 12px;
+  color: var(--text-tertiary);
+  border-top: 1px solid var(--border-light);
+}
+.auto-save-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--success);
 }
 
 /* ─── Tab 切换动画 ─── */
@@ -210,12 +219,12 @@ async function handleResetAll() {
 .tab-fade-leave-active {
   transition: opacity 150ms ease, transform 150ms ease;
 }
-.tab-fade-enter-from {
-  opacity: 0;
-  transform: translateY(6px);
-}
-.tab-fade-leave-to {
-  opacity: 0;
-  transform: translateY(-6px);
-}
+.tab-fade-enter-from { opacity: 0; transform: translateY(6px); }
+.tab-fade-leave-to { opacity: 0; transform: translateY(-6px); }
+
+/* ─── 保存指示动画 ─── */
+.save-fade-enter-active,
+.save-fade-leave-active { transition: opacity 300ms ease; }
+.save-fade-enter-from,
+.save-fade-leave-to { opacity: 0; }
 </style>
