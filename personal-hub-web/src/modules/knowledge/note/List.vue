@@ -17,6 +17,10 @@ const query = ref<NoteQuery>({ page: 1, size: 20, keyword: '' })
 const showImport = ref(false)
 onMounted(() => fetchList())
 
+function openImport() {
+  showImport.value = true
+}
+
 async function fetchList() {
   loading.value = true
   try {
@@ -57,7 +61,7 @@ async function handleToggleFavorite(note: NoteVO) {
 
     <ListToolbar :search="query.keyword" search-placeholder="搜索笔记标题..." search-width="240px" create-label="新建笔记" @update:search="query.keyword = $event" @search="onSearch" @create="goCreate">
       <template #actions>
-        <button class="toolbar-import-btn" @click="showImport = true">
+        <button class="toolbar-import-btn" @click="openImport">
           <Upload :size="14" /> 导入
         </button>
       </template>
@@ -109,17 +113,17 @@ async function handleToggleFavorite(note: NoteVO) {
     <ListPagination v-if="total > query.size" :total="total" :page="query.page" :size="query.size" @update:page="onPageChange" />
 
     <!-- 导入对话框 -->
-    <el-dialog
-      v-model="showImport"
-      title="导入 Markdown"
-      width="520px"
-      :close-on-click-modal="false"
-      @closed="showImport = false"
-    >
-      <ImportMarkdownDialog @done="showImport = false; fetchList()" />
-    </el-dialog>
   </div>
   </div>
+
+  <el-dialog
+    v-model="showImport"
+    title="导入 Markdown"
+    width="520px"
+    :close-on-click-modal="false"
+  >
+    <ImportMarkdownDialog @done="showImport = false; fetchList()" />
+  </el-dialog>
 </template>
 
 <style scoped>
