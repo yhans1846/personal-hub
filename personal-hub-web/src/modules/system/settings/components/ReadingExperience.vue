@@ -127,6 +127,53 @@ async function handleReset() {
       </div>
     </section>
 
+    <!-- 段距 -->
+    <section class="setting-section">
+      <h3 class="section-title">段落间距</h3>
+      <div class="inline-options">
+        <button
+          v-for="gap in [1.0, 1.2, 1.5]"
+          :key="gap"
+          :class="['inline-btn', { active: config.paragraphGap === gap }]"
+          @click="store.updateConfig({ paragraphGap: gap })"
+        >{{ gap }}em</button>
+      </div>
+    </section>
+
+    <!-- 代码字体 -->
+    <section class="setting-section">
+      <h3 class="section-title">代码字体</h3>
+      <div class="inline-options">
+        <button
+          :class="['inline-btn', { active: config.codeFontFamily === 'system' }]"
+          @click="store.updateConfig({ codeFontFamily: 'system' })"
+        >系统字体</button>
+        <button
+          :class="['inline-btn', { active: config.codeFontFamily === 'monospace' }]"
+          @click="store.updateConfig({ codeFontFamily: 'monospace' })"
+        >等宽字体</button>
+      </div>
+    </section>
+
+    <!-- 代码字号 -->
+    <section class="setting-section">
+      <h3 class="section-title">代码字号</h3>
+      <div class="inline-options">
+        <button
+          :class="['inline-btn', { active: config.codeFontSize === 'same' }]"
+          @click="store.updateConfig({ codeFontSize: 'same' })"
+        >同正文</button>
+        <button
+          :class="['inline-btn', { active: config.codeFontSize === '13px' }]"
+          @click="store.updateConfig({ codeFontSize: '13px' })"
+        >13px</button>
+        <button
+          :class="['inline-btn', { active: config.codeFontSize === '14px' }]"
+          @click="store.updateConfig({ codeFontSize: '14px' })"
+        >14px</button>
+      </div>
+    </section>
+
     <!-- 恢复默认 -->
     <div class="reset-area">
       <button class="reset-btn" @click="handleReset">
@@ -370,6 +417,34 @@ async function handleReset() {
 }
 
 .pct-btn.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+/* ─── 内联选项组 ─── */
+.inline-options {
+  display: flex;
+  gap: 4px;
+}
+
+.inline-btn {
+  padding: 6px 14px;
+  font-size: 13px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.inline-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.inline-btn.active {
   border-color: var(--accent);
   color: var(--accent);
   background: color-mix(in srgb, var(--accent) 8%, transparent);
