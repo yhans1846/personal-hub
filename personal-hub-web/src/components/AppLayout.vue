@@ -158,22 +158,8 @@ function handleQuickCreate(cmd: string) {
       </div>
 
       <div class="topbar-actions">
-        <!-- 快捷创建 -->
-        <el-dropdown trigger="click" @command="handleQuickCreate">
-          <el-button type="primary" size="small" class="quick-create-btn">
-            <Plus :size="16" />
-            <span>新建</span>
-          </el-button>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item command="note">📝 笔记</el-dropdown-item>
-              <el-dropdown-item command="todo">✅ 待办</el-dropdown-item>
-              <el-dropdown-item command="diary">📓 日记</el-dropdown-item>
-              <el-dropdown-item command="bookmark">🔖 收藏</el-dropdown-item>
-              <el-dropdown-item command="study-record">📚 学习记录</el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
+        <!-- 快捷创建（暂隐藏） -->
+
 
         <!-- GitHub -->
         <a href="https://github.com/yhans1846/personal-hub" target="_blank" class="topbar-icon-btn" title="GitHub">
