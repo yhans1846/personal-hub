@@ -40,3 +40,29 @@ export interface AppearanceConfig {
   theme: 'light' | 'dark'
   accent: 'blue' | 'purple' | 'green' | 'orange' | 'cyan'
 }
+
+/** 外观配置（含 Phase 2 扩展） */
+export interface ExtendedAppearanceConfig extends AppearanceConfig {
+  borderRadius: 'sm' | 'md' | 'lg' | 'xl'
+  animationSpeed: 'off' | 'slow' | 'normal' | 'fast'
+  density: 'comfortable' | 'standard' | 'compact'
+}
+
+/** 通知配置 */
+export interface NotificationConfig {
+  desktopEnabled: boolean
+  enabledTypes: string[]
+  soundEnabled: boolean
+  soundName: string
+  doNotDisturb: boolean
+  dndStart: string
+  dndEnd: string
+}
+
+/** 实验功能配置 */
+export interface FeatureFlags {
+  mermaid: boolean
+  katex: boolean
+  aiAssistant: boolean
+  backlink: boolean
+}
