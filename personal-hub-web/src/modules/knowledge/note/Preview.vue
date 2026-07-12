@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { getNotePreview, restoreNote } from '@/api/noteApi'
+import { getNotePreview, restoreNote, exportNote } from '@/api/noteApi'
 import { ElMessage } from 'element-plus'
 import { MdPreview } from 'md-editor-v3'
 import 'md-editor-v3/lib/style.css'
-import { RotateCcw, X } from 'lucide-vue-next'
+import { RotateCcw, X, Download } from 'lucide-vue-next'
 import type { NoteVO } from '@/types/note'
 
 const route = useRoute()
@@ -150,6 +150,22 @@ watch(() => note.value?.content, async () => {
   }
 })
 
+async function handleExport() {
+  if (!note.value) return
+  try {
+    const res = await exportNote(note.value.id)
+    const blob = new Blob([res.data], { type: 'application/zip' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${note.value.title || '笔记导出'}.zip`
+    a.click()
+    URL.revokeObjectURL(url)
+  } catch {
+    ElMessage.error('导出失败')
+  }
+}
+
 async function handleRestore() {
   if (!note.value) return
   try {
@@ -175,6 +191,9 @@ function handleClose() {
         <span>{{ bannerText }}</span>
       </div>
       <div class="banner-actions">
+        <el-button size="small" :icon="Download" @click="handleExport">
+          导出
+        </el-button>
         <el-button v-if="isTrash" size="small" type="warning" :icon="RotateCcw" @click="handleRestore">
           恢复笔记
         </el-button>

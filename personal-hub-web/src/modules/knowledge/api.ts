@@ -41,6 +41,10 @@ export function getNotePreview(id: number) {
   return request.get<Result<NoteVO>>(`/notes/${id}/preview`)
 }
 
+export function exportNote(id: number) {
+  return request.get(`/notes/${id}/export`, { responseType: 'blob' })
+}
+
 // ====== 日记 ======
 export function getDiaryList(params: DiaryQuery) {
   return request.get<Result<PageResult<DiaryVO>>>('/diaries', { params })
