@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getNoteList, deleteNote, toggleFavorite } from '@/api/noteApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, FileText, Star, Trash2, Clock, Eye, Upload, Download } from 'lucide-vue-next'
+import { Plus, FileText, Star, Trash2, Clock, Eye, Upload } from 'lucide-vue-next'
 import { EmptyState, PageHeader, ListToolbar, ListPagination } from '@/components'
 import type { NoteVO, NoteQuery } from '@/types/note'
 import { estimateReadingTime, formatRelativeTime, isRecentlyEdited } from '@/utils/readingTime'
@@ -57,21 +57,9 @@ async function handleToggleFavorite(note: NoteVO) {
 
     <ListToolbar :search="query.keyword" search-placeholder="搜索笔记标题..." search-width="240px" create-label="新建笔记" @update:search="query.keyword = $event" @search="onSearch" @create="goCreate">
       <template #actions>
-        <el-dropdown trigger="click" placement="bottom-start">
-          <button class="toolbar-import-btn">
-            <Upload :size="14" /> 导入
-          </button>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item @click="showImport = true">
-                <Upload :size="14" /> Markdown 文件
-              </el-dropdown-item>
-              <el-dropdown-item @click="showImport = true">
-                <FileText :size="14" /> Markdown 内容
-              </el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
+        <button class="toolbar-import-btn" @click="showImport = true">
+          <Upload :size="14" /> 导入
+        </button>
       </template>
     </ListToolbar>
 
