@@ -2,11 +2,12 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { getLayoutAll, saveLayout, resetLayout } from '@/api/layoutApi'
 import { useStorageSync } from '@/composables/useStorageSync'
-import { DEFAULT_MENU_ITEMS, DEFAULT_DASHBOARD_ITEMS } from '@/modules/dashboard/defaultLayouts'
+import { DEFAULT_MENU_ITEMS, DEFAULT_DASHBOARD_ITEMS, DEFAULT_STATS_CARDS } from '@/modules/dashboard/defaultLayouts'
 import type { MenuItem, CardItem, LayoutItem, AppearanceConfig, ExtendedAppearanceConfig } from '@/types/layout'
 
 const STORAGE_KEY_MENU = 'layout-menu'
 const STORAGE_KEY_DASHBOARD = 'layout-dashboard'
+const STORAGE_KEY_STATS = 'layout-stats'
 
 function loadFromStorage<T>(key: string, defaults: T[]): T[] {
   try {
@@ -31,6 +32,7 @@ export const useLayoutStore = defineStore('layout', () => {
   // --- State ---
   const menuItems = ref<MenuItem[]>(migrateMenuItems(loadFromStorage<MenuItem>(STORAGE_KEY_MENU, DEFAULT_MENU_ITEMS)))
   const dashboardCards = ref<CardItem[]>(loadFromStorage<CardItem>(STORAGE_KEY_DASHBOARD, DEFAULT_DASHBOARD_ITEMS))
+  const statsCards = ref<CardItem[]>(loadFromStorage<CardItem>(STORAGE_KEY_STATS, DEFAULT_STATS_CARDS))
   const loaded = ref(false)
 
   // --- Getters ---
@@ -61,6 +63,13 @@ export const useLayoutStore = defineStore('layout', () => {
       .sort((a, b) => a.order - b.order)
   })
 
+  /** 可见且已排序的统计卡片 */
+  const visibleStatsCards = computed(() => {
+    return [...statsCards.value]
+      .filter(card => card.visible)
+      .sort((a, b) => a.order - b.order)
+  })
+
   // --- Actions ---
   /** 从后端加载配置（合并到本地，保留展示字段） */
   async function fetchLayout() {
@@ -81,6 +90,13 @@ export const useLayoutStore = defineStore('layout', () => {
           if (parsed.items) {
             mergeDashboardCards(parsed.items)
             saveToStorage(STORAGE_KEY_DASHBOARD, dashboardCards.value)
+          }
+        }
+        if (layout.layoutType === 'stats' && layout.layoutJson) {
+          const parsed = JSON.parse(layout.layoutJson)
+          if (parsed.items) {
+            mergeStatsCards(parsed.items)
+            saveToStorage(STORAGE_KEY_STATS, statsCards.value)
           }
         }
       }
@@ -125,10 +141,28 @@ export const useLayoutStore = defineStore('layout', () => {
     await resetLayout('dashboard')
   }
 
+  /** 保存统计卡片配置 */
+  async function saveStatsConfig(items: CardItem[]) {
+    statsCards.value = items
+    saveToStorage(STORAGE_KEY_STATS, items)
+    await saveLayout({
+      layoutType: 'stats',
+      layoutJson: JSON.stringify({ items: items.map(toLayoutItem) })
+    })
+  }
+
+  /** 恢复默认统计卡片 */
+  async function resetStatsConfig() {
+    statsCards.value = DEFAULT_STATS_CARDS.map(item => ({ ...item }))
+    saveToStorage(STORAGE_KEY_STATS, statsCards.value)
+    await resetLayout('stats')
+  }
+
   /** 恢复所有默认配置 */
   async function resetAll() {
     await resetMenuConfig()
     await resetDashboardConfig()
+    await resetStatsConfig()
   }
 
   // ---- 外观配置（通过 useStorageSync 管理 localStorage + 后端同步） ----
@@ -235,11 +269,21 @@ export const useLayoutStore = defineStore('layout', () => {
     }
   }
 
+  function mergeStatsCards(items: LayoutItem[]) {
+    for (const incoming of items) {
+      const existing = statsCards.value.find(c => c.code === incoming.code)
+      if (existing) {
+        existing.visible = incoming.visible
+        existing.order = incoming.order
+      }
+    }
+  }
+
   return {
-    menuItems, dashboardCards, loaded,
-    visibleMenuSections, visibleDashboardCards,
-    fetchLayout, saveMenuConfig, saveDashboardConfig,
-    resetMenuConfig, resetDashboardConfig, resetAll,
+    menuItems, dashboardCards, statsCards, loaded,
+    visibleMenuSections, visibleDashboardCards, visibleStatsCards,
+    fetchLayout, saveMenuConfig, saveDashboardConfig, saveStatsConfig,
+    resetMenuConfig, resetDashboardConfig, resetStatsConfig, resetAll,
     appearanceConfig, DEFAULT_APPEARANCE,
     saveAppearanceConfig, resetAppearanceConfig,
   }

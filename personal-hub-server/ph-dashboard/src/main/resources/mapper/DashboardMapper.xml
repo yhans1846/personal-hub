@@ -104,6 +104,7 @@
         JOIN note_category_rel ncr ON n.id = ncr.note_id
         JOIN category c ON ncr.category_id = c.id
         WHERE n.user_id = #{userId} AND n.is_deleted = 0 AND c.type = 'note'
+            AND n.created_at >= #{since}
         GROUP BY c.name
         ORDER BY cnt DESC LIMIT #{limit}
     </select>
@@ -115,6 +116,7 @@
         FROM tag_rel tr
         JOIN tag t ON tr.tag_id = t.id
         WHERE t.user_id = #{userId}
+            AND tr.created_at >= #{since}
         GROUP BY t.id, t.name, t.color
         ORDER BY cnt DESC LIMIT #{limit}
     </select>
@@ -125,6 +127,7 @@
         SELECT id, module, action, content, business_id, created_at
         FROM audit_log
         WHERE operator_id = #{userId}
+            AND created_at >= #{since}
         ORDER BY created_at DESC LIMIT #{limit}
     </select>
 
@@ -132,16 +135,16 @@
 
     <select id="selectActiveDates" resultType="java.time.LocalDate">
         SELECT DISTINCT date FROM study_record
-            WHERE user_id = #{userId} AND is_deleted = 0
+            WHERE user_id = #{userId} AND is_deleted = 0 AND date >= #{since}
         UNION
         SELECT DISTINCT DATE(created_at) FROM note_note
-            WHERE user_id = #{userId} AND is_deleted = 0
+            WHERE user_id = #{userId} AND is_deleted = 0 AND created_at >= #{since}
         UNION
         SELECT DISTINCT DATE(created_at) FROM todo_task
-            WHERE user_id = #{userId}
+            WHERE user_id = #{userId} AND created_at >= #{since}
         UNION
         SELECT DISTINCT DATE(created_at) FROM reading_record
-            WHERE user_id = #{userId} AND is_deleted = 0
+            WHERE user_id = #{userId} AND is_deleted = 0 AND created_at >= #{since}
         ORDER BY 1 DESC
     </select>
 
@@ -150,7 +153,7 @@
     <select id="selectStudyWeekdayDistribution" resultType="map">
         SELECT DAYOFWEEK(date) AS weekday, COUNT(*) AS cnt
         FROM study_record
-        WHERE user_id = #{userId} AND is_deleted = 0
+        WHERE user_id = #{userId} AND is_deleted = 0 AND date >= #{since}
         GROUP BY DAYOFWEEK(date)
         ORDER BY cnt DESC
     </select>

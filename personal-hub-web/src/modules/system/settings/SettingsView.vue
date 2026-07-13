@@ -7,6 +7,7 @@ import PageHeader from '@/components/PageHeader.vue'
 import UiCard from '@/components/ui/UiCard.vue'
 import MenuManager from './components/MenuManager.vue'
 import DashboardManager from './components/DashboardManager.vue'
+import StatsManager from './components/StatsManager.vue'
 import ReadingExperience from './components/ReadingExperience.vue'
 import AppearanceSettings from './components/AppearanceSettings.vue'
 import AdvancedSettings from './components/AdvancedSettings.vue'
@@ -83,10 +84,16 @@ function onAutoSaved() {
               <h3 class="card-title">菜单管理</h3>
               <MenuManager />
             </UiCard>
-            <UiCard class="settings-card">
-              <h3 class="card-title">Dashboard 卡片</h3>
-              <DashboardManager />
-            </UiCard>
+            <div class="workspace-right">
+              <UiCard class="settings-card">
+                <h3 class="card-title">Dashboard 卡片</h3>
+                <DashboardManager />
+              </UiCard>
+              <UiCard class="settings-card">
+                <h3 class="card-title">统计卡片</h3>
+                <StatsManager />
+              </UiCard>
+            </div>
           </div>
 
           <!-- 阅读 -->
@@ -195,7 +202,7 @@ function onAutoSaved() {
   color: var(--text-primary);
 }
 
-/* ─── 两栏布局 ─── */
+/* ─── 左右双列布局 ─── */
 .workspace-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -205,6 +212,11 @@ function onAutoSaved() {
 .workspace-grid > .settings-card {
   margin-bottom: 0;
   min-width: 0;
+}
+.workspace-right {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 /* ─── 自动保存条 ─── */

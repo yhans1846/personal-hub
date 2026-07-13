@@ -32,3 +32,14 @@ export const DEFAULT_DASHBOARD_ITEMS: CardItem[] = [
   { code: 'recent_reading', title: '最近阅读', order: 4, visible: true },
   { code: 'pending_todos', title: '待办任务', order: 5, visible: false },
 ]
+
+/** 统计页面卡片配置 */
+export const DEFAULT_STATS_CARDS: CardItem[] = [
+  { code: 'kpi', title: 'KPI 统计卡', order: 1, visible: true },
+  { code: 'study-trend', title: '学习趋势', order: 2, visible: true },
+  { code: 'note-trend', title: '笔记趋势', order: 3, visible: true },
+  { code: 'todo-donut', title: 'Todo 完成率', order: 4, visible: true },
+  { code: 'cat-tag', title: '分类/标签排行', order: 5, visible: true },
+  { code: 'timeline', title: '最近活动', order: 6, visible: true },
+  { code: 'insight', title: '学习洞察', order: 7, visible: true },
+]

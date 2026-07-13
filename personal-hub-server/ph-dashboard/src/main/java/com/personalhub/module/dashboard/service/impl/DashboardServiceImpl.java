@@ -214,7 +214,7 @@ public class DashboardServiceImpl implements DashboardService {
         vo.setTodoOverdue(todoOver);
 
         // 连续天数
-        List<LocalDate> activeDates = dashboardMapper.selectActiveDates(userId);
+        List<LocalDate> activeDates = dashboardMapper.selectActiveDates(userId, since);
         vo.setStreakDays(calcStreak(activeDates, now));
         vo.setBestStreakDays(calcBestStreak(activeDates));
 
@@ -252,11 +252,11 @@ public class DashboardServiceImpl implements DashboardService {
         }
 
         // ========== 5. 分类/标签统计 ==========
-        vo.setCategoryStats(queryNamedStats(dashboardMapper.selectCategoryStats(userId, 8)));
-        vo.setTagStats(queryTagStats(dashboardMapper.selectTagStats(userId, 8)));
+        vo.setCategoryStats(queryNamedStats(dashboardMapper.selectCategoryStats(userId, since, 8)));
+        vo.setTagStats(queryTagStats(dashboardMapper.selectTagStats(userId, since, 8)));
 
         // ========== 6. 最近活动 ==========
-        List<Map<String, Object>> activityRows = dashboardMapper.selectRecentActivity(userId, 20);
+        List<Map<String, Object>> activityRows = dashboardMapper.selectRecentActivity(userId, since, 20);
         vo.setRecentActivity(activityRows.stream().map(row -> {
             ActivityItem item = new ActivityItem();
             item.setId(((Number) row.get("id")).longValue());
@@ -273,7 +273,7 @@ public class DashboardServiceImpl implements DashboardService {
         }).collect(Collectors.toList()));
 
         // ========== 7. 学习洞察 ==========
-        vo.setInsights(buildInsights(userId, vo, activeDates, now));
+        vo.setInsights(buildInsights(userId, vo, activeDates, now, since));
 
         return vo;
     }
@@ -313,7 +313,7 @@ public class DashboardServiceImpl implements DashboardService {
     }
 
     /** 构建洞察列表 */
-    private List<InsightItem> buildInsights(Long userId, StatsVO vo, List<LocalDate> activeDates, LocalDate now) {
+    private List<InsightItem> buildInsights(Long userId, StatsVO vo, List<LocalDate> activeDates, LocalDate now, LocalDate since) {
         List<InsightItem> insights = new ArrayList<>();
 
         // 效率洞察
@@ -354,7 +354,7 @@ public class DashboardServiceImpl implements DashboardService {
         }
 
         // 星期效率
-        List<Map<String, Object>> weekdayDist = dashboardMapper.selectStudyWeekdayDistribution(userId);
+        List<Map<String, Object>> weekdayDist = dashboardMapper.selectStudyWeekdayDistribution(userId, since);
         if (weekdayDist != null && !weekdayDist.isEmpty()) {
             String[] weekdays = {"", "周日", "周一", "周二", "周三", "周四", "周五", "周六"};
             int bestDay = ((Number) weekdayDist.get(0).get("weekday")).intValue();

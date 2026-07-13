@@ -3,6 +3,7 @@ import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { getDetailedStats } from '@/modules/dashboard/api'
 import type { StatsVO, InsightItem, ActivityItem, NamedStat } from '@/modules/dashboard/api'
 import * as echarts from 'echarts'
+import { useLayoutStore } from '@/store/layoutStore'
 import {
   BookOpen, FileText, CheckSquare, BookMarked,
   TrendingUp, Clock, Lightbulb, Layers, Tag,
@@ -10,11 +11,21 @@ import {
 } from 'lucide-vue-next'
 
 // ====== 状态 ======
-const days = ref(30)
+const days = ref(7)
 const loading = ref(true)
 const stats = ref<StatsVO | null>(null)
 const catTagTab = ref<'category' | 'tag'>('category')
 const error = ref(false)
+
+// ====== 统计卡片配置 ======
+const layoutStore = useLayoutStore()
+const visibleCards = computed(() => layoutStore.visibleStatsCards)
+const hasCard = (code: string) => visibleCards.value.some(c => c.code === code)
+
+// 当卡片可见性变化时重新渲染图表
+watch(visibleCards, () => {
+  if (stats.value) nextTick(() => renderCharts())
+})
 
 // ====== 图表容器 ref ======
 const studyChartRef = ref<HTMLDivElement>()
@@ -417,7 +428,9 @@ const groupedActivities = computed(() => {
       </div>
       <div class="range-picker">
         <el-radio-group v-model="days" size="small">
+          <el-radio-button :value="3">近 3 天</el-radio-button>
           <el-radio-button :value="7">近 7 天</el-radio-button>
+          <el-radio-button :value="15">近 15 天</el-radio-button>
           <el-radio-button :value="30">近 30 天</el-radio-button>
           <el-radio-button :value="90">近 90 天</el-radio-button>
         </el-radio-group>
@@ -447,7 +460,7 @@ const groupedActivities = computed(() => {
     <template v-else-if="stats">
 
       <!-- ====== ① KPI Summary ====== -->
-      <div class="kpi-grid">
+      <div v-if="hasCard('kpi')" class="kpi-grid">
         <div class="kpi-card">
           <div class="kpi-icon" style="--kpi-color: var(--accent); --kpi-bg: var(--accent-light);">
             <FileText :size="18" />
@@ -509,7 +522,7 @@ const groupedActivities = computed(() => {
       <div class="chart-grid">
 
         <!-- ====== ② 学习趋势 - 面积图 ====== -->
-        <div class="chart-card">
+        <div v-if="hasCard('study-trend')" class="chart-card">
           <div class="chart-header">
             <BookOpen :size="16" stroke="var(--accent)" />
             <span>学习趋势</span>
@@ -518,7 +531,7 @@ const groupedActivities = computed(() => {
         </div>
 
         <!-- ====== ③ 笔记新增趋势 - 柱状图 ====== -->
-        <div class="chart-card">
+        <div v-if="hasCard('note-trend')" class="chart-card">
           <div class="chart-header">
             <FileText :size="16" stroke="var(--success)" />
             <span>笔记新增趋势</span>
@@ -534,7 +547,7 @@ const groupedActivities = computed(() => {
         </div>
 
         <!-- ====== ④ Todo 完成率 - 环形图 ====== -->
-        <div class="chart-card card-small">
+        <div v-if="hasCard('todo-donut')" class="chart-card">
           <div class="chart-header">
             <CheckSquare :size="16" stroke="var(--warning)" />
             <span>Todo 完成率</span>
@@ -557,7 +570,7 @@ const groupedActivities = computed(() => {
         </div>
 
         <!-- ====== ⑤ 分类/标签统计 ====== -->
-        <div class="chart-card">
+        <div v-if="hasCard('cat-tag')" class="chart-card">
           <div class="chart-header">
             <Layers :size="16" stroke="var(--accent)" />
             <div class="chart-header-tabs">
@@ -577,10 +590,10 @@ const groupedActivities = computed(() => {
       </div>
 
       <!-- ====== 底部双栏 ====== -->
-      <div class="bottom-grid">
+      <div class="bottom-grid" :class="{ 'bottom-grid--single': !hasCard('timeline') !== !hasCard('insight') }">
 
         <!-- ====== ⑦ 最近活动 Timeline ====== -->
-        <div class="bottom-card">
+        <div v-if="hasCard('timeline')" class="bottom-card">
           <div class="chart-header">
             <Clock :size="16" stroke="var(--text-secondary)" />
             <span>最近活动</span>
@@ -605,7 +618,7 @@ const groupedActivities = computed(() => {
         </div>
 
         <!-- ====== ⑧ 学习洞察 ====== -->
-        <div class="bottom-card">
+        <div v-if="hasCard('insight')" class="bottom-card">
           <div class="chart-header">
             <Lightbulb :size="16" stroke="var(--warning)" />
             <span>学习洞察</span>
@@ -876,13 +889,36 @@ const groupedActivities = computed(() => {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--sp-4);
+  align-items: stretch;
+}
+.bottom-grid--single {
+  grid-template-columns: 1fr;
+}
+.bottom-grid--single .bottom-card {
+  max-width: 600px;
 }
 .bottom-card {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 16px;
   padding: var(--sp-4) var(--sp-5);
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 450px;
+}
+.bottom-card > .chart-header {
+  flex-shrink: 0;
+}
+.bottom-card > .timeline,
+.bottom-card > .insights {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  scrollbar-width: none;
+}
+.bottom-card > .timeline::-webkit-scrollbar,
+.bottom-card > .insights::-webkit-scrollbar {
+  display: none;
 }
 
 /* ====== Timeline ====== */
