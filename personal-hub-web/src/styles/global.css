@@ -464,7 +464,7 @@ a:hover { color: var(--accent-hover); }
 @keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
 
 /* --- 路由过渡动画 --- */
-.page-fade-enter-active, .page-fade-leave-active { transition: opacity 200ms ease; }
+.page-fade-enter-active, .page-fade-leave-active { transition: opacity 150ms ease; }
 .page-fade-enter-from, .page-fade-leave-to { opacity: 0; }
 
 /* --- 强调色选择器 --- */

@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import PageHeader from '@/components/PageHeader.vue'
-import EmptyState from '@/components/EmptyState.vue'
+import { PageHeader, EmptyState, ListToolbar, ListPagination } from '@/components'
 import { getStudyPlanList, deleteStudyPlan } from '@/modules/planning/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Plus, Pencil, Trash2, Calendar, Target, BookOpen } from 'lucide-vue-next'
+import { Pencil, Trash2, Calendar, Target, BookOpen } from 'lucide-vue-next'
 import StudyPlanDialog from './StudyPlanDialog.vue'
 import type { StudyPlanVO, StudyPlanQuery } from '@/types/studyplan'
 
@@ -81,19 +80,13 @@ const statusOptions = [
   <div>
     <PageHeader title="学习计划" :subtitle="`共 ${total} 个计划`" />
 
-    <div class="toolbar">
-      <div class="toolbar-left">
-        <el-input v-model="query.keyword" placeholder="搜索计划..." style="width:200px" clearable @clear="onSearch" @keyup.enter="onSearch">
-          <template #prefix><Search :size="14" style="color: var(--text-tertiary)" /></template>
-        </el-input>
+    <ListToolbar :search="query.keyword" search-placeholder="搜索计划..." search-width="200px" create-label="新建计划" @update:search="query.keyword = $event" @search="onSearch" @create="goCreate">
+      <template #filters>
         <el-select v-model="query.status" placeholder="状态" style="width:130px" clearable @change="onFilterChange">
           <el-option v-for="item in statusOptions" :key="item.label" :value="item.value" :label="item.label" />
         </el-select>
-      </div>
-      <el-button type="primary" @click="goCreate">
-        <Plus :size="14" /> 新建计划
-      </el-button>
-    </div>
+      </template>
+    </ListToolbar>
 
     <div v-if="loading" class="loading-skeleton">
       <div v-for="i in 3" :key="i" class="skeleton-plan" />
@@ -130,14 +123,7 @@ const statusOptions = [
       </div>
     </div>
 
-    <el-pagination
-      v-if="total > (query.size ?? 20)"
-      v-model:current-page="query.page"
-      :total="total" :page-size="query.size"
-      layout="total, prev, pager, next"
-      style="margin-top: var(--sp-6); justify-content: flex-end"
-      @current-change="onPageChange"
-    />
+    <ListPagination v-if="total > (query.size ?? 20)" :total="total" :page="query.page" :size="query.size" @update:page="onPageChange" />
 
     <StudyPlanDialog v-model="drawerVisible" :entity-id="editId" @saved="fetchList" />
   </div>

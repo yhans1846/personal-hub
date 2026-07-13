@@ -2,7 +2,7 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { globalSearch } from '@/modules/dashboard/api'
-import { Search, LayoutDashboard, FileText, CheckSquare, PenLine, BookOpen, Bookmark, Target, BookMarked, FolderOpen, BarChart3 } from 'lucide-vue-next'
+import { Search, LayoutDashboard, FileText, CheckSquare, PenLine, BookOpen, Bookmark, Target, BookMarked, FolderOpen, BarChart3, Clock } from 'lucide-vue-next'
 import type { SearchGroup } from '@/modules/dashboard/api'
 
 const router = useRouter()
@@ -12,6 +12,20 @@ const activeIndex = ref(0)
 const loading = ref(false)
 const apiGroups = ref<SearchGroup[]>([])
 const showApiResults = ref(false)
+
+// 搜索历史
+const searchHistory = ref<string[]>(loadSearchHistory())
+function loadSearchHistory(): string[] {
+  try { return JSON.parse(localStorage.getItem('search-history') || '[]') }
+  catch { return [] }
+}
+function saveSearchHistory(kw: string) {
+  const history = loadSearchHistory()
+  history.unshift(kw)
+  const unique = [...new Set(history)].slice(0, 5)
+  localStorage.setItem('search-history', JSON.stringify(unique))
+  searchHistory.value = unique
+}
 
 // 本地页面路由
 const pageRoutes = [
@@ -107,6 +121,7 @@ function onKeydown(e: KeyboardEvent) {
     e.preventDefault()
     const hit = allResults.value[activeIndex.value]
     if (hit) {
+      if (keyword.value.trim()) saveSearchHistory(keyword.value.trim())
       if (hit.path) router.push(hit.path)
       visible.value = false
     }
@@ -173,6 +188,22 @@ defineExpose({ open })
 
         <div v-else-if="keyword.trim().length > 0 && !loading" class="cp-empty">
           没有匹配结果
+        </div>
+
+        <div v-else-if="!keyword.trim() && searchHistory.length > 0" class="cp-history">
+          <div class="cp-history-header">
+            <Clock :size="12" />
+            <span>最近搜索</span>
+          </div>
+          <div
+            v-for="(item, idx) in searchHistory"
+            :key="idx"
+            class="cp-history-item"
+            @click="keyword = item; activeIndex = 0; saveSearchHistory(item); onSearch()"
+          >
+            <Search :size="12" class="cp-history-search-icon" />
+            <span>{{ item }}</span>
+          </div>
         </div>
 
         <div v-else class="cp-hint">
@@ -250,6 +281,23 @@ defineExpose({ open })
   font-size: var(--text-sm); color: var(--text-tertiary);
 }
 .cp-hint-sub { margin-top: var(--sp-2); }
+
+/* 搜索历史 */
+.cp-history { padding: var(--sp-2); }
+.cp-history-header {
+  display: flex; align-items: center; gap: var(--sp-2);
+  padding: var(--sp-1) var(--sp-3) var(--sp-2);
+  font-size: 11px; color: var(--text-tertiary);
+}
+.cp-history-item {
+  display: flex; align-items: center; gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--radius-sm);
+  cursor: pointer; transition: background var(--transition);
+  font-size: var(--text-sm); color: var(--text-secondary);
+}
+.cp-history-item:hover { background: var(--bg-hover); color: var(--text-primary); }
+.cp-history-search-icon { color: var(--text-tertiary); flex-shrink: 0; }
 .cp-hint-sub kbd {
   font-size: 11px; padding: 1px 5px;
   border-radius: 3px;

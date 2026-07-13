@@ -1,6 +1,6 @@
 import type { MenuItem, CardItem } from '@/types/layout'
 
-/** 默认菜单配置 - 按领域组织 */
+/** 默认菜单配置 - 保留 5 分组结构 */
 export const DEFAULT_MENU_ITEMS: MenuItem[] = [
   // ===== 工作区 =====
   { code: 'dashboard', title: '首页', section: 'workspace', route: '/dashboard', order: 1, visible: true, fixed: true },
@@ -9,7 +9,7 @@ export const DEFAULT_MENU_ITEMS: MenuItem[] = [
   { code: 'diaries', title: '日记', section: 'knowledge', route: '/diaries', order: 3, visible: true },
   { code: 'readings', title: '阅读记录', section: 'knowledge', route: '/readings', order: 4, visible: true },
   { code: 'study-records', title: '学习记录', section: 'knowledge', route: '/study-records', order: 5, visible: true },
-  // ===== 知识 =====
+  // ===== 工作台 =====
   { code: 'todos', title: '待办任务', section: 'knowledge', route: '/todos', order: 6, visible: true },
   { code: 'study-plans', title: '学习计划', section: 'knowledge', route: '/study-plans', order: 7, visible: true },
   // ===== 资源 =====
@@ -24,12 +24,13 @@ export const DEFAULT_MENU_ITEMS: MenuItem[] = [
   { code: 'stats', title: '数据统计', section: 'stats', route: '/stats', order: 14, visible: true },
 ]
 
-/** 默认 Dashboard 卡片配置 */
+/** 默认 Dashboard 卡片配置 — V4：内容优先 */
 export const DEFAULT_DASHBOARD_ITEMS: CardItem[] = [
-  { code: 'today_plan', title: '今日计划', order: 1, visible: true },
-  { code: 'recent_reading', title: '最近阅读', order: 2, visible: true },
-  { code: 'pending_todos', title: '待办任务', order: 3, visible: true },
-  { code: 'recent_notes', title: '最近更新', order: 4, visible: true },
-  { code: 'recent_bookmarks', title: '最近收藏', order: 5, visible: true },
-  { code: 'recent_studies', title: '学习记录', order: 6, visible: true },
+  { code: 'today_plan', title: '今日任务', order: 1, visible: true },
+  { code: 'recent_notes', title: '最近编辑', order: 2, visible: true },
+  { code: 'recent_reading', title: '最近阅读', order: 3, visible: true },
+  { code: 'recent_studies', title: '学习记录', order: 4, visible: true },
+  { code: 'quick_actions', title: '快捷操作', order: 5, visible: true },
+  { code: 'pending_todos', title: '待办任务', order: 6, visible: false },
+  { code: 'recent_bookmarks', title: '最近收藏', order: 7, visible: false },
 ]

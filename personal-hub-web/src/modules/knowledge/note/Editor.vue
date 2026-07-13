@@ -18,7 +18,7 @@ const route = useRoute()
 const router = useRouter()
 const isEdit = !!route.params.id
 
-const form = ref({ title: '', content: '', categoryIds: [] as number[], tagIds: [] as number[] })
+const form = ref({ title: isEdit ? '' : '未命名笔记', content: '', categoryIds: [] as number[], tagIds: [] as number[] })
 const categories = ref<any[]>([])
 const tags = ref<any[]>([])
 const isFavorite = ref(false)
