@@ -28,9 +28,7 @@ export function uploadFile(file: File, categoryId?: number) {
   const form = new FormData()
   form.append('file', file)
   if (categoryId) form.append('categoryId', String(categoryId))
-  return request.post<Result<FileVO>>('/files/upload', form, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  })
+  return request.post<Result<FileVO>>('/files/upload', form)
 }
 export function getFileDownloadUrl(id: number) {
   return `/api/files/${id}/download`

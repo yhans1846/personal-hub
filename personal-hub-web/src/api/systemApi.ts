@@ -25,9 +25,7 @@ export function getBackupList() {
 export function importBackup(file: File) {
   const formData = new FormData()
   formData.append('file', file)
-  return request.post<Result<void>>('/backup/import', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  })
+  return request.post<Result<void>>('/backup/import', formData)
 }
 
 /** 下载备份文件 */

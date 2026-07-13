@@ -59,9 +59,7 @@ export function importMarkdownFile(
   if (categoryIds?.length) categoryIds.forEach(id => form.append('categoryIds', String(id)))
   if (tagIds?.length) tagIds.forEach(id => form.append('tagIds', String(id)))
   if (baseDir) form.append('baseDir', baseDir)
-  return request.post<Result<ImportReport>>('/notes/import', form, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  })
+  return request.post<Result<ImportReport>>('/notes/import', form)
 }
 
 /** 粘贴 Markdown 内容导入 */
@@ -77,9 +75,7 @@ export function importMarkdownContent(data: {
 export function uploadNoteImage(noteId: number, file: File) {
   const form = new FormData()
   form.append('file', file)
-  return request.post<Result<Record<string, string>>>(`/notes/${noteId}/images`, form, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  })
+  return request.post<Result<Record<string, string>>>(`/notes/${noteId}/images`, form)
 }
 
 // ====== 日记 ======
