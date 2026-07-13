@@ -9,6 +9,9 @@
 - 前端 StatsView.vue 完全重写：5 种图表类型（面积/柱状/热力图/环图/横向柱状）、时间范围联动、分类-标签切换
 - 页面布局：顶部 KPI 4 卡 → 双栏图表网格 → 底部 Timeline + Insight 双栏
 - 设计规范：16px 圆角 Card、统一 280px 图表高度、Lucide 图标、骨架屏加载、空状态/错误状态处理
+- **统计卡片配置化**：新增 StatsManager 拖拽排序 + 显隐控制，集成到系统设置工作台
+- **时间选择器全卡片生效**：3/7/15/30/90 天选项，分类/标签/活动/连续天数/洞察均按范围过滤
+- **layoutStore 扩展**：新增 statsCards 状态、visibleStatsCards getter、save/reset/merge 方法
 - 项目审计：生成 PROJECT_AUDIT.md，5 维评分全面评估
 - API 层重构：删除 11 个冗余重导出 shim 文件，统一 import 路径为 `@/modules/*/api`
 - 类型增强：UiDatePicker/UiSelect 的 `any` 类型替换为联合类型
