@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
-import { getStudyRecordList, deleteStudyRecord, getStudyStats } from '@/api/studyApi'
-import type { StudyStats } from '@/api/studyApi'
+import { getStudyRecordList, deleteStudyRecord, getStudyStats } from '@/modules/knowledge/api'
+import type { StudyStats } from '@/modules/knowledge/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { BookOpen, Pencil, Trash2, Plus } from 'lucide-vue-next'
 import type { StudyRecordVO, StudyRecordQuery } from '@/types/study'

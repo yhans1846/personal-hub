@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
-import { getTrends } from '@/api/dashboardApi'
+import { getTrends } from '@/modules/dashboard/api'
 import * as echarts from 'echarts'
 import { BarChart3, BookOpen, FileText, CheckSquare, BookMarked } from 'lucide-vue-next'
 

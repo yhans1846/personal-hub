@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { getLayoutAll, saveLayout, resetLayout } from '@/api/layoutApi'
+import { useStorageSync } from '@/composables/useStorageSync'
 import { DEFAULT_MENU_ITEMS, DEFAULT_DASHBOARD_ITEMS } from '@/modules/dashboard/defaultLayouts'
 import type { MenuItem, CardItem, LayoutItem, AppearanceConfig, ExtendedAppearanceConfig } from '@/types/layout'
 
@@ -130,7 +131,8 @@ export const useLayoutStore = defineStore('layout', () => {
     await resetDashboardConfig()
   }
 
-  // ---- 外观配置 ----
+  // ---- 外观配置（通过 useStorageSync 管理 localStorage + 后端同步） ----
+
   const STORAGE_KEY_APPEARANCE = 'appearance-config'
 
   const DEFAULT_APPEARANCE: ExtendedAppearanceConfig = {
@@ -141,32 +143,25 @@ export const useLayoutStore = defineStore('layout', () => {
     density: 'standard',
   }
 
-  const appearanceConfig = ref<ExtendedAppearanceConfig>(loadAppearance())
-
-  function loadAppearance(): ExtendedAppearanceConfig {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY_APPEARANCE)
-      if (stored) return { ...DEFAULT_APPEARANCE, ...JSON.parse(stored) }
-    } catch { /* ignore */ }
-    return { ...DEFAULT_APPEARANCE }
-  }
-
-  function saveAppearanceLocally(config: AppearanceConfig) {
-    localStorage.setItem(STORAGE_KEY_APPEARANCE, JSON.stringify(config))
-  }
-
-  async function fetchAppearanceFromBackend() {
-    try {
+  const appearanceSync = useStorageSync<ExtendedAppearanceConfig>({
+    storageKey: STORAGE_KEY_APPEARANCE,
+    defaults: DEFAULT_APPEARANCE,
+    fetchApi: async () => {
       const res = await getLayoutAll()
       const appLayout = (res.data.data as any[]).find((l: any) => l.layoutType === 'appearance')
-      if (appLayout?.layoutJson) {
-        const parsed = JSON.parse(appLayout.layoutJson)
-        Object.assign(appearanceConfig.value, { ...DEFAULT_APPEARANCE, ...parsed })
-        saveAppearanceLocally(appearanceConfig.value)
-        applyAppearanceToDOM(appearanceConfig.value)
-      }
-    } catch { /* ignore */ }
-  }
+      return appLayout?.layoutJson ? JSON.parse(appLayout.layoutJson) : null
+    },
+    saveApi: async (data) => {
+      await saveLayout({
+        layoutType: 'appearance',
+        layoutJson: JSON.stringify(data),
+      })
+    },
+    silent: true,  // 原 fetchAppearanceFromBackend 为静默 catch
+    debugLabel: 'Appearance',
+  })
+
+  const appearanceConfig = appearanceSync.data
 
   function applyAppearanceToDOM(config: AppearanceConfig) {
     document.documentElement.setAttribute('data-theme', config.theme)
@@ -175,14 +170,16 @@ export const useLayoutStore = defineStore('layout', () => {
     localStorage.setItem('accent-preference', config.accent)
   }
 
+  async function fetchAppearanceFromBackend() {
+    await appearanceSync.fetchFromBackend()
+    applyAppearanceToDOM(appearanceConfig)
+  }
+
   async function saveAppearanceConfig(config: ExtendedAppearanceConfig) {
-    appearanceConfig.value = config
-    saveAppearanceLocally(config)
-    applyAppearanceToDOM(config)
-    await saveLayout({
-      layoutType: 'appearance',
-      layoutJson: JSON.stringify(config),
-    })
+    Object.assign(appearanceConfig, config)
+    appearanceSync.saveToLocal(appearanceConfig)
+    applyAppearanceToDOM(appearanceConfig)
+    await appearanceSync.saveToBackend(appearanceConfig)
   }
 
   async function resetAppearanceConfig() {

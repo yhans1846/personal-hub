@@ -2,12 +2,12 @@
 defineOptions({ inheritAttrs: false })
 
 const props = defineProps<{
-  modelValue?: any
-  options?: { value: any; label: string }[]
+  modelValue?: string | number | boolean | object
+  options?: { value: string | number; label: string }[]
 }>()
 
 const emit = defineEmits<{
-  'update:modelValue': [value: any]
+  'update:modelValue': [value: string | number | boolean | object]
 }>()
 </script>
 

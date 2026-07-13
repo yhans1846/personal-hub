@@ -186,15 +186,4 @@ public class TagServiceImpl implements TagService {
                             .filter(t -> t != null)
                             .collect(Collectors.toList());
                 }));
-    }
-
-    @Override
-    public List<Long> getEntityIdsByTag(Long tagId, String entityType) {
-        LambdaQueryWrapper<TagRel> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(TagRel::getTagId, tagId)
-                .eq(TagRel::getEntityType, entityType);
-        return tagRelMapper.selectList(wrapper).stream()
-                .map(TagRel::getEntityId)
-                .collect(Collectors.toList());
-    }
-}
+    }}

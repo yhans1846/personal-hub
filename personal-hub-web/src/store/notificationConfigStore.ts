@@ -1,6 +1,6 @@
-import { reactive } from 'vue'
 import { defineStore } from 'pinia'
 import { getLayoutAll, saveLayout, resetLayout } from '@/api/layoutApi'
+import { useStorageSync } from '@/composables/useStorageSync'
 import type { NotificationConfig } from '@/types/layout'
 
 const STORAGE_KEY = 'notification-config'
@@ -30,50 +30,34 @@ const SOUND_OPTIONS = [
   { value: 'pop', label: 'Pop' },
 ]
 
-function loadFromLocal(): Partial<NotificationConfig> {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored) return JSON.parse(stored)
-  } catch { /* ignore */ }
-  return {}
-}
-
-function saveToLocal(config: NotificationConfig) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(config))
-}
-
 export const useNotificationConfigStore = defineStore('notificationConfig', () => {
-  const config = reactive<NotificationConfig>({ ...DEFAULTS, ...loadFromLocal() })
-
-  async function fetchFromBackend() {
-    try {
+  const sync = useStorageSync<NotificationConfig>({
+    storageKey: STORAGE_KEY,
+    defaults: DEFAULTS,
+    fetchApi: async () => {
       const res = await getLayoutAll()
-      const notifLayout = (res.data.data as any[]).find((l: any) => l.layoutType === LAYOUT_TYPE)
-      if (notifLayout?.layoutJson) {
-        const parsed = JSON.parse(notifLayout.layoutJson)
-        Object.assign(config, { ...DEFAULTS, ...parsed })
-        saveToLocal({ ...config })
-      }
-    } catch {
-      console.warn('[NotificationConfig] 后端加载失败，使用本地缓存')
-    }
-  }
-
-  async function saveToBackend() {
-    try {
+      const notifLayout = (res.data.data as any[]).find(
+        (l: any) => l.layoutType === LAYOUT_TYPE,
+      )
+      return notifLayout?.layoutJson ? JSON.parse(notifLayout.layoutJson) : null
+    },
+    saveApi: async (data) => {
       await saveLayout({
         layoutType: LAYOUT_TYPE,
-        layoutJson: JSON.stringify({ ...config }),
+        layoutJson: JSON.stringify(data),
       })
-    } catch {
-      console.warn('[NotificationConfig] 后端保存失败')
-    }
-  }
+    },
+    resetApi: async () => resetLayout(LAYOUT_TYPE),
+    debugLabel: 'NotificationConfig',
+  })
+
+  const config = sync.data
+  const { fetchFromBackend } = sync
 
   function updateConfig(partial: Partial<NotificationConfig>) {
     Object.assign(config, partial)
-    saveToLocal({ ...config })
-    saveToBackend()
+    sync.saveToLocal(config)
+    sync.saveToBackend(config)
   }
 
   function toggleNotificationType(type: string) {
@@ -83,18 +67,12 @@ export const useNotificationConfigStore = defineStore('notificationConfig', () =
     } else {
       config.enabledTypes.push(type)
     }
-    saveToLocal({ ...config })
-    saveToBackend()
+    sync.saveToLocal(config)
+    sync.saveToBackend(config)
   }
 
   async function resetConfig() {
-    Object.assign(config, { ...DEFAULTS })
-    saveToLocal({ ...config })
-    try {
-      await resetLayout(LAYOUT_TYPE)
-    } catch {
-      console.warn('[NotificationConfig] 重置后端失败')
-    }
+    await sync.resetConfig()
   }
 
   /** 请求桌面通知权限 */
@@ -112,7 +90,7 @@ export const useNotificationConfigStore = defineStore('notificationConfig', () =
   }
 
   // 初始化加载
-  fetchFromBackend()
+  sync.fetchFromBackend()
 
   return {
     config,

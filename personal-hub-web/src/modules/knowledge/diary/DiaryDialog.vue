@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
-import { createDiary, updateDiary, getDiaryById } from '@/api/diaryApi'
-import { uploadFile } from '@/api/fileApi'
+import { ref, watch, computed, toRef } from 'vue'
+import { createDiary, updateDiary, getDiaryById } from '@/modules/knowledge/api'
+import { uploadFile } from '@/modules/resource/api'
 import { ElMessage } from 'element-plus'
 import { ImagePlus, X, MapPin } from 'lucide-vue-next'
 import { UiDialog, UiInput, UiButton } from '@/components/ui'
+import { useEntityDialog } from '@/composables/useEntityDialog'
 
 const props = withDefaults(defineProps<{
   modelValue: boolean
@@ -53,29 +54,35 @@ const dialogSubtitle = computed(() => props.entityId ? '' : '记录今天发生�
 
 const selectedMood = computed(() => moodOptions.find(m => m.value === form.value.mood))
 
-watch(() => props.modelValue, async (val) => {
-  if (!val) return
-
-  if (props.entityId) {
-    const res = await getDiaryById(props.entityId)
-    const r = res.data.data
-    form.value = {
-      date: r.date, title: r.title || '', content: r.content || '',
-      mood: r.mood || 3, weather: r.weather || '', location: r.location || '',
-      imageFileId: r.imageFileId
-    }
-    if (r.imageFileId) {
-      previewUrl.value = `/api/files/${r.imageFileId}/download`
-    }
-  } else {
-    const now = new Date()
-    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
-    form.value = {
-      date: props.initialDate || today,
-      title: '', content: '', mood: 3, weather: '', location: '', imageFileId: undefined
-    }
-    previewUrl.value = ''
+async function loadEntity(id: number) {
+  const res = await getDiaryById(id)
+  const r = res.data.data
+  form.value = {
+    date: r.date, title: r.title || '', content: r.content || '',
+    mood: r.mood || 3, weather: r.weather || '', location: r.location || '',
+    imageFileId: r.imageFileId
   }
+  if (r.imageFileId) {
+    previewUrl.value = `/api/files/${r.imageFileId}/download`
+  }
+}
+
+watch(() => props.modelValue, (val) => {
+  if (!val || props.entityId) return
+  const now = new Date()
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+  form.value = {
+    date: props.initialDate || today,
+    title: '', content: '', mood: 3, weather: '', location: '', imageFileId: undefined
+  }
+  previewUrl.value = ''
+})
+
+const { loading, close, onSaved } = useEntityDialog({
+  modelValue: toRef(props, 'modelValue'),
+  entityId: toRef(props, 'entityId'),
+  emit: (event, value) => emit(event as any, value),
+  loadEntity,
 })
 
 async function handleSave() {
@@ -88,8 +95,7 @@ async function handleSave() {
       await createDiary(form.value)
       ElMessage.success('已创建')
     }
-    emit('update:modelValue', false)
-    emit('saved')
+    onSaved()
   } finally { saving.value = false }
 }
 

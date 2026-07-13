@@ -85,7 +85,7 @@
 .markdown-prose p code,
 .markdown-prose li code {
   background: var(--prose-code-bg);
-  padding: 2px 6px;
+  padding: var(--sp-1) var(--sp-2);
   border-radius: 4px;
   font-size: 0.85em;
   border: 1px solid var(--prose-border-color);
@@ -96,7 +96,7 @@
 .markdown-prose pre {
   background: var(--prose-code-bg) !important;
   border-radius: 8px;
-  padding: 16px;
+  padding: var(--sp-4);
   overflow-x: auto;
   font-size: 0.875em;
   line-height: 1.6;
@@ -167,7 +167,7 @@
 
 .markdown-prose th,
 .markdown-prose td {
-  padding: 8px 14px;
+  padding: var(--sp-2) var(--sp-3);
   border: 1px solid var(--prose-border-color);
   text-align: left;
 }

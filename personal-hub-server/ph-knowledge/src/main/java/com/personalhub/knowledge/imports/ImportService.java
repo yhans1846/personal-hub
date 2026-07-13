@@ -171,7 +171,7 @@ public class ImportService {
     }
 
     /** 读取 MultipartFile 内容为字符串 */
-    private String readFileContent(MultipartFile file) {
+    public static String readFileContent(MultipartFile file) {
         try (var reader = new BufferedReader(
                 new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
             StringBuilder sb = new StringBuilder();

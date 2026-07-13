@@ -3,14 +3,14 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/store/authStore'
 import { useLayoutStore } from '@/store/layoutStore'
-import { getTodoList, getTodayTodos } from '@/api/todoApi'
-import { getStudyRecordList } from '@/api/studyApi'
-import { getRecentNotes } from '@/api/noteApi'
-import { getDashboardStats } from '@/api/dashboardApi'
-import type { DashboardStats } from '@/api/dashboardApi'
-import { getBookmarkList } from '@/api/bookmarkApi'
-import { getReadingList } from '@/api/readingApi'
-import { getStudyPlanList } from '@/api/studyplanApi'
+import { getTodoList, getTodayTodos } from '@/modules/planning/api'
+import { getStudyRecordList } from '@/modules/knowledge/api'
+import { getRecentNotes } from '@/modules/knowledge/api'
+import { getDashboardStats } from '@/modules/dashboard/api'
+import type { DashboardStats } from '@/modules/dashboard/api'
+import { getBookmarkList } from '@/modules/resource/api'
+import { getReadingList } from '@/modules/knowledge/api'
+import { getStudyPlanList } from '@/modules/planning/api'
 import { Plus, BookOpen, FileText, CheckCircle, File, Bookmark, BookMarked, Target, Clock } from 'lucide-vue-next'
 import StatCard from '@/components/StatCard.vue'
 import TodoDialog from '@/modules/planning/todo/TodoDialog.vue'
@@ -83,7 +83,7 @@ function formatDuration(minutes: number) {
 }
 
 async function handleToggleDone(id: number) {
-  const { toggleDone } = await import('@/api/todoApi')
+  const { toggleDone } = await import('@/modules/planning/api')
   await toggleDone(id)
   pendingTodos.value = pendingTodos.value.filter(t => t.id !== id)
 }

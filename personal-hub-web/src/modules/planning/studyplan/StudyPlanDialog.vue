@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
-import { createStudyPlan, updateStudyPlan, getStudyPlanById } from '@/api/studyplanApi'
+import { ref, watch, computed, toRef } from 'vue'
+import { createStudyPlan, updateStudyPlan, getStudyPlanById } from '@/modules/planning/api'
 import { ElMessage } from 'element-plus'
 import { Calendar } from 'lucide-vue-next'
 import { UiDialog, UiInput, UiButton } from '@/components/ui'
+import { useEntityDialog } from '@/composables/useEntityDialog'
 
 const props = withDefaults(defineProps<{
   modelValue: boolean
@@ -39,14 +40,21 @@ const progressColor = computed(() => {
 
 const currentStatus = computed(() => statusOptions.find(s => s.value === form.value.status))
 
-watch(() => props.modelValue, async (val) => {
-  if (!val) return
-  if (props.entityId) {
-    const r = (await getStudyPlanById(props.entityId)).data.data
-    form.value = { name: r.name, goal: r.goal || '', progress: r.progress, startDate: r.startDate, endDate: r.endDate, status: r.status }
-  } else {
-    form.value = { name: '', goal: '', progress: 0, startDate: null, endDate: null, status: 0 }
-  }
+async function loadEntity(id: number) {
+  const r = (await getStudyPlanById(id)).data.data
+  form.value = { name: r.name, goal: r.goal || '', progress: r.progress, startDate: r.startDate, endDate: r.endDate, status: r.status }
+}
+
+watch(() => props.modelValue, (val) => {
+  if (!val || props.entityId) return
+  form.value = { name: '', goal: '', progress: 0, startDate: null, endDate: null, status: 0 }
+})
+
+const { loading, close, onSaved } = useEntityDialog({
+  modelValue: toRef(props, 'modelValue'),
+  entityId: toRef(props, 'entityId'),
+  emit: (event, value) => emit(event as any, value),
+  loadEntity,
 })
 
 async function handleSave() {
@@ -60,8 +68,7 @@ async function handleSave() {
       await createStudyPlan(form.value)
       ElMessage.success('已创建')
     }
-    emit('update:modelValue', false)
-    emit('saved')
+    onSaved()
   } finally { saving.value = false }
 }
 </script>

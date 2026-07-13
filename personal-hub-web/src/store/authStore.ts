@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { loginApi } from '@/api/authApi'
+import { loginApi } from '@/modules/system/api'
 import { useLayoutStore } from '@/store/layoutStore'
 import router from '@/router'
 

@@ -2,6 +2,7 @@ package com.personalhub.knowledge.service;
 
 import com.personalhub.knowledge.dto.NoteCreateDTO;
 import com.personalhub.knowledge.entity.Note;
+import com.personalhub.knowledge.imports.ImportService;
 import com.personalhub.knowledge.mapper.NoteMapper;
 import com.personalhub.knowledge.vo.NoteVO;
 import com.personalhub.storage.StorageService;
@@ -11,10 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.LinkedHashMap;
@@ -44,18 +42,7 @@ public class MarkdownImportService {
     @Transactional
     public Long importMarkdown(Long userId, String title, List<Long> categoryIds,
                                 List<Long> tagIds, MultipartFile file) {
-        String content;
-        try (var reader = new BufferedReader(
-                new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
-            StringBuilder sb = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                sb.append(line).append("\n");
-            }
-            content = sb.toString();
-        } catch (Exception e) {
-            throw new RuntimeException("读取 Markdown 文件失败", e);
-        }
+        String content = ImportService.readFileContent(file);
 
         // 先创建笔记（获取 noteId）
         NoteCreateDTO dto = new NoteCreateDTO();

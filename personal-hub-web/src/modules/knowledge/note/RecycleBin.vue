@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { getRecycleList, restoreNote, permanentDeleteNote } from '@/api/noteApi'
+import { getRecycleList, restoreNote, permanentDeleteNote } from '@/modules/knowledge/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Trash2, Eye, RotateCcw, AlertTriangle } from 'lucide-vue-next'
 import type { NoteVO } from '@/types/note'

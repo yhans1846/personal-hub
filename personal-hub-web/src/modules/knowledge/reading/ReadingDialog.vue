@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
-import { createReading, updateReading, getReadingById } from '@/api/readingApi'
+import { ref, watch, computed, toRef } from 'vue'
+import { createReading, updateReading, getReadingById } from '@/modules/knowledge/api'
 import { ElMessage } from 'element-plus'
 import { Star, Calendar, BookOpen } from 'lucide-vue-next'
 import { UiDialog, UiInput, UiButton } from '@/components/ui'
+import { useEntityDialog } from '@/composables/useEntityDialog'
 
 const props = withDefaults(defineProps<{
   modelValue: boolean
@@ -37,23 +38,30 @@ const progressColor = computed(() => {
   return 'var(--warning)'
 })
 
-watch(() => props.modelValue, async (val) => {
-  if (!val) return
-  if (props.entityId) {
-    const r = (await getReadingById(props.entityId)).data.data
-    form.value = {
-      bookTitle: r.bookTitle, author: r.author || '', coverUrl: r.coverUrl || '',
-      totalChapters: r.totalChapters, currentChapter: r.currentChapter, progress: r.progress,
-      rating: r.rating, totalDuration: r.totalDuration, status: r.status,
-      notes: r.notes || '', startDate: r.startDate, endDate: r.endDate
-    }
-  } else {
-    form.value = {
-      bookTitle: '', author: '', coverUrl: '', totalChapters: 0, currentChapter: 0,
-      progress: 0, rating: undefined, totalDuration: undefined, status: 0,
-      notes: '', startDate: null, endDate: null
-    }
+async function loadEntity(id: number) {
+  const r = (await getReadingById(id)).data.data
+  form.value = {
+    bookTitle: r.bookTitle, author: r.author || '', coverUrl: r.coverUrl || '',
+    totalChapters: r.totalChapters, currentChapter: r.currentChapter, progress: r.progress,
+    rating: r.rating, totalDuration: r.totalDuration, status: r.status,
+    notes: r.notes || '', startDate: r.startDate, endDate: r.endDate
   }
+}
+
+watch(() => props.modelValue, (val) => {
+  if (!val || props.entityId) return
+  form.value = {
+    bookTitle: '', author: '', coverUrl: '', totalChapters: 0, currentChapter: 0,
+    progress: 0, rating: undefined, totalDuration: undefined, status: 0,
+    notes: '', startDate: null, endDate: null
+  }
+})
+
+const { loading, close, onSaved } = useEntityDialog({
+  modelValue: toRef(props, 'modelValue'),
+  entityId: toRef(props, 'entityId'),
+  emit: (event, value) => emit(event as any, value),
+  loadEntity,
 })
 
 async function handleSave() {
@@ -67,8 +75,7 @@ async function handleSave() {
       await createReading(form.value)
       ElMessage.success('已创建')
     }
-    emit('update:modelValue', false)
-    emit('saved')
+    onSaved()
   } finally { saving.value = false }
 }
 

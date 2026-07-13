@@ -44,6 +44,4 @@ public interface TagService {
     /** 批量获取实体的标签列表（key=entityId） */
     Map<Long, List<TagVO>> getTagsMap(String entityType, List<Long> entityIds);
 
-    /** 根据标签ID获取关联实体ID列表 */
-    List<Long> getEntityIdsByTag(Long tagId, String entityType);
 }

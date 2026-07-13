@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { importMarkdownFile, importMarkdownContent } from '@/api/noteApi'
+import { importMarkdownFile, importMarkdownContent } from '@/modules/knowledge/api'
 import { getCategories } from '@/api/categoryApi'
-import { getTags } from '@/api/tagApi'
+import { getTags } from '@/modules/knowledge/api'
 import { ElMessage } from 'element-plus'
 import { Upload, FileText, Link, CheckCircle, XCircle, AlertTriangle } from 'lucide-vue-next'
 import type { ImportReport } from '@/types/note'

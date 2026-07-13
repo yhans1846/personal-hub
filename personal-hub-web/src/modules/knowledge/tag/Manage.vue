@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { getTags, createTag, updateTag, deleteTag } from '@/api/tagApi'
+import { getTags, createTag, updateTag, deleteTag } from '@/modules/knowledge/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Tags, Plus, Pencil, Trash2, Search, ArrowUpDown } from 'lucide-vue-next'
 import type { TagVO } from '@/types/tag'
 import PageHeader from '@/components/PageHeader.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import { UiDialog, UiInput } from '@/components/ui'
+import TagStatsCards from './TagStatsCards.vue'
+import HotTagsBar from './HotTagsBar.vue'
 
 // ============ 状态 ============
 const list = ref<TagVO[]>([])
@@ -153,36 +155,10 @@ function formatDate(dateStr?: string) {
     </PageHeader>
 
     <!-- ========== 统计卡片 ========== -->
-    <div class="stats-row">
-      <div class="stat-card stat-card--total">
-        <span class="stat-value">{{ stats.total }}</span>
-        <span class="stat-label">标签总数</span>
-      </div>
-      <div class="stat-card stat-card--usage">
-        <span class="stat-value">{{ stats.totalUsage }}</span>
-        <span class="stat-label">引用总次数</span>
-      </div>
-      <div class="stat-card stat-card--recent">
-        <span class="stat-value">+{{ stats.recentAdded }}</span>
-        <span class="stat-label">本周新增</span>
-      </div>
-    </div>
+    <TagStatsCards :total="stats.total" :total-usage="stats.totalUsage" :recent-added="stats.recentAdded" />
 
     <!-- ========== 热门标签 ========== -->
-    <div v-if="hotTags.length > 0" class="hot-tags-bar">
-      <span class="hot-tags-label">🔥 热门</span>
-      <div class="hot-tags-list">
-        <span
-          v-for="tag in hotTags"
-          :key="tag.id"
-          class="hot-tag-item"
-        >
-          <span class="hot-tag-dot" :style="{ background: tag.color || '#409eff' }" />
-          {{ tag.name }}
-          <span class="hot-tag-count">{{ tag.usageCount }}</span>
-        </span>
-      </div>
-    </div>
+    <HotTagsBar :tags="hotTags" />
 
     <!-- ========== 工具栏 ========== -->
     <div class="toolbar">
@@ -312,90 +288,6 @@ function formatDate(dateStr?: string) {
   font-size: var(--text-sm);
   color: var(--text-tertiary);
   margin-top: 2px;
-}
-
-/* ---- 统计卡片 ---- */
-.stats-row {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--sp-3);
-  margin-bottom: var(--sp-4);
-}
-
-.stat-card {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: var(--sp-4);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border-color);
-  background: var(--bg-card);
-  transition: all var(--transition);
-}
-.stat-card:hover { box-shadow: var(--shadow-sm); }
-.stat-value {
-  font-size: 24px;
-  font-weight: 700;
-  line-height: 1.2;
-}
-.stat-label {
-  font-size: var(--text-xs);
-  color: var(--text-tertiary);
-  font-weight: 500;
-}
-.stat-card--total .stat-value { color: var(--accent); }
-.stat-card--usage .stat-value { color: var(--success); }
-.stat-card--recent .stat-value { color: var(--warning); }
-
-/* ---- 热门标签条 ---- */
-.hot-tags-bar {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-3);
-  margin-bottom: var(--sp-4);
-  padding: var(--sp-3) var(--sp-4);
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  flex-wrap: wrap;
-}
-.hot-tags-label {
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--warning);
-  white-space: nowrap;
-}
-.hot-tags-list {
-  display: flex;
-  gap: var(--sp-2);
-  flex-wrap: wrap;
-}
-.hot-tag-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 10px;
-  border-radius: 100px;
-  font-size: var(--text-xs);
-  font-weight: 500;
-  color: var(--text-secondary);
-  background: var(--bg-hover);
-  border: 1px solid var(--border-light);
-}
-.hot-tag-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-.hot-tag-count {
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--text-tertiary);
-  background: var(--bg-card);
-  padding: 0 5px;
-  border-radius: 4px;
-  margin-left: 2px;
 }
 
 /* ---- 工具栏 ---- */

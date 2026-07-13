@@ -12,6 +12,7 @@ import { useReadingTheme } from './preview/useReadingTheme'
 import DocLayout from '@/components/DocLayout.vue'
 import type { TocItem } from './preview/PreviewToc.vue'
 import { storeToRefs } from 'pinia'
+import { estimateReadingTime } from '@/utils/readingTime'
 
 const route = useRoute()
 const readingStore = useReadingConfigStore()
@@ -38,16 +39,6 @@ const mdTheme = computed(() => (resolvedTheme.value as string) === 'sepia' ? 'li
 function formatTime(dateStr?: string) {
   if (!dateStr) return ''
   return dateStr.slice(0, 16).replace('T', ' ')
-}
-
-/** 估算阅读时间 */
-function estimateReadingTime(content?: string): string {
-  if (!content) return ''
-  const zhChars = (content.match(/[一-鿿]/g) || []).length
-  const words = content.replace(/[一-鿿]/g, '').split(/\s+/).filter(Boolean).length
-  const total = zhChars + words
-  const mins = Math.max(1, Math.round(total / 500))
-  return `${mins} 分钟`
 }
 
 // ====== 目录 ======

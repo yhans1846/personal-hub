@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
-import { getTodoList, deleteTodo, toggleDone } from '@/api/todoApi'
+import { getTodoList, deleteTodo, toggleDone } from '@/modules/planning/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, CheckCircle, Pencil, Trash2, Calendar, GripVertical } from 'lucide-vue-next'
 import { EmptyState, PageHeader, ListToolbar, ListPagination } from '@/components'

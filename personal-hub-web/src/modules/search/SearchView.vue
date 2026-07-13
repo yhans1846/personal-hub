@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { globalSearch } from '@/api/dashboardApi'
+import { globalSearch } from '@/modules/dashboard/api'
 import { ElMessage } from 'element-plus'
 import { Search, FileText, PenLine, CheckSquare, BookOpen, Bookmark, BookMarked, FolderOpen, Target } from 'lucide-vue-next'
-import type { SearchGroup, SearchItem } from '@/api/dashboardApi'
+import type { SearchGroup, SearchItem } from '@/modules/dashboard/api'
 
 const router = useRouter()
 const route = useRoute()

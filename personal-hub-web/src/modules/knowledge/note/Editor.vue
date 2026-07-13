@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getNoteById, toggleFavorite, deleteNote } from '@/api/noteApi'
+import { getNoteById, toggleFavorite, deleteNote } from '@/modules/knowledge/api'
 import { getCategories } from '@/api/categoryApi'
-import { getTags } from '@/api/tagApi'
+import { getTags } from '@/modules/knowledge/api'
 import { MdEditor, MdPreview } from 'md-editor-v3'
 import 'md-editor-v3/lib/style.css'
 import { ElMessage, ElMessageBox } from 'element-plus'

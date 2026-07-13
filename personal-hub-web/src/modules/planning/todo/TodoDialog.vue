@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
-import { createTodo, updateTodo, getTodoById } from '@/api/todoApi'
+import { ref, watch, computed, toRef } from 'vue'
+import { createTodo, updateTodo, getTodoById } from '@/modules/planning/api'
 import { ElMessage } from 'element-plus'
 import { Calendar } from 'lucide-vue-next'
 import { UiDialog, UiInput, UiButton } from '@/components/ui'
+import { useEntityDialog } from '@/composables/useEntityDialog'
 
 const props = withDefaults(defineProps<{
   modelValue: boolean
@@ -29,15 +30,22 @@ const selectedPriority = computed(() => priorityOptions.find(p => p.value === fo
 const dialogTitle = computed(() => props.entityId ? '编辑任务' : '新建任务')
 const dialogSubtitle = computed(() => props.entityId ? '' : '今天准备完成什么？')
 
-watch(() => props.modelValue, async (val) => {
-  if (!val) return
-  if (props.entityId) {
-    const res = await getTodoById(props.entityId)
-    const r = res.data.data
-    form.value = { title: r.title, content: r.content || '', priority: r.priority, dueDate: r.dueDate }
-  } else {
-    form.value = { title: '', content: '', priority: 2, dueDate: null }
-  }
+async function loadEntity(id: number) {
+  const res = await getTodoById(id)
+  const r = res.data.data
+  form.value = { title: r.title, content: r.content || '', priority: r.priority, dueDate: r.dueDate }
+}
+
+watch(() => props.modelValue, (val) => {
+  if (!val || props.entityId) return
+  form.value = { title: '', content: '', priority: 2, dueDate: null }
+})
+
+const { loading, close, onSaved } = useEntityDialog({
+  modelValue: toRef(props, 'modelValue'),
+  entityId: toRef(props, 'entityId'),
+  emit: (event, value) => emit(event as any, value),
+  loadEntity,
 })
 
 async function handleSave() {
@@ -51,8 +59,7 @@ async function handleSave() {
       await createTodo(form.value)
       ElMessage.success('已创建')
     }
-    emit('update:modelValue', false)
-    emit('saved')
+    onSaved()
   } finally { saving.value = false }
 }
 </script>

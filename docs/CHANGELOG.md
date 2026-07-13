@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### 2026-07-13 项目全面治理（Project Cleanup）
+- 项目审计：生成 PROJECT_AUDIT.md，5 维评分全面评估
+- API 层重构：删除 11 个冗余重导出 shim 文件，统一 import 路径为 `@/modules/*/api`
+- 类型增强：UiDatePicker/UiSelect 的 `any` 类型替换为联合类型
+- 工具函数统一：`estimateReadingTime` 删除 Preview.vue 内联副本，统一使用 `utils/readingTime.ts`
+- CSS Token 迁移：global.css / markdown-prose.css 中 7 处原始像素值替换为 CSS 变量 token
+- 大组件拆分：CategoryManage(649→599行) 提取 CategoryStatsCards 子组件；TagManage(647→539行) 提取 TagStatsCards + HotTagsBar 子组件
+- Composable 抽象：新增 `useEntityDialog`（6 个 Dialog 共享生命周期），新增 `useStorageSync`（3 个 Store 共享双存储模式）
+- 后端清理：删除 `TagService.getEntityIdsByTag()` 死方法，删除 `application-dev.yml` 注释行
+- 重复代码消除：`MarkdownImportService` 中的文件读取逻辑复用 `ImportService.readFileContent()`
+- 文档更新：简化 CLAUDE.md，生成 PROJECT_CLEANUP_REPORT.md
+- CLAUDE.md 简化：移除 superpowers-zh 技能框架章节
+
 ### 2026-07-12 系统设置 V3 精简版 — 布局重构
 - Tab 精简：6个 → 4个（工作台/阅读/外观/高级），高级合并通知+数据+实验功能
 - 布局重构：去除内层 max-width 约束，内容自由填充 Card，页面居中 1080px

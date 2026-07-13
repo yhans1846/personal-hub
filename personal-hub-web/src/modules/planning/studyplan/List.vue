@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue'
 import PageHeader from '@/components/PageHeader.vue'
 import EmptyState from '@/components/EmptyState.vue'
-import { getStudyPlanList, deleteStudyPlan } from '@/api/studyplanApi'
+import { getStudyPlanList, deleteStudyPlan } from '@/modules/planning/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Plus, Pencil, Trash2, Calendar, Target, BookOpen } from 'lucide-vue-next'
 import StudyPlanDialog from './StudyPlanDialog.vue'

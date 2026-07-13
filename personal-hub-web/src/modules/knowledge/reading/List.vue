@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { PageHeader, EmptyState, ListToolbar, ListPagination } from '@/components'
-import { getReadingList, deleteReading } from '@/api/readingApi'
+import { getReadingList, deleteReading } from '@/modules/knowledge/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Pencil, Trash2, BookOpen, Book, BookCheck, Calendar, BookMarked, Star, Clock } from 'lucide-vue-next'
 import ReadingDialog from './ReadingDialog.vue'

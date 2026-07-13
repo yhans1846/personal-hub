@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { getNoteList, deleteNote, toggleFavorite } from '@/api/noteApi'
+import { getNoteList, deleteNote, toggleFavorite } from '@/modules/knowledge/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, FileText, Star, Trash2, Clock, Eye, Upload } from 'lucide-vue-next'
 import { EmptyState, PageHeader, ListToolbar, ListPagination } from '@/components'

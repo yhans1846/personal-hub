@@ -1,6 +1,7 @@
-import { reactive, ref, computed } from 'vue'
+import { computed } from 'vue'
 import { defineStore } from 'pinia'
 import { getLayoutAll, saveLayout, resetLayout } from '@/api/layoutApi'
+import { useStorageSync } from '@/composables/useStorageSync'
 
 // ========== 类型 ==========
 
@@ -33,24 +34,7 @@ const DEFAULTS: ReadingConfig = {
   codeFontFamily: 'monospace',
 }
 
-// ========== 工具函数 ==========
-
-function loadFromLocal(): Partial<ReadingConfig> {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored) {
-      const parsed = JSON.parse(stored)
-      // 旧值迁移：readingWidth=960 → 1100
-      if (parsed.readingWidth === 960) parsed.readingWidth = 1100
-      return parsed
-    }
-  } catch { /* ignore */ }
-  return {}
-}
-
-function saveToLocal(config: ReadingConfig) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(config))
-}
+// ========== 迁移 ==========
 
 /** 从旧 localStorage key 迁移数据到新 key */
 function migrateOldKeys() {
@@ -94,68 +78,66 @@ function debounce<T extends (...args: any[]) => any>(fn: T, ms: number) {
 // ========== Store ==========
 
 export const useReadingConfigStore = defineStore('readingConfig', () => {
-  // 初始化：旧key迁移 → 本地加载
+  // 初始化：旧 key 迁移 → 本地加载
   migrateOldKeys()
-  const config = reactive<ReadingConfig>({ ...DEFAULTS, ...loadFromLocal() })
-  const loaded = ref(false)
 
-  // ---- 后端同步 ----
-
-  async function fetchFromBackend() {
-    try {
+  const sync = useStorageSync<ReadingConfig>({
+    storageKey: STORAGE_KEY,
+    defaults: DEFAULTS,
+    fetchApi: async () => {
       const res = await getLayoutAll()
       const previewLayout = (res.data.data as any[]).find(
         (l: any) => l.layoutType === LAYOUT_TYPE,
       )
       if (previewLayout?.layoutJson) {
         const parsed = JSON.parse(previewLayout.layoutJson)
+        // 旧值迁移：readingWidth=960 → 1100
         if (parsed.readingWidth === 960) parsed.readingWidth = 1100
-        Object.assign(config, { ...DEFAULTS, ...parsed })
-        saveToLocal(config)
+        return parsed
       }
-    } catch {
-      console.warn('[ReadingConfig] 后端加载失败，使用本地缓存')
-    } finally {
-      loaded.value = true
-    }
-  }
-
-  async function saveToBackend() {
-    try {
+      return null
+    },
+    saveApi: async (data) => {
       await saveLayout({
         layoutType: LAYOUT_TYPE,
-        layoutJson: JSON.stringify(config),
+        layoutJson: JSON.stringify(data),
       })
-    } catch {
-      console.warn('[ReadingConfig] 后端保存失败')
-    }
-  }
+    },
+    resetApi: async () => resetLayout(LAYOUT_TYPE),
+    afterLoad: (data: any) => {
+      // 旧值迁移：readingWidth=960 → 1100（本地缓存中的遗留数据）
+      if (data.readingWidth === 960) data.readingWidth = 1100
+    },
+    debugLabel: 'ReadingConfig',
+  })
 
-  const debouncedSaveToBackend = debounce(saveToBackend, 500)
+  const config = sync.data
+  const loaded = sync.loaded
+
+  // 防抖写后端
+  const debouncedSaveToBackend = debounce(() => sync.saveToBackend(config), 500)
 
   // ---- 公共操作 ----
 
   /** 部分更新配置（即时写 localStorage，防抖写后端） */
   async function updateConfig(partial: Partial<ReadingConfig>) {
     Object.assign(config, partial)
-    saveToLocal(config)
+    sync.saveToLocal(config)
     debouncedSaveToBackend()
   }
 
   /** 恢复默认 */
   async function resetConfig() {
-    Object.assign(config, { ...DEFAULTS })
-    saveToLocal(config)
-    // 立即写后端（不防抖）
-    try {
-      await resetLayout(LAYOUT_TYPE)
-    } catch {
-      console.warn('[ReadingConfig] 重置后端失败')
-    }
+    await sync.resetConfig()
+  }
+
+  /** 从后端重载 */
+  async function fetchFromBackend() {
+    await sync.fetchFromBackend()
   }
 
   // 初始化时异步加载后端数据
-  fetchFromBackend()
+  sync.fetchFromBackend()
 
   /** 生成 CSS 变量映射，供预览页使用 */
   const cssVars = computed(() => ({

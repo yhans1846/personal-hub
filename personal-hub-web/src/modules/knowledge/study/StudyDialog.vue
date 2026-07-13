@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
-import { createStudyRecord, updateStudyRecord, getStudyRecordById } from '@/api/studyApi'
+import { ref, watch, computed, toRef } from 'vue'
+import { createStudyRecord, updateStudyRecord, getStudyRecordById } from '@/modules/knowledge/api'
 import { ElMessage } from 'element-plus'
 import { Clock, Calendar } from 'lucide-vue-next'
 import { UiDialog, UiButton } from '@/components/ui'
+import { useEntityDialog } from '@/composables/useEntityDialog'
 
 const props = withDefaults(defineProps<{
   modelValue: boolean
@@ -21,17 +22,24 @@ const saving = ref(false)
 const dialogTitle = computed(() => props.entityId ? '编辑学习记录' : '新建学习记录')
 const dialogSubtitle = computed(() => props.entityId ? '' : '记录今天的学习')
 
-watch(() => props.modelValue, async (val) => {
-  if (!val) return
-  if (props.entityId) {
-    const r = (await getStudyRecordById(props.entityId)).data.data
-    form.value = { subject: r.subject, date: r.date, duration: r.duration, content: r.content || '', reflection: r.reflection || '' }
-  } else {
-    form.value = {
-      subject: '', date: new Date().toISOString().slice(0, 10),
-      duration: 60, content: '', reflection: ''
-    }
+async function loadEntity(id: number) {
+  const r = (await getStudyRecordById(id)).data.data
+  form.value = { subject: r.subject, date: r.date, duration: r.duration, content: r.content || '', reflection: r.reflection || '' }
+}
+
+watch(() => props.modelValue, (val) => {
+  if (!val || props.entityId) return
+  form.value = {
+    subject: '', date: new Date().toISOString().slice(0, 10),
+    duration: 60, content: '', reflection: ''
   }
+})
+
+const { loading, close, onSaved } = useEntityDialog({
+  modelValue: toRef(props, 'modelValue'),
+  entityId: toRef(props, 'entityId'),
+  emit: (event, value) => emit(event as any, value),
+  loadEntity,
 })
 
 async function handleSave() {
@@ -46,8 +54,7 @@ async function handleSave() {
       await createStudyRecord(form.value)
       ElMessage.success('已创建')
     }
-    emit('update:modelValue', false)
-    emit('saved')
+    onSaved()
   } finally { saving.value = false }
 }
 </script>

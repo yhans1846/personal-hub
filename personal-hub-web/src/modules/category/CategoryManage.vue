@@ -8,6 +8,7 @@ import PageHeader from '@/components/PageHeader.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import { UiDialog, UiInput, UiButton } from '@/components/ui'
 import type { CategoryVO } from '@/types/category'
+import CategoryStatsCards from './CategoryStatsCards.vue'
 
 // ============ 状态 ============
 const activeType = ref<'note' | 'bookmark' | 'file'>('note')
@@ -182,20 +183,7 @@ function getTypeIcon(type: string) {
     </PageHeader>
 
     <!-- ========== 统计卡片 ========== -->
-    <div class="stats-row">
-      <div class="stat-card stat-card--total">
-        <span class="stat-value">{{ stats.total }}</span>
-        <span class="stat-label">全部分类</span>
-      </div>
-      <div class="stat-card stat-card--active">
-        <span class="stat-value">{{ stats.inUse }}</span>
-        <span class="stat-label">正在使用</span>
-      </div>
-      <div class="stat-card stat-card--inactive">
-        <span class="stat-value">{{ stats.unused }}</span>
-        <span class="stat-label">未使用</span>
-      </div>
-    </div>
+    <CategoryStatsCards :total="stats.total" :in-use="stats.inUse" :unused="stats.unused" />
 
     <!-- ========== 模块切换 (Segment) ========== -->
     <div class="segment-group">
@@ -319,44 +307,6 @@ function getTypeIcon(type: string) {
   color: var(--text-tertiary);
   margin-top: 2px;
 }
-
-/* ---- 统计卡片 ---- */
-.stats-row {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--sp-3);
-  margin-bottom: var(--sp-5);
-}
-
-.stat-card {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: var(--sp-4);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border-color);
-  background: var(--bg-card);
-  transition: all var(--transition);
-}
-.stat-card:hover {
-  box-shadow: var(--shadow-sm);
-}
-
-.stat-value {
-  font-size: 24px;
-  font-weight: 700;
-  line-height: 1.2;
-}
-
-.stat-label {
-  font-size: var(--text-xs);
-  color: var(--text-tertiary);
-  font-weight: 500;
-}
-
-.stat-card--total .stat-value { color: var(--accent); }
-.stat-card--active .stat-value { color: var(--success); }
-.stat-card--inactive .stat-value { color: var(--text-tertiary); }
 
 /* ---- Segment 切换 ---- */
 .segment-group {

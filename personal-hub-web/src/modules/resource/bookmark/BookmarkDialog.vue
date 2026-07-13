@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
-import { createBookmark, updateBookmark, getBookmarkById } from '@/api/bookmarkApi'
+import { ref, watch, computed, toRef } from 'vue'
+import { createBookmark, updateBookmark, getBookmarkById } from '@/modules/resource/api'
 import { getCategories } from '@/api/categoryApi'
-import { getTags } from '@/api/tagApi'
+import { getTags } from '@/modules/knowledge/api'
 import { ElMessage } from 'element-plus'
 import { FolderOpen, Link } from 'lucide-vue-next'
 import { UiDialog, UiInput, UiButton } from '@/components/ui'
 import type { CategoryVO } from '@/types/category'
 import type { TagVO } from '@/types/tag'
+import { useEntityDialog } from '@/composables/useEntityDialog'
 
 const props = withDefaults(defineProps<{
   modelValue: boolean
@@ -29,6 +30,15 @@ const dialogSubtitle = computed(() => props.entityId ? '' : '收藏一个值得�
 
 const selectedCategory = computed(() => categories.value.find(c => c.id === form.value.categoryId))
 
+async function loadEntity(id: number) {
+  const res = await getBookmarkById(id)
+  const r = res.data.data
+  form.value = {
+    title: r.title, url: r.url, description: r.description || '',
+    categoryId: r.categoryId, tagIds: (r.tags || []).map((t: TagVO) => t.id)
+  }
+}
+
 watch(() => props.modelValue, async (val) => {
   if (!val) return
   try {
@@ -36,17 +46,16 @@ watch(() => props.modelValue, async (val) => {
     categories.value = catRes.data.data
     tags.value = tagRes.data.data
   } catch { /* ignore */ }
-
-  if (props.entityId) {
-    const res = await getBookmarkById(props.entityId)
-    const r = res.data.data
-    form.value = {
-      title: r.title, url: r.url, description: r.description || '',
-      categoryId: r.categoryId, tagIds: (r.tags || []).map((t: TagVO) => t.id)
-    }
-  } else {
+  if (!props.entityId) {
     form.value = { title: '', url: '', description: '', categoryId: null, tagIds: [] }
   }
+})
+
+const { loading, close, onSaved } = useEntityDialog({
+  modelValue: toRef(props, 'modelValue'),
+  entityId: toRef(props, 'entityId'),
+  emit: (event, value) => emit(event as any, value),
+  loadEntity,
 })
 
 async function handleSave() {
@@ -63,8 +72,7 @@ async function handleSave() {
       await createBookmark({ ...form.value, url })
       ElMessage.success('已创建')
     }
-    emit('update:modelValue', false)
-    emit('saved')
+    onSaved()
   } finally { saving.value = false }
 }
 </script>
