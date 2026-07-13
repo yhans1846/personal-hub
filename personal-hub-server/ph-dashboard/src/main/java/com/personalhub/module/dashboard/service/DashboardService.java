@@ -2,6 +2,7 @@ package com.personalhub.module.dashboard.service;
 
 import com.personalhub.module.dashboard.vo.DashboardStatsVO;
 import com.personalhub.module.dashboard.vo.SearchVO;
+import com.personalhub.module.dashboard.vo.StatsVO;
 import com.personalhub.module.dashboard.vo.TrendVO;
 
 /**
@@ -17,4 +18,7 @@ public interface DashboardService {
 
     /** 全局搜索（跨所有模块） */
     SearchVO search(Long userId, String keyword);
+
+    /** 获取综合统计数据（统计页面专用） */
+    StatsVO getDetailedStats(Long userId, int days);
 }

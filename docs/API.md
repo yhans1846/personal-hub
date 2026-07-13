@@ -277,8 +277,31 @@ POST /api/categories
 | 方法 | 路径 | 说明 | 认证 |
 |------|------|------|------|
 | GET | /api/dashboard/stats | Dashboard 统计数据 | 是 |
+| GET | /api/dashboard/trends | 趋势数据（学习/笔记/Todo/阅读）| 是 |
+| GET | /api/dashboard/search | 全局搜索（跨 8 模块）| 是 |
+| GET | /api/dashboard/detail | 综合统计数据（统计页面专用 8 模块）| 是 |
 
 **GET /api/dashboard/trends** 参数: days(int, 默认30)
+
+**GET /api/dashboard/detail?days=30** — 统计页面综合数据（8 个模块）
+```json
+{
+  "noteCount": 126,           "noteCountChange": 12,
+  "readingHours": 38.5,       "readingHoursChange": 6,
+  "todoCompletionRate": 92.3, "todoCompletionChange": 3.5,
+  "streakDays": 18,           "bestStreakDays": 25,
+  "studyTrend": [{"date":"2026-07-01","value":120}],
+  "noteTrend": [{"date":"2026-07-01","value":3}],
+  "heatmap": [{"date":"2026-07-01","count":8}],
+  "todoDone": 92,             "todoPending": 12,
+  "todoOverdue": 6,
+  "categoryStats": [{"name":"Java","count":42}],
+  "tagStats": [{"name":"spring","count":28,"color":"#409eff"}],
+  "recentActivity": [{"id":1,"module":"NOTE","action":"CREATE","content":"新建笔记","createdAt":"...","timeLabel":"5分钟前"}],
+  "insights": [{"type":"streak","icon":"🔥","title":"连续学习18天","description":"..."}],
+  "avgDailyNotes": 1.5, "maxDailyNotes": 5, "minDailyNotes": 1
+}
+```
 
 **GET /api/dashboard/stats**
 ```json

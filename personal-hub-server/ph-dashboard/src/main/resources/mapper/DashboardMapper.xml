@@ -96,4 +96,100 @@
         SELECT COALESCE(SUM(duration), 0) FROM study_record WHERE user_id = #{userId} AND is_deleted = 0
     </select>
 
+    <!-- ====== 分类统计（笔记按分类分组） ====== -->
+
+    <select id="selectCategoryStats" resultType="map">
+        SELECT c.name, COUNT(*) AS cnt
+        FROM note_note n
+        JOIN note_category_rel ncr ON n.id = ncr.note_id
+        JOIN category c ON ncr.category_id = c.id
+        WHERE n.user_id = #{userId} AND n.is_deleted = 0 AND c.type = 'note'
+        GROUP BY c.name
+        ORDER BY cnt DESC LIMIT #{limit}
+    </select>
+
+    <!-- ====== 标签排行 ====== -->
+
+    <select id="selectTagStats" resultType="map">
+        SELECT t.name, t.color, COUNT(*) AS cnt
+        FROM tag_rel tr
+        JOIN tag t ON tr.tag_id = t.id
+        WHERE t.user_id = #{userId}
+        GROUP BY t.id, t.name, t.color
+        ORDER BY cnt DESC LIMIT #{limit}
+    </select>
+
+    <!-- ====== 最近活动（审计日志） ====== -->
+
+    <select id="selectRecentActivity" resultType="map">
+        SELECT id, module, action, content, business_id, created_at
+        FROM audit_log
+        WHERE operator_id = #{userId}
+        ORDER BY created_at DESC LIMIT #{limit}
+    </select>
+
+    <!-- ====== 活跃日期（用于连续天数计算） ====== -->
+
+    <select id="selectActiveDates" resultType="java.time.LocalDate">
+        SELECT DISTINCT date FROM study_record
+            WHERE user_id = #{userId} AND is_deleted = 0
+        UNION
+        SELECT DISTINCT DATE(created_at) FROM note_note
+            WHERE user_id = #{userId} AND is_deleted = 0
+        UNION
+        SELECT DISTINCT DATE(created_at) FROM todo_task
+            WHERE user_id = #{userId}
+        UNION
+        SELECT DISTINCT DATE(created_at) FROM reading_record
+            WHERE user_id = #{userId} AND is_deleted = 0
+        ORDER BY 1 DESC
+    </select>
+
+    <!-- ====== 按星期统计学习频率 ====== -->
+
+    <select id="selectStudyWeekdayDistribution" resultType="map">
+        SELECT DAYOFWEEK(date) AS weekday, COUNT(*) AS cnt
+        FROM study_record
+        WHERE user_id = #{userId} AND is_deleted = 0
+        GROUP BY DAYOFWEEK(date)
+        ORDER BY cnt DESC
+    </select>
+
+    <!-- ====== 按小时统计学习频率 ====== -->
+
+    <select id="selectStudyHourDistribution" resultType="map">
+        SELECT HOUR(created_at) AS hour, COUNT(*) AS cnt
+        FROM study_record
+        WHERE user_id = #{userId} AND is_deleted = 0 AND created_at IS NOT NULL
+        GROUP BY HOUR(created_at)
+        ORDER BY cnt DESC
+    </select>
+
+    <!-- ====== 昨日新增笔记（周环比用） ====== -->
+
+    <select id="countCreatedInRange" resultType="long">
+        SELECT COUNT(*) FROM note_note
+        WHERE user_id = #{userId} AND is_deleted = 0
+            AND created_at >= #{start} AND created_at &lt; #{end}
+    </select>
+
+    <select id="sumReadingDurationInRange" resultType="long">
+        SELECT COALESCE(SUM(total_duration), 0) FROM reading_record
+        WHERE user_id = #{userId} AND is_deleted = 0
+            AND created_at >= #{start} AND created_at &lt; #{end}
+    </select>
+
+    <select id="countTodosDoneInRange" resultType="long">
+        SELECT COUNT(*) FROM todo_task
+        WHERE user_id = #{userId}
+            AND is_done = 1
+            AND updated_at >= #{start} AND updated_at &lt; #{end}
+    </select>
+
+    <select id="countTodosTotalInRange" resultType="long">
+        SELECT COUNT(*) FROM todo_task
+        WHERE user_id = #{userId}
+            AND (created_at >= #{start} AND created_at &lt; #{end})
+    </select>
+
 </mapper>

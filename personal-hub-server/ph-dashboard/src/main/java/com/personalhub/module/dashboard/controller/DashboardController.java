@@ -4,6 +4,7 @@ import com.personalhub.common.result.Result;
 import com.personalhub.module.dashboard.service.DashboardService;
 import com.personalhub.module.dashboard.vo.DashboardStatsVO;
 import com.personalhub.module.dashboard.vo.SearchVO;
+import com.personalhub.module.dashboard.vo.StatsVO;
 import com.personalhub.module.dashboard.vo.TrendVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -48,5 +49,13 @@ public class DashboardController {
                                    Authentication authentication) {
         Long userId = Long.valueOf(authentication.getName());
         return Result.success(dashboardService.search(userId, keyword));
+    }
+
+    @GetMapping("/detail")
+    @Operation(summary = "获取综合统计数据（统计页面专用，含全部8个模块）")
+    public Result<StatsVO> detail(@RequestParam(defaultValue = "30") int days,
+                                  Authentication authentication) {
+        Long userId = Long.valueOf(authentication.getName());
+        return Result.success(dashboardService.getDetailedStats(userId, days));
     }
 }

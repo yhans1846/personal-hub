@@ -5,8 +5,12 @@ import com.personalhub.module.dashboard.mapper.DashboardMapper;
 import com.personalhub.module.dashboard.service.DashboardService;
 import com.personalhub.module.dashboard.vo.DashboardStatsVO;
 import com.personalhub.module.dashboard.vo.SearchVO;
+import com.personalhub.module.dashboard.vo.StatsVO;
+import com.personalhub.module.dashboard.vo.StatsVO.ActivityItem;
+import com.personalhub.module.dashboard.vo.StatsVO.DataPoint;
+import com.personalhub.module.dashboard.vo.StatsVO.InsightItem;
+import com.personalhub.module.dashboard.vo.StatsVO.NamedStat;
 import com.personalhub.module.dashboard.vo.TrendVO;
-import com.personalhub.module.dashboard.vo.TrendVO.DataPoint;
 import com.personalhub.resource.entity.BookmarkUrl;
 import com.personalhub.resource.mapper.BookmarkUrlMapper;
 import com.personalhub.resource.entity.FileResource;
@@ -29,10 +33,17 @@ import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Dashboard 服务实现
@@ -98,10 +109,10 @@ public class DashboardServiceImpl implements DashboardService {
         LocalDate since = LocalDate.now().minusDays(days);
         TrendVO trends = new TrendVO();
 
-        trends.setStudyTrend(queryTrend(dashboardMapper.selectStudyTrend(userId, since)));
-        trends.setNoteTrend(queryTrend(dashboardMapper.selectNoteTrend(userId, since)));
-        trends.setTodoTrend(queryTrend(dashboardMapper.selectTodoTrend(userId, since)));
-        trends.setReadingTrend(queryTrend(dashboardMapper.selectReadingTrend(userId, since)));
+        trends.setStudyTrend(toTrendPoints(dashboardMapper.selectStudyTrend(userId, since)));
+        trends.setNoteTrend(toTrendPoints(dashboardMapper.selectNoteTrend(userId, since)));
+        trends.setTodoTrend(toTrendPoints(dashboardMapper.selectTodoTrend(userId, since)));
+        trends.setReadingTrend(toTrendPoints(dashboardMapper.selectReadingTrend(userId, since)));
 
         return trends;
     }
@@ -181,6 +192,267 @@ public class DashboardServiceImpl implements DashboardService {
         return result;
     }
 
+    @Override
+    public StatsVO getDetailedStats(Long userId, int days) {
+        StatsVO vo = new StatsVO();
+        LocalDate now = LocalDate.now();
+        LocalDate since = now.minusDays(days);
+
+        // ========== 1. KPI 数据 ==========
+        long noteCount = countNotes(userId);
+        long readingMinutes = sumReadingDuration(userId);
+        long todoDone = countTodos(userId, 1);
+        long todoTotal = countTodos(userId, null);
+        long todoPend = countTodos(userId, 0);
+        long todoOver = countOverdueTodos(userId);
+
+        vo.setNoteCount(noteCount);
+        vo.setReadingHours(Math.round(readingMinutes / 6.0) / 10.0); // 分钟转小时，保留1位小数
+        vo.setTodoCompletionRate(todoTotal > 0 ? Math.round((double) todoDone / todoTotal * 1000) / 10.0 : 0);
+        vo.setTodoDone(todoDone);
+        vo.setTodoPending(todoPend);
+        vo.setTodoOverdue(todoOver);
+
+        // 连续天数
+        List<LocalDate> activeDates = dashboardMapper.selectActiveDates(userId);
+        vo.setStreakDays(calcStreak(activeDates, now));
+        vo.setBestStreakDays(calcBestStreak(activeDates));
+
+        // ========== 2. 周环比 ==========
+        LocalDateTime weekStart = now.atStartOfDay();
+        LocalDateTime prevWeekStart = weekStart.minusDays(7);
+
+        long noteThisWeek = getCountOrZero(dashboardMapper.countCreatedInRange(userId, prevWeekStart, weekStart));
+        long noteLastWeek = getCountOrZero(dashboardMapper.countCreatedInRange(userId, prevWeekStart.minusDays(7), prevWeekStart));
+        vo.setNoteCountChange(calcPercentChange(noteThisWeek, noteLastWeek));
+
+        long readingMinThisWeek = getCountOrZero(dashboardMapper.sumReadingDurationInRange(userId, prevWeekStart, weekStart));
+        long readingMinLastWeek = getCountOrZero(dashboardMapper.sumReadingDurationInRange(userId, prevWeekStart.minusDays(7), prevWeekStart));
+        vo.setReadingHoursChange(calcPercentChange(readingMinThisWeek, readingMinLastWeek));
+
+        long todoDoneThisWeek = getCountOrZero(dashboardMapper.countTodosDoneInRange(userId, prevWeekStart, weekStart));
+        long todoTotalThisWeek = getCountOrZero(dashboardMapper.countTodosTotalInRange(userId, prevWeekStart, weekStart));
+        long todoDoneLastWeek = getCountOrZero(dashboardMapper.countTodosDoneInRange(userId, prevWeekStart.minusDays(7), prevWeekStart));
+        long todoTotalLastWeek = getCountOrZero(dashboardMapper.countTodosTotalInRange(userId, prevWeekStart.minusDays(7), prevWeekStart));
+        double rateThis = todoTotalThisWeek > 0 ? (double) todoDoneThisWeek / todoTotalThisWeek : 0;
+        double rateLast = todoTotalLastWeek > 0 ? (double) todoDoneLastWeek / todoTotalLastWeek : 0;
+        vo.setTodoCompletionChange(Math.round((rateThis - rateLast) * 1000) / 10.0);
+
+        // ========== 3. 趋势数据 ==========
+        vo.setStudyTrend(queryDataPoints(dashboardMapper.selectStudyTrend(userId, since)));
+        vo.setNoteTrend(queryDataPoints(dashboardMapper.selectNoteTrend(userId, since)));
+
+        // 笔记辅助统计
+        List<DataPoint> noteTrend = vo.getNoteTrend();
+        if (!noteTrend.isEmpty()) {
+            long totalNotes = noteTrend.stream().mapToLong(DataPoint::getValue).sum();
+            vo.setAvgDailyNotes(Math.round((double) totalNotes / Math.max(noteTrend.size(), 1) * 100) / 100.0);
+            vo.setMaxDailyNotes(noteTrend.stream().mapToLong(DataPoint::getValue).max().orElse(0));
+            vo.setMinDailyNotes(noteTrend.stream().mapToLong(DataPoint::getValue).filter(v -> v > 0).min().orElse(0));
+        }
+
+        // ========== 5. 分类/标签统计 ==========
+        vo.setCategoryStats(queryNamedStats(dashboardMapper.selectCategoryStats(userId, 8)));
+        vo.setTagStats(queryTagStats(dashboardMapper.selectTagStats(userId, 8)));
+
+        // ========== 6. 最近活动 ==========
+        List<Map<String, Object>> activityRows = dashboardMapper.selectRecentActivity(userId, 20);
+        vo.setRecentActivity(activityRows.stream().map(row -> {
+            ActivityItem item = new ActivityItem();
+            item.setId(((Number) row.get("id")).longValue());
+            item.setModule((String) row.get("module"));
+            item.setAction((String) row.get("action"));
+            item.setContent((String) row.get("content"));
+            Object createdAt = row.get("created_at");
+            if (createdAt != null) {
+                LocalDateTime dt = (LocalDateTime) createdAt;
+                item.setCreatedAt(dt);
+                item.setTimeLabel(formatRelativeTime(dt));
+            }
+            return item;
+        }).collect(Collectors.toList()));
+
+        // ========== 7. 学习洞察 ==========
+        vo.setInsights(buildInsights(userId, vo, activeDates, now));
+
+        return vo;
+    }
+
+    /** 计算连续学习天数 */
+    private int calcStreak(List<LocalDate> activeDates, LocalDate today) {
+        if (activeDates == null || activeDates.isEmpty()) return 0;
+        int streak = 0;
+        LocalDate expected = today;
+        for (LocalDate date : activeDates) {
+            if (date.equals(expected) || date.equals(expected.minusDays(1))) {
+                streak++;
+                expected = date;
+            } else if (date.isBefore(expected.minusDays(1))) {
+                break;
+            }
+        }
+        return streak;
+    }
+
+    /** 计算最长连续天数 */
+    private int calcBestStreak(List<LocalDate> activeDates) {
+        if (activeDates == null || activeDates.isEmpty()) return 0;
+        List<LocalDate> asc = new ArrayList<>(activeDates);
+        asc.sort(Comparator.naturalOrder());
+        int best = 1;
+        int current = 1;
+        for (int i = 1; i < asc.size(); i++) {
+            if (asc.get(i).minusDays(1).equals(asc.get(i - 1))) {
+                current++;
+                best = Math.max(best, current);
+            } else {
+                current = 1;
+            }
+        }
+        return best;
+    }
+
+    /** 构建洞察列表 */
+    private List<InsightItem> buildInsights(Long userId, StatsVO vo, List<LocalDate> activeDates, LocalDate now) {
+        List<InsightItem> insights = new ArrayList<>();
+
+        // 效率洞察
+        Long noteChange = vo.getNoteCountChange();
+        if (noteChange != null && Math.abs(noteChange) >= 5) {
+            InsightItem item = new InsightItem();
+            item.setType("efficiency");
+            item.setIcon(noteChange > 0 ? "📈" : "📉");
+            item.setTitle("本周学习效率" + (noteChange > 0 ? "提升" : "下降") + " " + Math.abs(noteChange) + "%");
+            item.setDescription(noteChange > 0 ? "笔记新增量较上周明显增长" : "笔记新增量较上周有所减少");
+            insights.add(item);
+        }
+
+        // 连续学习
+        if (vo.getStreakDays() >= 3) {
+            InsightItem item = new InsightItem();
+            item.setType("streak");
+            item.setIcon("🔥");
+            item.setTitle("连续学习 " + vo.getStreakDays() + " 天");
+            item.setDescription(vo.getBestStreakDays() > vo.getStreakDays()
+                    ? "离最长纪录 " + vo.getBestStreakDays() + " 天还差 " + (vo.getBestStreakDays() - vo.getStreakDays()) + " 天"
+                    : "已追平历史最长纪录！");
+            insights.add(item);
+        }
+
+        // 分类占比
+        List<NamedStat> cats = vo.getCategoryStats();
+        if (cats != null && !cats.isEmpty()) {
+            InsightItem item = new InsightItem();
+            item.setType("category");
+            item.setIcon("📖");
+            long total = cats.stream().mapToLong(NamedStat::getCount).sum();
+            NamedStat top = cats.get(0);
+            int percent = total > 0 ? (int) Math.round((double) top.getCount() / total * 100) : 0;
+            item.setTitle(top.getName() + " 占学习内容 " + percent + "%");
+            item.setDescription("分类「" + top.getName() + "」笔记最多，共 " + top.getCount() + " 篇");
+            insights.add(item);
+        }
+
+        // 星期效率
+        List<Map<String, Object>> weekdayDist = dashboardMapper.selectStudyWeekdayDistribution(userId);
+        if (weekdayDist != null && !weekdayDist.isEmpty()) {
+            String[] weekdays = {"", "周日", "周一", "周二", "周三", "周四", "周五", "周六"};
+            int bestDay = ((Number) weekdayDist.get(0).get("weekday")).intValue();
+            String dayName = bestDay >= 1 && bestDay <= 7 ? weekdays[bestDay] : "某天";
+            InsightItem item = new InsightItem();
+            item.setType("day");
+            item.setIcon("⭐");
+            item.setTitle(dayName + " 效率最高");
+            item.setDescription(dayName + "的学习记录最多，是高效学习日");
+            insights.add(item);
+        }
+
+        // Todo 完成率
+        double rate = vo.getTodoCompletionRate();
+        if (rate > 0) {
+            InsightItem item = new InsightItem();
+            item.setType("todo");
+            item.setIcon("🎯");
+            item.setTitle("Todo 完成率 " + (int) Math.round(rate) + "%");
+            if (rate >= 80) {
+                item.setDescription("执行力很强，继续保持！");
+            } else if (rate >= 50) {
+                item.setDescription("多数任务已完成，继续推进剩余任务");
+            } else {
+                item.setDescription("还有不少待办未完成，加油！");
+            }
+            insights.add(item);
+        }
+
+        // 阅读洞察
+        double readingHours = vo.getReadingHours() != null ? vo.getReadingHours() : 0;
+        if (readingHours > 0) {
+            InsightItem item = new InsightItem();
+            item.setType("reading");
+            item.setIcon("📚");
+            String hoursStr = readingHours >= 10 ? String.valueOf((int) Math.round(readingHours)) : String.valueOf(readingHours);
+            item.setTitle("阅读总时长 " + hoursStr + " 小时");
+            item.setDescription("累计阅读 " + readingHours + " 小时，拓展知识边界");
+            insights.add(item);
+        }
+
+        return insights;
+    }
+
+    /** 计算百分比变化 */
+    private Long calcPercentChange(long current, long previous) {
+        if (previous == 0 && current == 0) return 0L;
+        if (previous == 0) return 100L;
+        return Math.round((double) (current - previous) / previous * 100);
+    }
+
+    /** 安全获取计数 */
+    private long getCountOrZero(Long value) {
+        return value != null ? value : 0L;
+    }
+
+    /** Map → DataPoint */
+    private List<DataPoint> queryDataPoints(List<Map<String, Object>> rows) {
+        return rows.stream().map(row -> new DataPoint(
+                String.valueOf(row.get("date_str")),
+                row.get("value") instanceof Number ? ((Number) row.get("value")).longValue() : 0L))
+                .collect(Collectors.toList());
+    }
+
+    /** Map → NamedStat（分类） */
+    private List<NamedStat> queryNamedStats(List<Map<String, Object>> rows) {
+        return rows.stream().map(row -> {
+            NamedStat stat = new NamedStat();
+            stat.setName((String) row.get("name"));
+            stat.setCount(row.get("cnt") instanceof Number ? ((Number) row.get("cnt")).longValue() : 0L);
+            return stat;
+        }).collect(Collectors.toList());
+    }
+
+    /** Map → NamedStat（标签，带颜色） */
+    private List<NamedStat> queryTagStats(List<Map<String, Object>> rows) {
+        return rows.stream().map(row -> {
+            NamedStat stat = new NamedStat();
+            stat.setName((String) row.get("name"));
+            stat.setCount(row.get("cnt") instanceof Number ? ((Number) row.get("cnt")).longValue() : 0L);
+            stat.setColor((String) row.get("color"));
+            return stat;
+        }).collect(Collectors.toList());
+    }
+
+    /** 格式化相对时间 */
+    private String formatRelativeTime(LocalDateTime dt) {
+        LocalDateTime now = LocalDateTime.now();
+        long diffMinutes = java.time.Duration.between(dt, now).toMinutes();
+        if (diffMinutes < 1) return "刚刚";
+        if (diffMinutes < 60) return diffMinutes + " 分钟前";
+        long diffHours = diffMinutes / 60;
+        if (diffHours < 24) return diffHours + " 小时前";
+        long diffDays = diffHours / 24;
+        if (diffDays < 7) return diffDays + " 天前";
+        return dt.toLocalDate().toString();
+    }
+
     private List<SearchVO.SearchItem> mapSearchItems(List<Map<String, Object>> rows) {
         return rows.stream().map(row -> {
             SearchVO.SearchItem item = new SearchVO.SearchItem();
@@ -193,8 +465,8 @@ public class DashboardServiceImpl implements DashboardService {
         }).toList();
     }
 
-    private List<DataPoint> queryTrend(List<Map<String, Object>> rows) {
-        return rows.stream().map(row -> new DataPoint(
+    private List<TrendVO.DataPoint> toTrendPoints(List<Map<String, Object>> rows) {
+        return rows.stream().map(row -> new TrendVO.DataPoint(
                 String.valueOf(row.get("date_str")),
                 row.get("value") instanceof Number ? ((Number) row.get("value")).longValue() : 0L))
                 .toList();

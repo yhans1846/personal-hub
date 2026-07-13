@@ -74,3 +74,69 @@ export function getTrends(days = 30) {
 export function globalSearch(keyword: string) {
   return request.get<Result<SearchResult>>('/dashboard/search', { params: { keyword } })
 }
+
+// ====== 统计页面专用类型 ======
+
+/** 综合统计数据 */
+export interface StatsVO {
+  // KPI
+  noteCount: number
+  noteCountChange: number
+  readingHours: number
+  readingHoursChange: number
+  todoCompletionRate: number
+  todoCompletionChange: number
+  streakDays: number
+  bestStreakDays: number
+
+  // 趋势
+  studyTrend: TrendPoint[]
+  noteTrend: TrendPoint[]
+
+  // Todo
+  todoDone: number
+  todoPending: number
+  todoOverdue: number
+
+  // 分类/标签
+  categoryStats: NamedStat[]
+  tagStats: NamedStat[]
+
+  // 最近活动
+  recentActivity: ActivityItem[]
+
+  // 洞察
+  insights: InsightItem[]
+
+  // 笔记柱状图辅助
+  avgDailyNotes: number
+  maxDailyNotes: number
+  minDailyNotes: number
+}
+
+export interface NamedStat {
+  name: string
+  count: number
+  color?: string
+}
+
+export interface ActivityItem {
+  id: number
+  module: string
+  action: string
+  content: string
+  createdAt: string
+  timeLabel: string
+}
+
+export interface InsightItem {
+  type: string
+  icon: string
+  title: string
+  description: string
+}
+
+/** 获取综合统计数据（统计页面专用） */
+export function getDetailedStats(days = 30) {
+  return request.get<Result<StatsVO>>('/dashboard/detail', { params: { days } })
+}
