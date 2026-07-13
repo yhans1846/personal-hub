@@ -24,13 +24,11 @@ export const DEFAULT_MENU_ITEMS: MenuItem[] = [
   { code: 'stats', title: '数据统计', section: 'stats', route: '/stats', order: 14, visible: true },
 ]
 
-/** 默认 Dashboard 卡片配置 — V4：内容优先 */
+/** 默认 Dashboard 卡片配置 — 两栏布局 */
 export const DEFAULT_DASHBOARD_ITEMS: CardItem[] = [
   { code: 'today_plan', title: '今日任务', order: 1, visible: true },
   { code: 'recent_notes', title: '最近编辑', order: 2, visible: true },
-  { code: 'recent_reading', title: '最近阅读', order: 3, visible: true },
-  { code: 'recent_studies', title: '学习记录', order: 4, visible: true },
-  { code: 'quick_actions', title: '快捷操作', order: 5, visible: true },
-  { code: 'pending_todos', title: '待办任务', order: 6, visible: false },
-  { code: 'recent_bookmarks', title: '最近收藏', order: 7, visible: false },
+  { code: 'recent_studies', title: '学习记录', order: 3, visible: true },
+  { code: 'recent_reading', title: '最近阅读', order: 4, visible: true },
+  { code: 'pending_todos', title: '待办任务', order: 5, visible: false },
 ]
