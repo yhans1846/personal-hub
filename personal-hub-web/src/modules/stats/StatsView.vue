@@ -49,15 +49,31 @@ function buildSeries(data: { date: string; value: number }[], name: string, colo
 }
 
 async function fetchData() {
+  // 销毁旧图表实例，避免 DOM 重建后实例指向已移除的元素
+  disposeCharts()
   loading.value = true
+
   try {
     const res = await getTrends(days.value)
     const data = res.data.data
 
-    nextTick(() => updateCharts(data))
+    loading.value = false
+    await nextTick()
+    updateCharts(data)
   } finally {
     loading.value = false
   }
+}
+
+function disposeCharts() {
+  studyChart?.dispose()
+  noteChart?.dispose()
+  todoChart?.dispose()
+  readingChart?.dispose()
+  studyChart = null
+  noteChart = null
+  todoChart = null
+  readingChart = null
 }
 
 function updateCharts(data: { studyTrend: any[]; noteTrend: any[]; todoTrend: any[]; readingTrend: any[] }) {

@@ -195,7 +195,7 @@ public class DashboardServiceImpl implements DashboardService {
 
     private List<DataPoint> queryTrend(List<Map<String, Object>> rows) {
         return rows.stream().map(row -> new DataPoint(
-                (String) row.get("date_str"),
+                String.valueOf(row.get("date_str")),
                 row.get("value") instanceof Number ? ((Number) row.get("value")).longValue() : 0L))
                 .toList();
     }
