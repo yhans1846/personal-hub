@@ -12,6 +12,7 @@
 |------|------|
 | PROJECT.md | 项目概览、路线图、开发历史 |
 | TECH_STACK.md | 技术栈版本与环境要求 |
+| DEPLOYMENT.md | Ubuntu / Docker Compose / GitHub Actions 自托管部署 |
 | DATABASE.md | 表结构、ER、索引 |
 | API.md | RESTful 接口定义 |
 | STYLE_GUIDE.md | 编码规范 + UI 设计系统 + 共享组件（必读） |

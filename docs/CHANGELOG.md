@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### 2026-07-14 Docker Compose + GitHub Actions 部署
+- **部署文档**：新增 `docs/DEPLOYMENT.md`（Ubuntu 22.04、Docker 速览、Self-hosted Runner、运维与排障）
+- **Compose 骨架**：`deploy/` 含前后端 Dockerfile、Nginx 反代、MySQL/Redis、`.env.example`
+- **CI/CD**：`.github/workflows/deploy.yml`（`self-hosted`，push `main` / 手动触发）
+- **生产配置**：`application-prod.yml` 支持 `MYSQL_*` / `REDIS_*` / `JWT_SECRET` 等环境变量覆盖
+
 ### 2026-07-14 沉浸式创作模式（Focus Mode）
 - **沉浸式创作模式**：10 项功能全面提升笔记写作体验
 - **全屏创作**：右上角全屏按钮 + Fullscreen API + Ctrl+Shift+F

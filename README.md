@@ -129,6 +129,10 @@ pnpm dev                               # 启动 → :3000
 mvn spring-boot:run -pl ph-boot -am -Dspring-boot.run.profiles=prod
 ```
 
+### 生产部署（Docker + CI/CD）
+
+Ubuntu 内网虚拟机可用 Docker Compose 一键运行，并配合 GitHub Actions Self-hosted Runner 自动发布。详见 [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)。
+
 ---
 
 ## 📚 文档索引
@@ -137,6 +141,7 @@ mvn spring-boot:run -pl ph-boot -am -Dspring-boot.run.profiles=prod
 |------|------|
 | [`PROJECT.md`](docs/PROJECT.md) | 项目定位 · 架构设计 · 核心原则 |
 | [`TECH_STACK.md`](docs/TECH_STACK.md) | 技术栈版本 · 环境配置 |
+| [`DEPLOYMENT.md`](docs/DEPLOYMENT.md) | Ubuntu 部署 · Docker Compose · GitHub Actions |
 | [`DATABASE.md`](docs/DATABASE.md) | 16 张表结构 · ER 图 · 索引策略 |
 | [`API.md`](docs/API.md) | RESTful 接口规范 · 请求/响应示例 |
 | [`STYLE_GUIDE.md`](docs/STYLE_GUIDE.md) | 编码规范 · UI 设计系统 · 共享组件 |
