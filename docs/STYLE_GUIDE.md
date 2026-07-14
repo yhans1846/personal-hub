@@ -464,6 +464,14 @@ UiDialog / UiInput / UiTextarea / UiSelect / UiDatePicker / UiButton / UiSection
 | | `formatRelativeTime()` | 相对时间格式化（刚刚/X分钟前） |
 | | `isRecentlyEdited()` | 24 小时内编辑检测 |
 
+### Editor Composable（`src/modules/knowledge/note/editor/`）
+| 文件 | 用途 |
+|------|------|
+| `useAutoSave.ts` | 自动保存状态机（2s 防抖，dirty→saving→success→error 切换，Ctrl+S 强制保存，路由离开守卫） |
+| `useEditorMode.ts` | 编辑器模式管理（edit/preview/focus + livePreview 分栏 + isFullscreen 全屏，快捷键 Ctrl+Shift+P/F，Esc 退出） |
+| `useEditorPreferences.ts` | 状态记忆单例（livePreview/fullscreen/splitRatio/focusMode 持久化到 localStorage） |
+| `useImageUpload.ts` | 图片上传校验 + noteId 自动获取 + 逐个上传 |
+
 ### 新页面模板（CRUD 列表页）
 `PageHeader` → `ListToolbar`（`#filters` 插槽）→ loading skeleton → `EmptyState` → 内容 → `ListPagination`
 

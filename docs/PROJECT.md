@@ -90,6 +90,7 @@ ph-system ─┬─ ph-knowledge
 | 十二 | 统一编辑 Dialog 设计（三段布局 + 内容优先 + Drawer→Dialog + 无 Label） | ✅ |
 | 十三 | 统计页面 V4：7 统计模块 + 5 种图表 + 可配置显隐排序 + 时间范围过滤 | ✅ |
 | 十四 | 个人资料模块 + 待办重构 + 外观扩展 | ✅ |
+| 十五 | 沉浸式创作模式（Focus Mode）：全屏/实时预览/滚动同步/阅读模式/Focus Mode/状态栏增强/状态记忆 | ✅ |
 
 ## 后续可扩展
 
@@ -136,3 +137,4 @@ ph-system ─┬─ ph-knowledge
 | 34 | 个人资料模块（Profile）：UserController + sys_user 扩展 10 字段 + 头像上传 + ProfileDrawer 左侧抽屉 | 十三 |
 | 35 | 待办任务重构：Tab 分组导航 + 信息卡片布局 + 截止日期相对时间徽章 + completed_at 字段 | 十三 |
 | 36 | 外观设置：强调色 5→9 种（新增粉色/红色/teal/靛蓝）| 十三 |
+| 37 | 沉浸式创作模式（Focus Mode）：全屏/实时预览/分栏拖拽/滚动同步/阅读模式/Focus Mode/状态栏增强/Editor Header 重构/状态记忆 | 十五 |

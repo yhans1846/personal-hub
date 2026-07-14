@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### 2026-07-14 沉浸式创作模式（Focus Mode）
+- **沉浸式创作模式**：10 项功能全面提升笔记写作体验
+- **全屏创作**：右上角全屏按钮 + Fullscreen API + Ctrl+Shift+F
+- **实时预览**：Splitpanes 分栏（编辑 + Preview 并排），可拖拽调整比例（40:60～60:40），比例持久化
+- **预览滚动同步**：左右栏百分比同步滚动，读写位置一致
+- **阅读模式**：工具栏隐藏，仅标题 + 正文 + Preview，适合校对
+- **Focus Mode**：隐藏左侧菜单/Header/Footer/面包屑/工具栏，仅标题 + 正文 + 状态栏
+- **底部状态栏增强**：字数/段落数/阅读时间/最后保存时间/Markdown/UTF-8
+- **状态记忆**：livePreview/fullscreen/splitRatio/focusMode 持久化到 localStorage
+- **编辑器 Header 重构**：新增全屏 / 分栏预览 / Focus Mode 按钮
+- **Preview 路由独立**：`/notes/:id/preview` 脱离 AppLayout 嵌套，避免侧边栏/顶部栏干扰
+- **新依赖**：splitpanes ^4.1.2
+
 ### 2026-07-14 个人资料模块 + 待办重构 + 外观扩展
 - **个人资料模块（Profile）**：新增 UserController（GET/PUT `/api/user/profile`，POST `/api/user/avatar`）
 - **sys_user 表扩展**：新增 gender/birthday/phone/country/province/city/district/website/github/bio 10 个字段
