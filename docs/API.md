@@ -63,11 +63,34 @@
 ### 二、用户信息 `/api/user`
 | 方法 | 路径 | 说明 | 认证 |
 |------|------|------|------|
-| GET | /api/user/profile | 获取个人信息 | 是 |
-| PUT | /api/user/profile | 修改个人信息 | 是 |
-| PUT | /api/user/password | 修改密码 | 是 |
+| GET | /api/user/profile | 获取个人资料 | 是 |
+| PUT | /api/user/profile | 更新个人资料 | 是 |
+| POST | /api/user/avatar | 上传头像（multipart） | 是 |
 
-**PUT /api/user/password** — `{"oldPassword":"123456","newPassword":"654321"}`
+**GET /api/user/profile 响应**
+```json
+{
+  "id": 1, "username": "admin", "nickname": "管理员",
+  "avatar": "/api/files/avatar/uuid.jpg",
+  "email": "admin@example.com",
+  "gender": 1, "birthday": "1990-01-01",
+  "phone": "13800138000",
+  "country": "中国", "province": "广东省",
+  "city": "深圳市", "district": "南山区",
+  "website": "https://example.com",
+  "github": "https://github.com/username",
+  "bio": "热爱编程"
+}
+```
+
+**PUT /api/user/profile 请求体** — 同上（不含 id/username/avatar）
+
+**POST /api/user/avatar** — `multipart/form-data`，参数 `file`（图片），返回 `{"url":"/api/files/avatar/uuid.jpg"}`
+
+**头像公开访问**
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | /api/files/avatar/{filename} | 头像文件（无需认证，7 天缓存） |
 
 ### 三、Markdown 笔记 `/api/notes`
 | 方法 | 路径 | 说明 | 认证 |

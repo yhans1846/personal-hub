@@ -27,6 +27,16 @@
 | nickname | VARCHAR(50) | 昵称 | |
 | avatar | VARCHAR(255) | 头像 URL | |
 | email | VARCHAR(100) | 邮箱 | |
+| gender | TINYINT | 性别 0-保密 1-男 2-女 | DEFAULT 0 |
+| birthday | DATE | 出生日期 | |
+| phone | VARCHAR(20) | 手机号 | |
+| country | VARCHAR(50) | 国家 | |
+| province | VARCHAR(50) | 省份 | |
+| city | VARCHAR(50) | 城市 | |
+| district | VARCHAR(50) | 区/县 | |
+| website | VARCHAR(200) | 个人网站 | |
+| github | VARCHAR(200) | GitHub 地址 | |
+| bio | VARCHAR(500) | 个人简介 | |
 | created_at | DATETIME | 创建时间 | NOT NULL |
 | updated_at | DATETIME | 更新时间 | NOT NULL |
 | is_deleted | TINYINT | 逻辑删除 | DEFAULT 0 |
@@ -93,6 +103,7 @@ PK: (`note_id`, `category_id`)。笔记与分类多对多。
 | is_done | TINYINT | 是否完成 | DEFAULT 0 |
 | priority | TINYINT | 优先级 1-高 2-中 3-低 | DEFAULT 2 |
 | due_date | DATE | 截止日期 | INDEX |
+| completed_at | DATETIME | 完成时间 | |
 | is_deleted | TINYINT | 逻辑删除 | DEFAULT 0 |
 | created_at | DATETIME | 创建时间 | NOT NULL |
 | updated_at | DATETIME | 更新时间 | NOT NULL |

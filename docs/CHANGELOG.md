@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### 2026-07-14 个人资料模块 + 待办重构 + 外观扩展
+- **个人资料模块（Profile）**：新增 UserController（GET/PUT `/api/user/profile`，POST `/api/user/avatar`）
+- **sys_user 表扩展**：新增 gender/birthday/phone/country/province/city/district/website/github/bio 10 个字段
+- **头像系统**：独立 avatars 存储目录，支持 JPG/PNG/GIF/WebP，最大 5MB，公开访问 `/api/files/avatar/*`
+- **ProfileDrawer 左侧抽屉**：点击右上角头像弹出，4 卡片布局（头像/基本信息/联系方式/个人简介），4 层级联地区选择器
+- **待办任务重构**：Tab 分组导航（全部/今天/进行中/已完成/已超期），信息卡片布局，截止日期相对时间徽章（今天/明天/N天后/已超期N天）
+- **todo_task 表扩展**：新增 completed_at 字段，toggleDone 时自动写入/清空
+- **外观设置**：强调色从 5 种扩展到 9 种（新增粉色/红色/teal/靛蓝），CSS 变量 + layoutStore 类型同步
+- **安全配置**：`/api/files/avatar/**` 放行公开访问
+- **Topbar**：高度 64→48px，右上角头像图片显示，左上角 mini 头像取消
+
 ### 2026-07-13 统计页面 V4 全面重写
 - 新增 8 个统计模块：KPI Summary、学习面积图、笔记柱状图、活跃热力图、Todo 环形图、分类/标签排行、活动时间线、学习洞察
 - 后端新增 `GET /api/dashboard/detail` 综合统计接口（StatsVO，含全部模块数据）
