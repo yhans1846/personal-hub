@@ -94,6 +94,11 @@ const breadcrumbItems = computed(() => {
 })
 function closeSidebar() { sidebarOpen.value = false }
 
+// Focus Mode — 由 Editor.vue 通过 body class 控制
+const isEditorFocusMode = computed(() =>
+  typeof document !== 'undefined' && document.body.classList.contains('editor-focus-mode')
+)
+
 // 菜单分组折叠
 const COLLAPSE_KEY = 'sidebar-collapsed-sections'
 const collapsedSections = ref<Set<string>>(new Set(loadCollapsed()))
@@ -167,9 +172,9 @@ function handleQuickCreate(cmd: string) {
 </script>
 
 <template>
-  <div class="app-shell">
+  <div class="app-shell" :class="{ 'focus-mode': isEditorFocusMode }">
     <!-- 顶部栏 -->
-    <header class="topbar">
+    <header class="topbar" :class="{ 'focus-hidden': isEditorFocusMode }">
       <div class="topbar-left">
         <button class="hamburger" @click="toggleSidebar" aria-label="菜单">
           <Menu :size="20" />
@@ -209,7 +214,7 @@ function handleQuickCreate(cmd: string) {
     </header>
 
     <!-- 面包屑导航 -->
-    <div class="header-breadcrumb">
+    <div class="header-breadcrumb" :class="{ 'focus-hidden': isEditorFocusMode }">
       <template v-for="(item, idx) in breadcrumbItems" :key="idx">
         <span v-if="idx > 0" class="breadcrumb-sep">/</span>
         <span class="breadcrumb-item">{{ item.label }}</span>
@@ -221,7 +226,7 @@ function handleQuickCreate(cmd: string) {
       <div class="sidebar-overlay" :class="{ open: sidebarOpen }" @click="closeSidebar" />
 
       <!-- 侧边栏 -->
-      <aside class="sidebar" :class="{ open: sidebarOpen }">
+      <aside class="sidebar" :class="{ open: sidebarOpen, 'focus-hidden': isEditorFocusMode }">
         <div class="sidebar-header">
           <span class="sidebar-title">导航</span>
           <button class="sidebar-close" @click="closeSidebar"><X :size="18" /></button>
@@ -527,6 +532,11 @@ function handleQuickCreate(cmd: string) {
 /* ============ 主内容 ============ */
 .main-content { flex: 1; overflow-y: auto; padding: var(--sp-8); }
 .content-container { max-width: var(--content-max-width); margin: 0 auto; width: 100%; }
+
+/* ============ Focus Mode ============ */
+.app-shell.focus-mode .focus-hidden { display: none !important; }
+.app-shell.focus-mode .main-content { padding: 0; max-width: 100%; }
+.app-shell.focus-mode .content-container { max-width: none; }
 
 /* ============ 响应式：平板 ============ */
 @media (max-width: 1024px) {

@@ -1,25 +1,34 @@
 <script setup lang="ts">
 import type { SaveStatus } from './useAutoSave'
 import type { EditorMode } from './useEditorMode'
-import { ArrowLeft, Star, MoreHorizontal, Download, Trash2, Eye, Edit3 } from 'lucide-vue-next'
+import { ArrowLeft, Star, MoreHorizontal, Download, Trash2, Eye, Edit3, Maximize2, Minimize2, Focus as FocusIcon, Columns3 } from 'lucide-vue-next'
 
-defineProps<{
+const props = defineProps<{
   saveStatus: SaveStatus
   isFavorite: boolean
   mode: EditorMode
+  livePreview?: boolean
+  isFullscreen?: boolean
+  isFocusMode?: boolean
 }>()
 
 const emit = defineEmits<{
   back: []
   toggleFavorite: []
   toggleMode: []
+  toggleLivePreview: []
+  toggleFocus: []
+  toggleFullscreen: []
   exportNote: []
   remove: []
 }>()
 </script>
 
 <template>
-  <header class="editor-header">
+  <header
+    class="editor-header"
+    :class="{ 'is-fullscreen': isFullscreen, 'is-focus': isFocusMode }"
+  >
     <div class="header-left">
       <button class="header-btn" @click="emit('back')" title="返回">
         <ArrowLeft :size="18" />
@@ -42,6 +51,41 @@ const emit = defineEmits<{
         <span class="status-dot" /> 未保存
       </span>
 
+      <!-- 实时预览开关 -->
+      <button
+        v-if="mode !== 'focus'"
+        class="header-btn"
+        :class="{ active: livePreview }"
+        :title="livePreview ? '关闭实时预览' : '开启实时预览'"
+        @click="emit('toggleLivePreview')"
+      >
+        <Columns3 :size="16" />
+        <span>{{ livePreview ? '分栏' : '预览' }}</span>
+      </button>
+
+      <!-- Focus Mode 开关 -->
+      <button
+        class="header-btn"
+        :class="{ active: mode === 'focus' }"
+        :title="mode === 'focus' ? '退出专注模式' : '专注模式'"
+        @click="emit('toggleFocus')"
+      >
+        <FocusIcon :size="16" />
+        <span>专注</span>
+      </button>
+
+      <!-- 编辑/预览切换 -->
+      <button
+        v-if="mode !== 'focus'"
+        class="header-btn"
+        :title="mode === 'edit' ? '预览' : '编辑'"
+        @click="emit('toggleMode')"
+      >
+        <Eye v-if="mode === 'edit'" :size="16" />
+        <Edit3 v-else :size="16" />
+        <span>{{ mode === 'edit' ? '预览' : '编辑' }}</span>
+      </button>
+
       <!-- 收藏 -->
       <button
         class="header-btn icon-only"
@@ -55,11 +99,14 @@ const emit = defineEmits<{
         />
       </button>
 
-      <!-- 模式切换 -->
-      <button class="header-btn" :title="mode === 'edit' ? '预览' : '编辑'" @click="emit('toggleMode')">
-        <Eye v-if="mode === 'edit'" :size="16" />
-        <Edit3 v-else :size="16" />
-        <span>{{ mode === 'edit' ? '预览' : '编辑' }}</span>
+      <!-- 全屏按钮 -->
+      <button
+        class="header-btn icon-only"
+        :title="isFullscreen ? '退出全屏 (Esc)' : '全屏 (Ctrl+Shift+F)'"
+        @click="emit('toggleFullscreen')"
+      >
+        <Maximize2 v-if="!isFullscreen" :size="16" />
+        <Minimize2 v-else :size="16" />
       </button>
 
       <!-- 更多菜单 -->
@@ -93,6 +140,13 @@ const emit = defineEmits<{
   flex-shrink: 0;
   background: var(--bg-card);
   z-index: 10;
+  transition: background 0.2s, border-color 0.2s;
+}
+.editor-header.is-fullscreen {
+  background: var(--bg-body);
+}
+.editor-header.is-focus {
+  display: none;
 }
 .header-left,
 .header-right {
@@ -117,6 +171,10 @@ const emit = defineEmits<{
 .header-btn:hover {
   background: var(--bg-hover);
   color: var(--text-primary);
+}
+.header-btn.active {
+  background: var(--accent-light);
+  color: var(--accent);
 }
 .header-btn.icon-only {
   padding: 6px;
@@ -150,5 +208,15 @@ const emit = defineEmits<{
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
+}
+
+@media (max-width: 768px) {
+  .editor-header {
+    padding: 0 12px;
+    height: 48px;
+  }
+  .header-btn span {
+    display: none;
+  }
 }
 </style>

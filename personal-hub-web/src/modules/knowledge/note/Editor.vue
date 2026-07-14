@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick, watch } from 'vue'
+import { ref, shallowRef, markRaw, computed, onMounted, nextTick, watch, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getNoteById, toggleFavorite, deleteNote } from '@/modules/knowledge/api'
 import { getCategories } from '@/api/categoryApi'
@@ -9,10 +9,28 @@ import 'md-editor-v3/lib/style.css'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useAutoSave } from './editor/useAutoSave'
 import { useEditorMode } from './editor/useEditorMode'
+import { useEditorPreferences } from './editor/useEditorPreferences'
 import { useImageUpload } from './editor/useImageUpload'
 import EditorHeader from './editor/EditorHeader.vue'
 import EditorStatusBar from './editor/EditorStatusBar.vue'
 import { estimateReadingTime, formatRelativeTime } from '@/utils/readingTime'
+
+// ─── Splitpanes 动态导入 ───
+const SplitpanesComponent = shallowRef<any>(null)
+const PaneComponent = shallowRef<any>(null)
+const splitpanesLoaded = ref(false)
+
+import('splitpanes')
+  .then((mod) => {
+    SplitpanesComponent.value = markRaw(mod.Splitpanes)
+    PaneComponent.value = markRaw(mod.Pane)
+    splitpanesLoaded.value = true
+    // 动态添加 splitpanes 样式
+    import('splitpanes/dist/splitpanes.css')
+  })
+  .catch(() => {
+    console.warn('splitpanes 未安装，分栏功能不可用')
+  })
 
 const route = useRoute()
 const router = useRouter()
@@ -39,13 +57,35 @@ const {
   clearDraft,
 } = useAutoSave(form, isEdit ? Number(route.params.id) : undefined)
 
-// ─── 编辑器模式 ───
-const { mode, togglePreview } = useEditorMode()
+// ─── 编辑器模式 + 偏好记忆 ───
+const {
+  mode,
+  livePreview,
+  isFullscreen,
+  togglePreview,
+  toggleFocus,
+  toggleLivePreview,
+  toggleFullscreen,
+} = useEditorMode()
 
-// ─── 预览模式下改写图片 src（相对路径 → API 路径 + token）───
-function setupPreviewImageProxy() {
+const { prefs } = useEditorPreferences()
+
+// ─── Focus Mode 全局状态（隐藏 AppLayout 的 sidebar/topbar/breadcrumb） ───
+watch(mode, (val) => {
+  if (val === 'focus') {
+    document.body.classList.add('editor-focus-mode')
+  } else {
+    document.body.classList.remove('editor-focus-mode')
+  }
+})
+onUnmounted(() => {
+  document.body.classList.remove('editor-focus-mode')
+})
+
+// ─── 预览模式下改写图片 src ───
+function setupPreviewImageProxy(container?: HTMLElement) {
   nextTick(() => {
-    const preview = document.querySelector('.md-editor-preview')
+    const preview = (container || document.querySelector('.md-editor-preview')) as HTMLElement | null
     if (!preview || !noteId.value) return
     const token = localStorage.getItem('token')
     if (!token) return
@@ -60,8 +100,54 @@ function setupPreviewImageProxy() {
   })
 }
 watch(mode, (val) => {
-  if (val === 'preview') setupPreviewImageProxy()
+  if (val === 'preview' || val === 'focus' || livePreview.value) {
+    setupPreviewImageProxy()
+  }
 })
+watch(livePreview, (on) => {
+  if (on) setupPreviewImageProxy()
+})
+
+// ─── 分栏滚动同步 ───
+let isSyncingScroll = false
+const editorWrapRef = ref<HTMLElement | null>(null)
+const previewWrapRef = ref<HTMLElement | null>(null)
+
+function syncScroll(source: 'editor' | 'preview') {
+  if (isSyncingScroll) return
+  isSyncingScroll = true
+
+  requestAnimationFrame(() => {
+    try {
+      if (source === 'editor') {
+        const preview = previewWrapRef.value
+        const editor = editorWrapRef.value
+        if (!preview || !editor) return
+        const sh = editor.scrollHeight - editor.clientHeight
+        if (sh <= 0) return
+        const ratio = editor.scrollTop / sh
+        preview.scrollTop = ratio * (preview.scrollHeight - preview.clientHeight)
+      } else {
+        const editor = editorWrapRef.value
+        const preview = previewWrapRef.value
+        if (!editor || !preview) return
+        const sh = preview.scrollHeight - preview.clientHeight
+        if (sh <= 0) return
+        const ratio = preview.scrollTop / sh
+        editor.scrollTop = ratio * (editor.scrollHeight - editor.clientHeight)
+      }
+    } finally {
+      isSyncingScroll = false
+    }
+  })
+}
+
+// ─── 分栏比例变化时保存 ───
+function onSplitterMoved(event: any) {
+  if (event?.[0]?.size) {
+    prefs.splitRatio = Math.round(event[0].size)
+  }
+}
 
 // ─── 图片上传 ───
 const { uploading, handleUpload } = useImageUpload(noteId, forceSave)
@@ -181,134 +267,214 @@ const savedTimeText = computed(() => {
 })
 const readingTimeText = computed(() => estimateReadingTime(form.value.content))
 
-// 工具条（编辑模式）
+// 工具条
 const EDIT_TOOLBARS = [
   'bold', 'italic', 'heading', '|',
   'quote', 'unorderedList', 'orderedList', '|',
   'code', 'link', 'image', 'table',
 ] as any
+
+const SPLIT_TOOLBARS = [
+  'bold', 'italic', 'heading', '|',
+  'code', 'link', 'image',
+] as any
 </script>
 
 <template>
-  <div class="editor-page" :class="{ 'is-focus': mode === 'focus' }">
+  <div
+    class="editor-page"
+    :class="{
+      'is-focus': mode === 'focus',
+      'is-fullscreen': isFullscreen,
+    }"
+  >
     <!-- Header -->
     <EditorHeader
-      v-show="mode !== 'focus'"
       :save-status="saveStatus"
       :is-favorite="isFavorite"
       :mode="mode"
+      :live-preview="livePreview"
+      :is-fullscreen="isFullscreen"
       @back="handleBack"
       @toggle-favorite="handleToggleFavorite"
       @toggle-mode="togglePreview"
+      @toggle-live-preview="toggleLivePreview"
+      @toggle-focus="toggleFocus"
+      @toggle-fullscreen="toggleFullscreen"
       @export-note="handleExport"
       @remove="handleDelete"
     />
 
     <!-- 主编辑区 -->
-    <div class="editor-body" :class="{ 'is-focus': mode === 'focus' }">
-      <div class="editor-content-wrap">
-        <!-- 标题（预览模式不显示 input） -->
-        <input
-          v-if="mode !== 'preview'"
-          v-model="form.title"
-          class="editor-title"
-          placeholder="请输入标题..."
-        />
-
-        <!-- 元信息（仅在编辑模式显示） -->
-        <div v-if="mode === 'edit' && !initialLoading" class="editor-meta">
-          <el-popover trigger="click" placement="bottom" :width="280">
-            <template #reference>
-              <span class="meta-item">
-                📂 {{ form.categoryIds.length ? getCategoryNames() : '分类' }}
-              </span>
-            </template>
-            <el-select
-              v-model="form.categoryIds"
-              multiple
-              placeholder="选择分类"
-              style="width: 100%"
+    <div
+      class="editor-body"
+      :class="{
+        'is-focus': mode === 'focus',
+        'is-split': mode === 'edit' && livePreview,
+        'is-fullscreen': isFullscreen,
+      }"
+    >
+      <!-- ─── 分栏模式（编辑 + 预览并排） ─── -->
+      <template v-if="mode === 'edit' && livePreview && splitpanesLoaded && SplitpanesComponent">
+        <component :is="SplitpanesComponent" class="splitpanes-editor" @resized="onSplitterMoved">
+          <component :is="PaneComponent" :size="prefs.splitRatio" :min-size="30">
+            <div ref="editorWrapRef" class="split-left" @scroll="syncScroll('editor')">
+              <div class="split-editor-content">
+                <input
+                  v-model="form.title"
+                  class="editor-title split-title"
+                  placeholder="请输入标题..."
+                />
+                <MdEditor
+                  v-model="form.content"
+                  :theme="editorTheme"
+                  :toolbars="SPLIT_TOOLBARS"
+                  :preview="false"
+                  language="zh-CN"
+                  placeholder="开始写作..."
+                  :on-upload-img="onUploadImg"
+                  class="editor-instance split-instance"
+                />
+              </div>
+            </div>
+          </component>
+          <component :is="PaneComponent" :size="100 - prefs.splitRatio" :min-size="30">
+            <div
+              ref="previewWrapRef"
+              class="split-right"
+              @scroll="syncScroll('preview')"
             >
-              <el-option
-                v-for="c in categories"
-                :key="c.id"
-                :label="c.name"
-                :value="c.id"
-              />
-            </el-select>
-          </el-popover>
+              <div class="preview-wrap markdown-prose">
+                <h1 class="split-preview-title">{{ form.title || '无标题' }}</h1>
+                <div class="preview-meta">
+                  <span v-if="readingTimeText" class="preview-meta-item">👁 {{ readingTimeText }}</span>
+                </div>
+                <MdPreview
+                  :model-value="form.content"
+                  :theme="editorTheme"
+                  :show-code-row-number="false"
+                />
+              </div>
+            </div>
+          </component>
+        </component>
+      </template>
 
-          <el-popover trigger="click" placement="bottom" :width="280">
-            <template #reference>
-              <span class="meta-item">
-                🏷 {{ form.tagIds.length ? getTagNames() : '标签' }}
-              </span>
-            </template>
-            <el-select
-              v-model="form.tagIds"
-              multiple
-              placeholder="选择标签"
-              style="width: 100%"
-            >
-              <el-option
-                v-for="t in tags"
-                :key="t.id"
-                :label="t.name"
-                :value="t.id"
-              />
-            </el-select>
-          </el-popover>
-
-          <span v-if="createdAt" class="meta-item static">🕒 {{ formatRelativeTime(createdAt) }}</span>
-          <span v-if="readingTimeText" class="meta-item static">👁 {{ readingTimeText }}</span>
+      <!-- ─── fallback: splitpanes 未加载完成 ─── -->
+      <template v-else-if="mode === 'edit' && livePreview && !splitpanesLoaded">
+        <div class="editor-content-wrap">
+          <div class="loading-split">加载分栏中...</div>
         </div>
+      </template>
 
-        <!-- 分割线（编辑模式） -->
-        <div v-if="mode === 'edit'" class="editor-divider" />
-
-        <!-- 编辑器（编辑 + 专注模式） -->
-        <MdEditor
-          v-show="mode === 'edit' || mode === 'focus'"
-          :key="mode"
-          v-model="form.content"
-          :theme="editorTheme"
-          :toolbars="mode === 'focus' ? [] : EDIT_TOOLBARS"
-          :preview="false"
-          language="zh-CN"
-          placeholder="开始写作..."
-          :on-upload-img="onUploadImg"
-          class="editor-instance"
-          :class="{ 'focus-editor': mode === 'focus' }"
-        />
-
-        <!-- 预览模式 -->
-        <div v-if="mode === 'preview'" class="preview-wrap markdown-prose">
-          <h1 class="preview-title">{{ form.title || '无标题' }}</h1>
-          <div class="preview-meta">
-            <template v-if="getCategoryNames()">
-              <span class="preview-meta-item">📂 {{ getCategoryNames() }}</span>
-            </template>
-            <template v-if="getTagNames()">
-              <span class="preview-meta-item">🏷 {{ getTagNames() }}</span>
-            </template>
-            <span v-if="savedTimeText" class="preview-meta-item">🕒 {{ savedTimeText }}</span>
-            <span v-if="readingTimeText" class="preview-meta-item">👁 {{ readingTimeText }}</span>
-          </div>
-          <MdPreview
-            :model-value="form.content"
-            :theme="editorTheme"
-            :show-code-row-number="false"
+      <!-- ─── 单栏模式（编辑 / 预览 / 专注） ─── -->
+      <template v-else>
+        <div class="editor-content-wrap" :class="{ 'is-focus-content': mode === 'focus' }">
+          <!-- 标题 -->
+          <input
+            v-if="mode !== 'preview'"
+            v-model="form.title"
+            class="editor-title"
+            placeholder="请输入标题..."
           />
+
+          <!-- 元信息 -->
+          <div v-if="mode === 'edit' && !initialLoading" class="editor-meta">
+            <el-popover trigger="click" placement="bottom" :width="280">
+              <template #reference>
+                <span class="meta-item">
+                  📂 {{ form.categoryIds.length ? getCategoryNames() : '分类' }}
+                </span>
+              </template>
+              <el-select
+                v-model="form.categoryIds"
+                multiple
+                placeholder="选择分类"
+                style="width: 100%"
+              >
+                <el-option
+                  v-for="c in categories"
+                  :key="c.id"
+                  :label="c.name"
+                  :value="c.id"
+                />
+              </el-select>
+            </el-popover>
+
+            <el-popover trigger="click" placement="bottom" :width="280">
+              <template #reference>
+                <span class="meta-item">
+                  🏷 {{ form.tagIds.length ? getTagNames() : '标签' }}
+                </span>
+              </template>
+              <el-select
+                v-model="form.tagIds"
+                multiple
+                placeholder="选择标签"
+                style="width: 100%"
+              >
+                <el-option
+                  v-for="t in tags"
+                  :key="t.id"
+                  :label="t.name"
+                  :value="t.id"
+                />
+              </el-select>
+            </el-popover>
+
+            <span v-if="createdAt" class="meta-item static">🕒 {{ formatRelativeTime(createdAt) }}</span>
+            <span v-if="readingTimeText" class="meta-item static">👁 {{ readingTimeText }}</span>
+          </div>
+
+          <!-- 分割线 -->
+          <div v-if="mode === 'edit'" class="editor-divider" />
+
+          <!-- 编辑器 -->
+          <MdEditor
+            v-show="mode === 'edit' || mode === 'focus'"
+            :key="mode"
+            v-model="form.content"
+            :theme="editorTheme"
+            :toolbars="mode === 'focus' ? [] : EDIT_TOOLBARS"
+            :preview="false"
+            language="zh-CN"
+            placeholder="开始写作..."
+            :on-upload-img="onUploadImg"
+            class="editor-instance"
+            :class="{ 'focus-editor': mode === 'focus' }"
+          />
+
+          <!-- 预览模式 -->
+          <div v-if="mode === 'preview'" class="preview-wrap markdown-prose">
+            <h1 class="preview-title">{{ form.title || '无标题' }}</h1>
+            <div class="preview-meta">
+              <template v-if="getCategoryNames()">
+                <span class="preview-meta-item">📂 {{ getCategoryNames() }}</span>
+              </template>
+              <template v-if="getTagNames()">
+                <span class="preview-meta-item">🏷 {{ getTagNames() }}</span>
+              </template>
+              <span v-if="savedTimeText" class="preview-meta-item">🕒 {{ savedTimeText }}</span>
+              <span v-if="readingTimeText" class="preview-meta-item">👁 {{ readingTimeText }}</span>
+            </div>
+            <MdPreview
+              :model-value="form.content"
+              :theme="editorTheme"
+              :show-code-row-number="false"
+            />
+          </div>
         </div>
-      </div>
+      </template>
     </div>
 
     <!-- 状态栏 -->
     <EditorStatusBar
-      v-show="mode !== 'focus'"
       :content="form.content"
       :mode="mode"
       :save-status="saveStatus"
+      :last-saved-at="lastSavedAt"
+      :live-preview="livePreview"
+      :is-fullscreen="isFullscreen"
     />
   </div>
 </template>
@@ -321,6 +487,7 @@ const EDIT_TOOLBARS = [
   height: 100vh;
   overflow: hidden;
   background: var(--bg-body);
+  transition: background 0.2s;
 }
 .editor-body {
   flex: 1;
@@ -331,19 +498,36 @@ const EDIT_TOOLBARS = [
 .editor-body.is-focus {
   padding: 0;
 }
-.editor-header,
-.editor-statusbar {
-  transition: opacity 0.2s ease;
+.editor-body.is-split {
+  padding: 0;
+  overflow: hidden;
+}
+.editor-body.is-fullscreen {
+  padding: 0;
 }
 .editor-content-wrap {
   max-width: 1000px;
   margin: 0 auto;
   padding: 0 48px;
 }
+.editor-content-wrap.is-focus-content {
+  max-width: 1000px;
+  padding: 0 48px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
 .editor-page.is-focus .editor-content-wrap {
-  padding: 0 24px;
   max-width: none;
   height: 100%;
+}
+.loading-split {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-tertiary);
+  font-size: var(--text-sm);
 }
 
 /* ===== 标题 ===== */
@@ -363,6 +547,10 @@ const EDIT_TOOLBARS = [
 }
 .editor-title::placeholder {
   color: var(--text-placeholder);
+}
+.split-title {
+  font-size: 24px;
+  margin-bottom: 12px;
 }
 
 /* ===== 元信息行 ===== */
@@ -501,21 +689,74 @@ const EDIT_TOOLBARS = [
   background: transparent !important;
   padding: 0 !important;
 }
-
-/* 图片缩放 80% */
 .preview-wrap :deep(.md-editor-preview img) {
   max-width: var(--image-max-width, 80%);
   height: auto;
 }
-
-/* 代码块 pre 默认有 16px padding，去掉 */
 .preview-wrap :deep(.md-editor-preview pre) {
   padding: 0 !important;
 }
-
-/* 代码头部 sticky 导致滚动时跳动，改为自然跟随 */
 .preview-wrap :deep(.md-editor-code .md-editor-code-head) {
   position: static !important;
+}
+
+/* ===== 分栏布局 ===== */
+.splitpanes-editor {
+  height: 100% !important;
+}
+.splitpanes-editor :deep(.splitpanes__splitter) {
+  width: 4px;
+  margin: 0 -2px;
+  background: transparent;
+  border: none;
+  position: relative;
+  z-index: 5;
+  cursor: col-resize;
+  transition: background 0.15s;
+}
+.splitpanes-editor :deep(.splitpanes__splitter:hover) {
+  background: var(--accent);
+  opacity: 0.3;
+}
+.splitpanes-editor :deep(.splitpanes__splitter::after) {
+  display: none;
+}
+
+.split-left {
+  height: 100%;
+  overflow-y: auto;
+  padding: 24px;
+  background: var(--bg-body);
+}
+.split-right {
+  height: 100%;
+  overflow-y: auto;
+  padding: 24px;
+  background: var(--bg-card);
+}
+.split-editor-content {
+  max-width: 100%;
+}
+.split-instance {
+  min-height: 0;
+  height: calc(100% - 50px);
+}
+.split-preview-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+}
+.split-right .preview-wrap {
+  padding-bottom: 48px;
+}
+.split-right .preview-meta {
+  margin-bottom: 16px;
+}
+.split-instance :deep(.md-editor-content) {
+  height: 100% !important;
 }
 
 /* ===== 响应式 ===== */
@@ -531,6 +772,15 @@ const EDIT_TOOLBARS = [
   }
   .preview-title {
     font-size: 28px;
+  }
+  .split-title {
+    font-size: 20px;
+  }
+  .split-left {
+    padding: 16px;
+  }
+  .split-right {
+    padding: 16px;
   }
 }
 </style>

@@ -10,6 +10,12 @@ const router = createRouter({
       component: () => import('@/modules/system/login/Login.vue')
     },
     {
+      path: '/notes/:id/preview',
+      name: 'NotePreview',
+      meta: { title: '预览' },
+      component: () => import('@/modules/knowledge/note/Preview.vue'),
+    },
+    {
       path: '/',
       component: () => import('@/components/AppLayout.vue'),
       redirect: '/dashboard',
@@ -18,7 +24,6 @@ const router = createRouter({
         { path: 'notes', name: 'NoteList', meta: { title: '笔记列表' }, component: () => import('@/modules/knowledge/note/List.vue') },
         { path: 'notes/new', name: 'NoteCreate', meta: { title: '新建笔记' }, component: () => import('@/modules/knowledge/note/Editor.vue') },
         { path: 'notes/:id/edit', name: 'NoteEdit', meta: { title: '编辑笔记' }, component: () => import('@/modules/knowledge/note/Editor.vue') },
-        { path: 'notes/:id/preview', name: 'NotePreview', meta: { title: '预览' }, component: () => import('@/modules/knowledge/note/Preview.vue') },
         { path: 'categories', name: 'CategoryManage', meta: { title: '分类管理' }, component: () => import('@/modules/category/CategoryManage.vue') },
         { path: 'tags', name: 'TagManage', meta: { title: '标签管理' }, component: () => import('@/modules/knowledge/tag/Manage.vue') },
         { path: 'stats', name: 'Stats', meta: { title: '统计' }, component: () => import('@/modules/stats/StatsView.vue') },
