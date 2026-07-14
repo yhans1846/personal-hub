@@ -7,6 +7,7 @@ import { LayoutDashboard, FileText, BookOpen, CheckSquare, PenLine, Bookmark, Ta
 import { ref, computed, onMounted } from 'vue'
 import CommandPalette from './CommandPalette.vue'
 import NotificationBell from './NotificationBell.vue'
+import ProfileDrawer from './ProfileDrawer.vue'
 import TodoDialog from '@/modules/planning/todo/TodoDialog.vue'
 import DiaryDialog from '@/modules/knowledge/diary/DiaryDialog.vue'
 import BookmarkDialog from '@/modules/resource/bookmark/BookmarkDialog.vue'
@@ -56,6 +57,7 @@ function isActiveRoute(item: MenuItem): boolean {
 }
 
 const sidebarOpen = ref(false)
+const profileDrawerOpen = ref(false)
 
 function toggleSidebar() { sidebarOpen.value = !sidebarOpen.value }
 
@@ -67,10 +69,12 @@ function openCommandPalette() { commandPaletteRef.value?.open() }
 const userName = computed(() => authStore.user?.nickname || authStore.user?.username || '')
 const avatarInitial = computed(() => userName.value ? userName.value[0].toUpperCase() : '?')
 
-function handleUserCommand(cmd: string) {
-  if (cmd === 'settings') router.push('/settings')
-  else if (cmd === 'logout') authStore.logout()
-}
+// 当前日期
+const DAY_NAMES = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
+const todayStr = computed(() => {
+  const d = new Date()
+  return `${d.getMonth() + 1}月${d.getDate()}日 · ${DAY_NAMES[d.getDay()]}`
+})
 
 // 面包屑导航
 const sectionMap: Record<string, string> = {
@@ -183,6 +187,9 @@ function handleQuickCreate(cmd: string) {
       </div>
 
       <div class="topbar-actions">
+        <!-- 当前日期 -->
+        <span class="topbar-date">{{ todayStr }}</span>
+
         <!-- 主题切换 -->
         <button class="topbar-icon-btn" :title="isDark ? '浅色模式' : '深色模式'" @click="toggleTheme">
           <Sun v-if="isDark" :size="18" />
@@ -193,21 +200,10 @@ function handleQuickCreate(cmd: string) {
         <NotificationBell />
 
         <!-- 用户头像 -->
-        <el-dropdown trigger="click" placement="bottom-end" @command="handleUserCommand">
-          <button class="topbar-icon-btn topbar-avatar" :title="userName">
-            <span class="avatar-text">{{ avatarInitial }}</span>
-          </button>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item command="settings">
-                <Cog :size="14" style="margin-right: 6px; vertical-align: -2px;" />系统设置
-              </el-dropdown-item>
-              <el-dropdown-item command="logout" divided>
-                <LogOut :size="14" style="margin-right: 6px; vertical-align: -2px;" />退出登录
-              </el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
+        <button class="topbar-avatar-btn" :title="userName" @click="profileDrawerOpen = true">
+          <img v-if="authStore.user?.avatar" :src="authStore.user.avatar" class="avatar-btn-img" alt="" />
+          <span v-else class="avatar-btn-text">{{ avatarInitial }}</span>
+        </button>
       </div>
 
     </header>
@@ -279,6 +275,9 @@ function handleQuickCreate(cmd: string) {
     <DiaryDialog v-model="diaryVisible" @saved="diaryVisible = false" />
     <BookmarkDialog v-model="bookmarkVisible" @saved="bookmarkVisible = false" />
     <StudyDialog v-model="studyVisible" @saved="studyVisible = false" />
+
+    <!-- 个人资料抽屉 -->
+    <ProfileDrawer v-model:visible="profileDrawerOpen" />
   </div>
 </template>
 
@@ -288,11 +287,11 @@ function handleQuickCreate(cmd: string) {
 
 /* ============ 顶部栏 ============ */
 .topbar {
-  height: 64px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
+  padding: 0 16px;
   border-bottom: 1px solid color-mix(in srgb, var(--border-color) 30%, transparent);
   background: var(--bg-card);
   flex-shrink: 0;
@@ -300,7 +299,7 @@ function handleQuickCreate(cmd: string) {
 }
 .topbar-left { display: flex; align-items: center; gap: var(--sp-2); }
 .hamburger {
-  display: none; width: 32px; height: 32px;
+  display: none; width: 28px; height: 28px;
   align-items: center; justify-content: center;
   background: none; border: none; color: var(--text-secondary);
   cursor: pointer; border-radius: var(--radius-sm);
@@ -316,7 +315,7 @@ function handleQuickCreate(cmd: string) {
 .topbar-center { flex: 1; display: flex; justify-content: center; max-width: 480px; margin: 0 auto; }
 .search-trigger {
   display: flex; align-items: center; gap: var(--sp-2);
-  padding: 7px 16px; width: 100%;
+  padding: 5px 12px; width: 100%;
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-color);
   color: var(--text-tertiary); font-size: var(--text-sm);
@@ -328,15 +327,16 @@ function handleQuickCreate(cmd: string) {
 .search-kbd { margin-left: auto; font-size: 10px; padding: 1px 5px; border-radius: 4px; background: var(--bg-hover); color: var(--text-tertiary); border: 1px solid var(--border-color); font-family: var(--font-mono); }
 
 .topbar-actions { display: flex; align-items: center; gap: var(--sp-2); margin: 0 var(--sp-4); }
+.topbar-date { font-size: 12px; color: var(--text-tertiary); white-space: nowrap; user-select: none; }
 .topbar-icon-btn {
-  width: 32px; height: 32px;
+  width: 28px; height: 28px;
   display: flex; align-items: center; justify-content: center;
   border-radius: var(--radius-sm); border: none;
   background: transparent; color: var(--text-secondary);
   cursor: pointer; transition: all var(--transition);
 }
 .topbar-icon-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
-.quick-create-btn { gap: 4px; height: 32px; }
+.quick-create-btn { gap: 4px; height: 28px; font-size: 13px; }
 
 /* ─── 面包屑导航 ─── */
 .header-breadcrumb {
@@ -364,19 +364,16 @@ function handleQuickCreate(cmd: string) {
   font-weight: 500;
 }
 
-/* ─── 用户头像 ─── */
-.topbar-avatar {
-  width: 32px;
-  height: 32px;
-  background: var(--accent-light);
-  color: var(--accent);
-  font-size: 13px;
-  font-weight: 600;
-  border-radius: 50%;
+/* ─── 用户头像（右上角） ─── */
+.topbar-avatar-btn {
+  width: 28px; height: 28px; border-radius: 50%; overflow: hidden; cursor: pointer; flex-shrink: 0;
+  background: var(--accent-light); border: none; padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: opacity var(--transition);
 }
-.topbar-avatar:hover {
-  background: color-mix(in srgb, var(--accent) 20%, transparent);
-}
+.topbar-avatar-btn:hover { opacity: 0.8; }
+.avatar-btn-img { width: 100%; height: 100%; object-fit: cover; }
+.avatar-btn-text { font-size: 12px; font-weight: 600; color: var(--accent); }
 
 /* ============ 主体区域 ============ */
 .app-body { display: flex; flex: 1; overflow: hidden; }

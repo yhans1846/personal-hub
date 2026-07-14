@@ -53,11 +53,7 @@ async function handleToggleFavorite(note: NoteVO) {
 
 <template>
   <div>
-    <PageHeader title="笔记" subtitle="记录想法与知识">
-      <el-link class="recycle-link" underline="never" @click="router.push('/notes/recycle')">
-        <Trash2 :size="14" style="margin-right: 4px" /> 回收站
-      </el-link>
-    </PageHeader>
+    <PageHeader title="笔记" subtitle="记录想法与知识" />
 
     <ListToolbar :search="query.keyword" search-placeholder="搜索笔记标题..." search-width="240px" create-label="新建笔记" @update:search="query.keyword = $event" @search="onSearch" @create="goCreate">
       <template #actions>
@@ -126,8 +122,6 @@ async function handleToggleFavorite(note: NoteVO) {
 </template>
 
 <style scoped>
-.recycle-link { font-size: var(--text-xs); color: var(--text-tertiary); transition: color var(--transition); }
-.recycle-link:hover { color: var(--accent); }
 .note-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--sp-4); }
 .card-grid-skeleton { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--sp-4); }
 .skeleton-note-card { height: 180px; border-radius: var(--radius-lg); background: var(--bg-hover); animation: pulse 1.5s ease-in-out infinite; }

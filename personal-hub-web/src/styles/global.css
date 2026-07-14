@@ -49,7 +49,7 @@
 
   /* ---- 布局 ---- */
   --sidebar-width: 240px;
-  --topbar-height: 56px;
+  --topbar-height: 48px;
   --content-max-width: 1600px;
   --reading-max-width: 1200px;
 
@@ -156,6 +156,38 @@
 [data-theme='dark'][data-accent='green'] {
   --accent: #34D399; --accent-hover: #6EE7B7;
   --accent-light: rgba(52, 211, 153, 0.1); --accent-border: rgba(52, 211, 153, 0.3);
+}
+[data-accent='pink'] {
+  --accent: #EC4899; --accent-hover: #DB2777;
+  --accent-light: #FDF2F8; --accent-border: #FBCFE8;
+}
+[data-theme='dark'][data-accent='pink'] {
+  --accent: #F472B6; --accent-hover: #F9A8D4;
+  --accent-light: rgba(244, 114, 182, 0.1); --accent-border: rgba(244, 114, 182, 0.3);
+}
+[data-accent='red'] {
+  --accent: #EF4444; --accent-hover: #DC2626;
+  --accent-light: #FEF2F2; --accent-border: #FECACA;
+}
+[data-theme='dark'][data-accent='red'] {
+  --accent: #F87171; --accent-hover: #FCA5A5;
+  --accent-light: rgba(248, 113, 113, 0.1); --accent-border: rgba(248, 113, 113, 0.3);
+}
+[data-accent='teal'] {
+  --accent: #14B8A6; --accent-hover: #0D9488;
+  --accent-light: #F0FDFA; --accent-border: #99F6E4;
+}
+[data-theme='dark'][data-accent='teal'] {
+  --accent: #2DD4BF; --accent-hover: #5EEAD4;
+  --accent-light: rgba(45, 212, 191, 0.1); --accent-border: rgba(45, 212, 191, 0.3);
+}
+[data-accent='indigo'] {
+  --accent: #6366F1; --accent-hover: #4F46E5;
+  --accent-light: #EEF2FF; --accent-border: #C7D2FE;
+}
+[data-theme='dark'][data-accent='indigo'] {
+  --accent: #818CF8; --accent-hover: #A5B4FC;
+  --accent-light: rgba(129, 140, 248, 0.1); --accent-border: rgba(129, 140, 248, 0.3);
 }
 
 /* ---------- 基础重置 ---------- */

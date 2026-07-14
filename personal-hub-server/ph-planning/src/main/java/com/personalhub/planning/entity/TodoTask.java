@@ -39,6 +39,9 @@ public class TodoTask {
     @TableLogic
     private Integer isDeleted;
 
+    /** 完成时间 */
+    private LocalDateTime completedAt;
+
     /** 创建时间 */
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;

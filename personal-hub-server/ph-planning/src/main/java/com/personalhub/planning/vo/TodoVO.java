@@ -44,6 +44,9 @@ public class TodoVO {
     @Schema(description = "更新时间")
     private LocalDateTime updatedAt;
 
+    @Schema(description = "完成时间")
+    private LocalDateTime completedAt;
+
     public static TodoVO from(TodoTask task) {
         TodoVO vo = new TodoVO();
         vo.setId(task.getId());
@@ -54,6 +57,7 @@ public class TodoVO {
         vo.setDueDate(task.getDueDate());
         vo.setCreatedAt(task.getCreatedAt());
         vo.setUpdatedAt(task.getUpdatedAt());
+        vo.setCompletedAt(task.getCompletedAt());
         // 设置优先级标签
         if (task.getPriority() != null) {
             vo.setPriorityLabel(switch (task.getPriority()) {

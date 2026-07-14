@@ -1,5 +1,6 @@
 package com.personalhub.system.service;
 
+import com.personalhub.system.dto.UserProfileUpdateDTO;
 import com.personalhub.system.entity.User;
 import com.personalhub.system.vo.UserProfileVO;
 
@@ -21,7 +22,12 @@ public interface UserService {
     /**
      * 修改个人信息
      */
-    void updateProfile(Long userId, String nickname, String email);
+    void updateProfile(Long userId, UserProfileUpdateDTO dto);
+
+    /**
+     * 更新头像
+     */
+    void updateAvatar(Long userId, String avatarUrl);
 
     /**
      * 修改密码

@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 文件资源控制器
@@ -108,6 +110,38 @@ public class FileController {
                 .header(HttpHeaders.CONTENT_DISPOSITION,
                         "inline; filename*=UTF-8''" + encodedName)
                 .body(resource);
+    }
+
+    @Operation(summary = "获取头像文件（公开）")
+    @GetMapping("/avatar/{filename}")
+    public ResponseEntity<Resource> getAvatar(@PathVariable String filename) {
+        try {
+            String path = "avatars/" + filename;
+            Resource resource = storageService.load(path);
+            if (!resource.exists()) {
+                return ResponseEntity.notFound().build();
+            }
+            String contentType = getContentTypeByExt(filename);
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .cacheControl(CacheControl.maxAge(7, TimeUnit.DAYS))
+                    .body(resource);
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    private String getContentTypeByExt(String filename) {
+        String ext = "";
+        int dot = filename.lastIndexOf('.');
+        if (dot > 0) ext = filename.substring(dot + 1).toLowerCase();
+        return switch (ext) {
+            case "jpg", "jpeg" -> "image/jpeg";
+            case "png" -> "image/png";
+            case "gif" -> "image/gif";
+            case "webp" -> "image/webp";
+            default -> "application/octet-stream";
+        };
     }
 
     @Operation(summary = "删除文件")

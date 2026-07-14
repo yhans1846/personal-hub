@@ -10,9 +10,13 @@ const { appearanceConfig } = storeToRefs(layoutStore)
 const ACCENT_OPTIONS = [
   { key: 'blue', label: '蓝色', color: '#4F7BFF' },
   { key: 'purple', label: '紫色', color: '#8B5CF6' },
-  { key: 'green', label: '绿色', color: '#10B981' },
+  { key: 'pink', label: '粉色', color: '#EC4899' },
+  { key: 'red', label: '红色', color: '#EF4444' },
   { key: 'orange', label: '橙色', color: '#F97316' },
-  { key: 'cyan', label: '青色', color: '#06B6D4' },
+  { key: 'green', label: '绿色', color: '#10B981' },
+  { key: 'teal', label: '青色', color: '#14B8A6' },
+  { key: 'cyan', label: '天蓝', color: '#06B6D4' },
+  { key: 'indigo', label: '靛蓝', color: '#6366F1' },
 ]
 
 const RADIUS_OPTIONS = [

@@ -116,6 +116,11 @@ public class TodoTaskServiceImpl implements TodoTaskService {
             throw new NotFoundException("任务不存在");
         }
         task.setIsDone(task.getIsDone() == null || task.getIsDone() == 0 ? 1 : 0);
+        if (task.getIsDone() == 1) {
+            task.setCompletedAt(java.time.LocalDateTime.now());
+        } else {
+            task.setCompletedAt(null);
+        }
         todoTaskMapper.updateById(task);
         log.info("切换待办任务状态: id={}, userId={}, isDone={}", id, userId, task.getIsDone());
         return TodoVO.from(task);

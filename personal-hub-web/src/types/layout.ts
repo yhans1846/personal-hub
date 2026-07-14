@@ -38,7 +38,7 @@ export interface LayoutSaveRequest {
 /** 外观配置 */
 export interface AppearanceConfig {
   theme: 'light' | 'dark'
-  accent: 'blue' | 'purple' | 'green' | 'orange' | 'cyan'
+  accent: 'blue' | 'purple' | 'pink' | 'red' | 'orange' | 'green' | 'teal' | 'cyan' | 'indigo'
 }
 
 /** 外观配置（含 Phase 2 扩展） */

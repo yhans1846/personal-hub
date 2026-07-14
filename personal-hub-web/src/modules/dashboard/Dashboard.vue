@@ -11,7 +11,7 @@ import type { DashboardStats } from '@/modules/dashboard/api'
 import { getBookmarkList } from '@/modules/resource/api'
 import { getReadingList } from '@/modules/knowledge/api'
 import { getStudyPlanList } from '@/modules/planning/api'
-import { BookOpen, FileText, CheckCircle, BookMarked, Target, PenLine, Clock, History, TrendingUp, Calendar, ArrowRight } from 'lucide-vue-next'
+import { BookOpen, FileText, CheckCircle, BookMarked, Target, PenLine, Clock, History, TrendingUp, ArrowRight } from 'lucide-vue-next'
 import TodoDialog from '@/modules/planning/todo/TodoDialog.vue'
 import type { TodoVO } from '@/types/todo'
 import type { StudyRecordVO } from '@/types/study'
@@ -36,11 +36,6 @@ const todoDialogVisible = ref(false)
 const hour = new Date().getHours()
 const greeting = hour < 6 ? '夜深了' : hour < 12 ? '上午好' : hour < 14 ? '中午好' : hour < 18 ? '下午好' : '晚上好'
 
-// 今天日期
-const today = new Date()
-const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
-const dateStr = `${today.getMonth() + 1}月${today.getDate()}日`
-const dayStr = weekdays[today.getDay()]
 
 // 最近访问 (localStorage)
 const recentVisits = ref<{ path: string; title: string }[]>([])
@@ -119,11 +114,6 @@ function quickCreate(type: string) {
         <p class="welcome-sub" v-if="stats">
           本周学习 <strong>{{ formatDuration(stats.studyDurationThisWeek) }}</strong>
         </p>
-      </div>
-      <div class="welcome-right">
-        <Calendar :size="16" />
-        <span class="date-text">{{ dateStr }}</span>
-        <span class="date-day">{{ dayStr }}</span>
       </div>
     </div>
 
@@ -338,16 +328,6 @@ function quickCreate(type: string) {
 .welcome-left h1 { font-size: var(--text-2xl); font-weight: 600; margin-bottom: var(--sp-1); }
 .welcome-sub { font-size: var(--text-sm); color: var(--text-secondary); }
 .welcome-sub strong { color: var(--text-primary); font-weight: 600; }
-.welcome-right {
-  display: flex; align-items: center; gap: var(--sp-2);
-  padding: var(--sp-2) var(--sp-4);
-  background: var(--bg-card); border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg); color: var(--text-secondary);
-  font-size: var(--text-sm); flex-shrink: 0;
-}
-.date-text { font-weight: 500; color: var(--text-primary); }
-.date-day { color: var(--text-tertiary); font-size: var(--text-xs); }
-
 /* ---- 骨架屏 ---- */
 .loading-skeleton { display: flex; flex-direction: column; gap: var(--sp-4); }
 .skeleton-block { height: 160px; border-radius: var(--radius-lg); background: var(--bg-hover); animation: pulse 1.5s ease-in-out infinite; }

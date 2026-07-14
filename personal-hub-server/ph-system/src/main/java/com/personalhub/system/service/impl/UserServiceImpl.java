@@ -2,6 +2,7 @@ package com.personalhub.system.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.personalhub.common.exception.BusinessException;
+import com.personalhub.system.dto.UserProfileUpdateDTO;
 import com.personalhub.system.entity.User;
 import com.personalhub.system.mapper.UserMapper;
 import com.personalhub.system.service.UserService;
@@ -39,16 +40,38 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void updateProfile(Long userId, String nickname, String email) {
+    public void updateProfile(Long userId, UserProfileUpdateDTO dto) {
         User user = userMapper.selectById(userId);
         if (user == null) {
             log.warn("更新资料用户不存在: userId={}", userId);
             throw new BusinessException("用户不存在");
         }
-        user.setNickname(nickname);
-        user.setEmail(email);
+        user.setNickname(dto.getNickname());
+        user.setEmail(dto.getEmail());
+        user.setGender(dto.getGender());
+        user.setBirthday(dto.getBirthday());
+        user.setPhone(dto.getPhone());
+        user.setCountry(dto.getCountry());
+        user.setProvince(dto.getProvince());
+        user.setCity(dto.getCity());
+        user.setDistrict(dto.getDistrict());
+        user.setWebsite(dto.getWebsite());
+        user.setGithub(dto.getGithub());
+        user.setBio(dto.getBio());
         userMapper.updateById(user);
         log.info("用户更新资料: userId={}", userId);
+    }
+
+    @Override
+    public void updateAvatar(Long userId, String avatarUrl) {
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            log.warn("更新头像用户不存在: userId={}", userId);
+            throw new BusinessException("用户不存在");
+        }
+        user.setAvatar(avatarUrl);
+        userMapper.updateById(user);
+        log.info("用户更新头像: userId={}", userId);
     }
 
     @Override

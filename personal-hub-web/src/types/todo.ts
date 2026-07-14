@@ -10,6 +10,7 @@ export interface TodoVO {
   isOverdue: boolean
   createdAt: string
   updatedAt: string
+  completedAt: string | null
 }
 
 /** 创建/编辑待办任务 */
