@@ -4,7 +4,7 @@ import {
   nextFootnoteIndex,
   nextReferenceId,
   wrapHeading,
-} from '../contextMenuActions'
+} from '../context-menu/contextMenuActions'
 
 describe('contextMenuActions', () => {
   it('buildTableMarkdown generates GFM table', () => {
