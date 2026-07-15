@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
-import { useRouter } from 'vue-router'
 import { getRecycleList, restoreNote, permanentDeleteNote } from '@/modules/knowledge/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Trash2, Eye, RotateCcw, AlertTriangle } from 'lucide-vue-next'
@@ -9,15 +8,23 @@ import PageHeader from '@/components/PageHeader.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import ListToolbar from '@/components/ListToolbar.vue'
 import ListPagination from '@/components/ListPagination.vue'
+import NoteCardContextMenu, { type CardMenuEntry } from './NoteCardContextMenu.vue'
 
-const router = useRouter()
-
-const list = ref<NoteVO[]>([])
 const loading = ref(false)
 const total = ref(0)
+const list = ref<any[]>([])
 const page = ref(1)
 const size = 20
 const keyword = ref('')
+const cardMenuRef = ref<InstanceType<typeof NoteCardContextMenu> | null>(null)
+const activeNote = ref<NoteVO | null>(null)
+
+const cardMenuEntries: CardMenuEntry[] = [
+  { type: 'item', id: 'preview', label: '预览' },
+  { type: 'item', id: 'restore', label: '恢复' },
+  { type: 'separator' },
+  { type: 'item', id: 'delete', label: '永久删除', danger: true },
+]
 
 onMounted(() => fetchList())
 
@@ -75,6 +82,27 @@ async function handlePermanentDelete(id: number) {
 function handlePreview(id: number) {
   window.open(`/notes/${id}/preview`, '_blank')
 }
+
+function onCardContextMenu(e: MouseEvent, note: NoteVO) {
+  activeNote.value = note
+  cardMenuRef.value?.openAt(e)
+}
+
+async function onCardMenuAction(actionId: string) {
+  const note = activeNote.value
+  if (!note) return
+  switch (actionId) {
+    case 'preview':
+      handlePreview(note.id)
+      break
+    case 'restore':
+      await handleRestore(note.id)
+      break
+    case 'delete':
+      await handlePermanentDelete(note.id)
+      break
+  }
+}
 </script>
 
 <template>
@@ -97,7 +125,12 @@ function handlePreview(id: number) {
     />
 
     <div v-else class="recycle-list">
-      <div v-for="note in list" :key="note.id" class="recycle-card">
+      <div
+        v-for="note in list"
+        :key="note.id"
+        class="recycle-card"
+        @contextmenu="onCardContextMenu($event, note)"
+      >
         <div class="recycle-card__main">
           <div class="recycle-card__title">{{ note.title }}</div>
           <div class="recycle-card__meta">
@@ -151,6 +184,12 @@ function handlePreview(id: number) {
       :page="page"
       :size="size"
       @update:page="page = $event"
+    />
+
+    <NoteCardContextMenu
+      ref="cardMenuRef"
+      :entries="cardMenuEntries"
+      @action="onCardMenuAction"
     />
   </div>
 </template>

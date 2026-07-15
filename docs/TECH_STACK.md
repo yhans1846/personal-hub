@@ -39,7 +39,7 @@
 | Axios | 最新 | HTTP 请求 |
 | Element Plus | 最新 | UI 组件库 |
 | lucide-vue-next / @lucide/vue | 最新 | 图标库（统一图标源） |
-| md-editor-v3 | 最新 | Markdown 编辑器组件 |
+| vditor | 最新 | Markdown 编辑器（Vditor IR 模式，WYSIWYG） |
 | sortablejs | 最新 | 拖拽排序 |
 | ECharts | 6.x | 数据可视化图表 |
 

@@ -24,7 +24,7 @@
 | **认证** | Spring Security + JWT（无状态会话） |
 | **文档** | SpringDoc OpenAPI 2.6（Swagger） |
 | **可视化** | ECharts（Dashboard 趋势分析） |
-| **编辑器** | md-editor-v3（Markdown 写作） |
+| **编辑器** | Vditor（Markdown 写作 / WYSIWYG） |
 
 ---
 

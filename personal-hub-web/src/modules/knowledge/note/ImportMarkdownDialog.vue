@@ -4,7 +4,7 @@ import { importMarkdownFile, importMarkdownContent } from '@/modules/knowledge/a
 import { getCategories } from '@/api/categoryApi'
 import { getTags } from '@/modules/knowledge/api'
 import { ElMessage } from 'element-plus'
-import { Upload, FileText, Link, CheckCircle, XCircle, AlertTriangle } from 'lucide-vue-next'
+import { Upload, FileText, CheckCircle, XCircle, AlertTriangle } from 'lucide-vue-next'
 import type { ImportReport } from '@/types/note'
 
 const emit = defineEmits<{ done: [] }>()
@@ -27,6 +27,7 @@ onMounted(async () => {
 
 // ─── 文件导入 ───
 const file = ref<File | null>(null)
+const fileInput = ref<HTMLInputElement | null>(null)
 const fileTitle = ref('')
 const baseDir = ref('')
 
@@ -198,7 +199,7 @@ function handleClose() {
       <div v-if="activeTab === 'file'" class="tab-content">
         <div class="form-group">
           <label class="form-label">选择 Markdown 文件</label>
-          <div class="file-upload-area" @click="$refs.fileInput?.click()">
+          <div class="file-upload-area" @click="fileInput?.click()">
             <Upload :size="24" class="upload-icon" />
             <p v-if="!file" class="upload-text">点击选择 .md 文件</p>
             <p v-else class="upload-text file-selected">{{ file.name }}</p>

@@ -570,8 +570,3 @@ a:hover { color: var(--accent-hover); }
   --preview-quote-bar: var(--accent);
   --preview-code-header: var(--bg-hover);
 }
-
-/* 阅读设置弹窗层级高于 md-editor-code-head (z-index: 10000) */
-.preview-settings-popper {
-  z-index: 10001 !important;
-}

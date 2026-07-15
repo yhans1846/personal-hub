@@ -2,8 +2,8 @@
 import { ref, computed, onMounted, nextTick, watch, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { MdPreview } from 'md-editor-v3'
-import 'md-editor-v3/lib/style.css'
+import Vditor from 'vditor'
+import 'vditor/dist/index.css'
 import mediumZoom from 'medium-zoom'
 import type { NoteVO } from '@/types/note'
 import { getNotePreview, restoreNote, exportNote } from '@/modules/knowledge/api'
@@ -13,6 +13,8 @@ import DocLayout from '@/components/DocLayout.vue'
 import type { TocItem } from './preview/PreviewToc.vue'
 import { storeToRefs } from 'pinia'
 import { estimateReadingTime } from '@/utils/readingTime'
+import { buildPreviewOptions } from './editor/vditorSetup'
+import { parseTocFromMarkdown } from './editor/parseToc'
 
 const route = useRoute()
 const readingStore = useReadingConfigStore()
@@ -24,8 +26,8 @@ const loading = ref(true)
 const error = ref('')
 const activeHeading = ref('')
 const toc = ref<TocItem[]>([])
+const previewRef = ref<HTMLDivElement | null>(null)
 
-/** 非空后的 note，用于 slot 内类型缩窄 */
 const loadedNote = computed(() => note.value as NoteVO)
 
 let observer: IntersectionObserver | null = null
@@ -33,136 +35,139 @@ let zoomInstance: ReturnType<typeof mediumZoom> | null = null
 
 const isTrash = computed(() => note.value?.isDeleted === 1)
 
-/** MdPreview 只接受 light/dark，sepia 映射为 light */
-const mdTheme = computed(() => (resolvedTheme.value as string) === 'sepia' ? 'light' : resolvedTheme.value)
+const previewTheme = computed<'light' | 'dark'>(() => {
+  const t = resolvedTheme.value as string
+  return t === 'dark' ? 'dark' : 'light'
+})
 
 function formatTime(dateStr?: string) {
   if (!dateStr) return ''
   return dateStr.slice(0, 16).replace('T', ' ')
 }
 
-// ====== 目录 ======
-
-function parseToc(content: string): TocItem[] {
-  const items: TocItem[] = []
-  const lines = content.split('\n')
-  for (const line of lines) {
-    const match = line.match(/^(#{1,6})\s+(.+)$/)
-    if (match) {
-      const level = match[1].length
-      const text = match[2].trim()
-      const id = text.replace(/\s+/g, '-')
-      items.push({ text, level, id })
-    }
-  }
-  return items
-}
+const parseToc = parseTocFromMarkdown
 
 function scrollToHeading(id: string) {
   activeHeading.value = id
-  // 直接用 id 查找（setupHeadingAnchors 阶段已设置 h.id）
-  const target = document.getElementById(id)
-  if (target) {
-    target.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
+function getPreviewRoot(): HTMLElement | null {
+  return previewRef.value
+}
+
+async function renderMarkdown() {
+  if (!previewRef.value || !note.value?.content) return
+  previewRef.value.innerHTML = ''
+  await Vditor.preview(previewRef.value, note.value.content, buildPreviewOptions(previewTheme.value))
+  await nextTick()
+  setupImageProxy()
+  setupObserver()
+  setupImageZoom()
+  setupCodeCopy()
+  setupExternalLinks()
+  setupHeadingAnchors()
 }
 
 function setupObserver() {
-  if (!note.value?.content) return
-  setTimeout(() => {
-    const preview = document.querySelector('.md-editor-preview')
-    if (!preview) return
-
-    const headingEls = preview.querySelectorAll('h1, h2, h3, h4, h5, h6')
-    if (!headingEls.length) return
-
-    observer?.disconnect()
-    observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            const text = entry.target.textContent?.trim() ?? ''
-            const id = text.replace(/\s+/g, '-')
-            activeHeading.value = id
-          }
+  const preview = getPreviewRoot()
+  if (!preview || !note.value?.content) return
+  const headingEls = preview.querySelectorAll('h1, h2, h3, h4, h5, h6')
+  if (!headingEls.length) return
+  observer?.disconnect()
+  observer = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          const text = entry.target.textContent?.trim() ?? ''
+          activeHeading.value = text.replace(/\s+/g, '-')
         }
-      },
-      { rootMargin: '-64px 0px -60% 0px', threshold: 0 }
-    )
-    headingEls.forEach((el) => observer!.observe(el))
-  }, 200)
+      }
+    },
+    { rootMargin: '-64px 0px -60% 0px', threshold: 0 },
+  )
+  headingEls.forEach((el) => observer!.observe(el))
 }
 
-// ====== 图片缩放 ======
-
 function setupImageProxy() {
-  nextTick(() => {
-    const preview = document.querySelector('.md-editor-preview')
-    if (!preview || !note.value) return
-    const noteId = note.value.id
-    const token = localStorage.getItem('token')
-    if (!token) return
-
-    preview.querySelectorAll('img').forEach((img) => {
-      const src = img.getAttribute('src')
-      if (!src) return
-      // 只处理相对路径的图片（相对于笔记目录存储的 images/ 或 attachments/）
-      if (src.startsWith('images/') || src.startsWith('attachments/')) {
-        img.setAttribute('src', `/api/notes/${noteId}/${src}?token=${token}`)
-      }
-    })
+  const preview = getPreviewRoot()
+  if (!preview || !note.value) return
+  const noteId = note.value.id
+  const token = localStorage.getItem('token')
+  if (!token) return
+  preview.querySelectorAll('img').forEach((img) => {
+    const src = img.getAttribute('src')
+    if (!src) return
+    if (src.startsWith('images/') || src.startsWith('attachments/')) {
+      img.setAttribute('src', `/api/notes/${noteId}/${src}?token=${token}`)
+    }
   })
 }
 
 function setupImageZoom() {
-  nextTick(() => {
-    const preview = document.querySelector('.md-editor-preview')
-    if (!preview) return
-
-    zoomInstance?.detach()
-    zoomInstance = mediumZoom(preview.querySelectorAll('img'), {
-      background: 'rgba(0, 0, 0, 0.6)',
-      margin: 40,
-    })
+  const preview = getPreviewRoot()
+  if (!preview) return
+  zoomInstance?.detach()
+  zoomInstance = mediumZoom(preview.querySelectorAll('img'), {
+    background: 'rgba(0, 0, 0, 0.6)',
+    margin: 40,
   })
 }
-
-// ====== 代码复制 ======
 
 function setupCodeCopy() {
-  nextTick(() => {
-    const preview = document.querySelector('.md-editor-preview')
-    if (!preview) return
-
-    preview.querySelectorAll('pre').forEach((pre) => {
-      // 避免重复添加
-      if (pre.querySelector('.code-copy-btn')) return
-
-      const btn = document.createElement('button')
-      btn.className = 'code-copy-btn'
-      btn.textContent = '复制'
-      btn.addEventListener('click', async () => {
-        const code = pre.querySelector('code')
-        if (!code) return
-        try {
-          await navigator.clipboard.writeText(code.textContent || '')
-          btn.textContent = '已复制'
-          setTimeout(() => { btn.textContent = '复制' }, 2000)
-        } catch {
-          btn.textContent = '失败'
-        }
-      })
-      pre.style.position = 'relative'
-      pre.appendChild(btn)
+  const preview = getPreviewRoot()
+  if (!preview) return
+  preview.querySelectorAll('pre').forEach((pre) => {
+    if (pre.querySelector('.code-copy-btn')) return
+    const btn = document.createElement('button')
+    btn.className = 'code-copy-btn'
+    btn.textContent = '复制'
+    btn.addEventListener('click', async () => {
+      const code = pre.querySelector('code')
+      if (!code) return
+      try {
+        await navigator.clipboard.writeText(code.textContent || '')
+        btn.textContent = '已复制'
+        setTimeout(() => { btn.textContent = '复制' }, 2000)
+      } catch {
+        btn.textContent = '失败'
+      }
     })
+    pre.style.position = 'relative'
+    pre.appendChild(btn)
   })
 }
 
-// ====== 数据加载 ======
+function setupExternalLinks() {
+  const preview = getPreviewRoot()
+  if (!preview) return
+  preview.querySelectorAll('a').forEach((a) => {
+    if (!a.getAttribute('target')) {
+      a.setAttribute('target', '_blank')
+      a.setAttribute('rel', 'noopener noreferrer')
+    }
+  })
+}
+
+function setupHeadingAnchors() {
+  const preview = getPreviewRoot()
+  if (!preview) return
+  preview.querySelectorAll('h1, h2, h3, h4, h5, h6').forEach((h) => {
+    if (h.querySelector('.heading-anchor')) return
+    const id = h.textContent?.trim().replace(/\s+/g, '-') ?? ''
+    if (!id) return
+    h.id = id
+    const anchor = document.createElement('a')
+    anchor.className = 'heading-anchor'
+    anchor.href = `#${id}`
+    anchor.textContent = '#'
+    anchor.setAttribute('aria-hidden', 'true')
+    h.insertBefore(anchor, h.firstChild)
+  })
+}
 
 onMounted(async () => {
   readingStore.fetchFromBackend()
-
   const id = Number(route.params.id)
   if (!id) {
     error.value = '笔记ID无效'
@@ -172,12 +177,8 @@ onMounted(async () => {
   try {
     const res = await getNotePreview(id)
     note.value = res.data.data
-    if (note.value?.content) {
-      toc.value = parseToc(note.value.content)
-    }
-    if (note.value?.title) {
-      document.title = note.value.title + ' — 预览'
-    }
+    if (note.value?.content) toc.value = parseToc(note.value.content)
+    if (note.value?.title) document.title = `${note.value.title} — 预览`
   } catch {
     error.value = '笔记不存在或无权访问'
   } finally {
@@ -185,62 +186,16 @@ onMounted(async () => {
   }
 })
 
-// ====== 链接新窗口打开 ======
-
-function setupExternalLinks() {
-  nextTick(() => {
-    const preview = document.querySelector('.md-editor-preview')
-    if (!preview) return
-    preview.querySelectorAll('a').forEach((a) => {
-      if (!a.getAttribute('target')) {
-        a.setAttribute('target', '_blank')
-        a.setAttribute('rel', 'noopener noreferrer')
-      }
-    })
-  })
-}
-
-// ====== 标题锚点 ======
-
-function setupHeadingAnchors() {
-  nextTick(() => {
-    const preview = document.querySelector('.md-editor-preview')
-    if (!preview) return
-    preview.querySelectorAll('h1, h2, h3, h4, h5, h6').forEach((h) => {
-      if (h.querySelector('.heading-anchor')) return
-      const id = h.textContent?.trim().replace(/\s+/g, '-') ?? ''
-      if (id) {
-        h.id = id
-        const anchor = document.createElement('a')
-        anchor.className = 'heading-anchor'
-        anchor.href = `#${id}`
-        anchor.textContent = '#'
-        anchor.setAttribute('aria-hidden', 'true')
-        h.insertBefore(anchor, h.firstChild)
-      }
-    })
-  })
-}
-
-// 内容加载后设置
-watch(() => note.value?.content, async () => {
+watch(() => note.value?.content, () => {
   if (note.value?.content) {
-    await nextTick()
-    setupImageProxy()
-    setupObserver()
-    setupImageZoom()
-    setupCodeCopy()
-    setupExternalLinks()
-    setupHeadingAnchors()
+    toc.value = parseToc(note.value.content)
+    renderMarkdown()
   }
-})
+}, { flush: 'post' })
 
-// 主题切换时重新绑定 zoom（zoom 需要新图片引用）
-watch(resolvedTheme, () => {
-  setupImageZoom()
+watch(previewTheme, () => {
+  renderMarkdown()
 })
-
-// ====== 操作 ======
 
 async function handleExport() {
   if (!note.value) return
@@ -264,9 +219,7 @@ async function handleRestore() {
     await restoreNote(note.value.id)
     ElMessage.success('已恢复')
     window.close()
-  } catch {
-    // 业务异常已由全局拦截器处理
-  }
+  } catch { /* handled */ }
 }
 
 function handleClose() {
@@ -290,75 +243,67 @@ onUnmounted(() => {
     <button class="back-btn" @click="handleClose">关闭页面</button>
   </div>
 
-  <DocLayout v-else-if="note"
-      :title="loadedNote.title"
-      :toc-items="toc"
-      :active-heading="activeHeading"
-      :is-trash="isTrash"
-      :meta="{
-        updatedAt: formatTime(loadedNote.updatedAt),
-        readingTime: estimateReadingTime(loadedNote.content),
+  <DocLayout
+    v-else-if="note"
+    :title="loadedNote.title"
+    :toc-items="toc"
+    :active-heading="activeHeading"
+    :is-trash="isTrash"
+    :meta="{
+      updatedAt: formatTime(loadedNote.updatedAt),
+      readingTime: estimateReadingTime(loadedNote.content),
+    }"
+    @back="handleClose"
+    @scroll-to-heading="scrollToHeading"
+  >
+    <template #header-actions>
+      <el-dropdown trigger="click" placement="bottom-end">
+        <button class="header-action-btn" title="更多">
+          <span style="letter-spacing: 2px">⋯</span>
+        </button>
+        <template #dropdown>
+          <el-dropdown-menu>
+            <el-dropdown-item @click="handleExport">导出笔记</el-dropdown-item>
+            <el-dropdown-item v-if="isTrash" @click="handleRestore">恢复笔记</el-dropdown-item>
+          </el-dropdown-menu>
+        </template>
+      </el-dropdown>
+    </template>
+
+    <div
+      class="preview-content-wrap"
+      :style="{
+        maxWidth: config.readingWidth + 'px',
+        fontSize: config.fontSize + 'px',
+        lineHeight: config.lineHeight,
+        '--prose-font-size': config.fontSize + 'px',
+        '--prose-line-height': config.lineHeight,
+        '--image-max-width': config.imageMaxWidth + '%',
       }"
-      @back="handleClose"
-      @scroll-to-heading="scrollToHeading"
     >
-      <!-- Header 右侧操作区 -->
-      <template #header-actions>
-        <el-dropdown trigger="click" placement="bottom-end">
-          <button class="header-action-btn" title="更多">
-            <span style="letter-spacing: 2px">⋯</span>
-          </button>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item @click="handleExport">导出笔记</el-dropdown-item>
-              <el-dropdown-item v-if="isTrash" @click="handleRestore">恢复笔记</el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
-      </template>
-
-      <!-- 正文 -->
-      <div
-        class="preview-content-wrap"
-        :style="{
-          maxWidth: config.readingWidth + 'px',
-          fontSize: config.fontSize + 'px',
-          lineHeight: config.lineHeight,
-          '--prose-font-size': config.fontSize + 'px',
-          '--prose-line-height': config.lineHeight,
-          '--image-max-width': config.imageMaxWidth + '%',
-        }"
-      >
-        <!-- 分类/标签 -->
-        <div class="preview-taxonomies">
-          <span v-if="loadedNote.categories?.length" class="taxonomy-block">
-            <span v-for="c in loadedNote.categories" :key="c.id" class="taxonomy-tag">{{ c.name }}</span>
-          </span>
-          <span v-if="loadedNote.tags?.length" class="taxonomy-block">
-            <span
-              v-for="t in loadedNote.tags"
-              :key="t.id"
-              class="taxonomy-tag"
-              :style="t.color ? { '--tag-color': t.color } : undefined"
-            >{{ t.name }}</span>
-          </span>
-        </div>
-
-        <!-- Markdown 正文 -->
-        <div v-if="loadedNote.content" class="preview-content markdown-prose">
-          <MdPreview
-            :model-value="loadedNote.content"
-            :theme="mdTheme"
-            :show-code-row-number="false"
-          />
-        </div>
-        <div v-else class="empty-content">笔记内容为空</div>
+      <div class="preview-taxonomies">
+        <span v-if="loadedNote.categories?.length" class="taxonomy-block">
+          <span v-for="c in loadedNote.categories" :key="c.id" class="taxonomy-tag">{{ c.name }}</span>
+        </span>
+        <span v-if="loadedNote.tags?.length" class="taxonomy-block">
+          <span
+            v-for="t in loadedNote.tags"
+            :key="t.id"
+            class="taxonomy-tag"
+            :style="t.color ? { '--tag-color': t.color } : undefined"
+          >{{ t.name }}</span>
+        </span>
       </div>
-    </DocLayout>
+
+      <div v-if="loadedNote.content" class="preview-content markdown-prose">
+        <div ref="previewRef" class="vditor-preview-body" />
+      </div>
+      <div v-else class="empty-content">笔记内容为空</div>
+    </div>
+  </DocLayout>
 </template>
 
 <style scoped>
-/* ====== 状态消息 ====== */
 .state-message {
   display: flex;
   flex-direction: column;
@@ -371,9 +316,7 @@ onUnmounted(() => {
   font-size: var(--text-sm);
   background: var(--preview-bg);
 }
-
 .state-error { color: var(--danger); }
-
 .back-btn {
   padding: 6px 16px;
   font-size: var(--text-sm);
@@ -382,14 +325,7 @@ onUnmounted(() => {
   background: transparent;
   border-radius: 6px;
   cursor: pointer;
-  transition: color var(--transition), border-color var(--transition);
 }
-
-.back-btn:hover {
-  color: var(--text-primary);
-  border-color: var(--text-tertiary);
-}
-
 .loading-spinner {
   width: 20px;
   height: 20px;
@@ -398,26 +334,18 @@ onUnmounted(() => {
   border-radius: 50%;
   animation: spin 0.6s linear infinite;
 }
-
 @keyframes spin { to { transform: rotate(360deg); } }
-
-/* ==== 正文区域 ==== */
 .preview-content-wrap {
   margin: 0 auto;
   padding: 0;
   color: var(--preview-text);
 }
-
-/* 安全区边距统一由 DocLayout .doc-content 提供 */
-
-/* 分类/标签行 */
 .preview-taxonomies {
   display: flex;
   flex-wrap: wrap;
   gap: var(--sp-2);
   margin-bottom: var(--sp-5);
 }
-
 .taxonomy-tag {
   display: inline-block;
   padding: 1px 8px;
@@ -427,19 +355,15 @@ onUnmounted(() => {
   color: var(--accent);
   border-radius: 4px;
 }
-
 .taxonomy-tag[style] {
   background: color-mix(in srgb, var(--tag-color) 15%, transparent);
   color: var(--tag-color);
 }
-
 .empty-content {
   text-align: center;
   padding: 48px 0;
   color: var(--text-tertiary);
 }
-
-/* Header 右侧操作按钮 */
 .header-action-btn {
   display: inline-flex;
   align-items: center;
@@ -451,76 +375,30 @@ onUnmounted(() => {
   border-radius: 6px;
   color: var(--text-tertiary);
   cursor: pointer;
-  font-size: var(--text-sm);
-  transition: color var(--transition), background var(--transition);
 }
-
-.header-action-btn:hover {
-  color: var(--text-primary);
-  background: var(--bg-hover);
-}
-
-/* MdPreview 根节点与内部容器：背景透明 / 边距 / 字号 / 颜色由阅读主题驱动 */
-:deep(.md-editor) {
-  background: transparent !important;
-}
-
-:deep(.md-editor-preview) {
+:deep(.vditor-reset) {
   background: transparent !important;
   padding-inline: 48px !important;
   padding-block-start: 4px !important;
-  /* 基准字号 — 子元素的 em 单位会基于此缩放 */
   font-size: var(--prose-font-size, 16px) !important;
   word-break: break-word !important;
-  /* 正文与标题颜色跟随阅读主题 */
   color: var(--prose-color) !important;
 }
-
-/* default-theme 内部元素硬编码了 line-height / word-break / 标题颜色，统一覆盖 */
-:deep(.md-editor-preview p),
-:deep(.md-editor-preview li),
-:deep(.md-editor-preview blockquote) {
+:deep(.vditor-reset p),
+:deep(.vditor-reset li),
+:deep(.vditor-reset blockquote) {
   line-height: inherit !important;
-  margin-left: 0 !important;
-  margin-right: 0 !important;
 }
-
-:deep(.md-editor-preview h1),
-:deep(.md-editor-preview h2),
-:deep(.md-editor-preview h3),
-:deep(.md-editor-preview h4),
-:deep(.md-editor-preview h5),
-:deep(.md-editor-preview h6) {
-  word-break: break-word !important;
+:deep(.vditor-reset h1),
+:deep(.vditor-reset h2),
+:deep(.vditor-reset h3),
+:deep(.vditor-reset h4),
+:deep(.vditor-reset h5),
+:deep(.vditor-reset h6) {
   color: var(--prose-heading-color) !important;
 }
-
-/* === 宽元素突破正文宽度 ===
-   图片、Mermaid 可以撑满容器，通过负 margin 抵消父级 padding-inline: 48px */
-
-/* 行内代码不额外缩进 */
-:deep(.md-editor-preview code) {
-  padding-left: 0 !important;
-  padding-right: 0 !important;
-}
-
-:deep(.md-editor-preview pre) {
-  padding: 0 !important;
-}
-
-:deep(.md-editor-preview figure) {
-  margin-left: -48px !important;
-  margin-right: -48px !important;
-  max-width: calc(100% + 96px) !important;
-}
-
-:deep(.md-editor-preview img) {
+:deep(.vditor-reset img) {
   max-width: var(--image-max-width, 80%);
   height: auto;
-}
-
-/* 代码块头部 sticky 导致滚动时跳动，改为自然跟随 */
-:deep(.md-editor-code .md-editor-code-head) {
-  position: static !important;
 }
 </style>

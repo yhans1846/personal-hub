@@ -438,8 +438,8 @@ UiDialog / UiInput / UiTextarea / UiSelect / UiDatePicker / UiButton / UiSection
 | `SearchBar` | 通用搜索框 | `placeholder`, `modelValue`, `debounce?` |
 | `ConfirmDialog` | 确认弹窗 | `title`, `content`, `confirmText?`, `cancelText?` |
 | `MarkdownEditor` | Markdown 编辑器 | `modelValue`, `previewOnly?` |
-| `NoteMdEditor` | 笔记专业编辑器（md-editor-v3 封装） | `modelValue`, `editorId`, `toolbars`, `theme`, `onUploadImg?` |
-| `EditorPreviewPanel` | 笔记预览面板（TOC/代码复制/图片缩放） | `content`, `editorId`, `noteId?`, `showToc?`, `showMeta?` |
+| `NoteVditor` | 笔记 WYSIWYG 编辑器（Vditor IR 模式） | `modelValue`, `editorId`, `theme`, `readonly?`, `onUploadImg?` |
+| `NoteMarkdownPreview` | 笔记 Markdown 只读预览（Vditor 渲染管道） | `content`, `editorId`, `noteId?`, `showToc?`, `showMeta?` |
 | `Tag` | 标签展示 | `name`, `color`, `closable?` |
 | `PriorityTag` | 优先级标签 | `priority` (高/中/低) |
 | `ProgressCard` | 进度卡片 | `value`, `max`, `label` |
@@ -471,11 +471,11 @@ UiDialog / UiInput / UiTextarea / UiSelect / UiDatePicker / UiButton / UiSection
 | 文件 | 用途 |
 |------|------|
 | `useAutoSave.ts` | 自动保存状态机（2s 防抖，dirty→saving→success→error 切换，Ctrl+S 强制保存，路由离开守卫） |
-| `useEditorMode.ts` | 编辑器模式管理（edit/preview/focus + livePreview 分栏 + isFullscreen 全屏，快捷键 Ctrl+Shift+P/L/F，Esc 退出） |
-| `useEditorPreferences.ts` | 状态记忆单例（livePreview 默认 true、splitRatio 55、fullscreen/focusMode 持久化到 localStorage） |
+| `useEditorMode.ts` | 编辑器模式管理（edit/preview/focus + isFullscreen 全屏，快捷键 Ctrl+Shift+P/F，Esc 退出） |
+| `useEditorPreferences.ts` | 状态记忆单例（fullscreen/focusMode 持久化到 localStorage） |
 | `useImageUpload.ts` | 图片上传校验 + noteId 自动获取 + 逐个上传 |
-| `mdEditorSetup.ts` | md-editor-v3 一次性 config（Mermaid/KaTeX 本地包） |
-| `mdEditorToolbars.ts` | `FULL_TOOLBARS` / `SPLIT_TOOLBARS` 工具栏配置 |
+| `vditorSetup.ts` | Vditor 初始化配置（IR 模式、隐藏工具栏、CDN、主题映射） |
+| `contextMenuActions.ts` | 39 个右键菜单操作纯函数（格式化/插入/转换） |
 | `parseToc.ts` | 从 Markdown 正文解析 TOC |
 
 ### 新页面模板（CRUD 列表页）

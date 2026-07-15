@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { PreviewTheme } from './usePreviewTheme'
+import type { PreviewTheme } from '@/store/readingConfigStore'
 
 const props = defineProps<{
   theme: PreviewTheme

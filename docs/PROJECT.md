@@ -92,6 +92,7 @@ ph-system ─┬─ ph-knowledge
 | 十四 | 个人资料模块 + 待办重构 + 外观扩展 | ✅ |
 | 十五 | 沉浸式创作模式（Focus Mode）：全屏/实时预览/滚动同步/阅读模式/Focus Mode/状态栏增强/状态记忆 | ✅ |
 | 十六 | 部署基线 + 正确性/性能/安全优化（回收站清理、密钥、JWT、N+1、excerpt、Redis 缓存、限流、Actuator） | ✅ |
+| 十七 | WYSIWYG 编辑器重构（md-editor-v3 → Vditor IR + 右键菜单 + 39 项格式操作 + 列表/回收站 UI 统一） | ✅ |
 
 ## 后续可扩展
 

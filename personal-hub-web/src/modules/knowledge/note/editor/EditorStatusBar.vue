@@ -9,7 +9,6 @@ const props = defineProps<{
   mode: EditorMode
   saveStatus: SaveStatus
   lastSavedAt?: number | null
-  livePreview?: boolean
   isFullscreen?: boolean
 }>()
 
@@ -30,7 +29,7 @@ const readingTime = computed(() => estimateReadingTime(props.content))
 
 const modeLabel = computed(() => {
   switch (props.mode) {
-    case 'edit': return props.livePreview ? '分栏预览' : '编辑模式'
+    case 'edit': return '编辑模式'
     case 'preview': return '预览模式'
     case 'focus': return '专注模式'
   }

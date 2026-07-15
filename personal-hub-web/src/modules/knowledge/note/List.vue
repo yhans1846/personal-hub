@@ -8,6 +8,7 @@ import { EmptyState, PageHeader, ListToolbar, ListPagination } from '@/component
 import type { NoteVO, NoteQuery } from '@/types/note'
 import { estimateReadingTime, formatRelativeTime, isRecentlyEdited } from '@/utils/readingTime'
 import ImportMarkdownDialog from './ImportMarkdownDialog.vue'
+import NoteCardContextMenu, { type CardMenuEntry } from './NoteCardContextMenu.vue'
 
 const router = useRouter()
 const list = ref<NoteVO[]>([])
@@ -15,6 +16,19 @@ const total = ref(0)
 const loading = ref(false)
 const query = ref<NoteQuery>({ page: 1, size: 20, keyword: '' })
 const showImport = ref(false)
+const cardMenuRef = ref<InstanceType<typeof NoteCardContextMenu> | null>(null)
+const activeNote = ref<NoteVO | null>(null)
+
+const cardMenuEntries: CardMenuEntry[] = [
+  { type: 'item', id: 'edit', label: '编辑' },
+  { type: 'item', id: 'preview', label: '新标签页预览' },
+  { type: 'separator' },
+  { type: 'item', id: 'favorite', label: '收藏 / 取消收藏' },
+  { type: 'item', id: 'export', label: '导出 Markdown' },
+  { type: 'separator' },
+  { type: 'item', id: 'delete', label: '移入回收站', danger: true },
+]
+
 onMounted(() => fetchList())
 
 function openImport() {
@@ -60,13 +74,52 @@ async function handleToggleFavorite(note: NoteVO) {
   await toggleFavorite(note.id)
   note.isFavorite = note.isFavorite ? 0 : 1
 }
+
+function onCardContextMenu(e: MouseEvent, note: NoteVO) {
+  activeNote.value = note
+  cardMenuRef.value?.openAt(e)
+}
+
+function handleExport(note: NoteVO) {
+  const title = note.title || '无标题笔记'
+  const content = `# ${title}\n\n${note.content || ''}`
+  const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `${title}.md`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+async function onCardMenuAction(actionId: string) {
+  const note = activeNote.value
+  if (!note) return
+  switch (actionId) {
+    case 'edit':
+      goEdit(note.id)
+      break
+    case 'preview':
+      goPreview(note.id)
+      break
+    case 'favorite':
+      await handleToggleFavorite(note)
+      break
+    case 'export':
+      handleExport(note)
+      break
+    case 'delete':
+      await handleDelete(note.id)
+      break
+  }
+}
 </script>
 
 <template>
   <div>
     <PageHeader title="笔记" subtitle="记录想法与知识" />
 
-    <ListToolbar :search="query.keyword" search-placeholder="搜索笔记标题..." search-width="240px" create-label="新建笔记" @update:search="query.keyword = $event" @search="onSearch" @create="goCreate">
+    <ListToolbar :search="query.keyword ?? ''" search-placeholder="搜索笔记标题..." search-width="240px" create-label="新建笔记" @update:search="query.keyword = $event" @search="onSearch" @create="goCreate">
       <template #actions>
         <button class="toolbar-import-btn" @click="openImport">
           <Upload :size="14" /> 导入
@@ -82,7 +135,13 @@ async function handleToggleFavorite(note: NoteVO) {
     <EmptyState v-else-if="list.length === 0" :icon="FileText" illustration="note" text="还没有笔记，开始写第一篇吧" action-label="新建笔记" :action-icon="Plus" @action="goCreate" />
 
     <div v-else class="note-grid">
-      <div v-for="note in list" :key="note.id" class="note-card" @click="goEdit(note.id)">
+      <div
+        v-for="note in list"
+        :key="note.id"
+        class="note-card"
+        @click="goEdit(note.id)"
+        @contextmenu="onCardContextMenu($event, note)"
+      >
         <div class="note-card-header">
           <div class="note-card-title-row">
             <FileText :size="14" class="note-type-icon" />
@@ -111,16 +170,20 @@ async function handleToggleFavorite(note: NoteVO) {
               <Eye :size="14" />
             </button>
             <button class="delete-btn" @click.stop="handleDelete(note.id)">
-            <Trash2 :size="14" />
-          </button>
+              <Trash2 :size="14" />
+            </button>
+          </div>
         </div>
       </div>
     </div>
 
-    <ListPagination v-if="total > query.size" :total="total" :page="query.page" :size="query.size" @update:page="onPageChange" />
+    <ListPagination v-if="total > (query.size ?? 20)" :total="total" :page="query.page ?? 1" :size="query.size ?? 20" @update:page="onPageChange" />
 
-    <!-- 导入对话框 -->
-  </div>
+    <NoteCardContextMenu
+      ref="cardMenuRef"
+      :entries="cardMenuEntries"
+      @action="onCardMenuAction"
+    />
   </div>
 
   <el-dialog

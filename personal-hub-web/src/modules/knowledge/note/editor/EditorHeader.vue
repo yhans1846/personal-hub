@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import type { SaveStatus } from './useAutoSave'
 import type { EditorMode } from './useEditorMode'
-import { ArrowLeft, Star, MoreHorizontal, Download, Trash2, Eye, Edit3, Maximize2, Minimize2, Focus as FocusIcon, Columns3 } from 'lucide-vue-next'
+import { ArrowLeft, Star, MoreHorizontal, Download, Trash2, Eye, Edit3, Maximize2, Minimize2, Focus as FocusIcon } from 'lucide-vue-next'
 
-const props = defineProps<{
+defineProps<{
   saveStatus: SaveStatus
   isFavorite: boolean
   mode: EditorMode
-  livePreview?: boolean
   isFullscreen?: boolean
   isFocusMode?: boolean
 }>()
@@ -16,7 +15,6 @@ const emit = defineEmits<{
   back: []
   toggleFavorite: []
   toggleMode: []
-  toggleLivePreview: []
   toggleFocus: []
   toggleFullscreen: []
   exportNote: []
@@ -37,7 +35,6 @@ const emit = defineEmits<{
     </div>
 
     <div class="header-right">
-      <!-- 保存状态 -->
       <span v-if="saveStatus === 'saving'" class="save-status saving">
         <span class="status-dot" /> 保存中...
       </span>
@@ -51,19 +48,6 @@ const emit = defineEmits<{
         <span class="status-dot" /> 未保存
       </span>
 
-      <!-- 实时预览开关 -->
-      <button
-        v-if="mode !== 'focus'"
-        class="header-btn"
-        :class="{ active: livePreview }"
-        :title="livePreview ? '关闭实时预览' : '开启实时预览'"
-        @click="emit('toggleLivePreview')"
-      >
-        <Columns3 :size="16" />
-        <span>{{ livePreview ? '分栏' : '预览' }}</span>
-      </button>
-
-      <!-- Focus Mode 开关 -->
       <button
         class="header-btn"
         :class="{ active: mode === 'focus' }"
@@ -74,7 +58,6 @@ const emit = defineEmits<{
         <span>专注</span>
       </button>
 
-      <!-- 编辑/预览切换 -->
       <button
         v-if="mode !== 'focus'"
         class="header-btn"
@@ -86,7 +69,6 @@ const emit = defineEmits<{
         <span>{{ mode === 'edit' ? '预览' : '编辑' }}</span>
       </button>
 
-      <!-- 收藏 -->
       <button
         class="header-btn icon-only"
         :title="isFavorite ? '取消收藏' : '收藏'"
@@ -99,7 +81,6 @@ const emit = defineEmits<{
         />
       </button>
 
-      <!-- 全屏按钮 -->
       <button
         class="header-btn icon-only"
         :title="isFullscreen ? '退出全屏 (Esc)' : '全屏 (Ctrl+Shift+F)'"
@@ -109,7 +90,6 @@ const emit = defineEmits<{
         <Minimize2 v-else :size="16" />
       </button>
 
-      <!-- 更多菜单 -->
       <el-dropdown trigger="click" placement="bottom-end">
         <button class="header-btn icon-only" @click.prevent>
           <MoreHorizontal :size="16" />
@@ -179,8 +159,6 @@ const emit = defineEmits<{
 .header-btn.icon-only {
   padding: 6px;
 }
-
-/* 保存状态指示 */
 .save-status {
   font-size: var(--text-xs);
   display: flex;
@@ -204,12 +182,10 @@ const emit = defineEmits<{
 .save-status.error .status-dot { background: var(--danger); }
 .save-status.dirty { color: var(--warning); }
 .save-status.dirty .status-dot { background: var(--warning); }
-
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
 }
-
 @media (max-width: 768px) {
   .editor-header {
     padding: 0 12px;

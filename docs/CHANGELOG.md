@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### 2026-07-15 WYSIWYG 编辑器重构（md-editor-v3 → Vditor IR）
+- **编辑器替换**：md-editor-v3 → Vditor IR 模式，输入即渲染 WYSIWYG 体验
+- **右键菜单**：完整上下文菜单系统，39 项操作（格式/标题/列表/表格/代码块/Mermaid/公式/图片上传等）
+- **新组件**：NoteVditor + NoteMarkdownPreview + vditorSetup + context-menu（ContextMenu / EditorContextMenu / TableGridPicker / contextMenuActions）
+- **模式简化**：去除分栏预览；保留 edit / preview / focus 三模式（快捷键 Ctrl+Shift+P、Ctrl+Shift+F、Esc）
+- **列表/回收站**：卡片右键菜单（编辑/预览/收藏/删除/恢复），UI 统一
+- **删除旧组件**：NoteMdEditor.vue、EditorPreviewPanel.vue、mdEditorToolbars.ts、mdEditorSetup.ts
+- **依赖变更**：新增 vditor^3.11，移除 md-editor-v3
+
 ### 2026-07-15 专业 Markdown 编辑器
 - **完整工具栏**：撤销/重做、标题、列表、任务、代码块、Mermaid、KaTeX、Prettier、目录、全屏等
 - **组件封装**：`NoteMdEditor` + `EditorPreviewPanel`，统一 Mermaid/KaTeX 本地扩展（无 CDN 依赖）

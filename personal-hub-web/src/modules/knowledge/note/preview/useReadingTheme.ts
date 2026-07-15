@@ -1,5 +1,5 @@
 import { computed, onMounted, onUnmounted, watch } from 'vue'
-import { useReadingConfigStore, type PreviewTheme } from '@/store/readingConfigStore'
+import { useReadingConfigStore } from '@/store/readingConfigStore'
 import { storeToRefs } from 'pinia'
 
 /**
