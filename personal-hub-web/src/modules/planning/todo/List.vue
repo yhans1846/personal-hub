@@ -7,6 +7,7 @@ import { EmptyState, PageHeader } from '@/components'
 import TodoDialog from './TodoDialog.vue'
 import type { TodoVO, TodoQuery } from '@/types/todo'
 import Sortable from 'sortablejs'
+import { useDeepLinkDialog } from '@/composables/useDeepLinkDialog'
 
 type TabKey = 'all' | 'overdue' | 'today' | 'week' | 'later' | 'done'
 
@@ -28,6 +29,8 @@ function openEdit(id: number) {
   editId.value = id
   dialogVisible.value = true
 }
+
+useDeepLinkDialog({ openCreate, openEdit })
 
 onMounted(async () => {
   await fetchList()

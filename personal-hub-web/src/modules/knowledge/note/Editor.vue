@@ -240,8 +240,16 @@ const readingTimeText = computed(() => estimateReadingTime(form.value.content))
 
         <div v-if="mode === 'edit'" class="editor-divider" />
 
+        <div v-if="initialLoading" class="editor-loading" aria-busy="true" aria-label="加载笔记中">
+          <div class="editor-loading-bar title" />
+          <div class="editor-loading-bar meta" />
+          <div class="editor-loading-bar line" />
+          <div class="editor-loading-bar line short" />
+          <div class="editor-loading-bar line" />
+        </div>
+
         <NoteVditor
-          v-if="mode === 'edit' || mode === 'focus'"
+          v-else-if="mode === 'edit' || mode === 'focus'"
           v-model="form.content"
           :editor-id="editorId"
           :theme="editorTheme"
@@ -250,7 +258,7 @@ const readingTimeText = computed(() => estimateReadingTime(form.value.content))
         />
 
         <NoteMarkdownPreview
-          v-if="mode === 'preview'"
+          v-if="!initialLoading && mode === 'preview'"
           :content="form.content"
           :title="form.title"
           :theme="editorTheme"
@@ -371,6 +379,44 @@ const readingTimeText = computed(() => estimateReadingTime(form.value.content))
   flex: 1;
   min-height: 0;
   height: 100%;
+}
+.editor-loading {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 40vh;
+  padding-top: 8px;
+}
+.editor-loading-bar {
+  height: 14px;
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    var(--bg-hover) 25%,
+    color-mix(in srgb, var(--bg-hover) 60%, var(--bg-card)) 50%,
+    var(--bg-hover) 75%
+  );
+  background-size: 200% 100%;
+  animation: editor-skeleton 1.2s ease-in-out infinite;
+}
+.editor-loading-bar.title {
+  height: 28px;
+  width: 55%;
+  margin-bottom: 8px;
+}
+.editor-loading-bar.meta {
+  width: 36%;
+  height: 12px;
+}
+.editor-loading-bar.line {
+  width: 100%;
+}
+.editor-loading-bar.line.short {
+  width: 68%;
+}
+@keyframes editor-skeleton {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 @media (max-width: 768px) {
   .editor-content-wrap {

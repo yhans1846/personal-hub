@@ -6,6 +6,7 @@ import { Plus, Pencil, Trash2, PenLine, Sun, Cloud, CloudRain, Smile, Frown, Meh
 import { EmptyState, PageHeader, ListToolbar, ListPagination } from '@/components'
 import DiaryDialog from './DiaryDialog.vue'
 import type { DiaryVO, DiaryQuery } from '@/types/diary'
+import { useDeepLinkDialog } from '@/composables/useDeepLinkDialog'
 
 const list = ref<DiaryVO[]>([])
 const total = ref(0)
@@ -27,6 +28,9 @@ function openEdit(id: number) {
   initialDate.value = ''
   dialogVisible.value = true
 }
+
+useDeepLinkDialog({ openCreate, openEdit })
+
 const showCalendar = ref(false)
 const calendarMonth = ref(new Date())
 const calendarEntries = ref<DiaryVO[]>([])

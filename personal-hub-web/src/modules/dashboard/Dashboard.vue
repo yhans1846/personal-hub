@@ -18,6 +18,7 @@ import type { StudyRecordVO } from '@/types/study'
 import type { NoteVO } from '@/types/note'
 import type { ReadingVO } from '@/types/reading'
 import type { StudyPlanVO } from '@/types/studyplan'
+import { buildCreatePath, buildEditPath } from '@/utils/deepLink'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -99,8 +100,8 @@ function quickCreate(type: string) {
   switch (type) {
     case 'note': router.push('/notes/new'); break
     case 'todo': todoDialogVisible.value = true; break
-    case 'diary': router.push('/diaries/new'); break
-    case 'study': router.push('/study-records/new'); break
+    case 'diary': router.push(buildCreatePath('/diaries')); break
+    case 'study': router.push(buildCreatePath('/study-records')); break
   }
 }
 </script>
@@ -146,7 +147,7 @@ function quickCreate(type: string) {
               <span class="list-title">{{ todo.title }}</span>
               <el-tag v-if="todo.priority === 1" type="danger" size="small">高</el-tag>
             </div>
-            <div v-for="plan in todayPlans.slice(0, 3)" :key="plan.id" class="list-item" @click="router.push(`/study-plans/${plan.id}/edit`)">
+            <div v-for="plan in todayPlans.slice(0, 3)" :key="plan.id" class="list-item" @click="router.push(buildEditPath('/study-plans', plan.id))">
               <Target :size="16" class="list-icon-info" />
               <span class="list-title">{{ plan.name }}</span>
               <span class="list-meta">{{ plan.progress }}%</span>
@@ -183,7 +184,7 @@ function quickCreate(type: string) {
             </div>
             <div v-if="recentStudies.length === 0" class="card-empty">暂无</div>
             <div v-else class="card-list">
-              <div v-for="s in recentStudies.slice(0, 4)" :key="s.id" class="list-item" @click="router.push(`/study-records/${s.id}/edit`)">
+              <div v-for="s in recentStudies.slice(0, 4)" :key="s.id" class="list-item" @click="router.push(buildEditPath('/study-records', s.id))">
                 <BookOpen :size="14" class="list-icon-info" />
                 <span class="list-title">{{ s.subject }}</span>
               </div>
@@ -202,9 +203,9 @@ function quickCreate(type: string) {
           </div>
           <div v-if="recentReadings.length === 0" class="card-empty">还没有阅读记录 📖</div>
           <div v-else class="card-list">
-            <div v-for="r in recentReadings.slice(0, 4)" :key="r.id" class="list-item" @click="router.push(`/readings/${r.id}/edit`)">
+            <div v-for="r in recentReadings.slice(0, 4)" :key="r.id" class="list-item" @click="router.push(buildEditPath('/readings', r.id))">
               <BookMarked :size="14" class="list-icon-accent" />
-              <span class="list-title">{{ r.title }}</span>
+              <span class="list-title">{{ r.bookTitle }}</span>
               <span class="list-meta" v-if="r.author">{{ r.author }}</span>
             </div>
           </div>

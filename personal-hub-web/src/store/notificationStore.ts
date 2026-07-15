@@ -8,6 +8,7 @@ import {
   clearAllNotifications,
 } from '@/api/notificationApi'
 import type { NotificationVO } from '@/types/notification'
+import { getNotificationRelatedPath } from '@/utils/deepLink'
 
 export const useNotificationStore = defineStore('notification', () => {
   const unreadCount = ref(0)
@@ -51,12 +52,7 @@ export const useNotificationStore = defineStore('notification', () => {
   }
 
   function getRelatedUrl(n: NotificationVO): string {
-    if (!n.relatedType || !n.relatedId) return ''
-    const routes: Record<string, string> = {
-      todo: `/todos/${n.relatedId}/edit`,
-      study_plan: `/study-plans/${n.relatedId}/edit`,
-    }
-    return routes[n.relatedType] || ''
+    return getNotificationRelatedPath(n.relatedType, n.relatedId)
   }
 
   return { unreadCount, notifications, loading, fetchUnreadCount, fetchRecent, markAsRead, markAllAsRead, clearAll, getRelatedUrl }

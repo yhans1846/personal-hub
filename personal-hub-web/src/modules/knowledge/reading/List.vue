@@ -6,6 +6,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Pencil, Trash2, BookOpen, Book, BookCheck, Calendar, BookMarked, Star, Clock } from 'lucide-vue-next'
 import ReadingDialog from './ReadingDialog.vue'
 import type { ReadingVO, ReadingQuery } from '@/types/reading'
+import { useDeepLinkDialog } from '@/composables/useDeepLinkDialog'
 
 const list = ref<ReadingVO[]>([])
 const total = ref(0)
@@ -24,6 +25,8 @@ function openEdit(id: number) {
   editId.value = id
   drawerVisible.value = true
 }
+
+useDeepLinkDialog({ openCreate, openEdit })
 
 onMounted(() => fetchList())
 async function fetchList() {

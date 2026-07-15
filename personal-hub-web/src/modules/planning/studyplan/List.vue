@@ -3,9 +3,10 @@ import { ref, onMounted } from 'vue'
 import { PageHeader, EmptyState, ListToolbar, ListPagination } from '@/components'
 import { getStudyPlanList, deleteStudyPlan } from '@/modules/planning/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Pencil, Trash2, Calendar, Target, BookOpen } from 'lucide-vue-next'
+import { Pencil, Trash2, Calendar, Target, BookOpen, Plus } from 'lucide-vue-next'
 import StudyPlanDialog from './StudyPlanDialog.vue'
 import type { StudyPlanVO, StudyPlanQuery } from '@/types/studyplan'
+import { useDeepLinkDialog } from '@/composables/useDeepLinkDialog'
 
 const list = ref<StudyPlanVO[]>([])
 const total = ref(0)
@@ -24,6 +25,8 @@ function openEdit(id: number) {
   editId.value = id
   drawerVisible.value = true
 }
+
+useDeepLinkDialog({ openCreate, openEdit })
 
 onMounted(() => fetchList())
 

@@ -7,6 +7,7 @@ import { BookOpen, Pencil, Trash2, Plus } from 'lucide-vue-next'
 import type { StudyRecordVO, StudyRecordQuery } from '@/types/study'
 import { PageHeader, EmptyState, ListToolbar, ListPagination } from '@/components'
 import StudyDialog from './StudyDialog.vue'
+import { useDeepLinkDialog } from '@/composables/useDeepLinkDialog'
 
 const list = ref<StudyRecordVO[]>([])
 const total = ref(0)
@@ -26,6 +27,8 @@ function openEdit(id: number) {
   editId.value = id
   drawerVisible.value = true
 }
+
+useDeepLinkDialog({ openCreate, openEdit })
 
 onMounted(() => { fetchList(); fetchStats() })
 async function fetchStats() {
