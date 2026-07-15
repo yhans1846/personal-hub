@@ -46,4 +46,20 @@
         WHERE r.note_id = #{noteId} AND c.type = 'note'
     </select>
 
+    <!-- 批量查询笔记分类 -->
+    <select id="selectCategoriesByNoteIds" resultType="map">
+        SELECT r.note_id AS noteId, c.id, c.name FROM category c
+        INNER JOIN note_category_rel r ON c.id = r.category_id
+        WHERE c.type = 'note'
+        <if test="noteIds != null and noteIds.size() &gt; 0">
+            AND r.note_id IN
+            <foreach collection="noteIds" item="id" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+        </if>
+        <if test="noteIds == null or noteIds.size() == 0">
+            AND 1 = 0
+        </if>
+    </select>
+
 </mapper>

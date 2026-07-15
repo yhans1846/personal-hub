@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### 2026-07-14 正确性 / 性能 / 安全优化
+- **回收站清理**：`NoteResourceCleanupTask` 仅删除 DB 无对应行的孤立目录，不再清理软删除笔记文件
+- **生产密钥**：`ProdSecretsValidator` + `application-prod.yml` 取消弱默认值，缺失/弱密钥拒绝启动
+- **JWT query**：仅允许 `/api/notes/{id}/images|attachments/**` 使用 `?token=`
+- **列表 N+1**：笔记列表批量分类/标签；标签 usage 一次聚合；文件列表分类 map 外提
+- **笔记 excerpt**：`note_note.excerpt` + 创建/更新时生成；列表卡片优先显示摘要
+- **Redis 缓存**：分类/标签列表 `@Cacheable`，收紧多态反序列化白名单；登录 Redis 限流
+- **健康检查**：Actuator `/actuator/health`；Docker HEALTHCHECK 与 Nginx login `limit_req`
+- **索引**：`idx_user_deleted_updated`；迁移脚本 `sql/migration-20260714-note-excerpt-index.sql`
+- **前端拆包**：Vite `manualChunks`（vue / element / editor / echarts）
+- **测试**：JWT query 白名单、excerpt、回收站清理决策单测
+
 ### 2026-07-14 Docker Compose + GitHub Actions 部署
 - **部署文档**：新增 `docs/DEPLOYMENT.md`（Ubuntu 22.04、Docker 速览、Self-hosted Runner、运维与排障）
 - **Compose 骨架**：`deploy/` 含前后端 Dockerfile、Nginx 反代、MySQL/Redis、`.env.example`

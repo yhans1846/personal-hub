@@ -19,7 +19,8 @@ jobs:
       - name: Ensure upload directory
         run: |
           sudo mkdir -p /data/personal-hub/uploads
-          sudo chmod 777 /data/personal-hub/uploads
+          # 容器内应用用户可写即可，避免 world-writable
+          sudo chmod 775 /data/personal-hub/uploads
 
       - name: Deploy with Docker Compose
         env:

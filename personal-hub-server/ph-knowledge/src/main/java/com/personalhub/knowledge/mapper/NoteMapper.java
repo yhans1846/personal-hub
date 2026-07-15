@@ -23,6 +23,9 @@ public interface NoteMapper extends BaseMapper<Note> {
     /** 查询笔记的分类列表 */
     List<Map<String, Object>> selectCategoriesByNoteId(@Param("noteId") Long noteId);
 
+    /** 批量查询笔记分类（返回含 noteId/id/name） */
+    List<Map<String, Object>> selectCategoriesByNoteIds(@Param("noteIds") List<Long> noteIds);
+
     /** 分页查询回收站（已删除笔记，按删除时间倒序） */
     IPage<Note> selectRecyclePage(Page<?> page, @Param("userId") Long userId, @Param("query") NoteQueryDTO query);
 }

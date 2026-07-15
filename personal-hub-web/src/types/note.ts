@@ -3,6 +3,8 @@ export interface NoteVO {
   id: number
   title: string
   content: string
+  /** 列表摘要（无全文时用于卡片预览） */
+  excerpt?: string
   isFavorite: number
   isDeleted: number
   createdAt: string

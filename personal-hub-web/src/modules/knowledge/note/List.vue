@@ -38,6 +38,17 @@ function goCreate() { router.push('/notes/new') }
 function goEdit(id: number) { router.push(`/notes/${id}/edit`) }
 function goPreview(id: number) { window.open(`/notes/${id}/preview`, '_blank') }
 
+function notePreviewText(note: NoteVO): string {
+  return note.excerpt || note.content || ''
+}
+
+function noteCardPreview(note: NoteVO): string {
+  const text = note.excerpt
+    || note.content?.replace(/#{1,6}\s/g, '').replace(/[*`~>]/g, '').slice(0, 120)
+    || ''
+  return text || '暂无内容'
+}
+
 async function handleDelete(id: number) {
   await ElMessageBox.confirm('确定将此笔记移入回收站？', '提示', { type: 'warning' })
   await deleteNote(id)
@@ -83,10 +94,10 @@ async function handleToggleFavorite(note: NoteVO) {
         </div>
         <div class="note-card-meta">
           <span v-for="cat in note.categories" :key="cat.id" class="meta-tag">{{ cat.name }}</span>
-          <span class="reading-time"><Clock :size="11" /> {{ estimateReadingTime(note.content) }}</span>
+          <span class="reading-time"><Clock :size="11" /> {{ estimateReadingTime(notePreviewText(note)) }}</span>
         </div>
         <div class="note-card-body">
-          <p class="note-card-preview">{{ note.content?.replace(/#{1,6}\s/g, '').replace(/[*`]/g, '').slice(0, 120) || '暂无内容' }}</p>
+          <p class="note-card-preview">{{ noteCardPreview(note) }}</p>
         </div>
         <div class="note-card-footer">
           <div class="note-card-tags">

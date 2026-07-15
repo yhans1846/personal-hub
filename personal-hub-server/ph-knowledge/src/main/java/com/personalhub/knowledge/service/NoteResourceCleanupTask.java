@@ -8,8 +8,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 /**
- * 定时清理孤立笔记资源
- * 删除 DB 中已不存在的笔记对应的 notes/{id}/ 目录
+ * 定时清理孤立笔记资源：仅删除 DB 中已不存在笔记行对应的 notes/{id}/ 目录。
+ * 回收站笔记（is_deleted=1）仍占用磁盘，供恢复使用，不得清理。
  */
 @Slf4j
 @Component
@@ -28,7 +28,8 @@ public class NoteResourceCleanupTask {
             try {
                 Long noteId = Long.parseLong(dirName);
                 var note = noteMapper.selectById(noteId);
-                if (note == null || note.getIsDeleted() == 1) {
+                // 仅物理删除后残留目录；软删除行仍需 notes/{id}/ 以支持恢复
+                if (note == null) {
                     storageService.delete("notes/" + noteId);
                     log.info("清理孤立笔记资源目录: notes/{}", noteId);
                     cleaned++;

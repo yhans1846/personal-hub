@@ -35,8 +35,12 @@ jwt:
   secret: personal-hub-jwt-secret-key-2026-please-change-in-production
   expiration: 86400000
 
-# 文件存储
+# 文件存储 / 登录限流
 personal-hub:
+  security:
+    login-rate-limit:
+      max-attempts: 30
+      window-seconds: 60
   storage:
     location: D:/PersonalHub/uploads
     max-size: 52428800

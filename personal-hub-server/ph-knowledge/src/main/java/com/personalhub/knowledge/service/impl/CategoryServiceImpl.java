@@ -11,6 +11,8 @@ import com.personalhub.knowledge.service.CategoryService;
 import com.personalhub.knowledge.vo.CategoryVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +32,7 @@ public class CategoryServiceImpl implements CategoryService {
     private final CategoryMapper categoryMapper;
 
     @Override
+    @Cacheable(cacheNames = "categories", key = "#userId + ':' + #type")
     public List<CategoryVO> listByType(Long userId, String type) {
         LambdaQueryWrapper<Category> qw = new LambdaQueryWrapper<Category>()
                 .eq(Category::getUserId, userId)
@@ -50,6 +53,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = "categories", allEntries = true)
     public CategoryVO create(Long userId, CategoryCreateDTO dto) {
         // 检查唯一性
         LambdaQueryWrapper<Category> qw = new LambdaQueryWrapper<Category>()
@@ -73,6 +77,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = "categories", allEntries = true)
     public CategoryVO update(Long id, Long userId, CategoryUpdateDTO dto) {
         Category category = categoryMapper.selectById(id);
         if (category == null || !category.getUserId().equals(userId)) {
@@ -99,6 +104,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = "categories", allEntries = true)
     public void delete(Long id, Long userId) {
         Category category = categoryMapper.selectById(id);
         if (category == null || !category.getUserId().equals(userId)) {
@@ -116,6 +122,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = "categories", allEntries = true)
     public void updateSortOrder(List<SortOrderDTO> list) {
         for (SortOrderDTO dto : list) {
             Category category = new Category();

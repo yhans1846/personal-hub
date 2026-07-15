@@ -91,6 +91,7 @@ ph-system ─┬─ ph-knowledge
 | 十三 | 统计页面 V4：7 统计模块 + 5 种图表 + 可配置显隐排序 + 时间范围过滤 | ✅ |
 | 十四 | 个人资料模块 + 待办重构 + 外观扩展 | ✅ |
 | 十五 | 沉浸式创作模式（Focus Mode）：全屏/实时预览/滚动同步/阅读模式/Focus Mode/状态栏增强/状态记忆 | ✅ |
+| 十六 | 部署基线 + 正确性/性能/安全优化（回收站清理、密钥、JWT、N+1、excerpt、Redis 缓存、限流、Actuator） | ✅ |
 
 ## 后续可扩展
 
@@ -102,7 +103,7 @@ ph-system ─┬─ ph-knowledge
 | MD 导出 PDF/HTML | 中 | |
 | 数据备份 | 中 | 定时备份 |
 | WebDAV 同步 | 低 | 文件同步 |
-| Docker 部署 | 中 | 容器化 |
+| Docker 部署 | — | ✅ 见 `docs/DEPLOYMENT.md` |
 | Mermaid/PlantUML 图表 | 低 | 编辑器内渲染 UML 和流程图 |
 | 数学公式 KaTeX | 低 | 行内/块级公式渲染 |
 | 双向链接（Backlink） | 低 | 笔记间引用关系 |

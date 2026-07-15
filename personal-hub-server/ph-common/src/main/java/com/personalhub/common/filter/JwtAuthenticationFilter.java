@@ -14,14 +14,20 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.regex.Pattern;
 
 /**
- * JWT 认证过滤器
+ * JWT 认证过滤器。
+ * query 参数 token 仅允许用于笔记静态资源（img 无法带 Authorization header）。
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    /** /api/notes/{id}/images|attachments/... */
+    private static final Pattern NOTE_STATIC_RESOURCE =
+            Pattern.compile("^/api/notes/\\d+/(images|attachments)/.+$");
 
     private final JwtUtil jwtUtil;
 
@@ -34,8 +40,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring(7);
-        } else {
-            // 兜底：从 query 参数读取 token（用于 <img> 标签等无法自定义 header 的场景）
+        } else if (allowQueryToken(request.getRequestURI())) {
             token = request.getParameter("token");
         }
 
@@ -53,5 +58,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    static boolean allowQueryToken(String uri) {
+        if (uri == null || uri.isBlank()) {
+            return false;
+        }
+        String path = uri;
+        int q = path.indexOf('?');
+        if (q >= 0) {
+            path = path.substring(0, q);
+        }
+        return NOTE_STATIC_RESOURCE.matcher(path).matches();
     }
 }

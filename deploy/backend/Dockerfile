@@ -23,8 +23,7 @@ ENV SPRING_PROFILES_ACTIVE=prod \
 
 EXPOSE 8080
 
-# 只要端口能响应 HTTP 即视为就绪（登录接口可能返回 4xx，不用 -f）
 HEALTHCHECK --interval=30s --timeout=5s --start-period=90s --retries=5 \
-    CMD curl -s -o /dev/null --connect-timeout 3 http://127.0.0.1:8080/api/auth/login || exit 1
+    CMD curl -sf --connect-timeout 3 http://127.0.0.1:8080/actuator/health || exit 1
 
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /app/app.jar"]

@@ -11,6 +11,8 @@ import com.personalhub.knowledge.service.TagService;
 import com.personalhub.knowledge.vo.TagVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,23 +33,31 @@ public class TagServiceImpl implements TagService {
     private final TagRelMapper tagRelMapper;
 
     @Override
+    @Cacheable(cacheNames = "tags", key = "#userId")
     public List<TagVO> listByUser(Long userId) {
         LambdaQueryWrapper<Tag> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Tag::getUserId, userId)
                 .orderByAsc(Tag::getCreatedAt);
         List<Tag> tags = tagMapper.selectList(wrapper);
-
-        // 统计每个标签的使用次数
-        List<TagVO> voList = tags.stream().map(TagVO::from).collect(Collectors.toList());
-        for (TagVO vo : voList) {
-            Long count = tagRelMapper.selectCount(
-                    new LambdaQueryWrapper<TagRel>().eq(TagRel::getTagId, vo.getId()));
-            vo.setUsageCount(count);
+        if (tags.isEmpty()) {
+            return Collections.emptyList();
         }
-        return voList;
+
+        List<Long> tagIds = tags.stream().map(Tag::getId).collect(Collectors.toList());
+        List<TagRel> rels = tagRelMapper.selectList(
+                new LambdaQueryWrapper<TagRel>().in(TagRel::getTagId, tagIds));
+        Map<Long, Long> usageMap = rels.stream()
+                .collect(Collectors.groupingBy(TagRel::getTagId, Collectors.counting()));
+
+        return tags.stream().map(tag -> {
+            TagVO vo = TagVO.from(tag);
+            vo.setUsageCount(usageMap.getOrDefault(tag.getId(), 0L));
+            return vo;
+        }).collect(Collectors.toList());
     }
 
     @Override
+    @CacheEvict(cacheNames = "tags", key = "#userId")
     public TagVO create(Long userId, String name, String color) {
         // 检查重复
         LambdaQueryWrapper<Tag> check = new LambdaQueryWrapper<>();
@@ -66,6 +76,7 @@ public class TagServiceImpl implements TagService {
     }
 
     @Override
+    @CacheEvict(cacheNames = "tags", key = "#userId")
     public void update(Long id, Long userId, String name, String color) {
         Tag tag = tagMapper.selectById(id);
         if (tag == null || !tag.getUserId().equals(userId)) {
@@ -87,6 +98,7 @@ public class TagServiceImpl implements TagService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = "tags", key = "#userId")
     public void delete(Long id, Long userId) {
         Tag tag = tagMapper.selectById(id);
         if (tag == null || !tag.getUserId().equals(userId)) {
@@ -99,6 +111,7 @@ public class TagServiceImpl implements TagService {
     }
 
     @Override
+    @CacheEvict(cacheNames = "tags", allEntries = true)
     public void bindTag(Long tagId, String entityType, Long entityId) {
         // 检查是否已绑定
         LambdaQueryWrapper<TagRel> check = new LambdaQueryWrapper<>();
@@ -115,6 +128,7 @@ public class TagServiceImpl implements TagService {
     }
 
     @Override
+    @CacheEvict(cacheNames = "tags", allEntries = true)
     public void unbindTag(Long tagId, String entityType, Long entityId) {
         LambdaQueryWrapper<TagRel> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(TagRel::getTagId, tagId)
@@ -124,6 +138,7 @@ public class TagServiceImpl implements TagService {
     }
 
     @Override
+    @CacheEvict(cacheNames = "tags", allEntries = true)
     public void unbindAll(String entityType, Long entityId) {
         LambdaQueryWrapper<TagRel> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(TagRel::getEntityType, entityType)
@@ -133,6 +148,7 @@ public class TagServiceImpl implements TagService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = "tags", allEntries = true)
     public void bindTags(Long entityId, String entityType, List<Long> tagIds) {
         // 先清空再绑定
         unbindAll(entityType, entityId);

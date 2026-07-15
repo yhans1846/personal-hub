@@ -7,8 +7,6 @@ import com.personalhub.common.exception.NotFoundException;
 import com.personalhub.knowledge.dto.NoteCreateDTO;
 import com.personalhub.knowledge.dto.NoteQueryDTO;
 import com.personalhub.knowledge.entity.Note;
-import com.personalhub.knowledge.entity.Category;
-import com.personalhub.knowledge.mapper.CategoryMapper;
 import com.personalhub.knowledge.mapper.NoteMapper;
 import com.personalhub.knowledge.service.NoteService;
 import com.personalhub.knowledge.service.TagService;
@@ -18,12 +16,15 @@ import com.personalhub.storage.StorageService;
 import com.personalhub.system.service.AuditLogService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -36,8 +37,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class NoteServiceImpl implements NoteService {
 
+    private static final int EXCERPT_MAX_LEN = 200;
+
     private final NoteMapper noteMapper;
-    private final CategoryMapper categoryMapper;
     private final TagService tagService;
     private final JdbcTemplate jdbcTemplate;
     private final StorageService storageService;
@@ -47,14 +49,7 @@ public class NoteServiceImpl implements NoteService {
     public IPage<NoteVO> listNotes(Long userId, NoteQueryDTO query) {
         Page<Note> page = new Page<>(query.getPage(), query.getSize());
         IPage<Note> notePage = noteMapper.selectNotePage(page, userId, query);
-
-        // 转换为 VO（批量填充分类和标签）
-        return notePage.convert(note -> {
-            NoteVO vo = NoteVO.from(note);
-            vo.setCategories(getCategories(note.getId()));
-            vo.setTags(getTags(note.getId()));
-            return vo;
-        });
+        return toVoPage(notePage);
     }
 
     @Override
@@ -65,17 +60,7 @@ public class NoteServiceImpl implements NoteService {
             throw new NotFoundException("笔记不存在");
         }
         NoteVO vo = NoteVO.from(note);
-        // 从文件读取 content
-        if (note.getMdPath() != null && storageService.exists(note.getMdPath())) {
-            try {
-                vo.setContent(storageService.read(note.getMdPath()));
-            } catch (Exception e) {
-                log.warn("读取 note.md 失败: id={}", id);
-                vo.setContent("");
-            }
-        } else {
-            vo.setContent("");
-        }
+        vo.setContent(readContent(note));
         vo.setCategories(getCategories(id));
         vo.setTags(getTags(id));
         return vo;
@@ -83,14 +68,15 @@ public class NoteServiceImpl implements NoteService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = "categories", allEntries = true)
     public NoteVO create(Long userId, NoteCreateDTO dto) {
         Note note = new Note();
         note.setUserId(userId);
         note.setTitle(dto.getTitle());
+        note.setExcerpt(buildExcerpt(dto.getContent()));
         noteMapper.insert(note);
         log.info("新建笔记: id={}, userId={}, title={}", note.getId(), userId, dto.getTitle());
 
-        // 笔记正文存文件，DB 只存路径
         String mdPath = "notes/" + note.getId() + "/note.md";
         if (dto.getContent() != null && !dto.getContent().isBlank()) {
             storageService.write(mdPath, dto.getContent());
@@ -98,9 +84,7 @@ public class NoteServiceImpl implements NoteService {
         note.setMdPath(mdPath);
         noteMapper.updateById(note);
 
-        // 保存分类关联
         saveCategoryRels(note.getId(), dto.getCategoryIds());
-        // 保存标签关联
         saveTagRels(note.getId(), dto.getTagIds());
 
         return getById(note.getId(), userId);
@@ -108,6 +92,7 @@ public class NoteServiceImpl implements NoteService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = "categories", allEntries = true)
     public NoteVO update(Long id, Long userId, NoteCreateDTO dto) {
         Note note = noteMapper.selectById(id);
         if (note == null || !note.getUserId().equals(userId) || note.getIsDeleted() == 1) {
@@ -115,16 +100,17 @@ public class NoteServiceImpl implements NoteService {
             throw new NotFoundException("笔记不存在");
         }
         note.setTitle(dto.getTitle());
+        if (dto.getContent() != null) {
+            note.setExcerpt(buildExcerpt(dto.getContent()));
+        }
         noteMapper.updateById(note);
 
-        // 正文只写文件，不同步 DB
         if (note.getMdPath() != null && dto.getContent() != null) {
             storageService.write(note.getMdPath(), dto.getContent());
         }
 
         log.info("编辑笔记: id={}, userId={}", id, userId);
 
-        // 重建关联
         jdbcTemplate.update("DELETE FROM note_category_rel WHERE note_id = ?", id);
         saveCategoryRels(id, dto.getCategoryIds());
         tagService.bindTags(id, "note", dto.getTagIds());
@@ -134,6 +120,7 @@ public class NoteServiceImpl implements NoteService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = "categories", allEntries = true)
     public void delete(Long id, Long userId) {
         Note note = noteMapper.selectById(id);
         if (note == null || !note.getUserId().equals(userId)) {
@@ -169,21 +156,19 @@ public class NoteServiceImpl implements NoteService {
     }
 
     @Override
+    @CacheEvict(cacheNames = "categories", allEntries = true)
     public void permanentDelete(Long id, Long userId) {
         Note note = noteMapper.selectById(id);
         if (note == null || !note.getUserId().equals(userId)) {
             log.warn("永久删除笔记不存在或无权访问: id={}, userId={}", id, userId);
             throw new NotFoundException("笔记不存在");
         }
-        // 清除关联
         jdbcTemplate.update("DELETE FROM note_category_rel WHERE note_id = ?", id);
         tagService.unbindAll("note", id);
-        // 删除笔记资源目录
         if (note.getMdPath() != null) {
             String noteDir = note.getMdPath().substring(0, note.getMdPath().indexOf("/note.md"));
             storageService.delete(noteDir);
         }
-        // 物理删除
         noteMapper.deleteById(id);
         log.info("笔记永久删除: id={}, userId={}", id, userId);
     }
@@ -204,12 +189,7 @@ public class NoteServiceImpl implements NoteService {
     public IPage<NoteVO> getRecycleList(Long userId, NoteQueryDTO query) {
         Page<Note> page = new Page<>(query.getPage(), query.getSize());
         IPage<Note> notePage = noteMapper.selectRecyclePage(page, userId, query);
-        return notePage.convert(note -> {
-            NoteVO vo = NoteVO.from(note);
-            vo.setCategories(getCategories(note.getId()));
-            vo.setTags(getTags(note.getId()));
-            return vo;
-        });
+        return toVoPage(notePage);
     }
 
     @Override
@@ -220,16 +200,7 @@ public class NoteServiceImpl implements NoteService {
             throw new NotFoundException("笔记不存在");
         }
         NoteVO vo = NoteVO.from(note);
-        if (note.getMdPath() != null && storageService.exists(note.getMdPath())) {
-            try {
-                vo.setContent(storageService.read(note.getMdPath()));
-            } catch (Exception e) {
-                log.warn("读取 note.md 失败: id={}", id);
-                vo.setContent("");
-            }
-        } else {
-            vo.setContent("");
-        }
+        vo.setContent(readContent(note));
         vo.setCategories(getCategories(id));
         vo.setTags(getTags(id));
         return vo;
@@ -243,15 +214,89 @@ public class NoteServiceImpl implements NoteService {
                 .orderByDesc(Note::getUpdatedAt);
         Page<Note> p = new Page<>(page, size);
         IPage<Note> notePage = noteMapper.selectPage(p, wrapper);
+        return toVoPage(notePage);
+    }
+
+    // ========== 辅助方法 ==========
+
+    private IPage<NoteVO> toVoPage(IPage<Note> notePage) {
+        List<Note> notes = notePage.getRecords();
+        if (notes == null || notes.isEmpty()) {
+            return notePage.convert(NoteVO::from);
+        }
+
+        List<Long> noteIds = notes.stream().map(Note::getId).collect(Collectors.toList());
+        Map<Long, List<NoteVO.CategoryItem>> categoriesMap = batchCategories(noteIds);
+        Map<Long, List<TagVO>> tagsMap = tagService.getTagsMap("note", noteIds);
+
         return notePage.convert(note -> {
             NoteVO vo = NoteVO.from(note);
-            vo.setCategories(getCategories(note.getId()));
-            vo.setTags(getTags(note.getId()));
+            vo.setCategories(categoriesMap.getOrDefault(note.getId(), Collections.emptyList()));
+            List<TagVO> tagVOs = tagsMap.getOrDefault(note.getId(), Collections.emptyList());
+            vo.setTags(toTagItems(tagVOs));
             return vo;
         });
     }
 
-    // ========== 辅助方法 ==========
+    private Map<Long, List<NoteVO.CategoryItem>> batchCategories(List<Long> noteIds) {
+        List<Map<String, Object>> rows = noteMapper.selectCategoriesByNoteIds(noteIds);
+        Map<Long, List<NoteVO.CategoryItem>> map = new HashMap<>();
+        for (Map<String, Object> row : rows) {
+            Long noteId = toLong(row.get("noteId"));
+            if (noteId == null) {
+                noteId = toLong(row.get("noteid"));
+            }
+            if (noteId == null) {
+                continue;
+            }
+            NoteVO.CategoryItem item = new NoteVO.CategoryItem();
+            item.setId(toLong(row.get("id")));
+            Object name = row.get("name");
+            item.setName(name != null ? name.toString() : null);
+            map.computeIfAbsent(noteId, k -> new ArrayList<>()).add(item);
+        }
+        return map;
+    }
+
+    private static Long toLong(Object value) {
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof Long l) {
+            return l;
+        }
+        if (value instanceof Number n) {
+            return n.longValue();
+        }
+        return Long.parseLong(value.toString());
+    }
+
+    private String readContent(Note note) {
+        if (note.getMdPath() != null && storageService.exists(note.getMdPath())) {
+            try {
+                return storageService.read(note.getMdPath());
+            } catch (Exception e) {
+                log.warn("读取 note.md 失败: id={}", note.getId());
+            }
+        }
+        return "";
+    }
+
+    /** 从 Markdown 生成列表摘要（纯文本截断） */
+    static String buildExcerpt(String content) {
+        if (content == null || content.isBlank()) {
+            return "";
+        }
+        String plain = content
+                .replaceAll("(?m)^#{1,6}\\s+", "")
+                .replaceAll("[*`_~\\[\\]#>-]", " ")
+                .replaceAll("\\s+", " ")
+                .trim();
+        if (plain.length() <= EXCERPT_MAX_LEN) {
+            return plain;
+        }
+        return plain.substring(0, EXCERPT_MAX_LEN);
+    }
 
     private void saveCategoryRels(Long noteId, List<Long> categoryIds) {
         if (categoryIds != null && !categoryIds.isEmpty()) {
@@ -270,15 +315,19 @@ public class NoteServiceImpl implements NoteService {
         if (rows.isEmpty()) return Collections.emptyList();
         return rows.stream().map(row -> {
             NoteVO.CategoryItem item = new NoteVO.CategoryItem();
-            item.setId((Long) row.get("id"));
-            item.setName((String) row.get("name"));
+            item.setId(toLong(row.get("id")));
+            Object name = row.get("name");
+            item.setName(name != null ? name.toString() : null);
             return item;
         }).collect(Collectors.toList());
     }
 
     private List<NoteVO.TagItem> getTags(Long noteId) {
-        List<TagVO> tagVOs = tagService.getTags("note", noteId);
-        if (tagVOs.isEmpty()) return Collections.emptyList();
+        return toTagItems(tagService.getTags("note", noteId));
+    }
+
+    private List<NoteVO.TagItem> toTagItems(List<TagVO> tagVOs) {
+        if (tagVOs == null || tagVOs.isEmpty()) return Collections.emptyList();
         return tagVOs.stream().map(vo -> {
             NoteVO.TagItem item = new NoteVO.TagItem();
             item.setId(vo.getId());

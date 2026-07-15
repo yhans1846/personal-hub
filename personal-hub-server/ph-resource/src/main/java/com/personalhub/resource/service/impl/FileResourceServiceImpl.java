@@ -21,7 +21,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * 文件资源服务实现
@@ -55,12 +57,16 @@ public class FileResourceServiceImpl implements FileResourceService {
         Page<FileResource> page = new Page<>(query.getPage(), query.getSize());
         IPage<FileResource> filePage = fileResourceMapper.selectPage(page, wrapper);
 
+        Map<Long, String> categoryNameMap = categoryService.listByType(userId, "file").stream()
+                .collect(Collectors.toMap(
+                        com.personalhub.knowledge.vo.CategoryVO::getId,
+                        com.personalhub.knowledge.vo.CategoryVO::getName,
+                        (a, b) -> a));
+
         return filePage.convert(file -> {
             FileVO vo = FileVO.from(file);
             if (file.getCategoryId() != null) {
-                com.personalhub.knowledge.vo.CategoryVO cat = categoryService.listByType(file.getUserId(), "file").stream()
-                        .filter(c -> c.getId().equals(file.getCategoryId())).findFirst().orElse(null);
-                if (cat != null) vo.setCategoryName(cat.getName());
+                vo.setCategoryName(categoryNameMap.get(file.getCategoryId()));
             }
             return vo;
         });
@@ -74,9 +80,12 @@ public class FileResourceServiceImpl implements FileResourceService {
         }
         FileVO vo = FileVO.from(file);
         if (file.getCategoryId() != null) {
-            com.personalhub.knowledge.vo.CategoryVO cat = categoryService.listByType(file.getUserId(), "file").stream()
-                    .filter(c -> c.getId().equals(file.getCategoryId())).findFirst().orElse(null);
-            if (cat != null) vo.setCategoryName(cat.getName());
+            Map<Long, String> categoryNameMap = categoryService.listByType(userId, "file").stream()
+                    .collect(Collectors.toMap(
+                            com.personalhub.knowledge.vo.CategoryVO::getId,
+                            com.personalhub.knowledge.vo.CategoryVO::getName,
+                            (a, b) -> a));
+            vo.setCategoryName(categoryNameMap.get(file.getCategoryId()));
         }
         return vo;
     }

@@ -48,6 +48,7 @@
 | user_id | BIGINT | 所属用户 | NOT NULL, INDEX |
 | title | VARCHAR(200) | 笔记标题 | NOT NULL |
 | md_path | VARCHAR(500) | MD 文件路径 `notes/{id}/note.md` | |
+| excerpt | VARCHAR(500) | 列表摘要（纯文本截断） | NULL |
 | is_favorite | TINYINT | 是否收藏 | DEFAULT 0 |
 | is_deleted | TINYINT | 逻辑删除 | DEFAULT 0 |
 | deleted_at | DATETIME | 删除时间 | NULL |
@@ -283,7 +284,7 @@ sys_user ── note_note ── note_category_rel ── category（type=note�
 | 表 | 索引 | 类型 | 说明 |
 |----|------|------|------|
 | sys_user | uk_username | UNIQUE | 用户名唯一 |
-| note_note | idx_user_id / idx_updated_at | NORMAL | 用户查询 / 排序 |
+| note_note | idx_user_id / idx_updated_at / idx_user_deleted_updated | NORMAL | 用户查询 / 排序 / 列表过滤 |
 | category | idx_user_id | NORMAL | 用户查询 |
 | category | idx_type | NORMAL | 按类型查询 |
 | category | idx_user_type | NORMAL | 用户+类型查询 |

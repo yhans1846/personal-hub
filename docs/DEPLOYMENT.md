@@ -178,6 +178,22 @@ docker volume rm personal-hub_mysql_data
 
 > 清卷会删库，生产数据先备份。
 
+### 已有库升级（migration）
+
+Compose **不会**自动执行 `sql/migration*.sql`。升级已有数据卷时，按版本手工执行对应脚本，例如：
+
+```bash
+# 示例：笔记 excerpt + 复合索引
+docker compose --env-file /opt/personal-hub/.env -f deploy/docker-compose.yml exec -T mysql \
+  mysql -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE" < sql/migration-20260714-note-excerpt-index.sql
+```
+
+也可用宿主机客户端连接容器映射的 MySQL 端口执行。执行前请备份。
+
+**生产密钥**：`JWT_SECRET`、`MYSQL_PASSWORD`、`REDIS_PASSWORD` 必须在 `/opt/personal-hub/.env` 中配置为强口令；缺失或使用示例弱值时，`ProdSecretsValidator` 会拒绝启动后端。
+
+**健康检查**：后端 Docker HEALTHCHECK 探测 `http://127.0.0.1:8080/actuator/health`。
+
 ---
 
 ## 7. 安装 GitHub Self-hosted Runner

@@ -140,6 +140,7 @@ CREATE TABLE `note_note`  (
                               `user_id` bigint NOT NULL COMMENT '所属用户',
                               `title` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '笔记标题',
                               `md_path` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '笔记MD文件路径(notes/{id}/note.md)',
+                              `excerpt` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '列表摘要',
                               `is_favorite` tinyint NOT NULL DEFAULT 0 COMMENT '是否收藏',
                               `is_deleted` tinyint NOT NULL DEFAULT 0 COMMENT '逻辑删除',
                               `deleted_at` datetime NULL DEFAULT NULL COMMENT '删除时间',
@@ -148,7 +149,8 @@ CREATE TABLE `note_note`  (
                               `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
                               PRIMARY KEY (`id`) USING BTREE,
                               INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
-                              INDEX `idx_updated_at`(`updated_at` ASC) USING BTREE
+                              INDEX `idx_updated_at`(`updated_at` ASC) USING BTREE,
+                              INDEX `idx_user_deleted_updated`(`user_id` ASC, `is_deleted` ASC, `updated_at` ASC) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '笔记表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------

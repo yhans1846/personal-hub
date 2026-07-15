@@ -23,6 +23,10 @@ public class NoteVO {
     @Schema(description = "Markdown 内容")
     private String content;
 
+
+    @Schema(description = "列表摘要")
+    private String excerpt;
+
     @Schema(description = "是否收藏 0-否 1-是")
     private Integer isFavorite;
 
@@ -71,7 +75,8 @@ public class NoteVO {
         NoteVO vo = new NoteVO();
         vo.setId(note.getId());
         vo.setTitle(note.getTitle());
-        // content 从文件读取，在 service 层填充
+        // content 从文件读取，在 service 层填充；列表用 excerpt
+        vo.setExcerpt(note.getExcerpt());
         vo.setIsFavorite(note.getIsFavorite());
         vo.setIsDeleted(note.getIsDeleted());
         vo.setCreatedAt(note.getCreatedAt());
