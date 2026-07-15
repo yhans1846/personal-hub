@@ -466,6 +466,14 @@ UiDialog / UiInput / UiTextarea / UiSelect / UiDatePicker / UiButton / UiSection
 | `readingTime.ts` | `estimateReadingTime()` | Markdown 阅读时长估算 |
 | | `formatRelativeTime()` | 相对时间格式化（刚刚/X分钟前） |
 | | `isRecentlyEdited()` | 24 小时内编辑检测 |
+| `deepLink.ts` | `buildEditPath()` / `buildCreatePath()` | 列表弹窗深链（`?edit=` / `?create=1`） |
+| | `parseDeepLinkQuery()` | 解析深链 query |
+| | `getNotificationRelatedPath()` | 通知关联跳转到列表深链 |
+
+### Composable
+| 文件 | 用途 |
+|------|------|
+| `composables/useDeepLinkDialog.ts` | 列表页消费 `?edit=` / `?create=1`，打开 Dialog/Drawer 并清理 URL |
 
 ### Editor Composable（`src/modules/knowledge/note/editor/`）
 | 文件 | 用途 |
@@ -482,6 +490,7 @@ UiDialog / UiInput / UiTextarea / UiSelect / UiDatePicker / UiButton / UiSection
 `PageHeader` → `ListToolbar`（`#filters` 插槽）→ loading skeleton → `EmptyState` → 内容 → `ListPagination`
 
 CRUD 操作遵循：Dialog（全部实体），不跳转独立页面。
+跨页深链统一走列表 query：`/todos?edit=10`、`/study-records?create=1`；旧路径由 router redirect 兼容。笔记编辑除外（独立 `/notes/:id/edit` 页）。
 
 ### 图标规范
 - 统一使用 **lucide-vue-next**（已迁移为 `@lucide/vue`）

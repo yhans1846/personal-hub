@@ -17,6 +17,7 @@
 | API.md | RESTful 接口定义 |
 | STYLE_GUIDE.md | 编码规范 + UI 设计系统 + 共享组件（必读） |
 | CHANGELOG.md | 版本变更记录 |
+| qa/CURSOR_BROWSER_TESTING.md | Cursor 浏览器巡检方法（Browser MCP + Playwright + 日志） |
 
 ---
 

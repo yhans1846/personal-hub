@@ -147,6 +147,7 @@ Ubuntu 内网虚拟机可用 Docker Compose 一键运行，并配合 GitHub Acti
 | [`STYLE_GUIDE.md`](docs/STYLE_GUIDE.md) | 编码规范 · UI 设计系统 · 共享组件 |
 | [`PREVIEW_PAGE_SPEC.md`](docs/PREVIEW_PAGE_SPEC.md) | 预览页开发规范 · 排版系统 · 注意事项 |
 | [`CHANGELOG.md`](docs/CHANGELOG.md) | 版本变更记录 |
+| [`qa/CURSOR_BROWSER_TESTING.md`](docs/qa/CURSOR_BROWSER_TESTING.md) | Cursor 浏览器巡检方法（MCP + Playwright + 日志） |
 
 ---
 

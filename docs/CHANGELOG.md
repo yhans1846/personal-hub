@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### 2026-07-15 Cursor 浏览器巡检方法文档化
+- **Cursor 规则**：新增 `.cursor/rules/browser-qa-testing.mdc`（Browser MCP + Playwright + 日志对照）
+- **文档**：新增 `docs/qa/CURSOR_BROWSER_TESTING.md`（完整方法、检查清单、产物规范）
+
+### 2026-07-15 深链跳转修复（工作台 / 通知 → 列表弹窗）
+- **根因**：待办/学习/阅读/日记使用 List+Dialog，却跳转未注册的 `/:id/edit`、`/new`，导致空白页
+- **方案**：统一 `?edit=` / `?create=1` 深链；`useDeepLinkDialog` 消费 query 并打开弹窗
+- **兼容**：路由 redirect 兼容旧路径（如 `/todos/1/edit` → `/todos?edit=1`）
+- **修复点**：Dashboard 列表项与「开始学习」、notificationStore、笔记编辑 loading 骨架
+- **附带**：工作台最近阅读显示 `bookTitle`；学习计划空状态补 `Plus` 图标；vitest + deepLink 单测
+
 ### 2026-07-15 WYSIWYG 编辑器重构（md-editor-v3 → Vditor IR）
 - **编辑器替换**：md-editor-v3 → Vditor IR 模式，输入即渲染 WYSIWYG 体验
 - **右键菜单**：完整上下文菜单系统，39 项操作（格式/标题/列表/表格/代码块/Mermaid/公式/图片上传等）

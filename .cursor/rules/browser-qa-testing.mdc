@@ -1,0 +1,47 @@
+---
+description: Cursor 浏览器巡检与全功能 QA（browser MCP + Playwright + 后端日志对照）。用户要求测功能、验跳转、对照日志时必用。
+alwaysApply: false
+---
+
+# 浏览器 QA（Cursor）
+
+完整流程见 `docs/qa/CURSOR_BROWSER_TESTING.md`。摘要如下：
+
+## 何时启用
+
+- 全功能 / 冒烟 / 回归测试
+- 验证超链接、深链、侧栏跳转
+- 「结合后端日志排查」类任务
+
+## 必做三件套
+
+1. **Cursor Browser MCP**（`cursor-ide-browser`）：人工复核关键路径与弹窗
+2. **Playwright 脚本**：`scripts/qa/full_feature_test.py` 批量扫路由
+3. **后端日志**：`logs/personal-hub.log` + `logs/personal-hub-error.log`
+
+## Browser MCP 顺序（铁律）
+
+```
+browser_navigate → browser_lock → snapshot/交互 → … → browser_unlock
+```
+
+- 交互前先 `browser_snapshot` 取 ref；ref 失效则重新 snapshot
+- 等待用 `browser_wait_for`（秒）；SPA 不要盲依赖 `networkidle`
+- 结束务必 `browser_unlock`
+
+## Playwright 本地注意
+
+- Windows：`PLAYWRIGHT_CHROMIUM_USE_HEADLESS_SHELL=0` + `channel="chrome"`
+- 导航用 `domcontentloaded`，`networkidle` 易因通知轮询超时
+- 结果写 `logs/qa-artifacts/`；报告写 `docs/qa/`
+
+## 判定标准
+
+| 信号 | 含义 |
+|------|------|
+| `title === "Personal Hub"` 且无模块名 | 可能无匹配路由 |
+| Console: `No match found for location` | 深链未注册（应走 `?edit=` / redirect） |
+| `personal-hub-error.log` 增长 / ERROR | 后端故障 |
+| API status ≥ 400 | 对照前端 request |
+
+弹窗类模块深链规范见 `docs/STYLE_GUIDE.md`（`?edit=` / `?create=1`）。
