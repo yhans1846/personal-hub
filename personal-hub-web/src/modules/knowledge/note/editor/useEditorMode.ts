@@ -87,6 +87,13 @@ export function useEditorMode() {
   function handleKeydown(e: KeyboardEvent) {
     const isCtrl = e.ctrlKey || e.metaKey
 
+    // Ctrl+Shift+L: 切换分栏实时预览
+    if (isCtrl && e.shiftKey && (e.key === 'L' || e.key === 'l')) {
+      e.preventDefault()
+      toggleLivePreview()
+      return
+    }
+
     // Ctrl+Shift+P: 切换编辑/预览
     if (isCtrl && e.shiftKey && (e.key === 'P' || e.key === 'p')) {
       e.preventDefault()

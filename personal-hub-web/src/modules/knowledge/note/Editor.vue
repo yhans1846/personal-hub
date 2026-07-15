@@ -1,11 +1,9 @@
 <script setup lang="ts">
-import { ref, shallowRef, markRaw, computed, onMounted, nextTick, watch, onUnmounted } from 'vue'
+import { ref, shallowRef, markRaw, computed, onMounted, watch, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getNoteById, toggleFavorite, deleteNote } from '@/modules/knowledge/api'
 import { getCategories } from '@/api/categoryApi'
 import { getTags } from '@/modules/knowledge/api'
-import { MdEditor, MdPreview } from 'md-editor-v3'
-import 'md-editor-v3/lib/style.css'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useAutoSave } from './editor/useAutoSave'
 import { useEditorMode } from './editor/useEditorMode'
@@ -13,6 +11,9 @@ import { useEditorPreferences } from './editor/useEditorPreferences'
 import { useImageUpload } from './editor/useImageUpload'
 import EditorHeader from './editor/EditorHeader.vue'
 import EditorStatusBar from './editor/EditorStatusBar.vue'
+import NoteMdEditor from './editor/NoteMdEditor.vue'
+import EditorPreviewPanel from './editor/EditorPreviewPanel.vue'
+import { buildEditorId, FULL_TOOLBARS, SPLIT_TOOLBARS } from './editor/mdEditorToolbars'
 import { estimateReadingTime, formatRelativeTime } from '@/utils/readingTime'
 
 // ─── Splitpanes 动态导入 ───
@@ -46,6 +47,8 @@ const initialLoading = ref(true)
 const editorTheme = computed(() =>
   document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light',
 )
+
+const editorId = computed(() => buildEditorId(noteId.value))
 
 // ─── 自动保存 ───
 const {
@@ -82,36 +85,14 @@ onUnmounted(() => {
   document.body.classList.remove('editor-focus-mode')
 })
 
-// ─── 预览模式下改写图片 src ───
-function setupPreviewImageProxy(container?: HTMLElement) {
-  nextTick(() => {
-    const preview = (container || document.querySelector('.md-editor-preview')) as HTMLElement | null
-    if (!preview || !noteId.value) return
-    const token = localStorage.getItem('token')
-    if (!token) return
-
-    preview.querySelectorAll('img').forEach((img) => {
-      const src = img.getAttribute('src')
-      if (!src) return
-      if (src.startsWith('images/') || src.startsWith('attachments/')) {
-        img.setAttribute('src', `/api/notes/${noteId.value}/${src}?token=${token}`)
-      }
-    })
-  })
-}
-watch(mode, (val) => {
-  if (val === 'preview' || val === 'focus' || livePreview.value) {
-    setupPreviewImageProxy()
-  }
-})
-watch(livePreview, (on) => {
-  if (on) setupPreviewImageProxy()
-})
-
 // ─── 分栏滚动同步 ───
 let isSyncingScroll = false
 const editorWrapRef = ref<HTMLElement | null>(null)
-const previewWrapRef = ref<HTMLElement | null>(null)
+const previewPanelRef = ref<InstanceType<typeof EditorPreviewPanel> | null>(null)
+
+function getPreviewScrollEl(): HTMLElement | null {
+  return previewPanelRef.value?.scrollEl ?? null
+}
 
 function syncScroll(source: 'editor' | 'preview') {
   if (isSyncingScroll) return
@@ -120,7 +101,7 @@ function syncScroll(source: 'editor' | 'preview') {
   requestAnimationFrame(() => {
     try {
       if (source === 'editor') {
-        const preview = previewWrapRef.value
+        const preview = getPreviewScrollEl()
         const editor = editorWrapRef.value
         if (!preview || !editor) return
         const sh = editor.scrollHeight - editor.clientHeight
@@ -129,7 +110,7 @@ function syncScroll(source: 'editor' | 'preview') {
         preview.scrollTop = ratio * (preview.scrollHeight - preview.clientHeight)
       } else {
         const editor = editorWrapRef.value
-        const preview = previewWrapRef.value
+        const preview = getPreviewScrollEl()
         if (!editor || !preview) return
         const sh = preview.scrollHeight - preview.clientHeight
         if (sh <= 0) return
@@ -266,18 +247,6 @@ const savedTimeText = computed(() => {
   return formatRelativeTime(new Date(lastSavedAt.value).toISOString())
 })
 const readingTimeText = computed(() => estimateReadingTime(form.value.content))
-
-// 工具条
-const EDIT_TOOLBARS = [
-  'bold', 'italic', 'heading', '|',
-  'quote', 'unorderedList', 'orderedList', '|',
-  'code', 'link', 'image', 'table',
-] as any
-
-const SPLIT_TOOLBARS = [
-  'bold', 'italic', 'heading', '|',
-  'code', 'link', 'image',
-] as any
 </script>
 
 <template>
@@ -325,36 +294,35 @@ const SPLIT_TOOLBARS = [
                   class="editor-title split-title"
                   placeholder="请输入标题..."
                 />
-                <MdEditor
+                <NoteMdEditor
                   v-model="form.content"
-                  :theme="editorTheme"
+                  :editor-id="editorId"
                   :toolbars="SPLIT_TOOLBARS"
-                  :preview="false"
-                  language="zh-CN"
-                  placeholder="开始写作..."
+                  :theme="editorTheme"
+                  compact
                   :on-upload-img="onUploadImg"
-                  class="editor-instance split-instance"
+                  class="split-instance"
                 />
               </div>
             </div>
           </component>
           <component :is="PaneComponent" :size="100 - prefs.splitRatio" :min-size="30">
-            <div
-              ref="previewWrapRef"
-              class="split-right"
-              @scroll="syncScroll('preview')"
-            >
-              <div class="preview-wrap markdown-prose">
-                <h1 class="split-preview-title">{{ form.title || '无标题' }}</h1>
-                <div class="preview-meta">
-                  <span v-if="readingTimeText" class="preview-meta-item">👁 {{ readingTimeText }}</span>
-                </div>
-                <MdPreview
-                  :model-value="form.content"
-                  :theme="editorTheme"
-                  :show-code-row-number="false"
-                />
-              </div>
+            <div class="split-right">
+              <EditorPreviewPanel
+                ref="previewPanelRef"
+                :content="form.content"
+                :title="form.title"
+                :theme="editorTheme"
+                :editor-id="`${editorId}-preview`"
+                :note-id="noteId"
+                :reading-time-text="readingTimeText"
+                :category-names="getCategoryNames()"
+                :tag-names="getTagNames()"
+                :saved-time-text="savedTimeText"
+                :show-meta="false"
+                :show-toc="false"
+                @scroll="syncScroll('preview')"
+              />
             </div>
           </component>
         </component>
@@ -430,39 +398,29 @@ const SPLIT_TOOLBARS = [
           <div v-if="mode === 'edit'" class="editor-divider" />
 
           <!-- 编辑器 -->
-          <MdEditor
-            v-show="mode === 'edit' || mode === 'focus'"
-            :key="mode"
+          <NoteMdEditor
+            v-if="mode === 'edit' || mode === 'focus'"
             v-model="form.content"
+            :editor-id="editorId"
+            :toolbars="mode === 'focus' ? [] : FULL_TOOLBARS"
             :theme="editorTheme"
-            :toolbars="mode === 'focus' ? [] : EDIT_TOOLBARS"
-            :preview="false"
-            language="zh-CN"
-            placeholder="开始写作..."
             :on-upload-img="onUploadImg"
-            class="editor-instance"
-            :class="{ 'focus-editor': mode === 'focus' }"
+            :class="{ 'editor-instance': true, 'focus-editor': mode === 'focus' }"
           />
 
           <!-- 预览模式 -->
-          <div v-if="mode === 'preview'" class="preview-wrap markdown-prose">
-            <h1 class="preview-title">{{ form.title || '无标题' }}</h1>
-            <div class="preview-meta">
-              <template v-if="getCategoryNames()">
-                <span class="preview-meta-item">📂 {{ getCategoryNames() }}</span>
-              </template>
-              <template v-if="getTagNames()">
-                <span class="preview-meta-item">🏷 {{ getTagNames() }}</span>
-              </template>
-              <span v-if="savedTimeText" class="preview-meta-item">🕒 {{ savedTimeText }}</span>
-              <span v-if="readingTimeText" class="preview-meta-item">👁 {{ readingTimeText }}</span>
-            </div>
-            <MdPreview
-              :model-value="form.content"
-              :theme="editorTheme"
-              :show-code-row-number="false"
-            />
-          </div>
+          <EditorPreviewPanel
+            v-if="mode === 'preview'"
+            :content="form.content"
+            :title="form.title"
+            :theme="editorTheme"
+            :editor-id="`${editorId}-preview`"
+            :note-id="noteId"
+            :reading-time-text="readingTimeText"
+            :category-names="getCategoryNames()"
+            :tag-names="getTagNames()"
+            :saved-time-text="savedTimeText"
+          />
         </div>
       </template>
     </div>
@@ -730,8 +688,7 @@ const SPLIT_TOOLBARS = [
 }
 .split-right {
   height: 100%;
-  overflow-y: auto;
-  padding: 24px;
+  overflow: hidden;
   background: var(--bg-card);
 }
 .split-editor-content {

@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### 2026-07-15 专业 Markdown 编辑器
+- **完整工具栏**：撤销/重做、标题、列表、任务、代码块、Mermaid、KaTeX、Prettier、目录、全屏等
+- **组件封装**：`NoteMdEditor` + `EditorPreviewPanel`，统一 Mermaid/KaTeX 本地扩展（无 CDN 依赖）
+- **预览增强**：TOC 目录、代码块复制、图片缩放（medium-zoom）、笔记图片鉴权代理
+- **分栏默认开启**：`livePreview` 默认 true，比例 55:45；`Ctrl+Shift+L` 切换分栏
+- **修复**：工具栏 `heading` → `title`（md-editor-v3 合法项）
+- **新依赖**：mermaid ^11、katex ^0.17
+
 ### 2026-07-15 Logback 按天归档
 - **Logback**：新增 `logback-spring.xml`，按日期滚动，`maxHistory=30`
 - **双文件**：`personal-hub.log` + `personal-hub-error.log`（仅 ERROR）

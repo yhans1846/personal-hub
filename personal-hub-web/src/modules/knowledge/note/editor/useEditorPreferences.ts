@@ -13,9 +13,9 @@ export interface EditorPreferences {
 
 const STORAGE_KEY = 'editor-preferences'
 const DEFAULTS: EditorPreferences = {
-  livePreview: false,
+  livePreview: true,
   focusMode: false,
-  splitRatio: 50,
+  splitRatio: 55,
   fullscreen: false,
 }
 
