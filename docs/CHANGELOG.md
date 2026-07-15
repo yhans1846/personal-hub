@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### 2026-07-15 Logback 按天归档
+- **Logback**：新增 `logback-spring.xml`，按日期滚动，`maxHistory=30`
+- **双文件**：`personal-hub.log` + `personal-hub-error.log`（仅 ERROR）
+- **部署**：`LOG_PATH` 环境变量；Compose / Dockerfile 挂载 `/data/personal-hub/logs`
+
 ### 2026-07-14 正确性 / 性能 / 安全优化
 - **回收站清理**：`NoteResourceCleanupTask` 仅删除 DB 无对应行的孤立目录，不再清理软删除笔记文件
 - **生产密钥**：`ProdSecretsValidator` + `application-prod.yml` 取消弱默认值，缺失/弱密钥拒绝启动

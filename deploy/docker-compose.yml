@@ -67,8 +67,10 @@ services:
       JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
       STORAGE_LOCATION: ${STORAGE_LOCATION:-/data/personal-hub/uploads}
       STORAGE_MAX_SIZE: ${STORAGE_MAX_SIZE:-104857600}
+      LOG_PATH: ${LOG_PATH:-/data/personal-hub/logs}
     volumes:
       - /data/personal-hub/uploads:/data/personal-hub/uploads
+      - /data/personal-hub/logs:/data/personal-hub/logs
     expose:
       - "8080"
 

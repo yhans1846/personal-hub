@@ -51,7 +51,7 @@ jwt:
   secret: ${JWT_SECRET}
   expiration: ${JWT_EXPIRATION:86400000}
 
-# 登录限流
+# 登录限流 / 文件存储 / 日志
 personal-hub:
   security:
     login-rate-limit:
@@ -60,3 +60,7 @@ personal-hub:
   storage:
     location: ${STORAGE_LOCATION:/data/personal-hub/uploads}
     max-size: ${STORAGE_MAX_SIZE:104857600}
+
+logging:
+  file:
+    path: ${LOG_PATH:/data/personal-hub/logs}

@@ -14,7 +14,7 @@ WORKDIR /app
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl \
     && rm -rf /var/lib/apt/lists/* \
-    && mkdir -p /data/personal-hub/uploads
+    && mkdir -p /data/personal-hub/uploads /data/personal-hub/logs
 
 COPY --from=build /src/app.jar /app/app.jar
 

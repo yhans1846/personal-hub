@@ -41,3 +41,8 @@ springdoc:
     path: /swagger-ui.html
     tags-sorter: alpha
     operations-sorter: alpha
+
+# 日志目录（Logback 按天滚动，保留 30 天，见 logback-spring.xml）
+logging:
+  file:
+    path: ${LOG_PATH:logs}
