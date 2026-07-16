@@ -2,6 +2,7 @@ package com.personalhub.planning.vo;
 
 import com.personalhub.knowledge.vo.TagVO;
 import com.personalhub.planning.entity.StudyPlan;
+import com.personalhub.planning.enums.StudyPlanStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -78,15 +79,7 @@ public class StudyPlanVO {
         vo.setStatus(plan.getStatus());
         vo.setCreatedAt(plan.getCreatedAt());
         vo.setUpdatedAt(plan.getUpdatedAt());
-        if (plan.getStatus() != null) {
-            vo.setStatusLabel(switch (plan.getStatus()) {
-                case 0 -> "未开始";
-                case 1 -> "学习中";
-                case 2 -> "已完成";
-                case 3 -> "已暂停";
-                default -> "未知";
-            });
-        }
+        vo.setStatusLabel(StudyPlanStatus.labelOf(plan.getStatus()));
         return vo;
     }
 }

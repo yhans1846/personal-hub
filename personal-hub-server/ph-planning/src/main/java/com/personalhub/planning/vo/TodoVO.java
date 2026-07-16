@@ -1,6 +1,7 @@
 package com.personalhub.planning.vo;
 
 import com.personalhub.planning.entity.TodoTask;
+import com.personalhub.planning.enums.TodoPriority;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -58,15 +59,7 @@ public class TodoVO {
         vo.setCreatedAt(task.getCreatedAt());
         vo.setUpdatedAt(task.getUpdatedAt());
         vo.setCompletedAt(task.getCompletedAt());
-        // 设置优先级标签
-        if (task.getPriority() != null) {
-            vo.setPriorityLabel(switch (task.getPriority()) {
-                case 1 -> "高";
-                case 2 -> "中";
-                case 3 -> "低";
-                default -> "未知";
-            });
-        }
+        vo.setPriorityLabel(TodoPriority.labelOf(task.getPriority()));
         // 检查是否超期
         if (task.getDueDate() != null && (task.getIsDone() == null || task.getIsDone() == 0)) {
             vo.setIsOverdue(task.getDueDate().isBefore(LocalDate.now()));
