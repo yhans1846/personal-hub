@@ -2,7 +2,8 @@
 import { useLayoutStore } from '@/store/layoutStore'
 import { ElMessage } from 'element-plus'
 import { storeToRefs } from 'pinia'
-import { Sun, Moon, RotateCcw, Maximize2, Minimize2, Wind } from 'lucide-vue-next'
+import { Sun, Moon, RotateCcw, Maximize2, Minimize2, Wind, Minus, Plus } from 'lucide-vue-next'
+import type { ExtendedAppearanceConfig } from '@/types/layout'
 
 const layoutStore = useLayoutStore()
 const { appearanceConfig } = storeToRefs(layoutStore)
@@ -24,63 +25,72 @@ const RADIUS_OPTIONS = [
   { value: 'md', label: '8px' },
   { value: 'lg', label: '12px' },
   { value: 'xl', label: '16px' },
-]
+] as const
 
 const ANIMATION_OPTIONS = [
   { value: 'off', label: '关闭' },
   { value: 'slow', label: '慢' },
   { value: 'normal', label: '标准' },
   { value: 'fast', label: '快' },
-]
+] as const
 
 const DENSITY_OPTIONS = [
   { value: 'comfortable', label: '舒适', icon: Maximize2 },
   { value: 'standard', label: '标准', icon: Minimize2 },
   { value: 'compact', label: '紧凑', icon: Wind },
-]
+] as const
 
 function setTheme(theme: 'light' | 'dark') {
   layoutStore.saveAppearanceConfig({ ...appearanceConfig.value, theme })
 }
 
 function setAccent(key: string) {
-  layoutStore.saveAppearanceConfig({ ...appearanceConfig.value, accent: key as any })
+  layoutStore.saveAppearanceConfig({
+    ...appearanceConfig.value,
+    accent: key as ExtendedAppearanceConfig['accent'],
+  })
 }
 
-function setAppearance(key: string, value: any) {
-  const config = { ...appearanceConfig.value, [key]: value }
-  layoutStore.saveAppearanceConfig(config)
-  applyCSSVariables(config)
+function setAppearance<K extends keyof ExtendedAppearanceConfig>(
+  key: K,
+  value: ExtendedAppearanceConfig[K],
+) {
+  layoutStore.saveAppearanceConfig({ ...appearanceConfig.value, [key]: value })
 }
 
-function applyCSSVariables(config: any) {
-  // 圆角
-  const radiusMap: Record<string, string> = { sm: '8px', md: '10px', lg: '12px', xl: '16px' }
-  if (config.borderRadius) {
-    document.documentElement.style.setProperty('--radius-sm', radiusMap[config.borderRadius] || '8px')
-  }
-  // 动画
-  const animMap: Record<string, string> = { off: '0ms', slow: '350ms', normal: '200ms', fast: '100ms' }
-  if (config.animationSpeed) {
-    document.documentElement.style.setProperty('--transition-duration', animMap[config.animationSpeed] || '200ms')
-  }
-  // 密度
-  const densityMap: Record<string, string> = { comfortable: '1.25', standard: '1', compact: '0.75' }
-  if (config.density) {
-    document.documentElement.style.setProperty('--sp-density', densityMap[config.density] || '1')
-  }
+/** 拖动时即时预览宽度，松手再持久化 */
+function clampWidth(v: number) {
+  return Math.min(100, Math.max(50, Math.round(v)))
+}
+
+function previewContentWidth(v: number) {
+  const n = clampWidth(v)
+  appearanceConfig.value.contentWidth = n
+  document.documentElement.style.setProperty('--content-max-width', `${n}%`)
+  document.documentElement.setAttribute('data-content-width', String(n))
+  return n
+}
+
+function onContentWidthInput(e: Event) {
+  previewContentWidth(Number((e.target as HTMLInputElement).value))
+}
+
+function onContentWidthCommit(e: Event) {
+  setAppearance('contentWidth', clampWidth(Number((e.target as HTMLInputElement).value)))
+}
+
+function nudgeContentWidth(delta: number) {
+  setAppearance('contentWidth', clampWidth(appearanceConfig.value.contentWidth + delta))
 }
 
 async function handleReset() {
   await layoutStore.resetAppearanceConfig()
-  applyCSSVariables({ borderRadius: 'lg', animationSpeed: 'normal', density: 'standard' })
   ElMessage.success('外观已恢复默认')
 }
 </script>
 
 <template>
   <div class="appearance-settings">
-    <!-- 主题 -->
     <section class="setting-section">
       <div class="section-title-row">
         <h3 class="section-title">主题</h3>
@@ -113,7 +123,6 @@ async function handleReset() {
       </div>
     </section>
 
-    <!-- 强调色 -->
     <section class="setting-section">
       <h3 class="section-title">强调色</h3>
       <div class="accent-grid">
@@ -130,40 +139,37 @@ async function handleReset() {
       </div>
     </section>
 
-    <!-- 界面圆角 -->
     <section class="setting-section">
       <h3 class="section-title">界面圆角</h3>
       <div class="inline-options">
         <button
           v-for="ro in RADIUS_OPTIONS"
           :key="ro.value"
-          :class="['inline-btn', { active: (appearanceConfig as any).borderRadius === ro.value }]"
+          :class="['inline-btn', { active: appearanceConfig.borderRadius === ro.value }]"
           @click="setAppearance('borderRadius', ro.value)"
         >{{ ro.label }}</button>
       </div>
     </section>
 
-    <!-- 动画速度 -->
     <section class="setting-section">
       <h3 class="section-title">动画速度</h3>
       <div class="inline-options">
         <button
           v-for="ao in ANIMATION_OPTIONS"
           :key="ao.value"
-          :class="['inline-btn', { active: (appearanceConfig as any).animationSpeed === ao.value }]"
+          :class="['inline-btn', { active: appearanceConfig.animationSpeed === ao.value }]"
           @click="setAppearance('animationSpeed', ao.value)"
         >{{ ao.label }}</button>
       </div>
     </section>
 
-    <!-- 界面密度 -->
     <section class="setting-section">
       <h3 class="section-title">界面密度</h3>
       <div class="density-options">
         <button
           v-for="d in DENSITY_OPTIONS"
           :key="d.value"
-          :class="['density-card', { active: (appearanceConfig as any).density === d.value }]"
+          :class="['density-card', { active: appearanceConfig.density === d.value }]"
           @click="setAppearance('density', d.value)"
         >
           <component :is="d.icon" :size="18" />
@@ -172,12 +178,44 @@ async function handleReset() {
       </div>
     </section>
 
+    <section class="setting-section">
+      <h3 class="section-title">内容区宽度</h3>
+      <div class="width-control">
+        <button
+          type="button"
+          class="width-nudge"
+          title="减小"
+          :disabled="appearanceConfig.contentWidth <= 50"
+          @click="nudgeContentWidth(-1)"
+        >
+          <Minus :size="14" />
+        </button>
+        <input
+          type="range"
+          class="width-slider"
+          min="50"
+          max="100"
+          step="1"
+          :value="appearanceConfig.contentWidth"
+          @input="onContentWidthInput"
+          @change="onContentWidthCommit"
+        />
+        <button
+          type="button"
+          class="width-nudge"
+          title="增大"
+          :disabled="appearanceConfig.contentWidth >= 100"
+          @click="nudgeContentWidth(1)"
+        >
+          <Plus :size="14" />
+        </button>
+        <span class="width-value">{{ appearanceConfig.contentWidth }}%</span>
+      </div>
+    </section>
   </div>
 </template>
 
 <style scoped>
-.appearance-settings { }
-
 .setting-section { margin-bottom: 20px; }
 
 .section-title-row {
@@ -188,11 +226,12 @@ async function handleReset() {
 }
 
 .section-title {
-  margin: 0;
+  margin: 0 0 10px;
   font-size: 13px;
   font-weight: 600;
   color: var(--text-secondary);
 }
+.section-title-row .section-title { margin-bottom: 0; }
 
 .reset-link {
   display: inline-flex;
@@ -204,25 +243,24 @@ async function handleReset() {
   border: none;
   cursor: pointer;
   padding: 2px 6px;
-  border-radius: 4px;
-  transition: all 150ms ease;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition);
 }
 .reset-link:hover {
   color: var(--accent);
   background: var(--accent-light);
 }
 
-/* 主题卡片 */
 .theme-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .theme-card {
   display: flex; align-items: center; gap: 10px;
   padding: 14px 16px;
   border: 1px solid var(--border-color);
   background: var(--bg-card);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   cursor: pointer;
   text-align: left;
-  transition: all 150ms ease;
+  transition: all var(--transition);
 }
 .theme-card:hover { border-color: var(--accent-border); background: var(--bg-hover); }
 .theme-card.active {
@@ -236,16 +274,15 @@ async function handleReset() {
 .theme-card-name { font-size: 13px; font-weight: 500; color: var(--text-primary); }
 .theme-card-desc { font-size: 11px; color: var(--text-tertiary); }
 
-/* 强调色 */
 .accent-grid { display: flex; gap: 8px; flex-wrap: wrap; }
 .accent-btn {
   display: flex; align-items: center; gap: 8px;
   padding: 8px 14px;
   border: 1px solid var(--border-color);
   background: var(--bg-card);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all 150ms ease;
+  transition: all var(--transition);
 }
 .accent-btn:hover { border-color: var(--accent-border); background: var(--bg-hover); }
 .accent-btn.active {
@@ -258,30 +295,99 @@ async function handleReset() {
 .accent-label { font-size: 13px; color: var(--text-primary); }
 .accent-btn.active .accent-label { color: var(--accent-color); font-weight: 500; }
 
-/* 内联选项组 */
-.inline-options { display: flex; gap: 4px; }
+.inline-options { display: flex; gap: 4px; flex-wrap: wrap; }
 .inline-btn {
+  display: inline-flex; align-items: center; gap: 6px;
   padding: 6px 14px; font-size: 13px;
   border: 1px solid var(--border-color); background: var(--bg-card);
-  border-radius: 6px; color: var(--text-secondary);
-  cursor: pointer; transition: all 150ms ease;
+  border-radius: var(--radius-sm); color: var(--text-secondary);
+  cursor: pointer; transition: all var(--transition);
 }
 .inline-btn:hover { border-color: var(--accent); color: var(--accent); }
-.inline-btn.active { border-color: var(--accent); color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.inline-btn.active {
+  border-color: var(--accent); color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+.btn-hint { font-size: 11px; color: var(--text-tertiary); }
+.inline-btn.active .btn-hint { color: var(--accent); opacity: 0.75; }
 
-/* 密度 */
+.width-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.width-nudge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.width-nudge:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+.width-nudge:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.width-value {
+  min-width: 40px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--accent);
+  text-align: right;
+}
+.width-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border-color);
+  outline: none;
+  cursor: pointer;
+}
+.width-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--bg-card);
+  box-shadow: 0 0 0 1px var(--accent);
+  cursor: pointer;
+}
+.width-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--bg-card);
+  box-shadow: 0 0 0 1px var(--accent);
+  cursor: pointer;
+}
+
 .density-options { display: flex; gap: 8px; }
 .density-card {
   flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px;
   padding: 12px; font-size: 12px;
   border: 1px solid var(--border-color); background: var(--bg-card);
-  border-radius: 8px; color: var(--text-secondary);
-  cursor: pointer; transition: all 150ms ease;
+  border-radius: var(--radius-md); color: var(--text-secondary);
+  cursor: pointer; transition: all var(--transition);
 }
 .density-card:hover { border-color: var(--accent); color: var(--accent); }
 .density-card.active {
   border-color: var(--accent); color: var(--accent);
   background: color-mix(in srgb, var(--accent) 8%, transparent);
 }
-
 </style>

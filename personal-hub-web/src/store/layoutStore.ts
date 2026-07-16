@@ -179,6 +179,19 @@ export const useLayoutStore = defineStore('layout', () => {
     borderRadius: 'lg',
     animationSpeed: 'normal',
     density: 'standard',
+    contentWidth: 80,
+  }
+
+  /** 兼容旧枚举 narrow/standard/wide/full → 百分比 */
+  function normalizeContentWidth(raw: unknown): number {
+    if (typeof raw === 'number' && Number.isFinite(raw)) {
+      return Math.min(100, Math.max(50, Math.round(raw)))
+    }
+    const legacy: Record<string, number> = {
+      narrow: 60, standard: 75, wide: 90, full: 100,
+    }
+    if (typeof raw === 'string' && legacy[raw] != null) return legacy[raw]
+    return 80
   }
 
   const appearanceSync = useStorageSync<ExtendedAppearanceConfig>({
@@ -187,7 +200,9 @@ export const useLayoutStore = defineStore('layout', () => {
     fetchApi: async () => {
       const res = await getLayoutAll()
       const appLayout = (res.data.data as any[]).find((l: any) => l.layoutType === 'appearance')
-      return appLayout?.layoutJson ? JSON.parse(appLayout.layoutJson) : null
+      if (!appLayout?.layoutJson) return null
+      const parsed = JSON.parse(appLayout.layoutJson)
+      return { ...parsed, contentWidth: normalizeContentWidth(parsed.contentWidth) }
     },
     saveApi: async (data) => {
       await saveLayout({
@@ -200,13 +215,55 @@ export const useLayoutStore = defineStore('layout', () => {
   })
 
   const appearanceConfig = appearanceSync.data
+  // 本地旧配置迁移
+  appearanceConfig.contentWidth = normalizeContentWidth(appearanceConfig.contentWidth)
 
-  function applyAppearanceToDOM(config: AppearanceConfig) {
-    document.documentElement.setAttribute('data-theme', config.theme)
-    document.documentElement.setAttribute('data-accent', config.accent)
-    localStorage.setItem('theme-preference', config.theme)
-    localStorage.setItem('accent-preference', config.accent)
+  /** 将外观配置落到 document CSS 变量 / data-*（主题、圆角、动画、密度、内容宽） */
+  function applyAppearanceToDOM(config: AppearanceConfig | ExtendedAppearanceConfig) {
+    const ext = { ...DEFAULT_APPEARANCE, ...config } as ExtendedAppearanceConfig
+    ext.contentWidth = normalizeContentWidth(ext.contentWidth)
+    const root = document.documentElement
+
+    root.setAttribute('data-theme', ext.theme)
+    root.setAttribute('data-accent', ext.accent)
+    root.setAttribute('data-density', ext.density)
+    root.setAttribute('data-radius', ext.borderRadius)
+    root.setAttribute('data-anim', ext.animationSpeed)
+    root.setAttribute('data-content-width', String(ext.contentWidth))
+    localStorage.setItem('theme-preference', ext.theme)
+    localStorage.setItem('accent-preference', ext.accent)
+
+    // 圆角：选项值即基准（与设置页 4/8/12/16px 文案一致）
+    const radiusBase: Record<string, number> = { sm: 4, md: 8, lg: 12, xl: 16 }
+    const r = radiusBase[ext.borderRadius] ?? 12
+    root.style.setProperty('--radius-sm', `${Math.max(2, Math.round(r * 0.5))}px`)
+    root.style.setProperty('--radius-md', `${r}px`)
+    root.style.setProperty('--radius-lg', `${r}px`)
+    root.style.setProperty('--radius-xl', `${Math.round(r * 1.25)}px`)
+
+    // 动画：全局 --transition 被大量组件引用
+    const animMs: Record<string, string> = { off: '0ms', slow: '350ms', normal: '200ms', fast: '100ms' }
+    const dur = animMs[ext.animationSpeed] ?? '200ms'
+    root.style.setProperty('--transition-duration', dur)
+    root.style.setProperty('--transition', `${dur} ease`)
+
+    // 密度：缩放间距 token（main-content padding 等依赖 --sp-*）
+    const densityScale: Record<string, number> = { comfortable: 1.25, standard: 1, compact: 0.75 }
+    const s = densityScale[ext.density] ?? 1
+    const spBase: Record<string, number> = {
+      '1': 4, '2': 8, '3': 12, '4': 16, '5': 20, '6': 24, '8': 32, '10': 40, '12': 48,
+    }
+    for (const [k, v] of Object.entries(spBase)) {
+      root.style.setProperty(`--sp-${k}`, `${Math.round(v * s)}px`)
+    }
+    root.style.setProperty('--sp-density', String(s))
+
+    // 内容区宽度：相对主内容区百分比
+    root.style.setProperty('--content-max-width', `${ext.contentWidth}%`)
   }
+
+  // 本地缓存就绪后立刻应用（避免刷新后设置丢失）
+  applyAppearanceToDOM(appearanceConfig)
 
   async function fetchAppearanceFromBackend() {
     await appearanceSync.fetchFromBackend()
@@ -214,7 +271,7 @@ export const useLayoutStore = defineStore('layout', () => {
   }
 
   async function saveAppearanceConfig(config: ExtendedAppearanceConfig) {
-    Object.assign(appearanceConfig, config)
+    Object.assign(appearanceConfig, { ...DEFAULT_APPEARANCE, ...config })
     appearanceSync.saveToLocal(appearanceConfig)
     applyAppearanceToDOM(appearanceConfig)
     await appearanceSync.saveToBackend(appearanceConfig)

@@ -50,10 +50,11 @@
   /* ---- 布局 ---- */
   --sidebar-width: 240px;
   --topbar-height: 48px;
-  --content-max-width: 1600px;
+  --content-max-width: 80%;
   --reading-max-width: 1200px;
 
-  --transition: 200ms ease;
+  --transition-duration: 200ms;
+  --transition: var(--transition-duration) ease;
 
   /* ========== 浅色模式 ========== */
   --bg-body: #F8FAFC;

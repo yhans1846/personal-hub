@@ -132,9 +132,8 @@ function onAutoSaved() {
 
 <style scoped>
 .settings-page {
-  max-width: 1200px;
-  margin: 0 auto;
   width: 100%;
+  /* 宽度由 .content-container 的 --content-max-width 统一约束 */
 }
 
 /* ─── Tab 导航 ─── */

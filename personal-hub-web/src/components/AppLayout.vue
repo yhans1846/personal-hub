@@ -543,7 +543,7 @@ function handleQuickCreate(cmd: string) {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  max-width: none;
+  /* 与普通页一致：保留 max-width + 居中，仅放开高度链 */
 }
 .main-content.main-content--fill .content-container > * {
   flex: 1;

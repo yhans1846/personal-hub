@@ -178,8 +178,7 @@ function widgetProps(code: string) {
 <style scoped>
 .dashboard {
   width: 100%;
-  max-width: 1280px;
-  margin: 0 auto;
+  /* 宽度由 .content-container 的 --content-max-width 统一约束 */
 }
 
 .hero {

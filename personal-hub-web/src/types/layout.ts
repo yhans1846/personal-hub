@@ -46,6 +46,8 @@ export interface ExtendedAppearanceConfig extends AppearanceConfig {
   borderRadius: 'sm' | 'md' | 'lg' | 'xl'
   animationSpeed: 'off' | 'slow' | 'normal' | 'fast'
   density: 'comfortable' | 'standard' | 'compact'
+  /** 主内容区最大宽度占比 50–100，默认 80 */
+  contentWidth: number
 }
 
 /** 通知配置 */
