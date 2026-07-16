@@ -24,7 +24,6 @@
         <module>ph-knowledge</module>
         <module>ph-planning</module>
         <module>ph-resource</module>
-        <module>ph-storage</module>
         <module>ph-dashboard</module>
         <module>ph-boot</module>
     </modules>
@@ -71,11 +70,6 @@
             <dependency>
                 <groupId>com.personalhub</groupId>
                 <artifactId>ph-dashboard</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.personalhub</groupId>
-                <artifactId>ph-storage</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

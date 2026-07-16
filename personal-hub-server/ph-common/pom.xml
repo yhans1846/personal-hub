@@ -13,13 +13,19 @@
 
     <artifactId>ph-common</artifactId>
     <name>ph-common</name>
-    <description>公共组件：统一返回、异常处理、配置、工具类</description>
+    <description>公共组件：统一返回、异常处理、配置、工具类、存储 SPI</description>
 
     <dependencies>
         <!-- Web -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
         </dependency>
 
         <!-- Validation -->

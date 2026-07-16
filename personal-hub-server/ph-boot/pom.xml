@@ -41,10 +41,6 @@
             <groupId>com.personalhub</groupId>
             <artifactId>ph-dashboard</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.personalhub</groupId>
-            <artifactId>ph-storage</artifactId>
-        </dependency>
 
         <!-- SpringDoc OpenAPI (Swagger) -->
         <dependency>

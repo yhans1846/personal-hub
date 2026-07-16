@@ -22,10 +22,6 @@
         </dependency>
         <dependency>
             <groupId>com.personalhub</groupId>
-            <artifactId>ph-storage</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.personalhub</groupId>
             <artifactId>ph-system</artifactId>
         </dependency>
 
