@@ -33,14 +33,14 @@ public class StudyPlan {
     private String remark;
 
     /** 进度百分比 0-100 */
-    private Integer progress;
+    private Integer progress = 0;
 
     private LocalDate startDate;
 
     private LocalDate endDate;
 
     /** 状态 0-未开始 1-学习中 2-已完成 3-已暂停 */
-    private Integer status;
+    private Integer status = 0;
 
     @TableLogic
     private Integer isDeleted;

@@ -304,9 +304,13 @@ public class StudyPlanServiceImpl implements StudyPlanService {
         plan.setAuthor(dto.getAuthor());
         plan.setUrl(dto.getUrl());
         plan.setRemark(dto.getRemark());
-        plan.setProgress(dto.getProgress() != null ? dto.getProgress() : 0);
+        if (dto.getProgress() != null) {
+            plan.setProgress(dto.getProgress());
+        }
         plan.setStartDate(dto.getStartDate());
         plan.setEndDate(dto.getEndDate());
-        plan.setStatus(dto.getStatus() != null ? dto.getStatus() : 0);
+        if (dto.getStatus() != null) {
+            plan.setStatus(dto.getStatus());
+        }
     }
 }

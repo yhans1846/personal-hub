@@ -68,7 +68,9 @@ public class CategoryServiceImpl implements CategoryService {
         category.setUserId(userId);
         category.setName(dto.getName());
         category.setType(dto.getType());
-        category.setSortOrder(dto.getSortOrder() != null ? dto.getSortOrder() : 0);
+        if (dto.getSortOrder() != null) {
+            category.setSortOrder(dto.getSortOrder());
+        }
         categoryMapper.insert(category);
 
         log.info("创建分类: type={}, name={}, userId={}", dto.getType(), dto.getName(), userId);

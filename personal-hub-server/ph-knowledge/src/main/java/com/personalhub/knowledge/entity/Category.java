@@ -26,7 +26,7 @@ public class Category {
     private String type;
 
     /** 排序 */
-    private Integer sortOrder;
+    private Integer sortOrder = 0;
 
     /** 创建时间 */
     @TableField(fill = FieldFill.INSERT)

@@ -55,12 +55,20 @@ public class ReadingRecordServiceImpl implements ReadingRecordService {
         r.setBookTitle(dto.getBookTitle());
         r.setAuthor(dto.getAuthor());
         r.setCoverUrl(dto.getCoverUrl());
-        r.setTotalChapters(dto.getTotalChapters() != null ? dto.getTotalChapters() : 0);
-        r.setCurrentChapter(dto.getCurrentChapter() != null ? dto.getCurrentChapter() : 0);
-        r.setProgress(dto.getProgress() != null ? dto.getProgress() : 0);
+        if (dto.getTotalChapters() != null) {
+            r.setTotalChapters(dto.getTotalChapters());
+        }
+        if (dto.getCurrentChapter() != null) {
+            r.setCurrentChapter(dto.getCurrentChapter());
+        }
+        if (dto.getProgress() != null) {
+            r.setProgress(dto.getProgress());
+        }
         r.setRating(dto.getRating());
         r.setTotalDuration(dto.getTotalDuration());
-        r.setStatus(dto.getStatus() != null ? dto.getStatus() : 0);
+        if (dto.getStatus() != null) {
+            r.setStatus(dto.getStatus());
+        }
         r.setNotes(dto.getNotes());
         r.setStartDate(dto.getStartDate());
         r.setEndDate(dto.getEndDate());

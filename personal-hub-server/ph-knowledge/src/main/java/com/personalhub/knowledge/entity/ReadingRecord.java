@@ -13,12 +13,12 @@ public class ReadingRecord {
     private String bookTitle;
     private String author;
     private String coverUrl;
-    private Integer totalChapters;
-    private Integer currentChapter;
-    private Integer progress;
+    private Integer totalChapters = 0;
+    private Integer currentChapter = 0;
+    private Integer progress = 0;
     private Integer rating;
     private Integer totalDuration;
-    private Integer status;
+    private Integer status = 0;
     private String notes;
     private LocalDate startDate;
     private LocalDate endDate;
