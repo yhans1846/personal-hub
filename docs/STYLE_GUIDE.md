@@ -433,6 +433,18 @@ UiDialog / UiInput / UiTextarea / UiSelect / UiDatePicker / UiButton / UiSection
 | `PageHeader` | 页面标题 | `title`, `subtitle?`, 插槽 |
 | `ListToolbar` | 列表搜索栏 | `search`, `search-placeholder`, `create-label` + `#filters` 插槽 |
 | `ListPagination` | 分页 | `total`, `page`, `size` |
+
+### Dashboard Bento（`src/modules/dashboard/`）
+
+- 布局：Hero（问候 + 超期 + 链到 `/stats`）→ 12 列 Bento 网格
+- 卡片由 `layoutStore.visibleDashboardCards` 驱动显隐/排序；设置页 `DashboardManager` 配置
+- 默认 code：`today_plan` / `quick_actions` / `external_links` / `recent_notes` / `recent_studies` / `recent_reading`（均为 span 4）
+- **不与统计页重复**：趋势图、最近活动、KPI 大卡仅在 `/stats`；已移除 `weekly_trend` / `recent_activity` / `kpi_strip` / `pending_todos` / `resource_snapshot`
+- **外部快捷**：收藏夹勾选「展示到首页」；系统设置 → Dashboard 布局可显隐排序
+- **Hero**：本周学习摘要 + 资源 chip（日记/收藏/文件/在读）
+- 栅格 span 见 `DASHBOARD_CARD_SPAN`；`ensureDashboardCards()` + `REMOVED_DASHBOARD_CODES` 清理旧配置
+- 组件：`widgets/*` + `DashCard` + `format.ts`
+
 | `CommandPalette` | Ctrl+K 全局搜索 | 全局快捷键 |
 | `NotificationBell` | 通知下拉 | el-badge 红标 + el-popover 面板，自动检测生成 |
 | `SearchBar` | 通用搜索框 | `placeholder`, `modelValue`, `debounce?` |

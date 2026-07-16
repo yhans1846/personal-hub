@@ -2,11 +2,11 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { PageHeader, EmptyState, ListToolbar, ListPagination } from '@/components'
-import { getBookmarkList, deleteBookmark } from '@/modules/resource/api'
+import { getBookmarkList, deleteBookmark, updateBookmark } from '@/modules/resource/api'
 import { getCategories } from '@/api/categoryApi'
 import { getTags } from '@/modules/knowledge/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Pencil, Trash2, FolderOpen, Tag, Bookmark } from 'lucide-vue-next'
+import { Plus, Pencil, Trash2, FolderOpen, Bookmark, House } from 'lucide-vue-next'
 import BookmarkDialog from './BookmarkDialog.vue'
 import type { BookmarkVO, BookmarkQuery } from '@/types/bookmark'
 import type { TagVO } from '@/types/tag'
@@ -74,6 +74,21 @@ async function handleDelete(id: number) {
   fetchList()
 }
 
+async function toggleDashboard(item: BookmarkVO) {
+  const next = item.showOnDashboard === 1 ? 0 : 1
+  await updateBookmark(item.id, {
+    title: item.title,
+    url: item.url,
+    description: item.description || '',
+    favicon: item.favicon || undefined,
+    categoryId: item.categoryId,
+    tagIds: (item.tags || []).map(t => t.id),
+    showOnDashboard: next,
+  })
+  item.showOnDashboard = next
+  ElMessage.success(next === 1 ? '已展示到首页' : '已从首页移除')
+}
+
 function extractDomain(url: string) {
   try { return new URL(url).hostname } catch { return url }
 }
@@ -119,6 +134,14 @@ function getFaviconUrl(url: string) {
         <div class="card-top">
           <img :src="item.favicon || getFaviconUrl(item.url)" class="card-favicon" alt="" @error="($event.target as HTMLImageElement).style.display='none'" />
           <div class="card-title">{{ item.title }}</div>
+          <button
+            class="home-toggle"
+            :class="{ active: item.showOnDashboard === 1 }"
+            :title="item.showOnDashboard === 1 ? '取消首页展示' : '展示到首页'"
+            @click.stop="toggleDashboard(item)"
+          >
+            <House :size="14" />
+          </button>
         </div>
         <div class="card-desc">{{ item.description || extractDomain(item.url) }}</div>
         <div class="card-footer">
@@ -160,7 +183,29 @@ function getFaviconUrl(url: string) {
 
 .card-top { display: flex; align-items: center; gap: var(--sp-2); }
 .card-favicon { width: 20px; height: 20px; border-radius: 4px; flex-shrink: 0; }
-.card-title { font-size: var(--text-sm); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.card-title { font-size: var(--text-sm); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
+.home-toggle {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--bg-hover);
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.home-toggle:hover {
+  color: var(--accent);
+  background: var(--accent-light);
+}
+.home-toggle.active {
+  color: var(--accent);
+  background: var(--accent-light);
+}
 .card-desc { font-size: var(--text-xs); color: var(--text-secondary); line-height: var(--leading-normal); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; flex: 1; }
 .card-footer { display: flex; align-items: center; gap: var(--sp-2); font-size: var(--text-xs); color: var(--text-tertiary); flex-wrap: wrap; }
 .card-category { display: flex; align-items: center; gap: 2px; white-space: nowrap; }

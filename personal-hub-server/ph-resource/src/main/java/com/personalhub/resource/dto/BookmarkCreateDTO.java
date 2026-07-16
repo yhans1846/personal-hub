@@ -33,6 +33,9 @@ public class BookmarkCreateDTO {
     @Schema(description = "分类ID")
     private Long categoryId;
 
+    @Schema(description = "是否展示到首页外部快捷：0 否 / 1 是", example = "0")
+    private Integer showOnDashboard;
+
     @Schema(description = "标签ID列表", example = "[1, 2]")
     private List<Long> tagIds;
 }

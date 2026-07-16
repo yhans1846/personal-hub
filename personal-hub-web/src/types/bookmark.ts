@@ -9,6 +9,7 @@ export interface BookmarkVO {
   favicon: string
   categoryId: number | null
   categoryName: string
+  showOnDashboard?: number
   tags: TagVO[]
   createdAt: string
   updatedAt: string
@@ -22,6 +23,7 @@ export interface BookmarkCreateDTO {
   favicon?: string
   categoryId?: number | null
   tagIds?: number[]
+  showOnDashboard?: number
 }
 
 /** 查询参数 */

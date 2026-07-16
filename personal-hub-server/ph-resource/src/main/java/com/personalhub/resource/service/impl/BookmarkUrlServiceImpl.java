@@ -127,6 +127,7 @@ public class BookmarkUrlServiceImpl implements BookmarkUrlService {
         url.setDescription(dto.getDescription());
         url.setFavicon(dto.getFavicon());
         url.setCategoryId(dto.getCategoryId());
+        url.setShowOnDashboard(dto.getShowOnDashboard() != null && dto.getShowOnDashboard() == 1 ? 1 : 0);
         bookmarkUrlMapper.insert(url);
         log.info("新建收藏: id={}, userId={}, title={}", url.getId(), userId, dto.getTitle());
 
@@ -158,6 +159,7 @@ public class BookmarkUrlServiceImpl implements BookmarkUrlService {
         url.setDescription(dto.getDescription());
         url.setFavicon(dto.getFavicon());
         url.setCategoryId(dto.getCategoryId());
+        url.setShowOnDashboard(dto.getShowOnDashboard() != null && dto.getShowOnDashboard() == 1 ? 1 : 0);
         bookmarkUrlMapper.updateById(url);
         log.info("编辑收藏: id={}, userId={}", id, userId);
 
@@ -186,5 +188,27 @@ public class BookmarkUrlServiceImpl implements BookmarkUrlService {
         tagService.unbindAll("bookmark", id);
         bookmarkUrlMapper.deleteById(id);
         log.info("删除收藏: id={}, userId={}", id, userId);
+    }
+
+    @Override
+    public List<BookmarkVO> listForDashboard(Long userId, int limit) {
+        int size = Math.min(Math.max(limit, 1), 20);
+        List<BookmarkUrl> urls = bookmarkUrlMapper.selectList(
+                new LambdaQueryWrapper<BookmarkUrl>()
+                        .eq(BookmarkUrl::getUserId, userId)
+                        .eq(BookmarkUrl::getShowOnDashboard, 1)
+                        .orderByDesc(BookmarkUrl::getUpdatedAt)
+                        .last("LIMIT " + size));
+        Map<Long, String> categoryMap = loadCategoryNames(userId);
+        List<Long> ids = urls.stream().map(BookmarkUrl::getId).collect(Collectors.toList());
+        Map<Long, List<TagVO>> tagsMap = tagService.getTagsMap("bookmark", ids);
+        return urls.stream().map(url -> {
+            BookmarkVO vo = BookmarkVO.from(url);
+            if (url.getCategoryId() != null) {
+                vo.setCategoryName(categoryMap.get(url.getCategoryId()));
+            }
+            vo.setTags(tagsMap.getOrDefault(url.getId(), List.of()));
+            return vo;
+        }).collect(Collectors.toList());
     }
 }

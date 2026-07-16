@@ -20,7 +20,14 @@ const emit = defineEmits<{
   'saved': []
 }>()
 
-const form = ref({ title: '', url: '', description: '', categoryId: null as number | null, tagIds: [] as number[] })
+const form = ref({
+  title: '',
+  url: '',
+  description: '',
+  categoryId: null as number | null,
+  tagIds: [] as number[],
+  showOnDashboard: false,
+})
 const categories = ref<CategoryVO[]>([])
 const tags = ref<TagVO[]>([])
 const saving = ref(false)
@@ -35,7 +42,8 @@ async function loadEntity(id: number) {
   const r = res.data.data
   form.value = {
     title: r.title, url: r.url, description: r.description || '',
-    categoryId: r.categoryId, tagIds: (r.tags || []).map((t: TagVO) => t.id)
+    categoryId: r.categoryId, tagIds: (r.tags || []).map((t: TagVO) => t.id),
+    showOnDashboard: r.showOnDashboard === 1,
   }
 }
 
@@ -47,7 +55,7 @@ watch(() => props.modelValue, async (val) => {
     tags.value = tagRes.data.data
   } catch { /* ignore */ }
   if (!props.entityId) {
-    form.value = { title: '', url: '', description: '', categoryId: null, tagIds: [] }
+    form.value = { title: '', url: '', description: '', categoryId: null, tagIds: [], showOnDashboard: false }
   }
 })
 
@@ -65,11 +73,19 @@ async function handleSave() {
   if (!/^https?:\/\//i.test(url)) url = 'https://' + url
   saving.value = true
   try {
+    const payload = {
+      title: form.value.title,
+      url,
+      description: form.value.description,
+      categoryId: form.value.categoryId,
+      tagIds: form.value.tagIds,
+      showOnDashboard: form.value.showOnDashboard ? 1 : 0,
+    }
     if (props.entityId) {
-      await updateBookmark(props.entityId, { ...form.value, url })
+      await updateBookmark(props.entityId, payload)
       ElMessage.success('已更新')
     } else {
-      await createBookmark({ ...form.value, url })
+      await createBookmark(payload)
       ElMessage.success('已创建')
     }
     onSaved()
@@ -139,6 +155,14 @@ async function handleSave() {
       </button>
       <span v-if="tags.length === 0" class="chip-empty">暂无标签</span>
     </div>
+
+    <div class="section-divider" />
+
+    <div class="dashboard-row">
+      <span class="dashboard-label">展示到首页</span>
+      <el-switch v-model="form.showOnDashboard" />
+    </div>
+    <p class="dashboard-hint">开启后会出现在首页「外部快捷」卡片</p>
 
     <div class="section-divider" />
 
@@ -265,6 +289,23 @@ async function handleSave() {
 .chip-empty {
   font-size: var(--text-xs);
   color: var(--text-placeholder);
+}
+
+.dashboard-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+.dashboard-label {
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  font-weight: 500;
+}
+.dashboard-hint {
+  margin: var(--sp-2) 0 0;
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
 }
 
 /* ---- 描述 ---- */

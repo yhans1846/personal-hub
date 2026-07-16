@@ -19,4 +19,7 @@ public interface BookmarkUrlService {
     BookmarkVO update(Long id, Long userId, BookmarkCreateDTO dto);
 
     void delete(Long id, Long userId);
+
+    /** 首页外部快捷：show_on_dashboard=1，按更新时间倒序 */
+    java.util.List<BookmarkVO> listForDashboard(Long userId, int limit);
 }

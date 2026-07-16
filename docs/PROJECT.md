@@ -128,6 +128,7 @@ ph-system ─┬─ ph-knowledge
 | 19 | 通知系统（sys_notification） | 四 |
 | 20-21 | UI 优化（设计令牌/侧边栏/共享组件/Command Palette）+ 功能增强 | 四 |
 | 22 | 工作台自定义布局（user_layout + 数据驱动 + 设置页） | 五 |
+| 22b | 工作台 Bento 六宫格（今日/快捷/外部快捷/最近列表；收藏夹首页开关；趋势与 KPI 在统计页） | 五 |
 | 23-24 | CRUD UI 优化（Ui 组件库 + Dialog/Drawer）+ 分类系统合并 | 六 |
 | 25-27 | 代码清理 + 配置分层（dev/prod）+ Swagger 修复 | 七 |
 | 28 | 笔记回收站改造 + 审计日志（deleted_at/audit_log/预览/回收站重构） | 八 |

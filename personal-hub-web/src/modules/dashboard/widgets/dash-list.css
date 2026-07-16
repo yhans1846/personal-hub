@@ -1,0 +1,78 @@
+/* Dashboard 列表行共用（非 scoped，由 widgets 引入） */
+.dash-list {
+  padding: var(--sp-1) 0;
+  flex: 1;
+}
+.dash-list-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: 10px var(--sp-4);
+  cursor: pointer;
+  transition: background var(--transition);
+  font-size: var(--text-sm);
+}
+.dash-list-item:hover {
+  background: var(--bg-hover);
+}
+.dash-list-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.dash-list-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+.dash-list-sub {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dash-list-meta {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+.dash-empty {
+  padding: var(--sp-5) var(--sp-4);
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+}
+.dash-progress {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--bg-hover);
+  overflow: hidden;
+  margin-top: 4px;
+  width: 100%;
+}
+.dash-progress-bar {
+  height: 100%;
+  border-radius: 2px;
+  background: var(--accent);
+  transition: width 0.3s ease;
+}
+.dash-todo-check {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all var(--transition);
+}
+.dash-todo-check.checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}

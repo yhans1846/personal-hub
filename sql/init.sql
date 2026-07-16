@@ -19,6 +19,7 @@ CREATE TABLE `bookmark_url`  (
                                  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '描述',
                                  `favicon` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '图标URL',
                                  `category_id` bigint NULL DEFAULT NULL COMMENT '分类ID',
+                                 `show_on_dashboard` tinyint NOT NULL DEFAULT 0 COMMENT '展示到首页外部快捷',
                                  `tags` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '标签（逗号分隔）',
                                  `is_deleted` tinyint NOT NULL DEFAULT 0 COMMENT '逻辑删除',
                                  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',

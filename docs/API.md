@@ -240,6 +240,7 @@ POST /api/categories
 | 方法 | 路径 | 说明 | 认证 |
 |------|------|------|------|
 | GET | /api/bookmarks | 收藏列表（分页）| 是 |
+| GET | /api/bookmarks/dashboard | 首页外部快捷（show_on_dashboard=1）| 是 |
 | GET | /api/bookmarks/{id} | 详情 | 是 |
 | POST | /api/bookmarks | 新建 | 是 |
 | PUT | /api/bookmarks/{id} | 编辑 | 是 |
@@ -247,11 +248,12 @@ POST /api/categories
 
 **GET /api/bookmarks** 参数: page, size, keyword, categoryId, tagId
 
+**GET /api/bookmarks/dashboard** 参数: limit（默认 8，最大 20）
+
 **POST /api/bookmarks**
 ```json
-{"title":"GitHub","url":"https://github.com","description":"","categoryId":1,"tagIds":[1,2]}
+{"title":"GitHub","url":"https://github.com","description":"","categoryId":1,"tagIds":[1,2],"showOnDashboard":1}
 ```
-
 ### 十二、学习计划 `/api/study-plans`
 | 方法 | 路径 | 说明 | 认证 |
 |------|------|------|------|

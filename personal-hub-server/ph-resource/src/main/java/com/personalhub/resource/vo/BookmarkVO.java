@@ -33,6 +33,9 @@ public class BookmarkVO {
     @Schema(description = "分类ID")
     private Long categoryId;
 
+    @Schema(description = "是否展示到首页外部快捷：0 否 / 1 是")
+    private Integer showOnDashboard;
+
     @Schema(description = "分类名称")
     private String categoryName;
 
@@ -53,6 +56,7 @@ public class BookmarkVO {
         vo.setDescription(url.getDescription());
         vo.setFavicon(url.getFavicon());
         vo.setCategoryId(url.getCategoryId());
+        vo.setShowOnDashboard(url.getShowOnDashboard() != null ? url.getShowOnDashboard() : 0);
         vo.setCreatedAt(url.getCreatedAt());
         vo.setUpdatedAt(url.getUpdatedAt());
         return vo;

@@ -2,6 +2,24 @@
 
 ## [Unreleased]
 
+### 2026-07-16 首页六宫格 + 外部快捷
+- **布局**：2×3 等宽等高；默认今日 / 快捷 / 外部快捷 / 笔记 / 学习 / 阅读
+- **外部快捷**：收藏夹 `show_on_dashboard`；编辑开关；`GET /api/bookmarks/dashboard`
+- **资源盘点**：独立卡移除，四指标并入 Hero 可点链接
+- **设置**：Dashboard 布局随默认项同步（含外部快捷）；本地 key `layout-dashboard-v5`
+
+### 2026-07-16 首页资源盘点小统计
+- **移除**：独立「待办任务」卡片（`pending_todos`），避免与「今日任务」重复
+- **新增**：`resource_snapshot` 整行资源盘点（本月日记 / 收藏 / 文件 / 在读中），指标与 `/stats` KPI 错开
+- **兼容**：`REMOVED_DASHBOARD_CODES` + 本地 key `layout-dashboard-v4`
+
+### 2026-07-16 工作台 Bento 信息中心
+- **布局重构**：稀疏两栏 → 12 列 Bento 网格；Hero 问候 + 超期入口
+- **配置驱动**：`visibleDashboardCards` 真正控制显隐/排序；默认 today / quick / notes / studies / reading
+- **组件拆分**：`dashboard/widgets/*`（Today / Quick / Notes / Studies / Reading / Todos）
+- **去重**：移除与 `/stats` 重复的 KPI 条、近 7 日趋势、最近活动（改由数据统计页承载）
+- **兼容**：`ensureDashboardCards` + `REMOVED_DASHBOARD_CODES`；本地 key `layout-dashboard-v3`
+
 ### 2026-07-15 Cursor 浏览器巡检方法文档化
 - **Cursor 规则**：新增 `.cursor/rules/browser-qa-testing.mdc`（Browser MCP + Playwright + 日志对照）
 - **文档**：新增 `docs/qa/CURSOR_BROWSER_TESTING.md`（完整方法、检查清单、产物规范）

@@ -153,6 +153,7 @@ PK: (`note_id`, `category_id`)。笔记与分类多对多。
 | description | TEXT | 描述 | |
 | favicon | VARCHAR(500) | 图标 URL | |
 | category_id | BIGINT | 分类 ID（关联 `category` 表，type='bookmark'） | INDEX |
+| show_on_dashboard | TINYINT | 是否展示到首页外部快捷：0 否 / 1 是 | NOT NULL, DEFAULT 0 |
 | tags | VARCHAR(500) | 标签（逗号分隔，遗留字段，已迁移到 tag_rel） | |
 | is_deleted | TINYINT | 逻辑删除 | DEFAULT 0 |
 | created_at | DATETIME | 创建时间 | NOT NULL |

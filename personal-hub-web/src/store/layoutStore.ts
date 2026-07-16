@@ -2,11 +2,11 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { getLayoutAll, saveLayout, resetLayout } from '@/api/layoutApi'
 import { useStorageSync } from '@/composables/useStorageSync'
-import { DEFAULT_MENU_ITEMS, DEFAULT_DASHBOARD_ITEMS, DEFAULT_STATS_CARDS } from '@/modules/dashboard/defaultLayouts'
+import { DEFAULT_MENU_ITEMS, DEFAULT_DASHBOARD_ITEMS, DEFAULT_STATS_CARDS, ensureDashboardCards, REMOVED_DASHBOARD_CODES } from '@/modules/dashboard/defaultLayouts'
 import type { MenuItem, CardItem, LayoutItem, AppearanceConfig, ExtendedAppearanceConfig } from '@/types/layout'
 
 const STORAGE_KEY_MENU = 'layout-menu'
-const STORAGE_KEY_DASHBOARD = 'layout-dashboard'
+const STORAGE_KEY_DASHBOARD = 'layout-dashboard-v5'
 const STORAGE_KEY_STATS = 'layout-stats'
 
 function loadFromStorage<T>(key: string, defaults: T[]): T[] {
@@ -31,7 +31,11 @@ function toLayoutItem(item: MenuItem | CardItem): LayoutItem {
 export const useLayoutStore = defineStore('layout', () => {
   // --- State ---
   const menuItems = ref<MenuItem[]>(migrateMenuItems(loadFromStorage<MenuItem>(STORAGE_KEY_MENU, DEFAULT_MENU_ITEMS)))
-  const dashboardCards = ref<CardItem[]>(loadFromStorage<CardItem>(STORAGE_KEY_DASHBOARD, DEFAULT_DASHBOARD_ITEMS))
+  const dashboardCards = ref<CardItem[]>(
+    ensureDashboardCards(loadFromStorage<CardItem>(STORAGE_KEY_DASHBOARD, DEFAULT_DASHBOARD_ITEMS)),
+  )
+  // 补齐新增卡片后写回本地，避免刷新丢失
+  saveToStorage(STORAGE_KEY_DASHBOARD, dashboardCards.value)
   const statsCards = ref<CardItem[]>(loadFromStorage<CardItem>(STORAGE_KEY_STATS, DEFAULT_STATS_CARDS))
   const loaded = ref(false)
 
@@ -260,13 +264,29 @@ export const useLayoutStore = defineStore('layout', () => {
   }
 
   function mergeDashboardCards(items: LayoutItem[]) {
-    for (const incoming of items) {
-      const existing = dashboardCards.value.find(c => c.code === incoming.code)
-      if (existing) {
-        existing.visible = incoming.visible
-        existing.order = incoming.order
+    const kept = items.filter(i => !REMOVED_DASHBOARD_CODES.has(i.code))
+    const backendCodes = new Set(kept.map(i => i.code))
+    const incomplete = DEFAULT_DASHBOARD_ITEMS.some(d => !backendCodes.has(d.code))
+
+    if (incomplete) {
+      // 后端仍是旧卡片集：只同步 visible，order 用 Bento 默认
+      const visibleMap = new Map(kept.map(i => [i.code, i.visible]))
+      dashboardCards.value = DEFAULT_DASHBOARD_ITEMS.map(def => ({
+        ...def,
+        visible: visibleMap.has(def.code) ? visibleMap.get(def.code)! : def.visible,
+        order: def.order,
+      }))
+    } else {
+      for (const incoming of kept) {
+        const existing = dashboardCards.value.find(c => c.code === incoming.code)
+        if (existing) {
+          existing.visible = incoming.visible
+          existing.order = incoming.order
+        }
       }
+      dashboardCards.value = ensureDashboardCards(dashboardCards.value)
     }
+    saveToStorage(STORAGE_KEY_DASHBOARD, dashboardCards.value)
   }
 
   function mergeStatsCards(items: LayoutItem[]) {

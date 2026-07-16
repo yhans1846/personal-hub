@@ -19,6 +19,9 @@ export function updateBookmark(id: number, data: BookmarkCreateDTO) {
 export function deleteBookmark(id: number) {
   return request.delete<Result<void>>(`/bookmarks/${id}`)
 }
+export function getDashboardBookmarks(limit = 8) {
+  return request.get<Result<BookmarkVO[]>>('/bookmarks/dashboard', { params: { limit } })
+}
 
 // ====== 文件 ======
 export function getFileList(params: FileQuery) {

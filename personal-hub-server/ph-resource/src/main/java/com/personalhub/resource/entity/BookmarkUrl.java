@@ -27,6 +27,9 @@ public class BookmarkUrl {
 
     private Long categoryId;
 
+    /** 是否展示到首页外部快捷：0 否 / 1 是 */
+    private Integer showOnDashboard;
+
     /** 标签（逗号分隔） */
     private String tags;
 

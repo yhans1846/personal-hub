@@ -26,6 +26,15 @@ public class BookmarkUrlController {
 
     private final BookmarkUrlService bookmarkUrlService;
 
+    @Operation(summary = "首页外部快捷", description = "返回勾选「展示到首页」的收藏，按更新时间倒序")
+    @GetMapping("/dashboard")
+    public Result<java.util.List<BookmarkVO>> dashboardList(
+            @Parameter(hidden = true) Authentication authentication,
+            @RequestParam(defaultValue = "8") int limit) {
+        Long userId = Long.valueOf(authentication.getName());
+        return Result.success(bookmarkUrlService.listForDashboard(userId, limit));
+    }
+
     @Operation(summary = "收藏列表", description = "分页查询收藏，支持关键词搜索、分类筛选、标签筛选")
     @GetMapping
     public Result<PageResult<BookmarkVO>> list(
