@@ -11,9 +11,9 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>ph-knowledge</artifactId>
-    <name>ph-knowledge</name>
-    <description>知识管理模块（笔记/日记/学习/阅读/标签）</description>
+    <artifactId>ph-biz</artifactId>
+    <name>ph-biz</name>
+    <description>业务合集：知识 / 规划 / 资源 / Dashboard 聚合</description>
 
     <dependencies>
         <dependency>

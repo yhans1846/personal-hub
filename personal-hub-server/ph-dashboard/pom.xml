@@ -22,7 +22,7 @@
         </dependency>
         <dependency>
             <groupId>com.personalhub</groupId>
-            <artifactId>ph-knowledge</artifactId>
+            <artifactId>ph-biz</artifactId>
         </dependency>
         <dependency>
             <groupId>com.personalhub</groupId>

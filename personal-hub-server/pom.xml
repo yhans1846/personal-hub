@@ -21,7 +21,7 @@
     <modules>
         <module>ph-common</module>
         <module>ph-system</module>
-        <module>ph-knowledge</module>
+        <module>ph-biz</module>
         <module>ph-planning</module>
         <module>ph-resource</module>
         <module>ph-dashboard</module>
@@ -54,7 +54,7 @@
             </dependency>
             <dependency>
                 <groupId>com.personalhub</groupId>
-                <artifactId>ph-knowledge</artifactId>
+                <artifactId>ph-biz</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
