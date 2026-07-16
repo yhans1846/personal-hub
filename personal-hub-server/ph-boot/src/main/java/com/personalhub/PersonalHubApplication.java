@@ -26,13 +26,11 @@ public class PersonalHubApplication {
     public void onReady(ApplicationReadyEvent event) {
         String port = event.getApplicationContext().getEnvironment()
                 .getProperty("server.port", "8080");
-        log.info("""
-                        
-                        =========================================================
-                          Personal Hub 启动完成！
-                          访问地址: http://localhost:3000
-                          API 文档: http://localhost:{}/swagger-ui.html
-                        =========================================================""",
+        log.info("\n=========================================================" +
+                "\n  Personal Hub 启动完成！" +
+                "\n  访问地址: http://localhost:3000" +
+                "\n  API 文档: http://localhost:{}/swagger-ui.html" +
+                "\n=========================================================",
                 port);
     }
 }

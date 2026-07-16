@@ -42,17 +42,21 @@ public class ProdSecretsValidator {
 
     private void requireStrong(String name, String value) {
         if (!StringUtils.hasText(value)) {
-            throw new IllegalStateException("生产环境必须设置 " + name + "，禁止空值或使用默认密钥启动");
+            throw new IllegalStateException(
+                    "生产环境必须设置 " + name + "，禁止空值或使用默认密钥启动");
         }
         String trimmed = value.trim();
         if (REJECTED_SECRETS.stream().anyMatch(r -> r.equalsIgnoreCase(trimmed))) {
-            throw new IllegalStateException("生产环境 " + name + " 使用了不安全的默认值，请通过环境变量更换");
+            throw new IllegalStateException(
+                    "生产环境 " + name + " 使用了不安全的默认值，请通过环境变量更换");
         }
         if (name.startsWith("JWT_SECRET") && trimmed.length() < 32) {
-            throw new IllegalStateException("生产环境 " + name + " 长度过短（至少 32 位）");
+            throw new IllegalStateException(
+                    "生产环境 " + name + " 长度过短（至少 32 位）");
         }
         if (!name.startsWith("JWT_SECRET") && trimmed.length() < 8) {
-            throw new IllegalStateException("生产环境 " + name + " 长度过短（至少 8 位）");
+            throw new IllegalStateException(
+                    "生产环境 " + name + " 长度过短（至少 8 位）");
         }
     }
 }
