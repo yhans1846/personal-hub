@@ -30,18 +30,18 @@
 
 ## 🧩 项目结构
 
-### 后端 · 领域驱动设计（7+1 模块）
+### 后端 · 4 模块（包内按领域划分）
 
 ```
 personal-hub-server/
 ├── ph-boot          启动入口
-├── ph-common        公共能力   Result / JWT / Security / 全局异常
-├── ph-system        用户系统   登录认证 / 通知中心 / 自定义布局 / 审计日志
-├── ph-knowledge     知识引擎   笔记 / 日记 / 学习 / 阅读 / 标签 / 分类
-├── ph-planning      规划系统   Todo / 学习计划
-├── ph-resource      资源管理   收藏夹 / 文件管理 / 笔记附件
-├── ph-storage       存储引擎   文件系统抽象层
-└── ph-dashboard     数据聚合   Dashboard / 全局搜索 / 统计趋势
+├── ph-common        公共能力 + 存储 SPI（Result / JWT / Security / StorageService）
+├── ph-system        用户系统（登录 / 通知 / 布局 / 审计）
+└── ph-biz           业务合集
+                     · knowledge   笔记 / 日记 / 学习 / 阅读 / 标签 / 分类
+                     · planning    Todo / 学习计划
+                     · resource    收藏夹 / 文件 / 笔记附件
+                     · dashboard   统计 / 搜索 / 趋势聚合
 ```
 
 ### 前端 · 领域模块（Composition API）

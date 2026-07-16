@@ -68,16 +68,18 @@ Controller：校验+返回（构造器注入）｜Service：业务｜Mapper：`B
 
 ### Maven 多模块结构
 
-#### 当前结构（领域聚合，7+1）
+#### 当前结构（4 模块）
 
 ```
 personal-hub-server/
-├── pom.xml / ph-common / ph-system / ph-knowledge / ph-planning
-├── ph-resource / ph-dashboard / ph-storage / ph-boot
-└── ph-boot/resources/  # application.yml + -dev / -prod
+├── pom.xml
+├── ph-common    # 含 storage SPI（com.personalhub.storage）
+├── ph-system
+├── ph-biz       # knowledge / planning / resource / module.dashboard
+└── ph-boot      # resources: application.yml + -dev / -prod
 ```
 
-模块内：`controller/ dto/ entity/ mapper/ service/ vo/`。按领域聚合，不按表拆模块。
+模块内：`controller/ dto/ entity/ mapper/ service/ vo/`。Maven 不按每个业务拆 jar；细领域用 package。
 
 ---
 

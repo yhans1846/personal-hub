@@ -12,17 +12,17 @@ Personal Hub 后端 — Spring Boot 3 + Java 21 + MyBatis-Plus。
 - **文档**: SpringDoc OpenAPI 2.6（仅 dev 环境开启）
 - **构建**: Maven 3.8+
 
-## 领域模块（7+1）
+## 领域模块（4）
 
 ```
 ph-boot          # 启动入口（spring-boot-maven-plugin）
-ph-common        # 公共组件（Result / 异常处理 / JWT / Security 配置）
-ph-system        # 用户认证(JWT) / 个人信息 / 通知系统 / 布局配置 / 审计日志
-ph-knowledge     # 笔记 / 笔记回收站 / 只读预览 / 日记 / 学习记录 / 阅读记录 / 标签 / 分类
-ph-planning      # Todo / 学习计划
-ph-resource      # 收藏夹 / 文件管理 / 笔记资源
-ph-storage       # 文件存储引擎
-ph-dashboard     # Dashboard 聚合统计 + 全局搜索 + 趋势图
+ph-common        # 公共组件 + 存储 SPI（Result / 异常 / JWT / Security / StorageService）
+ph-system        # 用户认证(JWT) / 个人信息 / 通知 / 布局 / 审计
+ph-biz           # 业务合集
+                 #   knowledge  笔记 / 回收站 / 日记 / 学习 / 阅读 / 标签 / 分类
+                 #   planning   Todo / 学习计划
+                 #   resource   收藏夹 / 文件 / 笔记资源
+                 #   dashboard  聚合统计 / 全局搜索 / 趋势
 ```
 
 ## 环境配置

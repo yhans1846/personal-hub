@@ -16,7 +16,7 @@
 > 「最新」= 开发时正式版。Boot 3 需 JDK 17+，本项目 JDK 21。
 
 ### Maven 多模块
-父 POM 管版本；内部模块 `dependencyManagement`；仅 web/boot 打可执行 JAR；优先官方 starter。
+父 POM 管版本；模块为 `ph-common` / `ph-system` / `ph-biz` / `ph-boot`；`dependencyManagement` 管内部版本；仅 `ph-boot` 打可执行 JAR；优先官方 starter。
 
 ## 前端技术
 

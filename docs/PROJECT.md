@@ -26,19 +26,18 @@ personal-hub-server/ · personal-hub-web/ · sql/ · docs/ · README.md
 后端 ph-*                    前端 modules/
 ph-boot / ph-common          —
 ph-system                    system/
-ph-knowledge                 knowledge/ + category/
-ph-planning                  planning/
-ph-resource                  resource/
-ph-dashboard                 dashboard/ + search/
+ph-biz                       knowledge/ + planning/ + resource/
+                             + dashboard/ + search/ + category/
+  └ packages: knowledge, planning, resource, module.dashboard
 ```
 
 ### 划分原则
-按领域聚合｜跨模块走 Service｜Dashboard 只聚合不落业务库
+Maven 粗粒度（common / system / biz / boot）｜细领域用 Java package｜跨包优先走 Service｜Dashboard 只聚合不落业务库
 
 ## 依赖关系
 
 ```
-ph-system → ph-knowledge / ph-planning / ph-resource / ph-dashboard
+ph-common ← ph-system ← ph-biz ← ph-boot
 ```
 
 ## 项目原则
