@@ -45,3 +45,13 @@ export function updateStudyPlan(id: number, data: StudyPlanCreateDTO) {
 export function deleteStudyPlan(id: number) {
   return request.delete<Result<void>>(`/study-plans/${id}`)
 }
+/** 导出学习计划 XLSX；scope=filtered 带筛选，scope=all 全部；直接 blob 下载，不落盘 */
+export function exportStudyPlans(
+  scope: 'filtered' | 'all',
+  params?: Omit<StudyPlanQuery, 'page' | 'size'>,
+) {
+  return request.get('/study-plans/export', {
+    params: { scope, ...params },
+    responseType: 'blob',
+  })
+}

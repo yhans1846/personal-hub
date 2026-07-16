@@ -66,7 +66,19 @@
 ## 6. Header / 工具栏 / 统计
 
 PageHeader（共 N）+ 可选状态徽章（勿做成 KPI 大卡）  
-toolbar：搜索/筛选/排序/视图切换 | 新建（Plus）
+toolbar：搜索/筛选/排序/视图切换 | **导出 ▾**（可选）+ 新建（Plus）
+
+### 导出（可选）
+
+| 项 | 约定 |
+|----|------|
+| 入口 | 工具栏「新建」左侧 `el-dropdown` |
+| 菜单 | 导出当前（当前筛选）/ 导出全部（忽略筛选） |
+| 格式 | XLSX（Apache POI 内存生成，不落盘） |
+| API | `GET …/export?scope=filtered\|all` + 列表同款筛选参数（filtered） |
+| 前端 | `responseType: 'blob'` → `URL.createObjectURL` 触发下载 |
+
+参考：学习计划 `GET /api/study-plans/export`。
 
 ---
 

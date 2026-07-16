@@ -3,12 +3,12 @@ import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { PageHeader, EmptyState, ListPagination } from '@/components'
 import {
   getStudyPlanList, getStudyPlanStats, deleteStudyPlan,
-  createStudyPlan, updateStudyPlan,
+  createStudyPlan, updateStudyPlan, exportStudyPlans,
 } from '@/modules/planning/api'
 import { getTags } from '@/modules/knowledge/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
-  Target, Plus, MoreHorizontal, ExternalLink, LayoutList, LayoutGrid, Link2,
+  Target, Plus, MoreHorizontal, ExternalLink, LayoutList, LayoutGrid, Link2, Download,
 } from 'lucide-vue-next'
 import StudyPlanDialog from './StudyPlanDialog.vue'
 import type { StudyPlanVO, StudyPlanQuery, StudyPlanStats } from '@/types/studyplan'
@@ -104,6 +104,39 @@ function onPageChange(page: number) {
 function setView(mode: 'table' | 'card') {
   viewMode.value = mode
   localStorage.setItem(VIEW_KEY, mode)
+}
+
+const exporting = ref(false)
+
+async function handleExport(scope: 'filtered' | 'all') {
+  if (exporting.value) return
+  exporting.value = true
+  try {
+    const filters = scope === 'filtered'
+      ? {
+          keyword: query.value.keyword,
+          status: query.value.status,
+          tagId: query.value.tagId,
+          sortBy: query.value.sortBy,
+          sortDir: query.value.sortDir,
+        }
+      : undefined
+    const res = await exportStudyPlans(scope, filters)
+    const blob = new Blob([res.data], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = '学习计划.xlsx'
+    a.click()
+    URL.revokeObjectURL(url)
+    ElMessage.success(scope === 'all' ? '已导出全部计划' : '已导出当前筛选结果')
+  } catch {
+    ElMessage.error('导出失败')
+  } finally {
+    exporting.value = false
+  }
 }
 
 const statusOptions = [
@@ -293,9 +326,22 @@ const headerSubtitle = computed(() => `共 ${stats.value.total} 个计划`)
             </button>
           </div>
         </div>
-        <el-button type="primary" @click="openCreate">
-          <Plus :size="14" /> 新建计划
-        </el-button>
+        <div class="toolbar-actions">
+          <el-dropdown trigger="click" :disabled="exporting" @command="(cmd: string) => handleExport(cmd as 'filtered' | 'all')">
+            <el-button :loading="exporting">
+              <Download :size="14" /> 导出
+            </el-button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item command="filtered">导出当前</el-dropdown-item>
+                <el-dropdown-item command="all">导出全部</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+          <el-button type="primary" @click="openCreate">
+            <Plus :size="14" /> 新建计划
+          </el-button>
+        </div>
       </div>
     </div>
 
@@ -567,6 +613,11 @@ const headerSubtitle = computed(() => `共 ${stats.value.total} 个计划`)
   gap: 8px;
   flex-wrap: wrap;
   flex: 1;
+}
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 .search-input { width: 200px; }
 .filter-select { width: 120px; }

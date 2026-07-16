@@ -13,8 +13,14 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 /**
  * 学习计划控制器
@@ -43,6 +49,22 @@ public class StudyPlanController {
             @Parameter(hidden = true) Authentication authentication) {
         Long userId = Long.valueOf(authentication.getName());
         return Result.success(studyPlanService.stats(userId));
+    }
+
+    @Operation(summary = "导出 XLSX", description = "scope=filtered 带当前筛选；scope=all 导出全部。内存生成，不落盘。")
+    @GetMapping("/export")
+    public ResponseEntity<byte[]> export(
+            @Parameter(hidden = true) Authentication authentication,
+            @RequestParam(defaultValue = "filtered") String scope,
+            StudyPlanQueryDTO query) {
+        Long userId = Long.valueOf(authentication.getName());
+        byte[] xlsx = studyPlanService.exportXlsx(userId, query, scope);
+        String filename = URLEncoder.encode("学习计划.xlsx", StandardCharsets.UTF_8).replace("+", "%20");
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + filename)
+                .body(xlsx);
     }
 
     @Operation(summary = "计划详情")

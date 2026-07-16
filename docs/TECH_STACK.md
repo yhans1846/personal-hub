@@ -11,6 +11,7 @@
 | Redis | 5.x | localhost:6379 · DB 8 |
 | JWT / Lombok / Maven 3.8.5 | | |
 | SpringDoc OpenAPI | 2.6.0 | Swagger UI |
+| Apache POI | 5.3.0 | 学习计划等 xlsx 导出 |
 
 > 「最新」= 开发时正式版。Boot 3 需 JDK 17+，本项目 JDK 21。
 

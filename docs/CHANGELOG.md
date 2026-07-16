@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### 2026-07-16 学习计划 XLSX 导出
+- **入口**：工具栏「导出 ▾」（新建左侧）：导出当前 / 导出全部
+- **接口**：`GET /api/study-plans/export?scope=filtered|all`，Apache POI 内存生成 `.xlsx`，直接下载不落盘
+
 ### 2026-07-16 外观设置生效 + 内容区宽度
 - **修复**：圆角/动画/密度写入真实 CSS Token（`--radius-*` / `--transition` / `--sp-*`），刷新后仍生效
 - **内容区宽度**：滑条 50%–100%，默认 80%；拖动即时预览

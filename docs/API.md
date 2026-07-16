@@ -118,9 +118,11 @@ CRUD + `GET /dashboard?limit=`（默认 8，最大 20；`show_on_dashboard=1`）
 |------|------|------|
 | GET | /api/study-plans | 分页 |
 | GET | /api/study-plans/stats | `{total,pending,learning,done,paused}` |
+| GET | /api/study-plans/export | XLSX 导出（内存流，不落盘） |
 | GET/POST/PUT/DELETE | /api/study-plans[/{id}] | CRUD |
 
 **列表：** keyword(name/source/author/remark), status, tagId, sortBy(updatedAt 默认|createdAt|startDate|endDate|name), sortDir  
+**export：** `scope=filtered|all`（默认 filtered）；filtered 时带与列表相同的筛选/排序参数（不分页）；返回 `.xlsx` 附件；列：名称,分类,状态,进度,开始,结束,来源,作者,URL,备注,更新时间  
 **POST/PUT：** `{name,source,author,url,remark,progress,startDate,endDate,status,tagIds}`  
 状态：0 未开始 / 1 学习中 / 2 已完成 / 3 已暂停；分类靠 tagIds（`entity_type=study_plan`）  
 学习记录可用 `planId` 关联。

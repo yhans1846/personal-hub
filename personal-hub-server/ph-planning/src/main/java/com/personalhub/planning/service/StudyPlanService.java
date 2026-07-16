@@ -22,4 +22,14 @@ public interface StudyPlanService {
     StudyPlanVO update(Long id, Long userId, StudyPlanCreateDTO dto);
 
     void delete(Long id, Long userId);
+
+    /**
+     * 导出学习计划为 XLSX（内存生成，不落盘）
+     *
+     * @param userId 用户 ID
+     * @param query  查询条件（scope=filtered 时生效）
+     * @param scope  filtered=当前筛选 / all=全部
+     * @return XLSX 字节
+     */
+    byte[] exportXlsx(Long userId, StudyPlanQueryDTO query, String scope);
 }

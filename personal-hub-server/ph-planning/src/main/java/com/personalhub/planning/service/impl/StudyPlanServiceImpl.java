@@ -21,9 +21,18 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 学习计划服务实现
@@ -192,6 +201,95 @@ public class StudyPlanServiceImpl implements StudyPlanService {
         tagService.unbindAll(ENTITY_TYPE, id);
         studyPlanMapper.deleteById(id);
         log.info("删除学习计划: id={}, userId={}", id, userId);
+    }
+
+    @Override
+    public byte[] exportXlsx(Long userId, StudyPlanQueryDTO query, String scope) {
+        List<StudyPlanVO> rows = listForExport(userId, query, scope);
+        DateTimeFormatter dateFmt = DateTimeFormatter.ISO_LOCAL_DATE;
+        DateTimeFormatter dtFmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        String[] headers = {"名称", "分类", "状态", "进度", "开始", "结束", "来源", "作者", "URL", "备注", "更新时间"};
+        try (XSSFWorkbook workbook = new XSSFWorkbook();
+             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            Sheet sheet = workbook.createSheet("学习计划");
+            Row headerRow = sheet.createRow(0);
+            for (int i = 0; i < headers.length; i++) {
+                headerRow.createCell(i).setCellValue(headers[i]);
+            }
+            int r = 1;
+            for (StudyPlanVO vo : rows) {
+                String tags = vo.getTags() == null ? "" : vo.getTags().stream()
+                        .map(TagVO::getName)
+                        .collect(Collectors.joining("、"));
+                Row row = sheet.createRow(r++);
+                setCell(row, 0, vo.getName());
+                setCell(row, 1, tags);
+                setCell(row, 2, vo.getStatusLabel());
+                Cell progressCell = row.createCell(3);
+                progressCell.setCellValue(vo.getProgress() != null ? vo.getProgress() : 0);
+                setCell(row, 4, vo.getStartDate() != null ? vo.getStartDate().format(dateFmt) : "");
+                setCell(row, 5, vo.getEndDate() != null ? vo.getEndDate().format(dateFmt) : "");
+                setCell(row, 6, vo.getSource());
+                setCell(row, 7, vo.getAuthor());
+                setCell(row, 8, vo.getUrl());
+                setCell(row, 9, vo.getRemark());
+                setCell(row, 10, vo.getUpdatedAt() != null ? vo.getUpdatedAt().format(dtFmt) : "");
+            }
+            for (int i = 0; i < headers.length; i++) {
+                sheet.autoSizeColumn(i);
+            }
+            workbook.write(out);
+            log.info("导出学习计划 XLSX: userId={}, scope={}, rows={}", userId, scope, rows.size());
+            return out.toByteArray();
+        } catch (IOException e) {
+            throw new IllegalStateException("导出学习计划失败", e);
+        }
+    }
+
+    private static void setCell(Row row, int col, String value) {
+        row.createCell(col).setCellValue(value != null ? value : "");
+    }
+
+    /**
+     * 导出用列表（不分页）
+     */
+    private List<StudyPlanVO> listForExport(Long userId, StudyPlanQueryDTO query, String scope) {
+        LambdaQueryWrapper<StudyPlan> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(StudyPlan::getUserId, userId);
+        boolean filtered = !"all".equalsIgnoreCase(scope);
+        if (filtered && query != null) {
+            if (StringUtils.hasText(query.getKeyword())) {
+                String kw = query.getKeyword();
+                wrapper.and(w -> w.like(StudyPlan::getName, kw)
+                        .or().like(StudyPlan::getSource, kw)
+                        .or().like(StudyPlan::getAuthor, kw)
+                        .or().like(StudyPlan::getRemark, kw));
+            }
+            if (query.getStatus() != null) {
+                wrapper.eq(StudyPlan::getStatus, query.getStatus());
+            }
+            if (query.getTagId() != null) {
+                List<Long> ids = listEntityIdsByTag(query.getTagId());
+                if (ids.isEmpty()) {
+                    return Collections.emptyList();
+                }
+                wrapper.in(StudyPlan::getId, ids);
+            }
+            applySort(wrapper, query.getSortBy(), query.getSortDir());
+        } else {
+            wrapper.orderByDesc(StudyPlan::getUpdatedAt);
+        }
+        List<StudyPlan> plans = studyPlanMapper.selectList(wrapper);
+        if (plans.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<Long> planIds = plans.stream().map(StudyPlan::getId).toList();
+        Map<Long, List<TagVO>> tagsMap = tagService.getTagsMap(ENTITY_TYPE, planIds);
+        return plans.stream().map(plan -> {
+            StudyPlanVO vo = StudyPlanVO.from(plan);
+            vo.setTags(tagsMap.getOrDefault(plan.getId(), List.of()));
+            return vo;
+        }).toList();
     }
 
     /**
