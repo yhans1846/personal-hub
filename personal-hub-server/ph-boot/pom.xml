@@ -29,18 +29,6 @@
             <groupId>com.personalhub</groupId>
             <artifactId>ph-biz</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.personalhub</groupId>
-            <artifactId>ph-planning</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.personalhub</groupId>
-            <artifactId>ph-resource</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.personalhub</groupId>
-            <artifactId>ph-dashboard</artifactId>
-        </dependency>
 
         <!-- SpringDoc OpenAPI (Swagger) -->
         <dependency>

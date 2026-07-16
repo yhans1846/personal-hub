@@ -22,9 +22,6 @@
         <module>ph-common</module>
         <module>ph-system</module>
         <module>ph-biz</module>
-        <module>ph-planning</module>
-        <module>ph-resource</module>
-        <module>ph-dashboard</module>
         <module>ph-boot</module>
     </modules>
 
@@ -55,21 +52,6 @@
             <dependency>
                 <groupId>com.personalhub</groupId>
                 <artifactId>ph-biz</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.personalhub</groupId>
-                <artifactId>ph-planning</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.personalhub</groupId>
-                <artifactId>ph-resource</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.personalhub</groupId>
-                <artifactId>ph-dashboard</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
