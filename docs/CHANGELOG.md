@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### 2026-07-17 后端基础数据优化
+- **枚举**：ReadingStatus / DiaryMood / StudyPlanStatus / TodoPriority，VO label 统一 `labelOf`
+- **EntityGuard**：归属校验收口到 ph-common
+- **默认值**：ReadingRecord / StudyPlan / Category 字段初值，create 去掉散落 `?: 0`
+
 ### 2026-07-16 阅读记录 Product 列表改造
 - **列表**：Product Table/Card 切换、一屏铺满、PAGE_SIZE=10；卡片左侧小封面
 - **工具栏**：搜索 + 状态 + 排序 + 视图 + 导出 ▾ + 添加书籍（无 Header 统计徽章）

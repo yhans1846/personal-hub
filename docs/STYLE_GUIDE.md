@@ -35,6 +35,12 @@
 - 过滤器认证 `log.debug`
 - 落盘：`ph-boot/.../logback-spring.xml` 按天滚动 30 天；`LOG_PATH` / `logging.file.path`
 
+#### 4. 状态码文案用模块枚举
+有固定 int 码表的字段（阅读状态、日记心情、计划状态、待办优先级）使用模块 `enums` 包枚举，VO 标签用 `XxxEnum.labelOf(code)`，禁止在 VO/Service 内嵌业务 switch。
+
+#### 5. 归属校验用 EntityGuard
+`selectById` 后校验「存在且属于当前用户」统一调用 `EntityGuard.requireOwned(entity, userId, Entity::getUserId, "xxx不存在")`，禁止手写 null + userId 判断（笔记回收站等额外条件可在 Guard 之后追加）。
+
 ### 命名
 | 类型 | 规则 | 示例 |
 |------|------|------|
