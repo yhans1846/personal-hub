@@ -139,6 +139,16 @@ export function updateReading(id: number, data: ReadingCreateDTO) {
 export function deleteReading(id: number) {
   return request.delete<Result<void>>(`/readings/${id}`)
 }
+/** 导出阅读记录 XLSX；scope=filtered 带筛选，scope=all 全部；直接 blob 下载，不落盘 */
+export function exportReadings(
+  scope: 'filtered' | 'all',
+  params?: Omit<ReadingQuery, 'page' | 'size'>,
+) {
+  return request.get('/readings/export', {
+    params: { scope, ...params },
+    responseType: 'blob',
+  })
+}
 
 // ====== 标签 ======
 export function getTags() {

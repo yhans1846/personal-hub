@@ -128,7 +128,14 @@ CRUD + `GET /dashboard?limit=`（默认 8，最大 20；`show_on_dashboard=1`）
 学习记录可用 `planId` 关联。
 
 ### 十四、阅读记录 `/api/readings`
-CRUD。列表：page,size,keyword,status  
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | /api/readings | 分页 |
+| GET | /api/readings/export | XLSX 导出（内存流，不落盘） |
+| GET/POST/PUT/DELETE | /api/readings[/{id}] | CRUD |
+
+列表：page,size,keyword(书名/作者),status, sortBy(updatedAt 默认\|createdAt\|progress\|startDate\|bookTitle), sortDir  
+**export：** `scope=filtered|all`（默认 filtered）；filtered 时带列表同款筛选/排序（不分页）；列：书名,作者,状态,进度,当前章,总章,评分,时长(分),开始,结束,备注,更新时间  
 **POST：** `{bookTitle,author,totalChapters,currentChapter,progress,status,notes}`
 
 ---

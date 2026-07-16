@@ -36,5 +36,7 @@ export interface ReadingQuery {
   page?: number
   size?: number
   keyword?: string
-  status?: number
+  status?: number | ''
+  sortBy?: string
+  sortDir?: 'asc' | 'desc'
 }

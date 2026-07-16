@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### 2026-07-16 阅读记录 Product 列表改造
+- **列表**：Product Table/Card 切换、一屏铺满、PAGE_SIZE=10；卡片左侧小封面
+- **工具栏**：搜索 + 状态 + 排序 + 视图 + 导出 ▾ + 添加书籍（无 Header 统计徽章）
+- **导出**：`GET /api/readings/export?scope=filtered|all`，XLSX 内存流不落盘
+- **排序**：`sortBy`/`sortDir`（默认 updatedAt desc）
+
 ### 2026-07-16 学习计划 XLSX 导出
 - **入口**：工具栏「导出 ▾」（新建左侧）：导出当前 / 导出全部
 - **接口**：`GET /api/study-plans/export?scope=filtered|all`，Apache POI 内存生成 `.xlsx`，直接下载不落盘
