@@ -1,6 +1,7 @@
 package com.personalhub.knowledge.vo;
 
 import com.personalhub.knowledge.entity.DiaryEntry;
+import com.personalhub.knowledge.enums.DiaryMood;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -73,17 +74,7 @@ public class DiaryVO {
             vo.setContentSummary(plain.length() > 100 ? plain.substring(0, 100) + "..." : plain);
         }
 
-        // 心情标签
-        if (entry.getMood() != null) {
-            vo.setMoodLabel(switch (entry.getMood()) {
-                case 1 -> "很好";
-                case 2 -> "好";
-                case 3 -> "一般";
-                case 4 -> "不好";
-                case 5 -> "很差";
-                default -> "未知";
-            });
-        }
+        vo.setMoodLabel(DiaryMood.labelOf(entry.getMood()));
         return vo;
     }
 }

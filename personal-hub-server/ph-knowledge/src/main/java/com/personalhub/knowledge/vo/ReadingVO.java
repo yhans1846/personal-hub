@@ -1,6 +1,7 @@
 package com.personalhub.knowledge.vo;
 
 import com.personalhub.knowledge.entity.ReadingRecord;
+import com.personalhub.knowledge.enums.ReadingStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import java.time.LocalDate;
@@ -35,9 +36,7 @@ public class ReadingVO {
         vo.setStatus(r.getStatus()); vo.setNotes(r.getNotes());
         vo.setStartDate(r.getStartDate()); vo.setEndDate(r.getEndDate());
         vo.setCreatedAt(r.getCreatedAt()); vo.setUpdatedAt(r.getUpdatedAt());
-        if (r.getStatus() != null) vo.setStatusLabel(switch (r.getStatus()) {
-            case 0 -> "未读"; case 1 -> "在读"; case 2 -> "读完"; default -> "未知";
-        });
+        vo.setStatusLabel(ReadingStatus.labelOf(r.getStatus()));
         return vo;
     }
 }
