@@ -16,6 +16,8 @@
 | DATABASE.md | 表结构、ER、索引 |
 | API.md | RESTful 接口定义 |
 | STYLE_GUIDE.md | 编码规范 + UI 设计系统 + 共享组件（必读） |
+| LIST_PAGE_SPEC.md | Product 列表页（Table/Card）开发规范 |
+| PREVIEW_PAGE_SPEC.md | 笔记预览页开发规范 |
 | CHANGELOG.md | 版本变更记录 |
 | qa/CURSOR_BROWSER_TESTING.md | Cursor 浏览器巡检方法（Browser MCP + Playwright + 日志） |
 

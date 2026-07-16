@@ -4,69 +4,48 @@
 个人知识管理系统，Spring Boot 3 + Vue 3 前后端分离。
 
 ## 设计理念
-> **Notion 的简洁 + Linear 的精致 + Raycast 的现代感 + Apple 的克制**
+> Notion 简洁 + Linear 精致 + Raycast 现代 + Apple 克制  
 
-不是企业后台，是长期陪伴的知识空间。简洁、专注、温暖、高级。详见 `STYLE_GUIDE.md`。
+非企业后台。详见 `STYLE_GUIDE.md`。
 
 ## 架构
 
 ```
-Vue 3 + Vite + TS → Axios → RESTful → Spring Boot 3 → MyBatis-Plus → MySQL
+Vue 3 + Vite + TS → Axios → REST → Spring Boot 3 → MyBatis-Plus → MySQL
 ```
 
 ## 目录
 
 ```
-personal-hub
-├── personal-hub-server/   # 后端（领域模块）
-├── personal-hub-web/      # 前端（modules/）
-├── sql/                   # init.sql
-├── docs/                  # 项目文档
-└── README.md
+personal-hub-server/ · personal-hub-web/ · sql/ · docs/ · README.md
 ```
 
 ## 领域模块设计
 
 ```
-后端 (ph-*)                       前端 (src/modules/)
-──────────────────────────────────────────────────
-ph-boot       # 启动入口
-ph-common     # 公共能力            —
-ph-system     # 用户/认证/通知/审计  system/
-ph-knowledge  # 笔记/日记/学习/      knowledge/
-              # 阅读/标签/分类       category/
-ph-planning   # Todo/学习计划       planning/
-ph-resource   # 收藏夹/文件         resource/
-ph-dashboard  # 聚合查询/全局搜索   dashboard/
-              —                     search/
+后端 ph-*                    前端 modules/
+ph-boot / ph-common          —
+ph-system                    system/
+ph-knowledge                 knowledge/ + category/
+ph-planning                  planning/
+ph-resource                  resource/
+ph-dashboard                 dashboard/ + search/
 ```
 
 ### 划分原则
-- **按领域聚合，不按表划分** — 避免数据库思维
-- **跨模块引用** — 通过 Service 调用，不直接依赖 Entity
-- **Dashboard 仅聚合** — 不保存业务数据
+按领域聚合｜跨模块走 Service｜Dashboard 只聚合不落业务库
 
 ## 依赖关系
 
 ```
-ph-system ─┬─ ph-knowledge
-           ├─ ph-planning
-           ├─ ph-resource
-           └─ ph-dashboard（聚合查询）
+ph-system → ph-knowledge / ph-planning / ph-resource / ph-dashboard
 ```
 
 ## 项目原则
 
-1. 可读性优先 — 代码是人读的
-2. 统一命名/结构 — 降低心智负担
-3. 按领域组织 — 前后端统一领域模型
-4. 不重复代码 — 公共能力沉淀到 common
-5. 不随意加依赖 — 评估体积和必要性
-6. 前后端命名一致 — API/模块/模型对齐
-7. 接口风格统一 — RESTful + Result/PageResult
-8. 数据库设计一致 — 主键/时间/逻辑删除/索引
-9. 纯函数优先 — 无副作用逻辑方便测试和复用
-10. 改代码先改文档
+1. 可读性优先 2. 命名/结构统一 3. 领域对齐 4. 公共沉 common  
+5. 慎加依赖 6. 前后端命名一致 7. RESTful + Result 8. 表设计一致  
+9. 纯函数优先 10. 改代码先改文档
 
 ---
 
@@ -74,41 +53,22 @@ ph-system ─┬─ ph-knowledge
 
 ## 已完成 ✅
 
-| 阶段 | 内容 | 状态 |
-|------|------|------|
-| 一 | 用户认证、笔记、学习记录、待办、文件管理 | ✅ |
-| 二 | 日记、收藏夹、学习计划、阅读记录 | ✅ |
-| 三 | Dashboard、数据统计、全局搜索、统一标签 | ✅ |
-| 四 | UI 优化、功能增强、通知系统 | ✅ |
-| 五 | 工作台自定义布局 | ✅ |
-| 六 | CRUD UI 优化（Ui 组件库 + Dialog/Drawer）+ 分类合并（category 表） | ✅ |
-| 七 | 代码清理（死代码删除）+ 配置文件分层（dev/prod） | ✅ |
-| 八 | 笔记回收站改造 + 统一审计日志 | ✅ |
-| 九 | 预览页阅读体验优化 | ✅ |
-| 十 | 笔记编辑器 UI 重构（沉浸式编辑/自动保存/预览/专注模式） | ✅ |
-| 十一 | 阅读配置系统设置化 + 图片比例可调 + JWT token query 参数 | ✅ |
-| 十二 | 统一编辑 Dialog 设计（三段布局 + 内容优先 + Drawer→Dialog + 无 Label） | ✅ |
-| 十三 | 统计页面 V4：7 统计模块 + 5 种图表 + 可配置显隐排序 + 时间范围过滤 | ✅ |
-| 十四 | 个人资料模块 + 待办重构 + 外观扩展 | ✅ |
-| 十五 | 沉浸式创作模式（Focus Mode）：全屏/实时预览/滚动同步/阅读模式/Focus Mode/状态栏增强/状态记忆 | ✅ |
-| 十六 | 部署基线 + 正确性/性能/安全优化（回收站清理、密钥、JWT、N+1、excerpt、Redis 缓存、限流、Actuator） | ✅ |
-| 十七 | WYSIWYG 编辑器重构（md-editor-v3 → Vditor IR + 右键菜单 + 39 项格式操作 + 列表/回收站 UI 统一） | ✅ |
+| 阶段 | 内容 |
+|------|------|
+| 一–三 | 认证/笔记/学习/待办/文件；日记/收藏/计划/阅读；Dashboard/统计/搜索/标签 |
+| 四–六 | UI/通知；工作台布局；Ui 组件 + Dialog + 统一 category |
+| 七–九 | 配置分层；回收站+审计；预览阅读体验 |
+| 十–十二 | 编辑器 UI；阅读配置进设置+JWT query；统一 Dialog；统计 V4 |
+| 十三–十五 | Profile+待办+外观；Focus Mode |
+| 十六–十七 | 部署/安全/性能；Vditor WYSIWYG |
 
 ## 后续可扩展
 
-| 功能 | 优先级 | 说明 |
-|------|--------|------|
-| AI 笔记总结/问答 | 低 | 接入大模型，编辑器内 AI 助手（总结/润色/翻译/问答） |
-| OCR 图片识别 | 低 | 文字提取 |
-| PDF 在线预览 | 中 | 浏览器端 |
-| MD 导出 PDF/HTML | 中 | |
-| 数据备份 | 中 | 定时备份 |
-| WebDAV 同步 | 低 | 文件同步 |
-| Docker 部署 | — | ✅ 见 `docs/DEPLOYMENT.md` |
-| Mermaid/PlantUML 图表 | 低 | 编辑器内渲染 UML 和流程图 |
-| 数学公式 KaTeX | 低 | 行内/块级公式渲染 |
-| 双向链接（Backlink） | 低 | 笔记间引用关系 |
-| 附件管理 | 低 | 笔记内附件上传与预览 |
+| 功能 | 优先级 |
+|------|--------|
+| AI 总结/问答 · OCR · 双向链接 · 附件 · Mermaid/KaTeX | 低 |
+| PDF 预览 · MD 导出 · 数据备份 | 中 |
+| Docker 部署 | ✅ 见 DEPLOYMENT.md |
 
 ---
 
@@ -116,28 +76,12 @@ ph-system ─┬─ ph-knowledge
 
 | 步骤 | 内容 | 阶段 |
 |------|------|------|
-| 1-4 | 后端/前端脚手架 + 数据库初始化 + Swagger | 一 |
-| 5-6 | Markdown 笔记 + 学习记录 | 一 |
-| 7 | Maven 多模块拆分 | 一 |
-| 8 | 代码质量统一（PageParam + ResultCode + @Slf4j） | 一 |
-| 9-10 | Todo 模块 + 文件管理 | 一 |
-| 11-12 | 日记 + 收藏夹 | 二 |
-| 13-14 | 学习计划 + 阅读记录 | 二 |
-| 15 | 统一标签系统（ph-tag + tag/tag_rel 表） | 三 |
-| 16-18 | Dashboard + 趋势图（ECharts）+ 全局搜索 | 三 |
-| 19 | 通知系统（sys_notification） | 四 |
-| 20-21 | UI 优化（设计令牌/侧边栏/共享组件/Command Palette）+ 功能增强 | 四 |
-| 22 | 工作台自定义布局（user_layout + 数据驱动 + 设置页） | 五 |
-| 22b | 工作台 Bento 六宫格（今日/快捷/外部快捷/最近列表；收藏夹首页开关；趋势与 KPI 在统计页） | 五 |
-| 23-24 | CRUD UI 优化（Ui 组件库 + Dialog/Drawer）+ 分类系统合并 | 六 |
-| 25-27 | 代码清理 + 配置分层（dev/prod）+ Swagger 修复 | 七 |
-| 28 | 笔记回收站改造 + 审计日志（deleted_at/audit_log/预览/回收站重构） | 八 |
-| 29 | 预览页阅读体验重构（DocLayout + markdown-prose + 阅读设置 + 主题 + 目录导航） | 九 |
-| 30 | 阅读配置迁移到系统设置页 + 图片比例可调 + JWT token query 参数 + 旧代码清理 | 十一 |
-| 31 | 统一所有编辑 Dialog 设计（三段布局 + 内容优先 + Drawer→Dialog 迁移 + 无 Label） | 十一 |
-| 32 | 统计页面 V4 全面重写：7 统计模块（KPI/面积图/柱状图/环图/排行/时间线/洞察）+ 5 种图表类型 | 十二 |
-| 33 | 统计卡片配置化：拖拽排序 + 显隐控制 + 时间选择器全卡片生效（3/7/15/30/90 天） | 十二 |
-| 34 | 个人资料模块（Profile）：UserController + sys_user 扩展 10 字段 + 头像上传 + ProfileDrawer 左侧抽屉 | 十三 |
-| 35 | 待办任务重构：Tab 分组导航 + 信息卡片布局 + 截止日期相对时间徽章 + completed_at 字段 | 十三 |
-| 36 | 外观设置：强调色 5→9 种（新增粉色/红色/teal/靛蓝）| 十三 |
-| 37 | 沉浸式创作模式（Focus Mode）：全屏/实时预览/分栏拖拽/滚动同步/阅读模式/Focus Mode/状态栏增强/Editor Header 重构/状态记忆 | 十五 |
+| 1–10 | 脚手架/DB/Swagger；笔记/学习；多模块；质量统一；Todo/文件 | 一 |
+| 11–14 | 日记/收藏；计划/阅读 | 二 |
+| 15–18 | 统一标签；Dashboard/趋势/搜索 | 三 |
+| 19–21 | 通知；UI/功能增强 | 四 |
+| 22–22b | 工作台布局；Bento 六宫格+外部快捷 | 五 |
+| 23–27 | CRUD Ui+分类合并；清理/配置/Swagger | 六–七 |
+| 28–30 | 回收站+审计；预览体验；阅读配置+JWT query | 八–十一 |
+| 31–36 | 统一 Dialog；统计 V4；Profile/待办/外观 | 十一–十三 |
+| 37 | Focus Mode | 十五 |
