@@ -63,14 +63,15 @@ public class StudyRecordServiceImpl implements StudyRecordService {
 
     @Override
     public StudyRecordVO create(Long userId, StudyRecordCreateDTO dto) {
-        StudyRecord record = new StudyRecord();
-        record.setUserId(userId);
-        record.setSubject(dto.getSubject());
-        record.setDate(dto.getDate());
-        record.setDuration(dto.getDuration());
-        record.setContent(dto.getContent());
-        record.setReflection(dto.getReflection());
-        record.setPlanId(dto.getPlanId());
+        var record = StudyRecord.builder()
+                .userId(userId)
+                .subject(dto.getSubject())
+                .date(dto.getDate())
+                .duration(dto.getDuration())
+                .content(dto.getContent())
+                .reflection(dto.getReflection())
+                .planId(dto.getPlanId())
+                .build();
         mapper.insert(record);
         log.info("新建学习记录: id={}, userId={}, subject={}", record.getId(), userId, dto.getSubject());
         return StudyRecordVO.from(record);

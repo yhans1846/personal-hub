@@ -118,14 +118,15 @@ public class BookmarkUrlServiceImpl implements BookmarkUrlService {
     @Override
     @Transactional
     public BookmarkVO create(Long userId, BookmarkCreateDTO dto) {
-        BookmarkUrl url = new BookmarkUrl();
-        url.setUserId(userId);
-        url.setTitle(dto.getTitle());
-        url.setUrl(dto.getUrl());
-        url.setDescription(dto.getDescription());
-        url.setFavicon(dto.getFavicon());
-        url.setCategoryId(dto.getCategoryId());
-        url.setShowOnDashboard(dto.getShowOnDashboard() != null && dto.getShowOnDashboard() == 1 ? 1 : 0);
+        var url = BookmarkUrl.builder()
+                .userId(userId)
+                .title(dto.getTitle())
+                .url(dto.getUrl())
+                .description(dto.getDescription())
+                .favicon(dto.getFavicon())
+                .categoryId(dto.getCategoryId())
+                .showOnDashboard(dto.getShowOnDashboard() != null && dto.getShowOnDashboard() == 1 ? 1 : 0)
+                .build();
         bookmarkUrlMapper.insert(url);
         log.info("新建收藏: id={}, userId={}, title={}", url.getId(), userId, dto.getTitle());
 

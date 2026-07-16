@@ -45,10 +45,11 @@ public class UserLayoutServiceImpl implements UserLayoutService {
             userLayoutMapper.updateById(existing);
             log.info("更新布局配置: userId={}, type={}", userId, layoutType);
         } else {
-            UserLayout entity = new UserLayout();
-            entity.setUserId(userId);
-            entity.setLayoutType(layoutType);
-            entity.setLayoutJson(layoutJson);
+            var entity = UserLayout.builder()
+                    .userId(userId)
+                    .layoutType(layoutType)
+                    .layoutJson(layoutJson)
+                    .build();
             userLayoutMapper.insert(entity);
             log.info("创建布局配置: userId={}, type={}", userId, layoutType);
         }

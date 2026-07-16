@@ -1,12 +1,18 @@
 package com.personalhub.resource.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 /** 文件资源实体 */
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @TableName("file_resource")
 public class FileResource {
     /** 主键 */

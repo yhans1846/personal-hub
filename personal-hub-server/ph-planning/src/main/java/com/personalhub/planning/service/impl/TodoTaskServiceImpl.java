@@ -65,12 +65,13 @@ public class TodoTaskServiceImpl implements TodoTaskService {
     @Override
     @Transactional
     public TodoVO create(Long userId, TodoCreateDTO dto) {
-        TodoTask task = new TodoTask();
-        task.setUserId(userId);
-        task.setTitle(dto.getTitle());
-        task.setContent(dto.getContent());
-        task.setPriority(dto.getPriority() != null ? dto.getPriority() : 2);
-        task.setDueDate(dto.getDueDate());
+        var task = TodoTask.builder()
+                .userId(userId)
+                .title(dto.getTitle())
+                .content(dto.getContent())
+                .priority(dto.getPriority() != null ? dto.getPriority() : 2)
+                .dueDate(dto.getDueDate())
+                .build();
         todoTaskMapper.insert(task);
         log.info("新建待办任务: id={}, userId={}, title={}", task.getId(), userId, dto.getTitle());
         return TodoVO.from(task);

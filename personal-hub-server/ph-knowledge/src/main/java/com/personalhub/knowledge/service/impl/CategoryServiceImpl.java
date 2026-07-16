@@ -65,10 +65,11 @@ public class CategoryServiceImpl implements CategoryService {
             throw new BusinessException("分类名称已存在");
         }
 
-        Category category = new Category();
-        category.setUserId(userId);
-        category.setName(dto.getName());
-        category.setType(dto.getType());
+        var category = Category.builder()
+                .userId(userId)
+                .name(dto.getName())
+                .type(dto.getType())
+                .build();
         if (dto.getSortOrder() != null) {
             category.setSortOrder(dto.getSortOrder());
         }

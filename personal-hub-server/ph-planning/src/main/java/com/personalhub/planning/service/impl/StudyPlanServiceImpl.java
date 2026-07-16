@@ -161,9 +161,22 @@ public class StudyPlanServiceImpl implements StudyPlanService {
     @Override
     @Transactional
     public StudyPlanVO create(Long userId, StudyPlanCreateDTO dto) {
-        StudyPlan plan = new StudyPlan();
-        plan.setUserId(userId);
-        applyDto(plan, dto);
+        var plan = StudyPlan.builder()
+                .userId(userId)
+                .name(dto.getName())
+                .source(dto.getSource())
+                .author(dto.getAuthor())
+                .url(dto.getUrl())
+                .remark(dto.getRemark())
+                .startDate(dto.getStartDate())
+                .endDate(dto.getEndDate())
+                .build();
+        if (dto.getProgress() != null) {
+            plan.setProgress(dto.getProgress());
+        }
+        if (dto.getStatus() != null) {
+            plan.setStatus(dto.getStatus());
+        }
         studyPlanMapper.insert(plan);
         if (dto.getTagIds() != null && !dto.getTagIds().isEmpty()) {
             tagService.bindTags(plan.getId(), ENTITY_TYPE, dto.getTagIds());

@@ -1,7 +1,10 @@
 package com.personalhub.knowledge.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
@@ -9,6 +12,9 @@ import java.time.LocalDateTime;
  * 统一分类实体
  */
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @TableName("category")
 public class Category {
 
@@ -26,6 +32,7 @@ public class Category {
     private String type;
 
     /** 排序 */
+    @Builder.Default
     private Integer sortOrder = 0;
 
     /** 创建时间 */

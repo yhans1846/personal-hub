@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### 2026-07-17 Entity @Builder 改造
+- **Entity**：统一 `@Data` + `@Builder` + `@NoArgsConstructor` + `@AllArgsConstructor`；初值字段加 `@Builder.Default`
+- **create**：Service 新建改为 `Xxx.builder()…build()`；update / VO 不变
+
 ### 2026-07-17 后端基础数据优化
 - **枚举**：ReadingStatus / DiaryMood / StudyPlanStatus / TodoPriority，VO label 统一 `labelOf`
 - **EntityGuard**：归属校验收口到 ph-common

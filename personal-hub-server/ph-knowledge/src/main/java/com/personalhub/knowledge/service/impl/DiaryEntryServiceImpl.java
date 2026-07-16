@@ -97,15 +97,16 @@ public class DiaryEntryServiceImpl implements DiaryEntryService {
     @Override
     @Transactional
     public DiaryVO create(Long userId, DiaryCreateDTO dto) {
-        DiaryEntry entry = new DiaryEntry();
-        entry.setUserId(userId);
-        entry.setDate(dto.getDate() != null ? dto.getDate() : LocalDate.now());
-        entry.setTitle(dto.getTitle());
-        entry.setContent(dto.getContent());
-        entry.setMood(dto.getMood());
-        entry.setWeather(dto.getWeather());
-        entry.setLocation(dto.getLocation());
-        entry.setImageFileId(dto.getImageFileId());
+        var entry = DiaryEntry.builder()
+                .userId(userId)
+                .date(dto.getDate() != null ? dto.getDate() : LocalDate.now())
+                .title(dto.getTitle())
+                .content(dto.getContent())
+                .mood(dto.getMood())
+                .weather(dto.getWeather())
+                .location(dto.getLocation())
+                .imageFileId(dto.getImageFileId())
+                .build();
         diaryEntryMapper.insert(entry);
         log.info("新建日记: id={}, userId={}, date={}", entry.getId(), userId, entry.getDate());
         return DiaryVO.from(entry);

@@ -41,6 +41,11 @@
 #### 5. 归属校验用 EntityGuard
 `selectById` 后校验「存在且属于当前用户」统一调用 `EntityGuard.requireOwned(entity, userId, Entity::getUserId, "xxx不存在")`，禁止手写 null + userId 判断（笔记回收站等额外条件可在 Guard 之后追加）。
 
+#### 6. Entity 用 Lombok 四件套 + create 用 Builder
+Entity：`@Data` + `@Builder` + `@NoArgsConstructor` + `@AllArgsConstructor`（保证 MyBatis 无参）。有字段初值时加 `@Builder.Default`。  
+Service **create** 优先 `Xxx.builder()…build()`；「DTO 为 null 则保留默认」的字段不要放进 builder 链，build 后再条件 `set`。  
+**update** 继续用 setter。VO **不强制** `@Builder`，可用静态 `from`。
+
 ### 命名
 | 类型 | 规则 | 示例 |
 |------|------|------|
@@ -59,7 +64,7 @@ Controller：校验+返回（构造器注入）｜Service：业务｜Mapper：`B
 - **复杂 SQL**（联表/聚合/动态条件）→ `mapper.xml`（`resources/mapper/`），禁止 Service 拼 SQL
 
 ### 时间 & Lombok
-`LocalDateTime`｜`@Data`(Entity/DTO/VO)｜`@RequiredArgsConstructor`(Controller/Service)
+`LocalDateTime`｜Entity 四件套见 §6｜DTO/VO `@Data`｜`@RequiredArgsConstructor`(Controller/Service)
 
 ### Maven 多模块结构
 

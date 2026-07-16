@@ -1,11 +1,17 @@
 package com.personalhub.knowledge.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @TableName("reading_record")
 public class ReadingRecord {
     @TableId(type = IdType.AUTO) private Long id;
@@ -13,12 +19,12 @@ public class ReadingRecord {
     private String bookTitle;
     private String author;
     private String coverUrl;
-    private Integer totalChapters = 0;
-    private Integer currentChapter = 0;
-    private Integer progress = 0;
+    @Builder.Default private Integer totalChapters = 0;
+    @Builder.Default private Integer currentChapter = 0;
+    @Builder.Default private Integer progress = 0;
     private Integer rating;
     private Integer totalDuration;
-    private Integer status = 0;
+    @Builder.Default private Integer status = 0;
     private String notes;
     private LocalDate startDate;
     private LocalDate endDate;

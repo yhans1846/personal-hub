@@ -19,12 +19,13 @@ public class AuditLogServiceImpl implements AuditLogService {
 
     @Override
     public void log(String module, Long businessId, String action, String content, Long operatorId) {
-        AuditLog auditLog = new AuditLog();
-        auditLog.setModule(module);
-        auditLog.setBusinessId(businessId);
-        auditLog.setAction(action);
-        auditLog.setContent(content);
-        auditLog.setOperatorId(operatorId);
+        var auditLog = AuditLog.builder()
+                .module(module)
+                .businessId(businessId)
+                .action(action)
+                .content(content)
+                .operatorId(operatorId)
+                .build();
         auditLogMapper.insert(auditLog);
         log.info("审计日志: module={}, businessId={}, action={}, content={}, operatorId={}",
                 module, businessId, action, content, operatorId);

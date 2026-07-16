@@ -75,15 +75,16 @@ public class NotificationServiceImpl implements NotificationService {
     @Transactional
     public void create(Long userId, String type, String title, String content,
                        Long relatedId, String relatedType) {
-        Notification n = new Notification();
-        n.setUserId(userId);
-        n.setType(type);
-        n.setTitle(title);
-        n.setContent(content);
-        n.setIsRead(0);
-        n.setIsDismissed(0);
-        n.setRelatedId(relatedId);
-        n.setRelatedType(relatedType);
+        var n = Notification.builder()
+                .userId(userId)
+                .type(type)
+                .title(title)
+                .content(content)
+                .isRead(0)
+                .isDismissed(0)
+                .relatedId(relatedId)
+                .relatedType(relatedType)
+                .build();
         notificationMapper.insert(n);
         log.info("生成通知: userId={}, type={}, title={}", userId, type, title);
     }

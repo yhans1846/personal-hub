@@ -67,10 +67,11 @@ public class TagServiceImpl implements TagService {
             throw new BusinessException("标签名称已存在");
         }
 
-        Tag tag = new Tag();
-        tag.setUserId(userId);
-        tag.setName(name);
-        tag.setColor(color != null ? color : "#409eff");
+        var tag = Tag.builder()
+                .userId(userId)
+                .name(name)
+                .color(color != null ? color : "#409eff")
+                .build();
         tagMapper.insert(tag);
         log.info("创建标签: id={}, userId={}, name={}", tag.getId(), userId, name);
         return TagVO.from(tag);

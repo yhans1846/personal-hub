@@ -72,10 +72,11 @@ public class NoteServiceImpl implements NoteService {
     @Transactional
     @CacheEvict(cacheNames = "categories", allEntries = true)
     public NoteVO create(Long userId, NoteCreateDTO dto) {
-        Note note = new Note();
-        note.setUserId(userId);
-        note.setTitle(dto.getTitle());
-        note.setExcerpt(buildExcerpt(dto.getContent()));
+        var note = Note.builder()
+                .userId(userId)
+                .title(dto.getTitle())
+                .excerpt(buildExcerpt(dto.getContent()))
+                .build();
         noteMapper.insert(note);
         log.info("新建笔记: id={}, userId={}, title={}", note.getId(), userId, dto.getTitle());
 

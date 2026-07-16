@@ -48,11 +48,17 @@ public class ReadingRecordServiceImpl implements ReadingRecordService {
     @Override
     @Transactional
     public ReadingVO create(Long userId, ReadingCreateDTO dto) {
-        var r = new ReadingRecord();
-        r.setUserId(userId);
-        r.setBookTitle(dto.getBookTitle());
-        r.setAuthor(dto.getAuthor());
-        r.setCoverUrl(dto.getCoverUrl());
+        var r = ReadingRecord.builder()
+                .userId(userId)
+                .bookTitle(dto.getBookTitle())
+                .author(dto.getAuthor())
+                .coverUrl(dto.getCoverUrl())
+                .rating(dto.getRating())
+                .totalDuration(dto.getTotalDuration())
+                .notes(dto.getNotes())
+                .startDate(dto.getStartDate())
+                .endDate(dto.getEndDate())
+                .build();
         if (dto.getTotalChapters() != null) {
             r.setTotalChapters(dto.getTotalChapters());
         }
@@ -62,14 +68,9 @@ public class ReadingRecordServiceImpl implements ReadingRecordService {
         if (dto.getProgress() != null) {
             r.setProgress(dto.getProgress());
         }
-        r.setRating(dto.getRating());
-        r.setTotalDuration(dto.getTotalDuration());
         if (dto.getStatus() != null) {
             r.setStatus(dto.getStatus());
         }
-        r.setNotes(dto.getNotes());
-        r.setStartDate(dto.getStartDate());
-        r.setEndDate(dto.getEndDate());
         mapper.insert(r);
         log.info("新建阅读记录: id={}, book={}", r.getId(), dto.getBookTitle());
         return ReadingVO.from(r);

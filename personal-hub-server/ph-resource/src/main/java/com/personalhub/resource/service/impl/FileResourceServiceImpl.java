@@ -125,16 +125,17 @@ public class FileResourceServiceImpl implements FileResourceService {
         storageService.store(multipartFile, relativePath);
 
         // 保存DB记录
-        FileResource file = new FileResource();
-        file.setUserId(userId);
-        file.setName(originalName);
-        file.setStoredName(storedName);
-        file.setPath(relativePath);
-        file.setSize(multipartFile.getSize());
-        file.setType(ext);
-        file.setMimeType(multipartFile.getContentType());
-        file.setCategoryId(categoryId);
-        file.setSource("upload");
+        var file = FileResource.builder()
+                .userId(userId)
+                .name(originalName)
+                .storedName(storedName)
+                .path(relativePath)
+                .size(multipartFile.getSize())
+                .type(ext)
+                .mimeType(multipartFile.getContentType())
+                .categoryId(categoryId)
+                .source("upload")
+                .build();
         fileResourceMapper.insert(file);
 
         log.info("文件上传成功: id={}, userId={}, name={}", file.getId(), userId, originalName);
