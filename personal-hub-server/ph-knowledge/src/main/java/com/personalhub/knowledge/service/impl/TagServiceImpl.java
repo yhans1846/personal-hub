@@ -3,6 +3,7 @@ package com.personalhub.knowledge.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.personalhub.common.exception.BusinessException;
 import com.personalhub.common.exception.NotFoundException;
+import com.personalhub.common.util.EntityGuard;
 import com.personalhub.knowledge.entity.Tag;
 import com.personalhub.knowledge.entity.TagRel;
 import com.personalhub.knowledge.mapper.TagMapper;
@@ -78,10 +79,8 @@ public class TagServiceImpl implements TagService {
     @Override
     @CacheEvict(cacheNames = "tags", key = "#userId")
     public void update(Long id, Long userId, String name, String color) {
-        Tag tag = tagMapper.selectById(id);
-        if (tag == null || !tag.getUserId().equals(userId)) {
-            throw new NotFoundException("标签不存在");
-        }
+        Tag tag = EntityGuard.requireOwned(
+                tagMapper.selectById(id), userId, Tag::getUserId, "标签不存在");
 
         // 检查重复（排除自身）
         LambdaQueryWrapper<Tag> check = new LambdaQueryWrapper<>();
@@ -100,10 +99,8 @@ public class TagServiceImpl implements TagService {
     @Transactional
     @CacheEvict(cacheNames = "tags", key = "#userId")
     public void delete(Long id, Long userId) {
-        Tag tag = tagMapper.selectById(id);
-        if (tag == null || !tag.getUserId().equals(userId)) {
-            throw new NotFoundException("标签不存在");
-        }
+        Tag tag = EntityGuard.requireOwned(
+                tagMapper.selectById(id), userId, Tag::getUserId, "标签不存在");
         // 清除关联
         tagRelMapper.delete(new LambdaQueryWrapper<TagRel>().eq(TagRel::getTagId, id));
         tagMapper.deleteById(id);

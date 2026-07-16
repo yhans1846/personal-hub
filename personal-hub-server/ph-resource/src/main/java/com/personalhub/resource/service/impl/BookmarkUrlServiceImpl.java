@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.personalhub.common.exception.NotFoundException;
+import com.personalhub.common.util.EntityGuard;
 import com.personalhub.resource.dto.BookmarkCreateDTO;
 import com.personalhub.resource.dto.BookmarkQueryDTO;
 import com.personalhub.knowledge.service.CategoryService;
@@ -102,11 +103,8 @@ public class BookmarkUrlServiceImpl implements BookmarkUrlService {
 
     @Override
     public BookmarkVO getById(Long id, Long userId) {
-        BookmarkUrl url = bookmarkUrlMapper.selectById(id);
-        if (url == null || !url.getUserId().equals(userId)) {
-            log.warn("收藏不存在或无权访问: id={}, userId={}", id, userId);
-            throw new NotFoundException("收藏不存在");
-        }
+        BookmarkUrl url = EntityGuard.requireOwned(
+                bookmarkUrlMapper.selectById(id), userId, BookmarkUrl::getUserId, "收藏不存在");
         BookmarkVO vo = BookmarkVO.from(url);
         if (url.getCategoryId() != null) {
             com.personalhub.knowledge.vo.CategoryVO cat = categoryService.listByType(url.getUserId(), "bookmark").stream()
@@ -149,11 +147,8 @@ public class BookmarkUrlServiceImpl implements BookmarkUrlService {
     @Override
     @Transactional
     public BookmarkVO update(Long id, Long userId, BookmarkCreateDTO dto) {
-        BookmarkUrl url = bookmarkUrlMapper.selectById(id);
-        if (url == null || !url.getUserId().equals(userId)) {
-            log.warn("编辑收藏不存在或无权访问: id={}, userId={}", id, userId);
-            throw new NotFoundException("收藏不存在");
-        }
+        BookmarkUrl url = EntityGuard.requireOwned(
+                bookmarkUrlMapper.selectById(id), userId, BookmarkUrl::getUserId, "收藏不存在");
         url.setTitle(dto.getTitle());
         url.setUrl(dto.getUrl());
         url.setDescription(dto.getDescription());
@@ -179,11 +174,8 @@ public class BookmarkUrlServiceImpl implements BookmarkUrlService {
     @Override
     @Transactional
     public void delete(Long id, Long userId) {
-        BookmarkUrl url = bookmarkUrlMapper.selectById(id);
-        if (url == null || !url.getUserId().equals(userId)) {
-            log.warn("删除收藏不存在或无权访问: id={}, userId={}", id, userId);
-            throw new NotFoundException("收藏不存在");
-        }
+        EntityGuard.requireOwned(
+                bookmarkUrlMapper.selectById(id), userId, BookmarkUrl::getUserId, "收藏不存在");
         // 清除标签关联
         tagService.unbindAll("bookmark", id);
         bookmarkUrlMapper.deleteById(id);

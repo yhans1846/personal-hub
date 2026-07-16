@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.personalhub.common.exception.NotFoundException;
+import com.personalhub.common.util.EntityGuard;
 import com.personalhub.resource.dto.FileQueryDTO;
 import com.personalhub.knowledge.service.CategoryService;
 import com.personalhub.resource.entity.FileResource;
@@ -74,10 +75,8 @@ public class FileResourceServiceImpl implements FileResourceService {
 
     @Override
     public FileVO getById(Long id, Long userId) {
-        FileResource file = fileResourceMapper.selectById(id);
-        if (file == null || !file.getUserId().equals(userId)) {
-            throw new NotFoundException("文件不存在");
-        }
+        FileResource file = EntityGuard.requireOwned(
+                fileResourceMapper.selectById(id), userId, FileResource::getUserId, "文件不存在");
         FileVO vo = FileVO.from(file);
         if (file.getCategoryId() != null) {
             Map<Long, String> categoryNameMap = categoryService.listByType(userId, "file").stream()
@@ -144,20 +143,16 @@ public class FileResourceServiceImpl implements FileResourceService {
 
     @Override
     public FileResource getFileResource(Long id, Long userId) {
-        FileResource file = fileResourceMapper.selectById(id);
-        if (file == null || !file.getUserId().equals(userId)) {
-            throw new NotFoundException("文件不存在");
-        }
+        FileResource file = EntityGuard.requireOwned(
+                fileResourceMapper.selectById(id), userId, FileResource::getUserId, "文件不存在");
         return file;
     }
 
     @Override
     @Transactional
     public void delete(Long id, Long userId) {
-        FileResource file = fileResourceMapper.selectById(id);
-        if (file == null || !file.getUserId().equals(userId)) {
-            throw new NotFoundException("文件不存在");
-        }
+        FileResource file = EntityGuard.requireOwned(
+                fileResourceMapper.selectById(id), userId, FileResource::getUserId, "文件不存在");
         // 删除物理文件
         if (file.getPath() != null) {
             storageService.delete(file.getPath());

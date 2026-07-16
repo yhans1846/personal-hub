@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.personalhub.common.exception.NotFoundException;
+import com.personalhub.common.util.EntityGuard;
 import com.personalhub.planning.dto.TodoCreateDTO;
 import com.personalhub.planning.dto.TodoQueryDTO;
 import com.personalhub.planning.entity.TodoTask;
@@ -56,11 +57,8 @@ public class TodoTaskServiceImpl implements TodoTaskService {
 
     @Override
     public TodoVO getById(Long id, Long userId) {
-        TodoTask task = todoTaskMapper.selectById(id);
-        if (task == null || !task.getUserId().equals(userId)) {
-            log.warn("任务不存在或无权访问: id={}, userId={}", id, userId);
-            throw new NotFoundException("任务不存在");
-        }
+        TodoTask task = EntityGuard.requireOwned(
+                todoTaskMapper.selectById(id), userId, TodoTask::getUserId, "任务不存在");
         return TodoVO.from(task);
     }
 
@@ -81,11 +79,8 @@ public class TodoTaskServiceImpl implements TodoTaskService {
     @Override
     @Transactional
     public TodoVO update(Long id, Long userId, TodoCreateDTO dto) {
-        TodoTask task = todoTaskMapper.selectById(id);
-        if (task == null || !task.getUserId().equals(userId)) {
-            log.warn("编辑任务不存在或无权访问: id={}, userId={}", id, userId);
-            throw new NotFoundException("任务不存在");
-        }
+        TodoTask task = EntityGuard.requireOwned(
+                todoTaskMapper.selectById(id), userId, TodoTask::getUserId, "任务不存在");
         task.setTitle(dto.getTitle());
         task.setContent(dto.getContent());
         task.setPriority(dto.getPriority() != null ? dto.getPriority() : 2);
@@ -98,11 +93,8 @@ public class TodoTaskServiceImpl implements TodoTaskService {
     @Override
     @Transactional
     public void delete(Long id, Long userId) {
-        TodoTask task = todoTaskMapper.selectById(id);
-        if (task == null || !task.getUserId().equals(userId)) {
-            log.warn("删除任务不存在或无权访问: id={}, userId={}", id, userId);
-            throw new NotFoundException("任务不存在");
-        }
+        EntityGuard.requireOwned(
+                todoTaskMapper.selectById(id), userId, TodoTask::getUserId, "任务不存在");
         todoTaskMapper.deleteById(id); // MyBatis-Plus 逻辑删除
         log.info("删除待办任务: id={}, userId={}", id, userId);
     }
@@ -110,11 +102,8 @@ public class TodoTaskServiceImpl implements TodoTaskService {
     @Override
     @Transactional
     public TodoVO toggleDone(Long id, Long userId) {
-        TodoTask task = todoTaskMapper.selectById(id);
-        if (task == null || !task.getUserId().equals(userId)) {
-            log.warn("切换状态任务不存在或无权访问: id={}, userId={}", id, userId);
-            throw new NotFoundException("任务不存在");
-        }
+        TodoTask task = EntityGuard.requireOwned(
+                todoTaskMapper.selectById(id), userId, TodoTask::getUserId, "任务不存在");
         task.setIsDone(task.getIsDone() == null || task.getIsDone() == 0 ? 1 : 0);
         if (task.getIsDone() == 1) {
             task.setCompletedAt(java.time.LocalDateTime.now());

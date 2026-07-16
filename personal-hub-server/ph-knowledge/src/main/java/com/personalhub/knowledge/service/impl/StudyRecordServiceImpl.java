@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.personalhub.common.exception.NotFoundException;
+import com.personalhub.common.util.EntityGuard;
 import com.personalhub.knowledge.dto.StudyRecordCreateDTO;
 import com.personalhub.knowledge.dto.StudyRecordQueryDTO;
 import com.personalhub.knowledge.entity.StudyRecord;
@@ -55,11 +56,8 @@ public class StudyRecordServiceImpl implements StudyRecordService {
 
     @Override
     public StudyRecordVO getById(Long id, Long userId) {
-        StudyRecord record = mapper.selectById(id);
-        if (record == null || !record.getUserId().equals(userId)) {
-            log.warn("学习记录不存在或无权访问: id={}, userId={}", id, userId);
-            throw new NotFoundException("学习记录不存在");
-        }
+        StudyRecord record = EntityGuard.requireOwned(
+                mapper.selectById(id), userId, StudyRecord::getUserId, "学习记录不存在");
         return StudyRecordVO.from(record);
     }
 
@@ -80,11 +78,8 @@ public class StudyRecordServiceImpl implements StudyRecordService {
 
     @Override
     public StudyRecordVO update(Long id, Long userId, StudyRecordCreateDTO dto) {
-        StudyRecord record = mapper.selectById(id);
-        if (record == null || !record.getUserId().equals(userId)) {
-            log.warn("编辑学习记录不存在或无权访问: id={}, userId={}", id, userId);
-            throw new NotFoundException("学习记录不存在");
-        }
+        StudyRecord record = EntityGuard.requireOwned(
+                mapper.selectById(id), userId, StudyRecord::getUserId, "学习记录不存在");
         record.setSubject(dto.getSubject());
         record.setDate(dto.getDate());
         record.setDuration(dto.getDuration());
@@ -98,11 +93,8 @@ public class StudyRecordServiceImpl implements StudyRecordService {
 
     @Override
     public void delete(Long id, Long userId) {
-        StudyRecord record = mapper.selectById(id);
-        if (record == null || !record.getUserId().equals(userId)) {
-            log.warn("删除学习记录不存在或无权访问: id={}, userId={}", id, userId);
-            throw new NotFoundException("学习记录不存在");
-        }
+        EntityGuard.requireOwned(
+                mapper.selectById(id), userId, StudyRecord::getUserId, "学习记录不存在");
         mapper.deleteById(id); // 逻辑删除
         log.info("删除学习记录: id={}, userId={}", id, userId);
     }

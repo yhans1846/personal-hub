@@ -1,6 +1,7 @@
 package com.personalhub.resource.service.impl;
 
 import com.personalhub.common.exception.NotFoundException;
+import com.personalhub.common.util.EntityGuard;
 import com.personalhub.knowledge.entity.Note;
 import com.personalhub.knowledge.mapper.NoteMapper;
 import com.personalhub.resource.service.NoteFileService;
@@ -32,10 +33,8 @@ public class NoteFileServiceImpl implements NoteFileService {
     }
 
     private void validateNote(Long noteId, Long userId) {
-        Note note = noteMapper.selectById(noteId);
-        if (note == null || !note.getUserId().equals(userId)) {
-            throw new NotFoundException("笔记不存在");
-        }
+        EntityGuard.requireOwned(
+                noteMapper.selectById(noteId), userId, Note::getUserId, "笔记不存在");
     }
 
     private void validateFile(MultipartFile file) {

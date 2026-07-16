@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.personalhub.common.exception.NotFoundException;
+import com.personalhub.common.util.EntityGuard;
 import com.personalhub.knowledge.dto.NoteCreateDTO;
 import com.personalhub.knowledge.dto.NoteQueryDTO;
 import com.personalhub.knowledge.entity.Note;
@@ -54,8 +55,9 @@ public class NoteServiceImpl implements NoteService {
 
     @Override
     public NoteVO getById(Long id, Long userId) {
-        Note note = noteMapper.selectById(id);
-        if (note == null || !note.getUserId().equals(userId) || note.getIsDeleted() == 1) {
+        Note note = EntityGuard.requireOwned(
+                noteMapper.selectById(id), userId, Note::getUserId, "笔记不存在");
+        if (Integer.valueOf(1).equals(note.getIsDeleted())) {
             log.warn("笔记不存在或无权访问: id={}, userId={}", id, userId);
             throw new NotFoundException("笔记不存在");
         }
@@ -94,8 +96,9 @@ public class NoteServiceImpl implements NoteService {
     @Transactional
     @CacheEvict(cacheNames = "categories", allEntries = true)
     public NoteVO update(Long id, Long userId, NoteCreateDTO dto) {
-        Note note = noteMapper.selectById(id);
-        if (note == null || !note.getUserId().equals(userId) || note.getIsDeleted() == 1) {
+        Note note = EntityGuard.requireOwned(
+                noteMapper.selectById(id), userId, Note::getUserId, "笔记不存在");
+        if (Integer.valueOf(1).equals(note.getIsDeleted())) {
             log.warn("编辑笔记不存在或无权访问: id={}, userId={}", id, userId);
             throw new NotFoundException("笔记不存在");
         }
@@ -122,11 +125,8 @@ public class NoteServiceImpl implements NoteService {
     @Transactional
     @CacheEvict(cacheNames = "categories", allEntries = true)
     public void delete(Long id, Long userId) {
-        Note note = noteMapper.selectById(id);
-        if (note == null || !note.getUserId().equals(userId)) {
-            log.warn("删除笔记不存在或无权访问: id={}, userId={}", id, userId);
-            throw new NotFoundException("笔记不存在");
-        }
+        Note note = EntityGuard.requireOwned(
+                noteMapper.selectById(id), userId, Note::getUserId, "笔记不存在");
         LocalDateTime now = LocalDateTime.now();
         note.setIsDeleted(1);
         note.setDeletedAt(now);
@@ -140,11 +140,8 @@ public class NoteServiceImpl implements NoteService {
     @Override
     @Transactional
     public void restore(Long id, Long userId) {
-        Note note = noteMapper.selectById(id);
-        if (note == null || !note.getUserId().equals(userId)) {
-            log.warn("恢复笔记不存在或无权访问: id={}, userId={}", id, userId);
-            throw new NotFoundException("笔记不存在");
-        }
+        Note note = EntityGuard.requireOwned(
+                noteMapper.selectById(id), userId, Note::getUserId, "笔记不存在");
         noteMapper.update(null, new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<Note>()
                 .eq(Note::getId, id)
                 .set(Note::getIsDeleted, 0)
@@ -158,11 +155,8 @@ public class NoteServiceImpl implements NoteService {
     @Override
     @CacheEvict(cacheNames = "categories", allEntries = true)
     public void permanentDelete(Long id, Long userId) {
-        Note note = noteMapper.selectById(id);
-        if (note == null || !note.getUserId().equals(userId)) {
-            log.warn("永久删除笔记不存在或无权访问: id={}, userId={}", id, userId);
-            throw new NotFoundException("笔记不存在");
-        }
+        Note note = EntityGuard.requireOwned(
+                noteMapper.selectById(id), userId, Note::getUserId, "笔记不存在");
         jdbcTemplate.update("DELETE FROM note_category_rel WHERE note_id = ?", id);
         tagService.unbindAll("note", id);
         if (note.getMdPath() != null) {
@@ -175,8 +169,9 @@ public class NoteServiceImpl implements NoteService {
 
     @Override
     public void toggleFavorite(Long id, Long userId) {
-        Note note = noteMapper.selectById(id);
-        if (note == null || !note.getUserId().equals(userId) || note.getIsDeleted() == 1) {
+        Note note = EntityGuard.requireOwned(
+                noteMapper.selectById(id), userId, Note::getUserId, "笔记不存在");
+        if (Integer.valueOf(1).equals(note.getIsDeleted())) {
             log.warn("切换收藏笔记不存在或无权访问: id={}, userId={}", id, userId);
             throw new NotFoundException("笔记不存在");
         }
@@ -194,11 +189,8 @@ public class NoteServiceImpl implements NoteService {
 
     @Override
     public NoteVO getPreview(Long id, Long userId) {
-        Note note = noteMapper.selectById(id);
-        if (note == null || !note.getUserId().equals(userId)) {
-            log.warn("预览笔记不存在或无权访问: id={}, userId={}", id, userId);
-            throw new NotFoundException("笔记不存在");
-        }
+        Note note = EntityGuard.requireOwned(
+                noteMapper.selectById(id), userId, Note::getUserId, "笔记不存在");
         NoteVO vo = NoteVO.from(note);
         vo.setContent(readContent(note));
         vo.setCategories(getCategories(id));

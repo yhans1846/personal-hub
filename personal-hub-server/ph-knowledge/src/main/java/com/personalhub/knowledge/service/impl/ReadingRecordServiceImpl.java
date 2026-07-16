@@ -3,7 +3,7 @@ package com.personalhub.knowledge.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.personalhub.common.exception.NotFoundException;
+import com.personalhub.common.util.EntityGuard;
 import com.personalhub.knowledge.dto.ReadingCreateDTO;
 import com.personalhub.knowledge.dto.ReadingQueryDTO;
 import com.personalhub.knowledge.entity.ReadingRecord;
@@ -40,10 +40,8 @@ public class ReadingRecordServiceImpl implements ReadingRecordService {
 
     @Override
     public ReadingVO getById(Long id, Long userId) {
-        var r = mapper.selectById(id);
-        if (r == null || !r.getUserId().equals(userId)) {
-            throw new NotFoundException("阅读记录不存在");
-        }
+        var r = EntityGuard.requireOwned(
+                mapper.selectById(id), userId, ReadingRecord::getUserId, "阅读记录不存在");
         return ReadingVO.from(r);
     }
 
@@ -80,10 +78,8 @@ public class ReadingRecordServiceImpl implements ReadingRecordService {
     @Override
     @Transactional
     public ReadingVO update(Long id, Long userId, ReadingCreateDTO dto) {
-        var r = mapper.selectById(id);
-        if (r == null || !r.getUserId().equals(userId)) {
-            throw new NotFoundException("阅读记录不存在");
-        }
+        var r = EntityGuard.requireOwned(
+                mapper.selectById(id), userId, ReadingRecord::getUserId, "阅读记录不存在");
         r.setBookTitle(dto.getBookTitle());
         r.setAuthor(dto.getAuthor());
         r.setCoverUrl(dto.getCoverUrl());
@@ -115,10 +111,8 @@ public class ReadingRecordServiceImpl implements ReadingRecordService {
     @Override
     @Transactional
     public void delete(Long id, Long userId) {
-        var r = mapper.selectById(id);
-        if (r == null || !r.getUserId().equals(userId)) {
-            throw new NotFoundException("阅读记录不存在");
-        }
+        EntityGuard.requireOwned(
+                mapper.selectById(id), userId, ReadingRecord::getUserId, "阅读记录不存在");
         mapper.deleteById(id);
     }
 

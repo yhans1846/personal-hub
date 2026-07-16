@@ -3,6 +3,7 @@ package com.personalhub.knowledge.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.personalhub.common.exception.BusinessException;
 import com.personalhub.common.exception.NotFoundException;
+import com.personalhub.common.util.EntityGuard;
 import com.personalhub.knowledge.dto.CategoryCreateDTO;
 import com.personalhub.knowledge.dto.CategoryUpdateDTO;
 import com.personalhub.knowledge.entity.Category;
@@ -81,10 +82,8 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional
     @CacheEvict(cacheNames = "categories", allEntries = true)
     public CategoryVO update(Long id, Long userId, CategoryUpdateDTO dto) {
-        Category category = categoryMapper.selectById(id);
-        if (category == null || !category.getUserId().equals(userId)) {
-            throw new NotFoundException("分类不存在");
-        }
+        Category category = EntityGuard.requireOwned(
+                categoryMapper.selectById(id), userId, Category::getUserId, "分类不存在");
 
         // 检查名称唯一性（排除自身）
         LambdaQueryWrapper<Category> qw = new LambdaQueryWrapper<Category>()
@@ -108,10 +107,8 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional
     @CacheEvict(cacheNames = "categories", allEntries = true)
     public void delete(Long id, Long userId) {
-        Category category = categoryMapper.selectById(id);
-        if (category == null || !category.getUserId().equals(userId)) {
-            throw new NotFoundException("分类不存在");
-        }
+        Category category = EntityGuard.requireOwned(
+                categoryMapper.selectById(id), userId, Category::getUserId, "分类不存在");
 
         // 清理关联（note 类型有关联表）
         if ("note".equals(category.getType())) {

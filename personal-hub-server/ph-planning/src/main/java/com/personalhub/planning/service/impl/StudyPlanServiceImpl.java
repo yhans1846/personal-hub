@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.personalhub.common.exception.NotFoundException;
+import com.personalhub.common.util.EntityGuard;
 import com.personalhub.knowledge.entity.TagRel;
 import com.personalhub.knowledge.mapper.TagRelMapper;
 import com.personalhub.knowledge.service.TagService;
@@ -150,10 +151,8 @@ public class StudyPlanServiceImpl implements StudyPlanService {
 
     @Override
     public StudyPlanVO getById(Long id, Long userId) {
-        StudyPlan plan = studyPlanMapper.selectById(id);
-        if (plan == null || !plan.getUserId().equals(userId)) {
-            throw new NotFoundException("学习计划不存在");
-        }
+        StudyPlan plan = EntityGuard.requireOwned(
+                studyPlanMapper.selectById(id), userId, StudyPlan::getUserId, "学习计划不存在");
         StudyPlanVO vo = StudyPlanVO.from(plan);
         vo.setTags(tagService.getTags(ENTITY_TYPE, id));
         return vo;
@@ -178,10 +177,8 @@ public class StudyPlanServiceImpl implements StudyPlanService {
     @Override
     @Transactional
     public StudyPlanVO update(Long id, Long userId, StudyPlanCreateDTO dto) {
-        StudyPlan plan = studyPlanMapper.selectById(id);
-        if (plan == null || !plan.getUserId().equals(userId)) {
-            throw new NotFoundException("学习计划不存在");
-        }
+        StudyPlan plan = EntityGuard.requireOwned(
+                studyPlanMapper.selectById(id), userId, StudyPlan::getUserId, "学习计划不存在");
         applyDto(plan, dto);
         studyPlanMapper.updateById(plan);
         tagService.bindTags(id, ENTITY_TYPE, dto.getTagIds());
@@ -194,10 +191,8 @@ public class StudyPlanServiceImpl implements StudyPlanService {
     @Override
     @Transactional
     public void delete(Long id, Long userId) {
-        StudyPlan plan = studyPlanMapper.selectById(id);
-        if (plan == null || !plan.getUserId().equals(userId)) {
-            throw new NotFoundException("学习计划不存在");
-        }
+        StudyPlan plan = EntityGuard.requireOwned(
+                studyPlanMapper.selectById(id), userId, StudyPlan::getUserId, "学习计划不存在");
         tagService.unbindAll(ENTITY_TYPE, id);
         studyPlanMapper.deleteById(id);
         log.info("删除学习计划: id={}, userId={}", id, userId);

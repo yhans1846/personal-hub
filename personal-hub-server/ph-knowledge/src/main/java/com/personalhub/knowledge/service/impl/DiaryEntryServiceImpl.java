@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.personalhub.common.exception.NotFoundException;
+import com.personalhub.common.util.EntityGuard;
 import com.personalhub.knowledge.dto.DiaryCreateDTO;
 import com.personalhub.knowledge.dto.DiaryQueryDTO;
 import com.personalhub.knowledge.entity.DiaryEntry;
@@ -88,11 +89,8 @@ public class DiaryEntryServiceImpl implements DiaryEntryService {
 
     @Override
     public DiaryVO getById(Long id, Long userId) {
-        DiaryEntry entry = diaryEntryMapper.selectById(id);
-        if (entry == null || !entry.getUserId().equals(userId)) {
-            log.warn("日记不存在或无权访问: id={}, userId={}", id, userId);
-            throw new NotFoundException("日记不存在");
-        }
+        DiaryEntry entry = EntityGuard.requireOwned(
+                diaryEntryMapper.selectById(id), userId, DiaryEntry::getUserId, "日记不存在");
         return DiaryVO.from(entry);
     }
 
@@ -116,11 +114,8 @@ public class DiaryEntryServiceImpl implements DiaryEntryService {
     @Override
     @Transactional
     public DiaryVO update(Long id, Long userId, DiaryCreateDTO dto) {
-        DiaryEntry entry = diaryEntryMapper.selectById(id);
-        if (entry == null || !entry.getUserId().equals(userId)) {
-            log.warn("编辑日记不存在或无权访问: id={}, userId={}", id, userId);
-            throw new NotFoundException("日记不存在");
-        }
+        DiaryEntry entry = EntityGuard.requireOwned(
+                diaryEntryMapper.selectById(id), userId, DiaryEntry::getUserId, "日记不存在");
         if (dto.getDate() != null) entry.setDate(dto.getDate());
         if (dto.getTitle() != null) entry.setTitle(dto.getTitle());
         if (dto.getContent() != null) entry.setContent(dto.getContent());
@@ -136,11 +131,8 @@ public class DiaryEntryServiceImpl implements DiaryEntryService {
     @Override
     @Transactional
     public void delete(Long id, Long userId) {
-        DiaryEntry entry = diaryEntryMapper.selectById(id);
-        if (entry == null || !entry.getUserId().equals(userId)) {
-            log.warn("删除日记不存在或无权访问: id={}, userId={}", id, userId);
-            throw new NotFoundException("日记不存在");
-        }
+        EntityGuard.requireOwned(
+                diaryEntryMapper.selectById(id), userId, DiaryEntry::getUserId, "日记不存在");
         diaryEntryMapper.deleteById(id);
         log.info("删除日记: id={}, userId={}", id, userId);
     }
