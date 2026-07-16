@@ -8,7 +8,6 @@ import PageHeader from '@/components/PageHeader.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import { UiDialog, UiInput } from '@/components/ui'
 import TagStatsCards from './TagStatsCards.vue'
-import HotTagsBar from './HotTagsBar.vue'
 
 // ============ 状态 ============
 const list = ref<TagVO[]>([])
@@ -37,13 +36,6 @@ const stats = computed(() => {
     return tTime >= sevenDaysAgo
   }).length
   return { total, totalUsage, recentAdded }
-})
-
-const hotTags = computed(() => {
-  return [...list.value]
-    .sort((a, b) => (b.usageCount ?? 0) - (a.usageCount ?? 0))
-    .slice(0, 5)
-    .filter(t => (t.usageCount ?? 0) > 0)
 })
 
 const uniqueColors = computed(() => {
@@ -156,9 +148,6 @@ function formatDate(dateStr?: string) {
 
     <!-- ========== 统计卡片 ========== -->
     <TagStatsCards :total="stats.total" :total-usage="stats.totalUsage" :recent-added="stats.recentAdded" />
-
-    <!-- ========== 热门标签 ========== -->
-    <HotTagsBar :tags="hotTags" />
 
     <!-- ========== 工具栏 ========== -->
     <div class="toolbar">

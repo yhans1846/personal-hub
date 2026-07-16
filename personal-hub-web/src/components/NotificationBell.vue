@@ -24,6 +24,11 @@ onUnmounted(() => {
   clearInterval(pollTimer)
 })
 
+function handleClearAll() {
+  store.clearAll()
+}
+
+/** 打开面板时只拉列表，不再触发 check 以免闪现旧通知 */
 function handleShow() {
   store.fetchRecent()
 }
@@ -41,10 +46,6 @@ function handleMarkRead(e: Event, n: NotificationVO) {
 
 function handleMarkAllRead() {
   store.markAllAsRead()
-}
-
-function handleClearAll() {
-  store.clearAll()
 }
 
 function getTypeIcon(type: string): string {

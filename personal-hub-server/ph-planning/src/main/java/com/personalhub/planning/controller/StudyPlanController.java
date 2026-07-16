@@ -6,6 +6,7 @@ import com.personalhub.common.result.Result;
 import com.personalhub.planning.dto.StudyPlanCreateDTO;
 import com.personalhub.planning.dto.StudyPlanQueryDTO;
 import com.personalhub.planning.service.StudyPlanService;
+import com.personalhub.planning.vo.StudyPlanStatsVO;
 import com.personalhub.planning.vo.StudyPlanVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -26,7 +27,7 @@ public class StudyPlanController {
 
     private final StudyPlanService studyPlanService;
 
-    @Operation(summary = "计划列表", description = "分页查询学习计划，支持关键词搜索、状态筛选")
+    @Operation(summary = "计划列表", description = "分页查询学习计划，支持关键词、状态、标签、排序")
     @GetMapping
     public Result<PageResult<StudyPlanVO>> list(
             @Parameter(hidden = true) Authentication authentication,
@@ -34,6 +35,14 @@ public class StudyPlanController {
         Long userId = Long.valueOf(authentication.getName());
         IPage<StudyPlanVO> page = studyPlanService.list(userId, query);
         return Result.success(PageResult.of(page));
+    }
+
+    @Operation(summary = "状态统计")
+    @GetMapping("/stats")
+    public Result<StudyPlanStatsVO> stats(
+            @Parameter(hidden = true) Authentication authentication) {
+        Long userId = Long.valueOf(authentication.getName());
+        return Result.success(studyPlanService.stats(userId));
     }
 
     @Operation(summary = "计划详情")

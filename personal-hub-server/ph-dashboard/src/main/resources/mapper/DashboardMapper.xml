@@ -84,9 +84,13 @@
     </select>
 
     <select id="searchPlans" resultType="map">
-        SELECT id, name AS title, LEFT(goal, 200) AS snippet, created_at AS date_str
+        SELECT id, name AS title, LEFT(COALESCE(remark, source, ''), 200) AS snippet, created_at AS date_str
         FROM study_plan
-        WHERE user_id = #{userId} AND is_deleted = 0 AND (name LIKE CONCAT('%', #{keyword}, '%') OR goal LIKE CONCAT('%', #{keyword}, '%'))
+        WHERE user_id = #{userId} AND is_deleted = 0
+          AND (name LIKE CONCAT('%', #{keyword}, '%')
+            OR IFNULL(source, '') LIKE CONCAT('%', #{keyword}, '%')
+            OR IFNULL(author, '') LIKE CONCAT('%', #{keyword}, '%')
+            OR IFNULL(remark, '') LIKE CONCAT('%', #{keyword}, '%'))
         LIMIT 10
     </select>
 

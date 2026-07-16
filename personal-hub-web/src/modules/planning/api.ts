@@ -1,7 +1,7 @@
 import request from '@/api/request'
 import type { Result, PageResult } from '@/types/common'
 import type { TodoVO, TodoCreateDTO, TodoQuery } from '@/types/todo'
-import type { StudyPlanVO, StudyPlanCreateDTO, StudyPlanQuery } from '@/types/studyplan'
+import type { StudyPlanVO, StudyPlanCreateDTO, StudyPlanQuery, StudyPlanStats } from '@/types/studyplan'
 
 // ====== 待办 ======
 export function getTodoList(params: TodoQuery) {
@@ -29,6 +29,9 @@ export function getTodayTodos() {
 // ====== 学习计划 ======
 export function getStudyPlanList(params: StudyPlanQuery) {
   return request.get<Result<PageResult<StudyPlanVO>>>('/study-plans', { params })
+}
+export function getStudyPlanStats() {
+  return request.get<Result<StudyPlanStats>>('/study-plans/stats')
 }
 export function getStudyPlanById(id: number) {
   return request.get<Result<StudyPlanVO>>(`/study-plans/${id}`)

@@ -12,12 +12,19 @@ const emit = defineEmits<{
 
 <template>
   <el-pagination
-    v-if="total > size"
+    v-if="total > 0"
     :total="total"
     :page-size="size"
     :current-page="page"
     layout="total, prev, pager, next"
-    style="margin-top: var(--sp-6); justify-content: flex-end"
+    class="list-pagination"
     @current-change="emit('update:page', $event)"
   />
 </template>
+
+<style scoped>
+.list-pagination {
+  margin-top: var(--sp-6);
+  justify-content: flex-end;
+}
+</style>

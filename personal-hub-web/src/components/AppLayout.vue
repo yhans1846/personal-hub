@@ -532,6 +532,24 @@ function handleQuickCreate(cmd: string) {
 /* ============ 主内容 ============ */
 .main-content { flex: 1; overflow-y: auto; padding: var(--sp-8); }
 .content-container { max-width: var(--content-max-width); margin: 0 auto; width: 100%; }
+/* 学习计划等「一屏内」页面：主区不滚动，由页面内部消化高度 */
+.main-content.main-content--fill {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.main-content.main-content--fill .content-container {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  max-width: none;
+}
+.main-content.main-content--fill .content-container > * {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+}
 
 /* ============ Focus Mode ============ */
 .app-shell.focus-mode .focus-hidden { display: none !important; }

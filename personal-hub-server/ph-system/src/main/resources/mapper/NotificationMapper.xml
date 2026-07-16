@@ -7,10 +7,11 @@
         UPDATE sys_notification SET is_read = 1 WHERE user_id = #{userId} AND is_read = 0
     </update>
 
-    <!-- 清空用户通知 -->
-    <delete id="clearAllXml">
-        DELETE FROM sys_notification WHERE user_id = #{userId}
-    </delete>
+    <!-- 清空用户通知（软清除，避免下次 check 再次生成） -->
+    <update id="clearAllXml">
+        UPDATE sys_notification SET is_dismissed = 1, is_read = 1
+        WHERE user_id = #{userId} AND is_dismissed = 0
+    </update>
 
     <!-- 查询过期未完成的待办 -->
     <select id="selectOverdueTodos" resultType="map">
@@ -19,12 +20,12 @@
 
     <!-- 查询即将截止的学习计划 -->
     <select id="selectDeadlinePlans" resultType="map">
-        SELECT id, name FROM study_plan WHERE user_id = #{userId} AND status NOT IN (2,3) AND end_date BETWEEN #{today} AND #{deadline}
+        SELECT id, name FROM study_plan WHERE user_id = #{userId} AND is_deleted = 0 AND status NOT IN (2,3) AND end_date BETWEEN #{today} AND #{deadline}
     </select>
 
     <!-- 查询已完成的学习计划 -->
     <select id="selectCompletedPlans" resultType="map">
-        SELECT id, name FROM study_plan WHERE user_id = #{userId} AND status = 2 AND progress = 100
+        SELECT id, name FROM study_plan WHERE user_id = #{userId} AND status = 2 AND is_deleted = 0
     </select>
 
     <!-- 查询所有用户ID -->

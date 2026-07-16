@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { ref, watch, computed, toRef } from 'vue'
 import { createStudyPlan, updateStudyPlan, getStudyPlanById } from '@/modules/planning/api'
+import { getTags } from '@/modules/knowledge/api'
 import { ElMessage } from 'element-plus'
-import { Calendar } from 'lucide-vue-next'
+import { Calendar, Link } from 'lucide-vue-next'
 import { UiDialog, UiInput, UiButton } from '@/components/ui'
 import { useEntityDialog } from '@/composables/useEntityDialog'
+import type { TagVO } from '@/types/tag'
 
 const props = withDefaults(defineProps<{
   modelValue: boolean
@@ -16,21 +18,32 @@ const emit = defineEmits<{
   'saved': []
 }>()
 
-const form = ref({
-  name: '', goal: '', progress: 0,
-  startDate: null as string | null, endDate: null as string | null, status: 0
+const emptyForm = () => ({
+  name: '',
+  source: '',
+  author: '',
+  url: '',
+  remark: '',
+  progress: 0,
+  startDate: null as string | null,
+  endDate: null as string | null,
+  status: 0,
+  tagIds: [] as number[],
 })
+
+const form = ref(emptyForm())
+const tags = ref<TagVO[]>([])
 const saving = ref(false)
 
 const statusOptions = [
-  { value: 0, label: '未开始', emoji: '📋' },
-  { value: 1, label: '进行中', emoji: '📖' },
+  { value: 0, label: '未开始', emoji: '⚪' },
+  { value: 1, label: '学习中', emoji: '🟢' },
   { value: 2, label: '已完成', emoji: '✅' },
-  { value: 3, label: '已放弃', emoji: '⏹️' }
+  { value: 3, label: '已暂停', emoji: '🟡' },
 ]
 
 const dialogTitle = computed(() => props.entityId ? '编辑计划' : '新建计划')
-const dialogSubtitle = computed(() => props.entityId ? '' : '设定学习目标')
+const dialogSubtitle = computed(() => props.entityId ? '' : '记录一门课程或学习资源')
 
 const progressColor = computed(() => {
   if (form.value.progress >= 100) return 'var(--success)'
@@ -38,19 +51,34 @@ const progressColor = computed(() => {
   return 'var(--warning)'
 })
 
-const currentStatus = computed(() => statusOptions.find(s => s.value === form.value.status))
-
 async function loadEntity(id: number) {
   const r = (await getStudyPlanById(id)).data.data
-  form.value = { name: r.name, goal: r.goal || '', progress: r.progress, startDate: r.startDate, endDate: r.endDate, status: r.status }
+  form.value = {
+    name: r.name,
+    source: r.source || '',
+    author: r.author || '',
+    url: r.url || '',
+    remark: r.remark || '',
+    progress: r.progress ?? 0,
+    startDate: r.startDate,
+    endDate: r.endDate,
+    status: r.status,
+    tagIds: (r.tags || []).map((t: TagVO) => t.id),
+  }
 }
 
-watch(() => props.modelValue, (val) => {
-  if (!val || props.entityId) return
-  form.value = { name: '', goal: '', progress: 0, startDate: null, endDate: null, status: 0 }
+watch(() => props.modelValue, async (val) => {
+  if (!val) return
+  try {
+    const tagRes = await getTags()
+    tags.value = tagRes.data.data
+  } catch { /* ignore */ }
+  if (!props.entityId) {
+    form.value = emptyForm()
+  }
 })
 
-const { loading, close, onSaved } = useEntityDialog({
+const { onSaved } = useEntityDialog({
   modelValue: toRef(props, 'modelValue'),
   entityId: toRef(props, 'entityId'),
   emit: (event, value) => emit(event as any, value),
@@ -58,18 +86,39 @@ const { loading, close, onSaved } = useEntityDialog({
 })
 
 async function handleSave() {
-  if (!form.value.name.trim()) { ElMessage.warning('请输入计划名称'); return }
+  if (!form.value.name.trim()) {
+    ElMessage.warning('请输入计划名称')
+    return
+  }
+  let url = form.value.url.trim()
+  if (url && !/^https?:\/\//i.test(url)) {
+    url = 'https://' + url
+  }
   saving.value = true
   try {
+    const payload = {
+      name: form.value.name.trim(),
+      source: form.value.source.trim() || null,
+      author: form.value.author.trim() || null,
+      url: url || null,
+      remark: form.value.remark.trim() || null,
+      progress: form.value.progress,
+      startDate: form.value.startDate,
+      endDate: form.value.endDate,
+      status: form.value.status,
+      tagIds: form.value.tagIds,
+    }
     if (props.entityId) {
-      await updateStudyPlan(props.entityId, form.value)
+      await updateStudyPlan(props.entityId, payload)
       ElMessage.success('已更新')
     } else {
-      await createStudyPlan(form.value)
+      await createStudyPlan(payload)
       ElMessage.success('已创建')
     }
     onSaved()
-  } finally { saving.value = false }
+  } finally {
+    saving.value = false
+  }
 }
 </script>
 
@@ -80,7 +129,6 @@ async function handleSave() {
     :subtitle="dialogSubtitle"
     @update:model-value="emit('update:modelValue', $event)"
   >
-    <!-- 计划名称 -->
     <UiInput
       v-model="form.name"
       placeholder="计划名称"
@@ -88,9 +136,40 @@ async function handleSave() {
       maxlength="200"
     />
 
+    <div class="meta-grid">
+      <UiInput v-model="form.source" placeholder="来源（如 B站）" maxlength="100" />
+      <UiInput v-model="form.author" placeholder="作者" maxlength="100" />
+    </div>
+
+    <div class="url-row">
+      <Link :size="14" class="url-icon" />
+      <input
+        v-model="form.url"
+        class="url-input"
+        placeholder="https:// 资源地址"
+        maxlength="500"
+      />
+    </div>
+
     <div class="section-divider" />
 
-    <!-- 状态卡片 -->
+    <div class="section-label">分类标签</div>
+    <div class="chip-row">
+      <button
+        v-for="t in tags"
+        :key="t.id"
+        type="button"
+        class="chip tag-chip"
+        :class="{ active: form.tagIds.includes(t.id) }"
+        :style="form.tagIds.includes(t.id) ? { '--chip-color': t.color } : {}"
+        @click="form.tagIds = form.tagIds.includes(t.id) ? form.tagIds.filter(id => id !== t.id) : [...form.tagIds, t.id]"
+      >
+        <span class="tag-dot" :style="{ background: t.color }" />
+        {{ t.name }}
+      </button>
+      <span v-if="tags.length === 0" class="chip-empty">暂无标签，可先在标签管理中创建</span>
+    </div>
+
     <div class="section-label">状态</div>
     <div class="status-row">
       <button
@@ -106,7 +185,6 @@ async function handleSave() {
       </button>
     </div>
 
-    <!-- 进度滑块 -->
     <div class="section-label">进度</div>
     <div class="progress-row">
       <input
@@ -121,40 +199,50 @@ async function handleSave() {
       <span class="progress-value" :style="{ color: progressColor }">{{ form.progress }}%</span>
     </div>
 
-    <!-- 时间范围 -->
     <div class="section-label">时间范围</div>
     <div class="date-range-row">
       <button
         type="button"
         class="date-chip"
         :class="{ 'has-date': !!form.startDate }"
-        @click="$refs.startInput?.showPicker ? $refs.startInput.showPicker() : $refs.startInput?.click()"
+        @click="($refs.startInput as HTMLInputElement)?.showPicker?.() ?? ($refs.startInput as HTMLInputElement)?.click()"
       >
         <Calendar :size="14" />
         <span>{{ form.startDate || '开始日期' }}</span>
-        <input ref="startInput" type="date" class="date-input-abs" :value="form.startDate || ''" @change="form.startDate = ($event.target as HTMLInputElement).value || null" />
+        <input
+          ref="startInput"
+          type="date"
+          class="date-input-abs"
+          :value="form.startDate || ''"
+          @change="form.startDate = ($event.target as HTMLInputElement).value || null"
+        />
       </button>
       <span class="date-range-arrow">→</span>
       <button
         type="button"
         class="date-chip"
         :class="{ 'has-date': !!form.endDate }"
-        @click="$refs.endInput?.showPicker ? $refs.endInput.showPicker() : $refs.endInput?.click()"
+        @click="($refs.endInput as HTMLInputElement)?.showPicker?.() ?? ($refs.endInput as HTMLInputElement)?.click()"
       >
         <Calendar :size="14" />
         <span>{{ form.endDate || '结束日期' }}</span>
-        <input ref="endInput" type="date" class="date-input-abs" :value="form.endDate || ''" @change="form.endDate = ($event.target as HTMLInputElement).value || null" />
+        <input
+          ref="endInput"
+          type="date"
+          class="date-input-abs"
+          :value="form.endDate || ''"
+          @change="form.endDate = ($event.target as HTMLInputElement).value || null"
+        />
       </button>
     </div>
 
     <div class="section-divider" />
 
-    <!-- 学习目标 -->
     <div class="content-section">
       <textarea
-        v-model="form.goal"
+        v-model="form.remark"
         class="content-editor"
-        placeholder="设定学习目标、计划安排或学习心得…"
+        placeholder="备注…"
       />
     </div>
 
@@ -167,7 +255,7 @@ async function handleSave() {
 
 <style scoped>
 .title-input {
-  margin-bottom: var(--sp-2);
+  margin-bottom: var(--sp-3);
 }
 .title-input :deep(input) {
   font-size: var(--text-lg) !important;
@@ -179,6 +267,39 @@ async function handleSave() {
 .title-input :deep(input)::placeholder {
   color: var(--text-placeholder);
   font-weight: 400;
+}
+
+.meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-3);
+}
+
+.url-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: var(--sp-3);
+}
+.url-icon {
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+}
+.url-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  outline: none;
+  padding: 4px 0;
+}
+.url-input::placeholder {
+  color: var(--text-placeholder);
+}
+.url-input:focus {
+  color: var(--text-primary);
 }
 
 .section-divider {
@@ -196,13 +317,56 @@ async function handleSave() {
   text-transform: uppercase;
 }
 
-/* ---- 状态卡片 ---- */
-.status-row {
+.chip-row {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--sp-2);
   margin-bottom: var(--sp-5);
 }
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+.chip:hover {
+  border-color: var(--accent-border);
+  color: var(--text-primary);
+}
+.chip.active {
+  border-color: var(--chip-color, var(--accent));
+  color: var(--chip-color, var(--accent));
+  background: var(--accent-light);
+}
+.tag-chip.active {
+  background: color-mix(in srgb, var(--chip-color, var(--accent)) 12%, transparent);
+}
+.tag-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.chip-empty {
+  font-size: var(--text-xs);
+  color: var(--text-placeholder);
+}
 
+.status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-5);
+}
 .status-card {
   display: flex;
   align-items: center;
@@ -222,8 +386,10 @@ async function handleSave() {
   border-color: var(--accent);
   background: var(--accent-light);
 }
-
-.status-emoji { font-size: 14px; line-height: 1; }
+.status-emoji {
+  font-size: 14px;
+  line-height: 1;
+}
 .status-label {
   font-size: var(--text-sm);
   font-weight: 500;
@@ -233,14 +399,12 @@ async function handleSave() {
   color: var(--accent);
 }
 
-/* ---- 进度滑块 ---- */
 .progress-row {
   display: flex;
   align-items: center;
   gap: var(--sp-3);
   margin-bottom: var(--sp-5);
 }
-
 .progress-slider {
   flex: 1;
   -webkit-appearance: none;
@@ -253,28 +417,14 @@ async function handleSave() {
 }
 .progress-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
   background: var(--progress-color, var(--accent));
   border: 2px solid var(--bg-card);
   box-shadow: var(--shadow-sm);
   cursor: pointer;
-  transition: transform var(--transition);
 }
-.progress-slider::-webkit-slider-thumb:hover {
-  transform: scale(1.2);
-}
-.progress-slider::-webkit-slider-runnable-track {
-  height: 6px;
-  border-radius: 3px;
-  background: linear-gradient(to right,
-    var(--progress-color, var(--accent)) 0%,
-    var(--progress-color, var(--accent)) var(--progress, 0%),
-    var(--bg-hover) var(--progress, 0%)
-  );
-}
-
 .progress-value {
   font-size: var(--text-sm);
   font-weight: 600;
@@ -282,14 +432,12 @@ async function handleSave() {
   text-align: right;
 }
 
-/* ---- 日期范围 ---- */
 .date-range-row {
   display: flex;
   align-items: center;
   gap: var(--sp-2);
   margin-bottom: var(--sp-5);
 }
-
 .date-chip {
   display: inline-flex;
   align-items: center;
@@ -313,12 +461,10 @@ async function handleSave() {
   border-color: var(--accent-border);
   background: var(--accent-light);
 }
-
 .date-range-arrow {
   color: var(--text-tertiary);
   font-size: var(--text-sm);
 }
-
 .date-input-abs {
   position: absolute;
   inset: 0;
@@ -329,14 +475,12 @@ async function handleSave() {
   border: none;
 }
 
-/* ---- 正文 ---- */
 .content-section {
   margin-bottom: var(--sp-2);
 }
-
 .content-editor {
   width: 100%;
-  min-height: 300px;
+  min-height: 160px;
   border: none;
   outline: none;
   resize: vertical;

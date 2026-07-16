@@ -48,11 +48,13 @@ const router = useRouter()
         <Target :size="16" class="plan-icon" />
         <div class="dash-list-main">
           <span class="dash-list-title">{{ plan.name }}</span>
-          <div class="dash-progress">
-            <div class="dash-progress-bar" :style="{ width: `${plan.progress || 0}%` }" />
-          </div>
+          <span v-if="plan.startDate || plan.endDate" class="dash-list-meta">
+            {{ plan.startDate || '?' }} ~ {{ plan.endDate || '?' }}
+          </span>
         </div>
-        <span class="dash-list-meta">{{ plan.progress }}%</span>
+        <el-tag :type="plan.status === 2 ? 'success' : plan.status === 3 ? 'warning' : plan.status === 1 ? 'primary' : 'info'" size="small">
+          {{ plan.statusLabel }}
+        </el-tag>
       </div>
     </div>
   </DashCard>

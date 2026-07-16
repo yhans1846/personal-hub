@@ -165,14 +165,19 @@ PK: (`note_id`, `category_id`)。笔记与分类多对多。
 | id | BIGINT | 主键 | PK |
 | user_id | BIGINT | 所属用户 | NOT NULL, INDEX |
 | name | VARCHAR(200) | 计划名称 | NOT NULL |
-| goal | TEXT | 学习目标 | |
+| source | VARCHAR(100) | 来源（如 B站） | |
+| author | VARCHAR(100) | 作者 | |
+| url | VARCHAR(500) | 资源地址 | |
+| remark | TEXT | 备注 | |
 | progress | INT | 进度百分比 0-100 | DEFAULT 0 |
 | start_date | DATE | 开始日期 | |
 | end_date | DATE | 结束日期 | |
-| status | TINYINT | 状态 0-未开始 1-进行中 2-已完成 3-已放弃 | DEFAULT 0 |
+| status | TINYINT | 状态 0-未开始 1-学习中 2-已完成 3-已暂停 | DEFAULT 0 |
 | is_deleted | TINYINT | 逻辑删除 | DEFAULT 0 |
 | created_at | DATETIME | 创建时间 | NOT NULL |
 | updated_at | DATETIME | 更新时间 | NOT NULL |
+
+> 分类通过 `tag_rel`（`entity_type=study_plan`）关联统一标签，不设独立分类列。
 
 ### 11. `reading_record` 阅读记录表
 | 字段 | 类型 | 说明 | 约束 |
@@ -228,11 +233,12 @@ PK: (`note_id`, `category_id`)。笔记与分类多对多。
 | title | VARCHAR(200) | 通知标题 | NOT NULL |
 | content | TEXT | 通知内容 | |
 | is_read | TINYINT | 0-未读 1-已读 | DEFAULT 0 |
+| is_dismissed | TINYINT | 0-正常 1-已清空（不再展示、不再重复生成） | DEFAULT 0 |
 | related_id | BIGINT | 关联实体 ID | |
 | related_type | VARCHAR(50) | 关联实体类型 | |
 | created_at | DATETIME | 创建时间 | NOT NULL |
 
-> 无逻辑删除。通知自动生成，只读不可修改，通过清空批量删除。
+> 清空为软清除（`is_dismissed=1`），列表不再展示；系统自动生成时若已存在同 type+related_id 记录（含已读/已清空）则不再重复创建。
 
 ### 15. `user_layout` 用户布局配置表
 | 字段 | 类型 | 说明 | 约束 |

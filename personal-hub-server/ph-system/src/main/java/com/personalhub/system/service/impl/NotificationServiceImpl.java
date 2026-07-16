@@ -31,6 +31,7 @@ public class NotificationServiceImpl implements NotificationService {
     public IPage<NotificationVO> list(Long userId, NotificationQueryDTO query) {
         LambdaQueryWrapper<Notification> w = new LambdaQueryWrapper<>();
         w.eq(Notification::getUserId, userId)
+                .eq(Notification::getIsDismissed, 0)
                 .orderByAsc(Notification::getIsRead)
                 .orderByDesc(Notification::getCreatedAt);
         return notificationMapper
@@ -43,6 +44,7 @@ public class NotificationServiceImpl implements NotificationService {
         return notificationMapper.selectCount(
                 new LambdaQueryWrapper<Notification>()
                         .eq(Notification::getUserId, userId)
+                        .eq(Notification::getIsDismissed, 0)
                         .eq(Notification::getIsRead, 0));
     }
 
@@ -79,6 +81,7 @@ public class NotificationServiceImpl implements NotificationService {
         n.setTitle(title);
         n.setContent(content);
         n.setIsRead(0);
+        n.setIsDismissed(0);
         n.setRelatedId(relatedId);
         n.setRelatedType(relatedType);
         notificationMapper.insert(n);
@@ -155,12 +158,12 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     private boolean hasNoExistingNotification(Long userId, String type, Long relatedId) {
+        // 含已读/已清空：清空或已读后不再为同一关联实体重复生成
         Long count = notificationMapper.selectCount(
                 new LambdaQueryWrapper<Notification>()
                         .eq(Notification::getUserId, userId)
                         .eq(Notification::getType, type)
-                        .eq(Notification::getRelatedId, relatedId)
-                        .eq(Notification::getIsRead, 0));
+                        .eq(Notification::getRelatedId, relatedId));
         return count == 0;
     }
 }

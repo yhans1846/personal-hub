@@ -12,12 +12,23 @@ interface FormData {
   tagIds: number[]
 }
 
+function formSnapshot(form: FormData): string {
+  return JSON.stringify({
+    title: form.title,
+    content: form.content,
+    categoryIds: form.categoryIds,
+    tagIds: form.tagIds,
+  })
+}
+
 /**
  * 自动保存状态机
  *
  * IDLE → (内容变化) → DIRTY → (2s debounce) → SAVING → SUCCESS → (2s) → IDLE
  *                                                         ↘ ERROR → (5s retry) → SAVING
  * 保存期间再修改 → 当前保存结束后立即再触发一次
+ *
+ * 初始加载通过 markReady() 建立基线，避免「打开已有笔记未改动却提示保存」。
  */
 export function useAutoSave(form: Ref<FormData>, initialNoteId?: number) {
   const status = ref<SaveStatus>('idle')
@@ -29,10 +40,33 @@ export function useAutoSave(form: Ref<FormData>, initialNoteId?: number) {
   let dirtyDuringSave = false
   let isSaving = false
   let isDestroyed = false
+  /** 初始 hydration 完成前忽略 watch */
+  let ready = false
+  let baseline = formSnapshot(form.value)
 
   function clearTimers() {
     if (debounceTimer) { clearTimeout(debounceTimer); debounceTimer = null }
     if (retryTimer) { clearTimeout(retryTimer); retryTimer = null }
+  }
+
+  function syncBaseline() {
+    baseline = formSnapshot(form.value)
+  }
+
+  /**
+   * 表单初始数据加载完毕后调用。
+   * @param markDirty 若恢复了与服务器不同的草稿，传 true 以进入未保存态
+   */
+  function markReady(markDirty = false) {
+    syncBaseline()
+    ready = true
+    if (markDirty) {
+      status.value = 'dirty'
+      if (debounceTimer) clearTimeout(debounceTimer)
+      debounceTimer = setTimeout(() => save(), 2000)
+    } else {
+      status.value = 'idle'
+    }
   }
 
   async function save(): Promise<void> {
@@ -40,6 +74,7 @@ export function useAutoSave(form: Ref<FormData>, initialNoteId?: number) {
     if (!form.value.title.trim() && !form.value.content.trim()) {
       status.value = 'idle'
       dirtyDuringSave = false
+      syncBaseline()
       return
     }
 
@@ -68,6 +103,7 @@ export function useAutoSave(form: Ref<FormData>, initialNoteId?: number) {
 
       if (isDestroyed) return
 
+      syncBaseline()
       status.value = 'success'
       lastSavedAt.value = Date.now()
 
@@ -140,6 +176,12 @@ export function useAutoSave(form: Ref<FormData>, initialNoteId?: number) {
       JSON.stringify(form.value.tagIds),
     ],
     () => {
+      if (!ready) return
+      if (formSnapshot(form.value) === baseline) {
+        if (status.value === 'dirty') status.value = 'idle'
+        if (debounceTimer) { clearTimeout(debounceTimer); debounceTimer = null }
+        return
+      }
       if (debounceTimer) clearTimeout(debounceTimer)
       if (status.value === 'success') status.value = 'idle'
       status.value = 'dirty'
@@ -208,5 +250,6 @@ export function useAutoSave(form: Ref<FormData>, initialNoteId?: number) {
     save: forceSave,
     restoreDraft,
     clearDraft,
+    markReady,
   }
 }

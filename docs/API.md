@@ -263,17 +263,34 @@ POST /api/categories
 | PUT | /api/study-plans/{id} | 编辑 | 是 |
 | DELETE | /api/study-plans/{id} | 删除 | 是 |
 
-**GET /api/study-plans** 参数: page, size, keyword, status
+**GET /api/study-plans** 参数: page, size, keyword, status, tagId, sortBy, sortDir  
+keyword 搜索：name / source / author / remark  
+sortBy：updatedAt（默认）/ createdAt / startDate / endDate / name；sortDir：asc / desc
+
+**GET /api/study-plans/stats** — 状态统计（total / pending / learning / done / paused）
 
 **POST /api/study-plans**
 ```json
-{"name":"Spring Boot 深入学习","goal":"完成官方文档阅读","progress":0,"startDate":"2026-07-01","endDate":"2026-08-31","status":0}
+{
+  "name": "苍穹外卖",
+  "source": "B站",
+  "author": "黑马",
+  "startDate": "2025-10-20",
+  "endDate": "2025-12-28",
+  "status": 2,
+  "progress": 100,
+  "url": "https://www.bilibili.com/video/...",
+  "remark": "SpringBoot+SSM 项目实战",
+  "tagIds": [1, 2]
+}
 ```
+
+状态：0-未开始 / 1-学习中 / 2-已完成 / 3-已暂停。分类通过 `tagIds` 绑定统一标签（`entity_type=study_plan`）。
 
 **PUT /api/study-plans/{id}** — 同 POST 请求体
 
 ### 学习记录关联
-`study_record` 表新增 `plan_id` 字段，学习记录支持关联学习计划。
+`study_record.plan_id` 可选关联学习计划。
 **POST /api/study-records** 新增可选字段: `planId`
 
 ### 十四、阅读记录 `/api/readings`
@@ -342,7 +359,7 @@ POST /api/categories
 ```
 
 **GET /api/dashboard/search?keyword=xxx** — 全局搜索（跨 8 模块）
-- 搜索字段：笔记(标题+内容)、日记(标题+内容)、待办(标题+内容)、学习记录(主题+内容)、收藏夹(标题+网址+描述)、阅读记录(书名+作者+笔记)、文件(名称)、学习计划(名称+目标)
+- 搜索字段：笔记(标题+内容)、日记(标题+内容)、待办(标题+内容)、学习记录(主题+内容)、收藏夹(标题+网址+描述)、阅读记录(书名+作者+笔记)、文件(名称)、学习计划(名称+来源+作者+备注)
 - 返回按模块分组的结果，每项含标题、摘要、日期、跳转链接
 
 **GET /api/dashboard/trends?days=30** -- 返回 4 项趋势数据（每日聚合）

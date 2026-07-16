@@ -20,15 +20,26 @@ public class StudyPlan {
 
     private String name;
 
-    private String goal;
+    /** 来源（如 B站） */
+    private String source;
 
+    /** 作者 */
+    private String author;
+
+    /** 资源地址 */
+    private String url;
+
+    /** 备注 */
+    private String remark;
+
+    /** 进度百分比 0-100 */
     private Integer progress;
 
     private LocalDate startDate;
 
     private LocalDate endDate;
 
-    /** 状态 0-未开始 1-进行中 2-已完成 3-已放弃 */
+    /** 状态 0-未开始 1-学习中 2-已完成 3-已暂停 */
     private Integer status;
 
     @TableLogic

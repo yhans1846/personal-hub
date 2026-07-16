@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
+import { ref, computed, onMounted, watch, onUnmounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getNoteById, toggleFavorite, deleteNote } from '@/modules/knowledge/api'
 import { getCategories } from '@/api/categoryApi'
@@ -37,7 +37,12 @@ const {
   save: forceSave,
   restoreDraft,
   clearDraft,
+  markReady,
 } = useAutoSave(form, isEdit ? Number(route.params.id) : undefined)
+
+/** 加载阶段是否因草稿与服务器不一致而需要 dirty */
+const hydrationDirty = ref(false)
+let hydrationDone = false
 
 const editorId = computed(() => buildEditorId(noteId.value))
 
@@ -63,6 +68,7 @@ onUnmounted(() => {
 const { handleUpload } = useImageUpload(noteId, forceSave)
 
 onMounted(async () => {
+  let shouldMarkDirty = false
   try {
     const [catRes, tagRes] = await Promise.all([getCategories('note'), getTags()])
     categories.value = catRes.data.data
@@ -92,6 +98,7 @@ onMounted(async () => {
             form.value.content = d.content
             form.value.categoryIds = d.categoryIds || form.value.categoryIds
             form.value.tagIds = d.tagIds || form.value.tagIds
+            shouldMarkDirty = true
             ElMessage.info('已恢复本地草稿')
           }
         } catch { /* ignore */ }
@@ -100,11 +107,27 @@ onMounted(async () => {
       ElMessage.error('加载笔记失败')
     }
   } else if (restoreDraft()) {
+    shouldMarkDirty = true
     ElMessage.info('已恢复未保存的草稿')
   }
 
+  hydrationDirty.value = shouldMarkDirty
   initialLoading.value = false
+  await nextTick()
+  // 预览态无 Vditor，直接建立基线；编辑态等 @ready（避免编辑器初始化归一化误标 dirty）
+  if (mode.value === 'preview') {
+    markReady(hydrationDirty.value)
+    hydrationDone = true
+  }
 })
+
+function onVditorReady() {
+  if (hydrationDone) return
+  nextTick(() => {
+    markReady(hydrationDirty.value)
+    hydrationDone = true
+  })
+}
 
 async function handleToggleFavorite() {
   if (!noteId.value) await forceSave()
@@ -255,6 +278,7 @@ const readingTimeText = computed(() => estimateReadingTime(form.value.content))
           :theme="editorTheme"
           :on-upload-img="onUploadImg"
           :class="{ 'editor-instance': true, 'focus-editor': mode === 'focus' }"
+          @ready="onVditorReady"
         />
 
         <NoteMarkdownPreview

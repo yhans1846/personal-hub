@@ -166,7 +166,7 @@ personal-hub-web/src/
 │   │   ├── study/    # 学习记录列表 + StudyDialog
 │   │   └── tag/      # 统一标签管理
 │   ├── planning/
-│   │   ├── studyplan/ # 学习计划列表 + StudyPlanDialog
+│   │   ├── studyplan/ # 学习计划表格列表 + StudyPlanDialog
 │   │   └── todo/      # 待办列表 + TodoDialog
 │   ├── resource/
 │   │   ├── bookmark/  # 收藏夹列表 + BookmarkDialog
@@ -409,7 +409,7 @@ Card
 | File Category | Dialog |
 | Reading Record | Dialog |
 | Study Record | Dialog |
-| Study Plan | Dialog |
+| Study Plan | Dialog + 表格列表 |
 | Markdown 编辑器 | Full Page |
 | 日记编辑 | Dialog |
 
@@ -552,7 +552,7 @@ CRUD 操作遵循：Dialog（全部实体），不跳转独立页面。
 
 ### Checklist（新增页面时对照）
 1. ✅ 使用 `<PageHeader>` + `<EmptyState>` 共享组件
-2. ✅ 卡片网格/列表优先，不用 table
+2. ✅ 卡片网格/列表优先，不用 table（例外：学习计划为数据密集课程表，使用轻边框 `el-table`）
 3. ✅ 卡片 hover 反馈（translateY + shadow）
 4. ✅ 深色模式验证
 5. ✅ 响应式适配（768px 断点）

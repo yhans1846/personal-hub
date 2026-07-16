@@ -32,6 +32,8 @@ const vditorReady = ref(false)
 let vditor: Vditor | null = null
 let syncingExternal = false
 let pendingExternalValue: string | null = null
+/** 初始化完成前忽略 input，避免归一化内容误触发父级 dirty */
+let suppressInput = true
 
 function getVditor() {
   return vditorRef.value
@@ -54,6 +56,7 @@ function onUploadImage(files: File[]) {
 
 async function initVditor() {
   if (!containerRef.value) return
+  suppressInput = true
   vditor = new Vditor(containerRef.value, {
     ...buildVditorBaseOptions({
       height: props.compact ? '100%' : 'auto',
@@ -61,7 +64,7 @@ async function initVditor() {
       placeholder: props.placeholder,
       value: props.modelValue,
       input: (value: string) => {
-        if (syncingExternal) return
+        if (syncingExternal || suppressInput) return
         emit('update:modelValue', value)
       },
       after: () => {
@@ -76,7 +79,17 @@ async function initVditor() {
           syncingExternal = false
           pendingExternalValue = null
         }
-        emit('ready', vditor!)
+        // 回写归一化内容后再通知 ready，供父组件建立未保存基线
+        nextTick(() => {
+          if (vditor) {
+            const finalValue = vditor.getValue()
+            if (finalValue !== props.modelValue) {
+              emit('update:modelValue', finalValue)
+            }
+          }
+          suppressInput = false
+          emit('ready', vditor!)
+        })
       },
       upload: props.onUploadImg
         ? {

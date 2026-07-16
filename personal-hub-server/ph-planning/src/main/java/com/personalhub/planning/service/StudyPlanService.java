@@ -3,6 +3,7 @@ package com.personalhub.planning.service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.personalhub.planning.dto.StudyPlanCreateDTO;
 import com.personalhub.planning.dto.StudyPlanQueryDTO;
+import com.personalhub.planning.vo.StudyPlanStatsVO;
 import com.personalhub.planning.vo.StudyPlanVO;
 
 /**
@@ -11,6 +12,8 @@ import com.personalhub.planning.vo.StudyPlanVO;
 public interface StudyPlanService {
 
     IPage<StudyPlanVO> list(Long userId, StudyPlanQueryDTO query);
+
+    StudyPlanStatsVO stats(Long userId);
 
     StudyPlanVO getById(Long id, Long userId);
 

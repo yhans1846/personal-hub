@@ -22,6 +22,9 @@ public class Notification {
 
     private Integer isRead;
 
+    /** 0-正常 1-已清空/忽略 */
+    private Integer isDismissed;
+
     private Long relatedId;
 
     private String relatedType;
