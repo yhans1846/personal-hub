@@ -222,9 +222,9 @@ Topbar 56px｜Sidebar 240px｜Main max-width 1600、padding 32
 | `EmptyState` | 空状态 | icon, text, actionLabel?, illustration? |
 | `StatCard` | 统计卡 | icon, value, label, color? |
 | `PageHeader` | 页头 | title, subtitle?, 插槽 |
-| `ListToolbar` | 搜索栏 | search + `#filters` |
-| `ListPagination` | 分页 | total, page, size |
-| `CommandPalette` | Ctrl+K | — |
+| `ListToolbar` | 列表工具栏 | search + `#filters` + `#actions` + createLabel? |
+| `ListPagination` | 分页 | total, page, size（fill 页顶边距归零） |
+| `CommandPalette` | Ctrl+K | 导航 + Enter 跳转 `/search?q=` |
 | `NotificationBell` | 通知 | badge + popover |
 | `SearchBar` | 搜索框 | placeholder, modelValue, debounce? |
 | `ConfirmDialog` | 确认 | title, content |
@@ -235,11 +235,12 @@ Topbar 56px｜Sidebar 240px｜Main max-width 1600、padding 32
 | `DocLayout` | 文档壳 Header+TOC+正文 | title, tocItems?, meta?, isTrash? + `#header-actions` |
 
 ### Dashboard Bento（`src/modules/dashboard/`）
-- Hero → 12 列 Bento；`visibleDashboardCards` 显隐排序
+- Hero → 12 列 Bento；`visibleDashboardCards` 显隐排序；`useMainContentFill` + DashCard 体内滚
 - 默认：today_plan / quick_actions / external_links / recent_notes / recent_studies / recent_reading（span 4）
 - 趋势/KPI/活动仅 `/stats`；已移除 weekly_trend / recent_activity / kpi_strip / pending_todos / resource_snapshot
-- 外部快捷：收藏 `show_on_dashboard`；`DASHBOARD_CARD_SPAN` + `ensureDashboardCards` + `REMOVED_DASHBOARD_CODES`
+- 窄屏（≤900）：整页可滚、Hero 压缩；资源 chips 收成链到 `/stats`
 - 组件：`widgets/*` + `DashCard` + `format.ts`
+- 设置「工作台」：菜单 / Dashboard / 统计统一**标签云**（点击显隐、拖把手排序）
 
 #### UI 基础组件（`src/components/ui/`）
 | 组件 | 用途 | 关键 |
@@ -254,10 +255,24 @@ Topbar 56px｜Sidebar 240px｜Main max-width 1600、padding 32
 | `readingTime.ts` | 阅读时长 / 相对时间 / 近 24h 编辑 |
 | `deepLink.ts` | `buildEditPath` / `buildCreatePath` / `parseDeepLinkQuery` / 通知跳转 |
 
-### Composable
+### Composable（`src/composables/`）
 | 文件 | 用途 |
 |------|------|
 | `useDeepLinkDialog.ts` | 消费 `?edit=` / `?create=1`，开 Dialog 并清 URL |
+| `useMainContentFill.ts` | 挂载/卸载 `.main-content--fill` |
+| `useFillPageSize.ts` | 按内容区高度得到 10/8/6，resize 防抖后回调刷新列表 |
+| `resolveFillPageSize.ts` | 高度 → pageSize 纯函数（单测） |
+| `useProductViewMode.ts` | Table/Card 视图 + `localStorage` |
+
+### 样式
+| 文件 | 用途 |
+|------|------|
+| `styles/global.css` | 设计令牌 / 主题 / fill 布局 |
+| `styles/product-list.css` | Product 视图切换（`.view-toggle`）公共样式 |
+| `styles/markdown-prose.css` | Markdown 排版 |
+
+### 路由约定
+列表主路由可设 `meta.hideBreadcrumb: true`，`AppLayout` 隐藏面包屑，避免与 `PageHeader` 双标题。
 
 ### Editor Composable（`src/modules/knowledge/note/editor/`）
 | 文件 | 用途 |
@@ -309,11 +324,12 @@ pointer + 200ms｜Focus accent inset｜卡片 Hover 上浮｜操作按钮 hover 
 7. header→toolbar→list→pagination；筛选重置页码  
 8. Dialog + `useDeepLinkDialog`  
 9. 新建/编辑共用 Dialog  
-10. `main-content--fill` 挂载/卸载成对  
+10. 列表页用 `useMainContentFill` + `useFillPageSize`（禁手写 DOM class）  
+11. 工具栏优先 `ListToolbar`；视图切换用 `useProductViewMode`  
 
 ### 相关文件
-- Token：`styles/global.css`｜散文：`markdown-prose.css`  
-- 列表：`LIST_PAGE_SPEC.md`｜预览：`PREVIEW_PAGE_SPEC.md`  
+- Token：`styles/global.css`｜视图切换：`product-list.css`｜散文：`markdown-prose.css`  
+- 列表：`LIST_PAGE_SPEC.md`｜预览：`PREVIEW_PAGE_SPEC.md`｜全站盘点：`qa/2026-07-17-全站页面优化盘点.md`  
 - 组件：`src/components/`｜主题：`main.ts`
 
 ---

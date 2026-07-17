@@ -92,8 +92,12 @@
 
 ## 6. Header / 工具栏 / 统计
 
-PageHeader（共 N）+ 可选状态徽章（勿做成 KPI 大卡）  
-toolbar：搜索/筛选/排序/视图切换 | **导出 ▾**（可选）+ 新建（Plus）
+PageHeader（共 N，动态计数即可；禁营销副标题）+ 可选状态徽章（勿做成 KPI 大卡）  
+toolbar：统一 **`ListToolbar`**（搜索 / `#filters` / `#actions` / createLabel）  
+视图切换：`useProductViewMode` + `.view-toggle`（`styles/product-list.css`）  
+列表主路由建议 `meta.hideBreadcrumb: true`（与 PageHeader 二选一标题）
+
+适用 fill 页：学习计划、阅读、笔记、日记、学习记录、待办、收藏、文件、回收站、Dashboard。
 
 ### 导出（可选）
 

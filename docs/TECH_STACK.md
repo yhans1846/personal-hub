@@ -28,7 +28,8 @@
 | sortablejs · ECharts 6 | | 拖拽 / 图表 |
 
 ### 前端约定
-`<script setup lang="ts">` · pnpm · 主题用 `global.css` 变量，不改 EP 源码。
+`<script setup lang="ts">` · pnpm · 主题用 `global.css` 变量，不改 EP 源码。  
+列表页遵循 `LIST_PAGE_SPEC.md`：`useMainContentFill` + `useFillPageSize`（矮屏 10/8/6）· `ListToolbar` · `useProductViewMode`。
 
 ## 开发工具
 

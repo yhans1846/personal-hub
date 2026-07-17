@@ -60,6 +60,7 @@ ph-common ← ph-system ← ph-biz ← ph-boot
 | 十–十二 | 编辑器 UI；阅读配置进设置+JWT query；统一 Dialog；统计 V4 |
 | 十三–十五 | Profile+待办+外观；Focus Mode |
 | 十六–十七 | 部署/安全/性能；Vditor WYSIWYG |
+| 十八 | 后端 8→4 模块（ph-biz）；列表一屏铺满；设置工作台标签云；全站列表规范收口 |
 
 ## 后续可扩展
 
@@ -84,3 +85,6 @@ ph-common ← ph-system ← ph-biz ← ph-boot
 | 28–30 | 回收站+审计；预览体验；阅读配置+JWT query | 八–十一 |
 | 31–36 | 统一 Dialog；统计 V4；Profile/待办/外观 | 十一–十三 |
 | 37 | Focus Mode | 十五 |
+| 38 | 后端模块合并 ph-biz；Entity Builder / 枚举收口 | 十八 |
+| 39 | 列表一屏铺满（fill + 10/8/6）；待办 dueScope；设置标签云 | 十八 |
+| 40 | 全站列表规范收口（工具栏 / 回收站 / 统计折叠 / 命令面板进搜索） | 十八 |

@@ -10,6 +10,9 @@
 - **批次 3**：新增 `useProductViewMode`；学习计划 / 阅读记录接入；Product 样式抽公共组件暂缓（P2-1 注释标记）
 - **批次 4**：笔记列表补 Table/Card 切换（默认 Card，`note-view` 持久化）；回收站接入 plan-page + fill + 矮屏降档 + 骨架屏 + 图标操作；`LIST_PAGE_SPEC` 文档化学习记录时间线例外
 
+### 2026-07-17 文档同步
+- 同步 PROJECT / STYLE_GUIDE / LIST_PAGE_SPEC / TECH_STACK / README / 前后端 README / CLAUDE 索引，反映一屏铺满、dueScope、设置标签云与全站优化收口
+
 ### 2026-07-17 全站优化收尾（原暂缓项）
 - **P0-3 / P1-5**：学习计划、阅读、待办统一 `ListToolbar`；待办 Tab 改 lucide + 可横滚
 - **P1-3 / P1-4**：Dashboard 窄屏可滚、Hero 压缩与资源入口简化

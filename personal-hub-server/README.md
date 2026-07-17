@@ -20,7 +20,7 @@ ph-common        # 公共组件 + 存储 SPI（Result / 异常 / JWT / Security 
 ph-system        # 用户认证(JWT) / 个人信息 / 通知 / 布局 / 审计
 ph-biz           # 业务合集
                  #   knowledge  笔记 / 回收站 / 日记 / 学习 / 阅读 / 标签 / 分类
-                 #   planning   Todo / 学习计划
+                 #   planning   Todo（含 dueScope 列表筛选）/ 学习计划（含 XLSX 导出）
                  #   resource   收藏夹 / 文件 / 笔记资源
                  #   dashboard  聚合统计 / 全局搜索 / 趋势
 ```
