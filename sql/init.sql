@@ -49,7 +49,7 @@ CREATE TABLE `diary_entry`  (
                                 `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
                                 `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
                                 `location` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '地点',
-                                `image_file_id` bigint NULL DEFAULT NULL COMMENT '配图文件ID',
+                                `image_file_ids` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '配图文件ID列表(JSON数组)',
                                 PRIMARY KEY (`id`) USING BTREE,
                                 INDEX `idx_user_id_date`(`user_id` ASC, `date` ASC) USING BTREE,
                                 INDEX `idx_date`(`date` ASC) USING BTREE

@@ -8,6 +8,11 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * 日记条目实体
@@ -44,8 +49,19 @@ public class DiaryEntry {
     /** 地点 */
     private String location;
 
-    /** 配图文件ID */
-    private Long imageFileId;
+    /** 配图文件ID列表(JSON数组) */
+    private String imageFileIds;
+
+    /** 解析 imageFileIds 为列表 */
+    public List<Long> parseImageFileIds() {
+        if (imageFileIds == null || imageFileIds.isBlank()) return Collections.emptyList();
+        try {
+            return new ObjectMapper().readValue(imageFileIds,
+                    new TypeReference<List<Long>>() {});
+        } catch (Exception e) {
+            return Collections.emptyList();
+        }
+    }
 
     /** 逻辑删除 0-正常 1-删除 */
     @TableLogic

@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, watch, computed, toRef } from 'vue'
+import { ref, watch, computed, toRef, onUnmounted } from 'vue'
 import { createDiary, updateDiary, getDiaryById } from '@/modules/knowledge/api'
-import { uploadFile } from '@/modules/resource/api'
+import { uploadFile, deleteFile } from '@/modules/resource/api'
+import { getFilePreviewUrl, revokePreviewUrl } from '@/utils/file'
 import { ElMessage } from 'element-plus'
 import { ImagePlus, X, MapPin } from 'lucide-vue-next'
 import { UiDialog, UiInput, UiButton } from '@/components/ui'
@@ -18,6 +19,11 @@ const emit = defineEmits<{
   'saved': []
 }>()
 
+interface ImageItem {
+  id: number
+  url: string
+}
+
 const form = ref({
   date: '',
   title: '',
@@ -25,11 +31,11 @@ const form = ref({
   mood: 3,
   weather: '',
   location: '',
-  imageFileId: undefined as number | undefined
+  imageFileIds: [] as number[],
 })
 const saving = ref(false)
 const uploading = ref(false)
-const previewUrl = ref('')
+const previewImages = ref<ImageItem[]>([])
 const isDragging = ref(false)
 
 const moodOptions = [
@@ -37,7 +43,7 @@ const moodOptions = [
   { value: 2, emoji: '😄', label: '不错' },
   { value: 3, emoji: '😐', label: '一般' },
   { value: 4, emoji: '😔', label: '难过' },
-  { value: 5, emoji: '😭', label: '糟糕' }
+  { value: 5, emoji: '😭', label: '糟糕' },
 ]
 
 const weatherOptions = [
@@ -46,7 +52,7 @@ const weatherOptions = [
   { emoji: '☁️', label: '阴' },
   { emoji: '🌧️', label: '雨' },
   { emoji: '⛈️', label: '雷阵雨' },
-  { emoji: '❄️', label: '雪' }
+  { emoji: '❄️', label: '雪' },
 ]
 
 const dialogTitle = computed(() => props.entityId ? '编辑日记' : '今天')
@@ -58,12 +64,21 @@ async function loadEntity(id: number) {
   const res = await getDiaryById(id)
   const r = res.data.data
   form.value = {
-    date: r.date, title: r.title || '', content: r.content || '',
-    mood: r.mood || 3, weather: r.weather || '', location: r.location || '',
-    imageFileId: r.imageFileId
+    date: r.date,
+    title: r.title || '',
+    content: r.content || '',
+    mood: r.mood || 3,
+    weather: r.weather || '',
+    location: r.location || '',
+    imageFileIds: r.imageFileIds || [],
   }
-  if (r.imageFileId) {
-    previewUrl.value = `/api/files/${r.imageFileId}/download`
+  // 清理旧 blob URL
+  previewImages.value.forEach(img => revokePreviewUrl(img.url))
+  // 加载已有图片预览
+  previewImages.value = []
+  for (const fileId of form.value.imageFileIds) {
+    const url = await getFilePreviewUrl(fileId)
+    previewImages.value.push({ id: fileId, url })
   }
 }
 
@@ -73,9 +88,11 @@ watch(() => props.modelValue, (val) => {
   const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
   form.value = {
     date: props.initialDate || today,
-    title: '', content: '', mood: 3, weather: '', location: '', imageFileId: undefined
+    title: '', content: '', mood: 3, weather: '', location: '', imageFileIds: [],
   }
-  previewUrl.value = ''
+  // 清理旧 blob URL
+  previewImages.value.forEach(img => revokePreviewUrl(img.url))
+  previewImages.value = []
 })
 
 const { loading, close, onSaved } = useEntityDialog({
@@ -100,27 +117,45 @@ async function handleSave() {
 }
 
 // ---- Image Upload ----
-async function handleImageUpload(file: File) {
-  if (!file.type.startsWith('image/')) {
-    ElMessage.warning('请上传图片文件')
-    return
+async function handleImageUpload(files: FileList | File[]) {
+  const valid: File[] = []
+  for (const f of files) {
+    if (f.type.startsWith('image/')) valid.push(f)
+    else ElMessage.warning(`"${f.name}" 不是图片，已跳过`)
   }
+  if (!valid.length) return
+
   uploading.value = true
   try {
-    const res = await uploadFile(file)
-    form.value.imageFileId = res.data.data.id
-    previewUrl.value = `/api/files/${form.value.imageFileId}/download`
+    for (const file of valid) {
+      const res = await uploadFile(file)
+      const fileId = res.data.data.id
+      form.value.imageFileIds.push(fileId)
+      const url = await getFilePreviewUrl(fileId)
+      previewImages.value.push({ id: fileId, url })
+    }
   } finally { uploading.value = false }
 }
 
 function onFileChange(e: Event) {
-  const file = (e.target as HTMLInputElement).files?.[0]
-  if (file) handleImageUpload(file)
+  const files = (e.target as HTMLInputElement).files
+  if (files?.length) {
+    handleImageUpload(files)
+    // 清空 input 以便重复选择同一个文件
+    ;(e.target as HTMLInputElement).value = ''
+  }
 }
 
-function removeImage() {
-  form.value.imageFileId = undefined
-  previewUrl.value = ''
+/** 删除单张图片（调用后端删除 + 清理本地状态） */
+async function handleRemoveImage(img: ImageItem) {
+  try {
+    await deleteFile(img.id)
+  } catch {
+    // 后端删除失败不阻断本地清理
+  }
+  revokePreviewUrl(img.url)
+  form.value.imageFileIds = form.value.imageFileIds.filter(id => id !== img.id)
+  previewImages.value = previewImages.value.filter(p => p.id !== img.id)
 }
 
 function onDragOver(e: DragEvent) {
@@ -135,9 +170,14 @@ function onDragLeave() {
 function onDrop(e: DragEvent) {
   e.preventDefault()
   isDragging.value = false
-  const file = e.dataTransfer?.files?.[0]
-  if (file) handleImageUpload(file)
+  const files = e.dataTransfer?.files
+  if (files?.length) handleImageUpload(files)
 }
+
+/** 组件卸载时清理所有 blob URL */
+onUnmounted(() => {
+  previewImages.value.forEach(img => revokePreviewUrl(img.url))
+})
 </script>
 
 <template>
@@ -211,16 +251,21 @@ function onDrop(e: DragEvent) {
       </div>
     </div>
 
-    <!-- 配图 DropZone -->
+    <!-- 配图 -->
     <div class="section-label">配图</div>
-    <div v-if="previewUrl" class="image-preview-wrapper">
-      <img :src="previewUrl" class="preview-img" />
-      <button class="image-remove-btn" @click="removeImage" :disabled="uploading">
-        <X :size="16" />
-      </button>
+
+    <!-- 图片预览列表 -->
+    <div v-if="previewImages.length" class="image-grid">
+      <div v-for="img in previewImages" :key="img.id" class="image-item">
+        <img :src="img.url" class="preview-img" />
+        <button class="image-remove-btn" @click="handleRemoveImage(img)" :disabled="uploading">
+          <X :size="16" />
+        </button>
+      </div>
     </div>
+
+    <!-- 上传 DropZone -->
     <div
-      v-else
       class="dropzone"
       :class="{ 'dropzone--dragging': isDragging }"
       @dragover="onDragOver"
@@ -230,11 +275,12 @@ function onDrop(e: DragEvent) {
     >
       <ImagePlus :size="28" class="dropzone-icon" />
       <span class="dropzone-text">拖拽图片到这里，或点击上传</span>
-      <span class="dropzone-hint">支持 JPG、PNG、WEBP</span>
+      <span class="dropzone-hint">支持 JPG、PNG、WEBP，可多选</span>
       <input
         ref="fileInput"
         type="file"
         accept="image/*"
+        multiple
         class="dropzone-input"
         @change="onFileChange"
       />
@@ -423,6 +469,47 @@ function onDrop(e: DragEvent) {
   color: var(--text-primary);
 }
 
+/* ---- 图片网格 ---- */
+.image-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+}
+
+.image-item {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.preview-img {
+  width: 120px;
+  height: 90px;
+  border-radius: var(--radius-md);
+  object-fit: cover;
+  border: 1px solid var(--border-color);
+}
+
+.image-remove-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition);
+}
+.image-remove-btn:hover {
+  background: rgba(0, 0, 0, 0.75);
+}
+
 /* ---- DropZone ---- */
 .dropzone {
   display: flex;
@@ -461,41 +548,6 @@ function onDrop(e: DragEvent) {
 }
 .dropzone-input {
   display: none;
-}
-
-/* ---- 图片预览 ---- */
-.image-preview-wrapper {
-  position: relative;
-  display: inline-block;
-  margin-bottom: var(--sp-5);
-}
-
-.preview-img {
-  max-width: 280px;
-  max-height: 200px;
-  border-radius: var(--radius-md);
-  object-fit: cover;
-  border: 1px solid var(--border-color);
-}
-
-.image-remove-btn {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.55);
-  color: #fff;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background var(--transition);
-}
-.image-remove-btn:hover {
-  background: rgba(0, 0, 0, 0.75);
 }
 
 /* ---- 正文编辑器 ---- */

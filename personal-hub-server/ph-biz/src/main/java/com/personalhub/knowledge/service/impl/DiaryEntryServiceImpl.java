@@ -21,6 +21,8 @@ import org.springframework.util.StringUtils;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 /**
  * 日记服务实现
  */
@@ -106,7 +108,7 @@ public class DiaryEntryServiceImpl implements DiaryEntryService {
                 .mood(dto.getMood())
                 .weather(dto.getWeather())
                 .location(dto.getLocation())
-                .imageFileId(dto.getImageFileId())
+                .imageFileIds(toImageFileIdsJson(dto.getImageFileIds()))
                 .build();
         diaryEntryMapper.insert(entry);
         log.info("新建日记: id={}, userId={}, date={}", entry.getId(), userId, entry.getDate());
@@ -124,7 +126,7 @@ public class DiaryEntryServiceImpl implements DiaryEntryService {
         if (dto.getMood() != null) entry.setMood(dto.getMood());
         if (dto.getWeather() != null) entry.setWeather(dto.getWeather());
         if (dto.getLocation() != null) entry.setLocation(dto.getLocation());
-        if (dto.getImageFileId() != null) entry.setImageFileId(dto.getImageFileId());
+        if (dto.getImageFileIds() != null) entry.setImageFileIds(toImageFileIdsJson(dto.getImageFileIds()));
         diaryEntryMapper.updateById(entry);
         log.info("编辑日记: id={}, userId={}", id, userId);
         return DiaryVO.from(entry);
@@ -137,5 +139,16 @@ public class DiaryEntryServiceImpl implements DiaryEntryService {
                 diaryEntryMapper.selectById(id), userId, DiaryEntry::getUserId, "日记不存在");
         diaryEntryMapper.deleteById(id);
         log.info("删除日记: id={}, userId={}", id, userId);
+    }
+
+    /** 将文件ID列表转为JSON字符串存储 */
+    private String toImageFileIdsJson(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) return null;
+        try {
+            return new ObjectMapper().writeValueAsString(ids);
+        } catch (Exception e) {
+            log.warn("序列化 imageFileIds 失败", e);
+            return null;
+        }
     }
 }

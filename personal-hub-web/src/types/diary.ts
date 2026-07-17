@@ -9,7 +9,7 @@ export interface DiaryVO {
   moodLabel: string
   weather: string
   location?: string
-  imageFileId?: number
+  imageFileIds?: number[]
   createdAt: string
   updatedAt: string
 }
@@ -22,7 +22,7 @@ export interface DiaryCreateDTO {
   mood?: number
   weather?: string
   location?: string
-  imageFileId?: number
+  imageFileIds?: number[]
 }
 
 /** 查询参数 */

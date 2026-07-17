@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.util.List;
 
 /**
  * 创建/编辑日记 DTO
@@ -33,6 +34,6 @@ public class DiaryCreateDTO {
     @Schema(description = "地点", example = "图书馆")
     private String location;
 
-    @Schema(description = "配图文件ID")
-    private Long imageFileId;
+    @Schema(description = "配图文件ID列表")
+    private List<Long> imageFileIds;
 }

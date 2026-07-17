@@ -5,6 +5,7 @@ import com.personalhub.knowledge.enums.DiaryMood;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
+import java.util.List;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -42,8 +43,8 @@ public class DiaryVO {
     @Schema(description = "地点")
     private String location;
 
-    @Schema(description = "配图文件ID")
-    private Long imageFileId;
+    @Schema(description = "配图文件ID列表")
+    private List<Long> imageFileIds;
 
     @Schema(description = "创建时间")
     private LocalDateTime createdAt;
@@ -60,7 +61,7 @@ public class DiaryVO {
         vo.setMood(entry.getMood());
         vo.setWeather(entry.getWeather());
         vo.setLocation(entry.getLocation());
-        vo.setImageFileId(entry.getImageFileId());
+        vo.setImageFileIds(entry.parseImageFileIds());
         vo.setCreatedAt(entry.getCreatedAt());
         vo.setUpdatedAt(entry.getUpdatedAt());
 
