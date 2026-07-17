@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { PageHeader, EmptyState, ListPagination } from '@/components'
 import {
   getStudyPlanList, getStudyPlanStats, deleteStudyPlan,
@@ -14,9 +14,10 @@ import StudyPlanDialog from './StudyPlanDialog.vue'
 import type { StudyPlanVO, StudyPlanQuery, StudyPlanStats } from '@/types/studyplan'
 import type { TagVO } from '@/types/tag'
 import { useDeepLinkDialog } from '@/composables/useDeepLinkDialog'
+import { useMainContentFill } from '@/composables/useMainContentFill'
+import { useFillPageSize } from '@/composables/useFillPageSize'
 
 const VIEW_KEY = 'study-plan-view'
-const PAGE_SIZE = 10
 
 const list = ref<StudyPlanVO[]>([])
 const total = ref(0)
@@ -26,7 +27,7 @@ const stats = ref<StudyPlanStats>({ total: 0, pending: 0, learning: 0, done: 0, 
 const viewMode = ref<'table' | 'card'>((localStorage.getItem(VIEW_KEY) as 'table' | 'card') || 'table')
 const query = ref<StudyPlanQuery>({
   page: 1,
-  size: PAGE_SIZE,
+  size: 10,
   keyword: '',
   sortBy: 'updatedAt',
   sortDir: 'desc',
@@ -47,15 +48,16 @@ function openEdit(id: number) {
 
 useDeepLinkDialog({ openCreate, openEdit })
 
-onMounted(() => {
-  document.querySelector('.main-content')?.classList.add('main-content--fill')
-  fetchTags()
-  fetchStats()
+useMainContentFill()
+const { pageSize } = useFillPageSize((size) => {
+  query.value.size = size
+  query.value.page = 1
   fetchList()
 })
 
-onUnmounted(() => {
-  document.querySelector('.main-content')?.classList.remove('main-content--fill')
+onMounted(() => {
+  fetchTags()
+  fetchStats()
 })
 
 async function fetchTags() {
@@ -449,7 +451,7 @@ const headerSubtitle = computed(() => `共 ${stats.value.total} 个计划`)
             </div>
           </div>
           <div
-            v-for="n in Math.max(0, PAGE_SIZE - list.length)"
+            v-for="n in Math.max(0, pageSize - list.length)"
             :key="'pad-' + n"
             class="pt-row pt-row--pad"
             aria-hidden="true"
@@ -521,7 +523,7 @@ const headerSubtitle = computed(() => `共 ${stats.value.total} 个计划`)
           </div>
         </div>
         <div
-          v-for="n in Math.max(0, PAGE_SIZE - list.length)"
+          v-for="n in Math.max(0, pageSize - list.length)"
           :key="'card-pad-' + n"
           class="plan-card plan-card--pad"
           aria-hidden="true"
@@ -534,7 +536,7 @@ const headerSubtitle = computed(() => `共 ${stats.value.total} 个计划`)
         v-if="list.length > 0 || total > 0"
         :total="total"
         :page="query.page ?? 1"
-        :size="PAGE_SIZE"
+        :size="pageSize"
         @update:page="onPageChange"
       />
     </div>

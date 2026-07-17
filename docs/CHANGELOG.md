@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### 2026-07-17 全站列表 fill 批次 1–2
+- 学习计划 / 阅读记录：手写 fill 改为 `useMainContentFill` + `useFillPageSize`（矮屏 10/8/6）
+- 收藏夹 / 文件：接入 plan-page 一屏铺满、默认 size=10、pad 槽、分页 `total>0` 即显
+
 ### 2026-07-17 全站页面优化盘点
 - 新增 `docs/qa/2026-07-17-全站页面优化盘点.md`：路由清单、LIST 对齐矩阵、P0–P2 优化项与落地批次
 

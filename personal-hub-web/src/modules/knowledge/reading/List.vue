@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, computed } from 'vue'
 import { PageHeader, EmptyState, ListPagination } from '@/components'
 import {
   getReadingList, deleteReading, createReading, exportReadings,
@@ -11,9 +11,10 @@ import {
 import ReadingDialog from './ReadingDialog.vue'
 import type { ReadingVO, ReadingQuery } from '@/types/reading'
 import { useDeepLinkDialog } from '@/composables/useDeepLinkDialog'
+import { useMainContentFill } from '@/composables/useMainContentFill'
+import { useFillPageSize } from '@/composables/useFillPageSize'
 
 const VIEW_KEY = 'reading-view'
-const PAGE_SIZE = 10
 
 const list = ref<ReadingVO[]>([])
 const total = ref(0)
@@ -21,7 +22,7 @@ const loading = ref(false)
 const viewMode = ref<'table' | 'card'>((localStorage.getItem(VIEW_KEY) as 'table' | 'card') || 'table')
 const query = ref<ReadingQuery>({
   page: 1,
-  size: PAGE_SIZE,
+  size: 10,
   keyword: '',
   sortBy: 'updatedAt',
   sortDir: 'desc',
@@ -42,13 +43,11 @@ function openEdit(id: number) {
 
 useDeepLinkDialog({ openCreate, openEdit })
 
-onMounted(() => {
-  document.querySelector('.main-content')?.classList.add('main-content--fill')
+useMainContentFill()
+const { pageSize } = useFillPageSize((size) => {
+  query.value.size = size
+  query.value.page = 1
   fetchList()
-})
-
-onUnmounted(() => {
-  document.querySelector('.main-content')?.classList.remove('main-content--fill')
 })
 
 async function fetchList() {
@@ -385,7 +384,7 @@ const headerSubtitle = computed(() => `共 ${total.value} 本`)
             </div>
           </div>
           <div
-            v-for="n in Math.max(0, PAGE_SIZE - list.length)"
+            v-for="n in Math.max(0, pageSize - list.length)"
             :key="'pad-' + n"
             class="pt-row pt-row--pad"
             aria-hidden="true"
@@ -459,7 +458,7 @@ const headerSubtitle = computed(() => `共 ${total.value} 本`)
           </div>
         </div>
         <div
-          v-for="n in Math.max(0, PAGE_SIZE - list.length)"
+          v-for="n in Math.max(0, pageSize - list.length)"
           :key="'card-pad-' + n"
           class="book-card book-card--pad"
           aria-hidden="true"
@@ -472,7 +471,7 @@ const headerSubtitle = computed(() => `共 ${total.value} 本`)
         v-if="list.length > 0 || total > 0"
         :total="total"
         :page="query.page ?? 1"
-        :size="PAGE_SIZE"
+        :size="pageSize"
         @update:page="onPageChange"
       />
     </div>

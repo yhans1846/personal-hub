@@ -28,9 +28,9 @@
 
 ### 一屏铺满（默认）
 
-挂载加 / 卸载移 `main-content--fill`（见 AppLayout）。适用：学习计划、阅读记录、笔记、日记、学习记录、待办、Dashboard。
+挂载加 / 卸载移 `main-content--fill`（见 AppLayout）。适用：学习计划、阅读记录、笔记、日记、学习记录、待办、收藏、文件、Dashboard。
 
-使用 `useMainContentFill()` + `useFillPageSize()`。
+使用 `useMainContentFill()` + `useFillPageSize()`（禁止再手写 DOM class / 固定 PAGE_SIZE）。
 
 #### 矮屏降档（内容区可视高）
 
