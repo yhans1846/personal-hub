@@ -27,10 +27,10 @@ import ExperimentalFeatures from './ExperimentalFeatures.vue'
   width: 100%;
 }
 .settings-card {
-  margin-bottom: 20px;
+  margin-bottom: var(--sp-3);
 }
 .card-title {
-  margin: 0 0 12px;
+  margin: 0 0 var(--sp-2);
   font-size: 15px;
   font-weight: 700;
   color: var(--text-primary);

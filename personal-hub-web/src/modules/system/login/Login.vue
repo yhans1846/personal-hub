@@ -77,4 +77,12 @@ async function handleLogin() {
 .login-subtitle { text-align: center; font-size: var(--text-sm); color: var(--text-secondary); margin-bottom: var(--sp-8); }
 .login-form { max-width: 100%; }
 .login-btn { width: 100%; height: 44px; font-size: var(--text-base); }
+
+@media (max-width: 480px) {
+  .login-page { padding: 0 var(--sp-4); }
+  .login-card {
+    width: 100%;
+    padding: var(--sp-8) var(--sp-5);
+  }
+}
 </style>

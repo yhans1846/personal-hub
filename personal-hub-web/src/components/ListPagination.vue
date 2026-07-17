@@ -24,7 +24,7 @@ const emit = defineEmits<{
 
 <style scoped>
 .list-pagination {
-  margin-top: var(--sp-6);
+  margin-top: 0;
   justify-content: flex-end;
 }
 </style>

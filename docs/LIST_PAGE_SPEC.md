@@ -2,7 +2,7 @@
 
 > 参考：`modules/planning/studyplan/List.vue` · 配套 `STYLE_GUIDE.md`
 
-**最后更新：** 2026-07-16  
+**最后更新：** 2026-07-17  
 **定位：** Product 列表（非 Admin 密表）。
 
 ---
@@ -13,9 +13,23 @@
 |------|------|
 | 多列对照 | **Product Table**（禁默认 `el-table`） |
 | 浏览发现 | **Product Card** |
-| 都要 | Table/Card 切换 + `localStorage` |
+| 都要 | Table/Card 切换 + `localStorage`（`useProductViewMode`） |
+| 时间线浏览 | **学习记录**专用形态（见 §2.1） |
 
 禁：灰底密表、行内一堆 Primary、独立编辑页（笔记除外）。
+
+### 2.1 学习记录（时间线例外）
+
+`/study-records`（`knowledge/study/List.vue`）**不采用** Product Table/Card，为已批准例外：
+
+| 项 | 约定 |
+|----|------|
+| 骨架 | `plan-page` + `useMainContentFill` + `useFillPageSize` |
+| 中区 | 时间线列表；`plan-middle` 内 `flex:1; overflow:auto` 纵向滚动 |
+| 槽位 | 无 Table/Card 固定行 pad；条数随 `pageSize` 分页，不强制均分行高 |
+| 工具栏 | `ListToolbar`；无 Table/Card 切换 |
+
+其余 fill 列表仍按 §2 固定槽位契约。
 
 ---
 
@@ -122,4 +136,4 @@ Query 继承 PageParam · keyword/筛选/sortBy·sortDir（默认 updatedAt desc
 
 ## 10. 参考文件
 
-`studyplan/List.vue` · `StudyPlanDialog.vue` · `AppLayout.vue` · `ListPagination`/`EmptyState`/`PageHeader` · `useDeepLinkDialog` · `STYLE_GUIDE.md`
+`studyplan/List.vue` · `StudyPlanDialog.vue` · `AppLayout.vue` · `ListPagination`/`EmptyState`/`PageHeader` · `useDeepLinkDialog` · `useProductViewMode` · `STYLE_GUIDE.md`

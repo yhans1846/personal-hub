@@ -13,13 +13,12 @@ import type { ReadingVO, ReadingQuery } from '@/types/reading'
 import { useDeepLinkDialog } from '@/composables/useDeepLinkDialog'
 import { useMainContentFill } from '@/composables/useMainContentFill'
 import { useFillPageSize } from '@/composables/useFillPageSize'
-
-const VIEW_KEY = 'reading-view'
+import { useProductViewMode } from '@/composables/useProductViewMode'
 
 const list = ref<ReadingVO[]>([])
 const total = ref(0)
 const loading = ref(false)
-const viewMode = ref<'table' | 'card'>((localStorage.getItem(VIEW_KEY) as 'table' | 'card') || 'table')
+const { viewMode, setViewMode } = useProductViewMode('reading-view', 'table')
 const query = ref<ReadingQuery>({
   page: 1,
   size: 10,
@@ -75,11 +74,6 @@ function onFilterChange() {
 function onPageChange(page: number) {
   query.value.page = page
   fetchList()
-}
-
-function setView(mode: 'table' | 'card') {
-  viewMode.value = mode
-  localStorage.setItem(VIEW_KEY, mode)
 }
 
 const exporting = ref(false)
@@ -238,8 +232,8 @@ const headerSubtitle = computed(() => `共 ${total.value} 本`)
 </script>
 
 <template>
-  <div class="reading-page">
-    <div class="reading-top">
+  <div class="plan-page">
+    <div class="plan-top">
       <PageHeader title="阅读记录" :subtitle="headerSubtitle" />
 
       <div class="toolbar">
@@ -263,10 +257,10 @@ const headerSubtitle = computed(() => `共 ${total.value} 本`)
             <el-option v-for="s in sortOptions" :key="s.value" :value="s.value" :label="s.label" />
           </el-select>
           <div class="view-toggle">
-            <button type="button" class="view-btn" :class="{ active: viewMode === 'table' }" title="列表" @click="setView('table')">
+            <button type="button" class="view-btn" :class="{ active: viewMode === 'table' }" title="列表" @click="setViewMode('table')">
               <LayoutList :size="15" />
             </button>
-            <button type="button" class="view-btn" :class="{ active: viewMode === 'card' }" title="卡片" @click="setView('card')">
+            <button type="button" class="view-btn" :class="{ active: viewMode === 'card' }" title="卡片" @click="setViewMode('card')">
               <LayoutGrid :size="15" />
             </button>
           </div>
@@ -290,7 +284,7 @@ const headerSubtitle = computed(() => `共 ${total.value} 本`)
       </div>
     </div>
 
-    <div class="reading-middle">
+    <div class="plan-middle">
       <div v-if="loading" class="loading-skeleton">
         <div v-for="i in 5" :key="i" class="skeleton-row" />
       </div>
@@ -466,7 +460,7 @@ const headerSubtitle = computed(() => `共 ${total.value} 本`)
       </div>
     </div>
 
-    <div class="reading-foot">
+    <div class="plan-foot">
       <ListPagination
         v-if="list.length > 0 || total > 0"
         :total="total"
@@ -481,22 +475,23 @@ const headerSubtitle = computed(() => `共 ${total.value} 本`)
 </template>
 
 <style scoped>
-.reading-page {
+/* Product list styles — shared extract deferred (盘点 P2-1) */
+.plan-page {
   display: flex;
   flex-direction: column;
   height: 100%;
   min-height: 0;
   overflow: hidden;
 }
-.reading-top { flex-shrink: 0; }
-.reading-middle {
+.plan-top { flex-shrink: 0; }
+.plan-middle {
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
-.reading-foot { flex-shrink: 0; padding-top: 8px; }
+.plan-foot { flex-shrink: 0; padding-top: 8px; }
 
 .toolbar {
   display: flex;

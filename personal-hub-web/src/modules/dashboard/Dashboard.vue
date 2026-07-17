@@ -297,4 +297,12 @@ function widgetProps(code: string) {
 @media (max-width: 768px) {
   .hero-text h1 { font-size: var(--text-xl); }
 }
+@media (max-width: 640px) {
+  .hero {
+    margin-bottom: var(--sp-3);
+    gap: var(--sp-2);
+  }
+  .hero-sub { display: none; }
+  .hero-text h1 { margin-bottom: var(--sp-1); }
+}
 </style>

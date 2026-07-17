@@ -166,7 +166,7 @@ const moodOptions = [
 <template>
   <div class="plan-page">
     <div class="plan-top">
-      <PageHeader title="日记" subtitle="记录每天的生活" />
+      <PageHeader title="日记" />
 
       <ListToolbar :search="query.keyword" search-placeholder="搜索日记..." search-width="200px" create-label="写日记" @update:search="query.keyword = $event" @search="onSearch" @create="goCreate">
         <template #filters>
@@ -329,7 +329,7 @@ const moodOptions = [
 .calendar-view {
   flex: 1;
   min-height: 0;
-  overflow: auto;
+  overflow-y: auto;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);

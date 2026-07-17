@@ -4,6 +4,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { globalSearch } from '@/modules/dashboard/api'
 import { ElMessage } from 'element-plus'
 import { Search, FileText, PenLine, CheckSquare, BookOpen, Bookmark, BookMarked, FolderOpen, Target } from 'lucide-vue-next'
+import { EmptyState } from '@/components'
 import type { SearchGroup, SearchItem } from '@/modules/dashboard/api'
 
 const router = useRouter()
@@ -78,9 +79,8 @@ function highlight(text: string, kw: string): string {
     </div>
 
     <!-- 未搜索提示 -->
-    <div v-if="!searched" class="empty-state" style="margin-top: 80px;">
-      <div class="empty-state__icon"><Search :size="48" /></div>
-      <div class="empty-state__text">输入关键词搜索所有模块内容</div>
+    <div v-if="!searched" class="search-empty">
+      <EmptyState :icon="Search" text="输入关键词搜索所有模块内容" />
     </div>
 
     <!-- 搜索中 -->
@@ -91,9 +91,8 @@ function highlight(text: string, kw: string): string {
     <!-- 搜索结果 -->
     <template v-if="!loading && searched">
       <!-- 无结果 -->
-      <div v-if="total === 0" class="empty-state" style="margin-top: 60px;">
-        <div class="empty-state__icon"><Search :size="48" /></div>
-        <div class="empty-state__text">没有找到 "{{ keyword }}" 相关的结果</div>
+      <div v-if="total === 0" class="search-empty search-empty--results">
+        <EmptyState :icon="Search" :text="`没有找到「${keyword}」相关的结果`" />
       </div>
 
       <!-- 结果列表 -->
@@ -128,6 +127,8 @@ function highlight(text: string, kw: string): string {
 <style scoped>
 .search-page { max-width: 720px; margin: 0 auto; }
 .search-bar { margin-bottom: var(--sp-6); }
+.search-empty { margin-top: 80px; }
+.search-empty--results { margin-top: 60px; }
 
 .loading-skeleton { display: flex; flex-direction: column; gap: var(--sp-4); }
 .skeleton-card { height: 80px; border-radius: var(--radius-md); background: var(--bg-hover); animation: pulse 1.5s ease-in-out infinite; }

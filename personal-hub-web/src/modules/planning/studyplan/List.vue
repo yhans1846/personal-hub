@@ -16,15 +16,14 @@ import type { TagVO } from '@/types/tag'
 import { useDeepLinkDialog } from '@/composables/useDeepLinkDialog'
 import { useMainContentFill } from '@/composables/useMainContentFill'
 import { useFillPageSize } from '@/composables/useFillPageSize'
-
-const VIEW_KEY = 'study-plan-view'
+import { useProductViewMode } from '@/composables/useProductViewMode'
 
 const list = ref<StudyPlanVO[]>([])
 const total = ref(0)
 const loading = ref(false)
 const tags = ref<TagVO[]>([])
 const stats = ref<StudyPlanStats>({ total: 0, pending: 0, learning: 0, done: 0, paused: 0 })
-const viewMode = ref<'table' | 'card'>((localStorage.getItem(VIEW_KEY) as 'table' | 'card') || 'table')
+const { viewMode, setViewMode } = useProductViewMode('study-plan-view', 'table')
 const query = ref<StudyPlanQuery>({
   page: 1,
   size: 10,
@@ -101,11 +100,6 @@ function onFilterChange() {
 function onPageChange(page: number) {
   query.value.page = page
   fetchList()
-}
-
-function setView(mode: 'table' | 'card') {
-  viewMode.value = mode
-  localStorage.setItem(VIEW_KEY, mode)
 }
 
 const exporting = ref(false)
@@ -320,10 +314,10 @@ const headerSubtitle = computed(() => `共 ${stats.value.total} 个计划`)
             <el-option v-for="s in sortOptions" :key="s.value" :value="s.value" :label="s.label" />
           </el-select>
           <div class="view-toggle">
-            <button type="button" class="view-btn" :class="{ active: viewMode === 'table' }" title="列表" @click="setView('table')">
+            <button type="button" class="view-btn" :class="{ active: viewMode === 'table' }" title="列表" @click="setViewMode('table')">
               <LayoutList :size="15" />
             </button>
-            <button type="button" class="view-btn" :class="{ active: viewMode === 'card' }" title="卡片" @click="setView('card')">
+            <button type="button" class="view-btn" :class="{ active: viewMode === 'card' }" title="卡片" @click="setViewMode('card')">
               <LayoutGrid :size="15" />
             </button>
           </div>
@@ -546,6 +540,7 @@ const headerSubtitle = computed(() => `共 ${stats.value.total} 个计划`)
 </template>
 
 <style scoped>
+/* Product list styles — shared extract deferred (盘点 P2-1) */
 .plan-page {
   width: 100%;
   height: 100%;

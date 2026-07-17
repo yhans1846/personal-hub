@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { getNoteList, deleteNote, toggleFavorite } from '@/modules/knowledge/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, FileText, Star, Trash2, Clock, Eye, Upload } from 'lucide-vue-next'
+import { Plus, FileText, Star, Trash2, Clock, Eye, Upload, LayoutList, LayoutGrid } from 'lucide-vue-next'
 import { EmptyState, PageHeader, ListToolbar, ListPagination } from '@/components'
 import type { NoteVO, NoteQuery } from '@/types/note'
 import { estimateReadingTime, formatRelativeTime, isRecentlyEdited } from '@/utils/readingTime'
@@ -11,6 +11,7 @@ import ImportMarkdownDialog from './ImportMarkdownDialog.vue'
 import NoteCardContextMenu, { type CardMenuEntry } from './NoteCardContextMenu.vue'
 import { useMainContentFill } from '@/composables/useMainContentFill'
 import { useFillPageSize } from '@/composables/useFillPageSize'
+import { useProductViewMode } from '@/composables/useProductViewMode'
 
 const router = useRouter()
 const list = ref<NoteVO[]>([])
@@ -20,6 +21,7 @@ const query = ref<NoteQuery>({ page: 1, size: 10, keyword: '' })
 const showImport = ref(false)
 const cardMenuRef = ref<InstanceType<typeof NoteCardContextMenu> | null>(null)
 const activeNote = ref<NoteVO | null>(null)
+const { viewMode, setViewMode } = useProductViewMode('note-view', 'card')
 
 useMainContentFill()
 
@@ -69,6 +71,20 @@ function noteCardPreview(note: NoteVO): string {
     || note.content?.replace(/#{1,6}\s/g, '').replace(/[*`~>]/g, '').slice(0, 120)
     || ''
   return text || '暂无内容'
+}
+
+function formatRelativeUpdated(d?: string | null) {
+  if (!d) return '更新于 —'
+  const rel = formatRelativeTime(d)
+  if (rel === '刚刚') return '更新于 刚刚'
+  if (rel.endsWith('前')) return `更新于 ${rel}`
+  return `更新于 ${rel}`
+}
+
+function visibleTags(tags: NoteVO['tags']) {
+  const shown = tags.slice(0, 2)
+  const more = tags.length > 2 ? tags.length - 2 : 0
+  return { shown, more }
 }
 
 async function handleDelete(id: number) {
@@ -126,9 +142,19 @@ async function onCardMenuAction(actionId: string) {
 <template>
   <div class="plan-page">
     <div class="plan-top">
-      <PageHeader title="笔记" subtitle="记录想法与知识" />
+      <PageHeader title="笔记" />
 
       <ListToolbar :search="query.keyword ?? ''" search-placeholder="搜索笔记标题..." search-width="240px" create-label="新建笔记" @update:search="query.keyword = $event" @search="onSearch" @create="goCreate">
+        <template #filters>
+          <div class="view-toggle">
+            <button type="button" class="view-btn" :class="{ active: viewMode === 'table' }" title="列表" @click="setViewMode('table')">
+              <LayoutList :size="15" />
+            </button>
+            <button type="button" class="view-btn" :class="{ active: viewMode === 'card' }" title="卡片" @click="setViewMode('card')">
+              <LayoutGrid :size="15" />
+            </button>
+          </div>
+        </template>
         <template #actions>
           <button class="toolbar-import-btn" @click="openImport">
             <Upload :size="14" /> 导入
@@ -138,11 +164,74 @@ async function onCardMenuAction(actionId: string) {
     </div>
 
     <div class="plan-middle">
-      <div v-if="loading" class="card-grid-skeleton">
+      <div v-if="loading && viewMode === 'card'" class="card-grid-skeleton">
         <div v-for="i in pageSize" :key="i" class="skeleton-note-card" />
       </div>
 
+      <div v-else-if="loading" class="table-skeleton">
+        <div v-for="i in pageSize" :key="i" class="skeleton-row" />
+      </div>
+
       <EmptyState v-else-if="list.length === 0" :icon="FileText" illustration="note" text="还没有笔记，开始写第一篇吧" action-label="新建笔记" :action-icon="Plus" @action="goCreate" />
+
+      <div v-else-if="viewMode === 'table'" class="product-table">
+        <div class="pt-head">
+          <div class="col-title">标题</div>
+          <div class="col-cat">分类</div>
+          <div class="col-tags">标签</div>
+          <div class="col-updated">更新</div>
+          <div class="col-actions" />
+        </div>
+        <div class="pt-body" :style="{ gridTemplateRows: `repeat(${pageSize}, minmax(0, 1fr))` }">
+          <div
+            v-for="note in list"
+            :key="note.id"
+            class="pt-row"
+            @click="goEdit(note.id)"
+          >
+            <div class="col-title">
+              <div class="name-title">{{ note.title || '无标题笔记' }}</div>
+            </div>
+            <div class="col-cat">
+              <template v-if="note.categories?.length">
+                <span v-for="c in note.categories" :key="c.id" class="soft-tag">{{ c.name }}</span>
+              </template>
+              <span v-else class="muted">—</span>
+            </div>
+            <div class="col-tags">
+              <template v-if="note.tags?.length">
+                <span
+                  v-for="t in visibleTags(note.tags).shown"
+                  :key="t.id"
+                  class="soft-tag soft-tag--tag"
+                  :style="t.color ? { background: t.color + '20', color: t.color } : undefined"
+                >{{ t.name }}</span>
+                <span v-if="visibleTags(note.tags).more" class="tag-more">+{{ visibleTags(note.tags).more }}</span>
+              </template>
+              <span v-else class="muted">—</span>
+            </div>
+            <div class="col-updated cell-date">{{ formatRelativeUpdated(note.updatedAt) }}</div>
+            <div class="col-actions" @click.stop>
+              <el-tooltip content="预览">
+                <button type="button" class="icon-action" @click="goPreview(note.id)">
+                  <Eye :size="15" />
+                </button>
+              </el-tooltip>
+              <el-tooltip content="移入回收站">
+                <button type="button" class="icon-action icon-action--danger" @click="handleDelete(note.id)">
+                  <Trash2 :size="15" />
+                </button>
+              </el-tooltip>
+            </div>
+          </div>
+          <div
+            v-for="n in Math.max(0, pageSize - list.length)"
+            :key="'pad-' + n"
+            class="pt-row pt-row--pad"
+            aria-hidden="true"
+          />
+        </div>
+      </div>
 
       <div v-else class="note-grid">
         <div
@@ -322,5 +411,150 @@ async function onCardMenuAction(actionId: string) {
   border-color: var(--accent);
   color: var(--accent);
   background: var(--accent-light);
+}
+
+.view-toggle {
+  display: inline-flex;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.view-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+}
+.view-btn.active {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.table-skeleton {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.table-skeleton .skeleton-row {
+  flex: 1;
+  border-radius: 8px;
+  background: var(--bg-hover);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.product-table {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--bg-card);
+}
+.pt-head, .pt-row {
+  display: grid;
+  grid-template-columns:
+    minmax(160px, 2fr)
+    minmax(100px, 1fr)
+    minmax(120px, 1.2fr)
+    120px
+    72px;
+  align-items: center;
+  column-gap: 12px;
+  padding: 0 16px;
+}
+.pt-head {
+  flex-shrink: 0;
+  height: 36px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  border-bottom: 1px solid var(--border-light);
+}
+.pt-body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+}
+.pt-row {
+  min-height: 0;
+  height: 100%;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-light);
+  transition: background 0.15s ease;
+}
+.pt-row:last-child { border-bottom: none; }
+.pt-row:hover:not(.pt-row--pad) { background: var(--bg-hover); }
+.pt-row--pad {
+  cursor: default;
+  pointer-events: none;
+}
+.name-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.soft-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 7px;
+  border-radius: 6px;
+  font-size: 12px;
+  background: var(--accent-light);
+  color: var(--accent);
+  margin-right: 4px;
+}
+.soft-tag--tag {
+  background: var(--bg-hover);
+  color: var(--text-tertiary);
+}
+.tag-more {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+.muted { color: var(--text-placeholder); font-size: 13px; }
+.cell-date {
+  font-size: 13px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.col-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+}
+.icon-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.icon-action:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+.icon-action--danger:hover {
+  color: var(--danger);
+  background: var(--danger-light);
 }
 </style>
