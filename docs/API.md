@@ -31,10 +31,17 @@
 ### 一、用户认证 `/api/auth`
 | 方法 | 路径 | 说明 | 认证 |
 |------|------|------|------|
-| POST | /api/auth/login | 登录 | 否 |
+| GET | /api/auth/captcha | 书架归位验证码 | 否 |
+| POST | /api/auth/captcha/check | 归位预检 | 否 |
+| POST | /api/auth/login | 登录（须带验证结果） | 否 |
 | POST | /api/auth/logout | 退出 | 是 |
 
-**login** Req`username`,`password`} → `{token,user:{id,username,nickname,avatar}}`
+**captcha** → `{captchaId, slotCount, emptyIndex, shelfBooks, dragBook}`
+
+**captcha/check** Req`{captchaId,sliderX}`（`sliderX`=槽位下标）→ `{matched}`
+
+**login** Req`{username,password,captchaId,sliderX}` → `{token,user:{id,username,nickname,avatar}}`  
+书架空位一次性；TTL 120s。
 
 ### 二、用户信息 `/api/user`
 | 方法 | 路径 | 说明 | 认证 |

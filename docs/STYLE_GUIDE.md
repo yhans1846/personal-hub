@@ -273,7 +273,7 @@ Topbar 56px｜Sidebar 240px｜Main max-width 1600、padding 32
 | `styles/markdown-prose.css` | Markdown 排版 |
 
 ### 路由约定
-列表主路由可设 `meta.hideBreadcrumb: true`，`AppLayout` 隐藏面包屑，避免与 `PageHeader` 双标题。
+`AppLayout` 面包屑在各主路由统一展示（固定高度），避免首页有、列表无导致内容区高度落差。编辑器专注模式仍可通过 `focus-hidden` 隐藏。
 
 ### Editor Composable（`src/modules/knowledge/note/editor/`）
 | 文件 | 用途 |

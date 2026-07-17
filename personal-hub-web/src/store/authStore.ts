@@ -21,14 +21,22 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.setItem('user', JSON.stringify(newUser))
   }
 
-  /** 登录 */
-  async function login(username: string, password: string) {
-    const res = await loginApi(username, password)
+  /** 登录；redirect=false 时由调用方自行跳转（用于成功动画） */
+  async function login(
+    username: string,
+    password: string,
+    captchaId: string,
+    sliderX: number,
+    options?: { redirect?: boolean },
+  ) {
+    const res = await loginApi(username, password, captchaId, sliderX)
     const { token: t, user: u } = res.data.data
     setToken(t)
     setUser(u)
     useLayoutStore().fetchLayout()
-    router.push('/')
+    if (options?.redirect !== false) {
+      router.push('/')
+    }
   }
 
   /** 退出登录 */

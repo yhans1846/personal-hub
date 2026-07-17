@@ -3,10 +3,36 @@ import type { Result } from '@/types/common'
 import type { ProfileVO, ProfileUpdateDTO } from '@/types/user'
 
 /** 登录 */
-export function loginApi(username: string, password: string) {
+export function loginApi(
+  username: string,
+  password: string,
+  captchaId: string,
+  sliderX: number,
+) {
   return request.post<Result<{ token: string; user: any }>>('/auth/login', {
     username,
-    password
+    password,
+    captchaId,
+    sliderX,
+  })
+}
+
+/** 书架归位验证码 */
+export function getCaptcha() {
+  return request.get<Result<{
+    captchaId: string
+    slotCount: number
+    emptyIndex: number
+    shelfBooks: string[]
+    dragBook: string
+  }>>('/auth/captcha')
+}
+
+/** 验证预检（不消费）；sliderX = 选中的槽位下标 */
+export function checkCaptcha(captchaId: string, sliderX: number) {
+  return request.post<Result<{ matched: boolean }>>('/auth/captcha/check', {
+    captchaId,
+    sliderX,
   })
 }
 

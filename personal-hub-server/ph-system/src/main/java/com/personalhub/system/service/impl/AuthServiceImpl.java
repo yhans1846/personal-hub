@@ -3,6 +3,7 @@ package com.personalhub.system.service.impl;
 import com.personalhub.common.exception.BusinessException;
 import com.personalhub.common.util.JwtUtil;
 import com.personalhub.system.service.AuthService;
+import com.personalhub.system.service.CaptchaService;
 import com.personalhub.system.vo.LoginVO;
 import com.personalhub.system.entity.User;
 import com.personalhub.system.service.UserService;
@@ -22,9 +23,12 @@ public class AuthServiceImpl implements AuthService {
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final CaptchaService captchaService;
 
     @Override
-    public LoginVO login(String username, String password) {
+    public LoginVO login(String username, String password, String captchaId, Integer sliderX) {
+        captchaService.verifyAndConsume(captchaId, sliderX);
+
         User user = userService.getByUsername(username);
         if (user == null) {
             log.warn("登录失败，用户不存在: {}", username);

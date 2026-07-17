@@ -2,6 +2,28 @@
 
 ## [Unreleased]
 
+### 2026-07-17 登录三步流（账号 → Loading → 安全验证）
+- 首屏仅账号密码；点「进入 Personal Hub」后 Loading「正在验证身份…」，再滑入书架验证
+- 验证通过自动登录；规格见 `docs/superpowers/specs/2026-07-17-login-product-ui-redesign.md`
+- 左侧去掉「今日概览」；补 Good Evening + 时钟、左下角每日一句、柔光/网格/知识水印漂浮；动效对齐微动画规范
+
+### 2026-07-17 登录验证改书架归位
+- 去掉滑动拼图；改为「请把知识放回书架」横向拖拽归位（`BookShelfCaptcha`）
+
+### 2026-07-17 登录页产品化 UI
+- 55/45 双栏；浅网格 + 慢漂浮光晕；Glass 登录卡；左侧 Feature + 今日概览 Preview + Quote
+- 滑块成功 ✓；按钮 Loading / Success + 页淡出；规格见 `docs/superpowers/specs/2026-07-17-login-product-ui-redesign.md`
+
+### 2026-07-17 登录页分屏 + 滑动拼图
+- 登录页改为左品牌 / 右表单（墨绿墨水 + 米黄纸感）；强制滑动拼图后方可登录
+- `GET /api/auth/captcha`；`login` 增 `captchaId` + `sliderX`（Redis TTL 120s，容差 ±4px）
+- 规格 / 计划：`docs/superpowers/specs/2026-07-17-login-split-slider-captcha-design.md`、`docs/superpowers/plans/2026-07-17-login-split-slider-captcha.md`
+
+### 2026-07-17 个人资料抽屉 UI
+- 右侧滑出；Hero（头像 + 昵称 / @用户名）；基本 / 联系 / 简介分段 Tab；底部固定重置 / 保存
+- 规格：`docs/superpowers/specs/2026-07-17-profile-drawer-ui-design.md`
+- 统计页分区默认展开；面包屑全路由统一显示，消除首页/列表高度落差
+
 ### 2026-07-17 全站页面优化批次 5–6
 - 列表页去营销副标题；日记月历 overflow；搜索 EmptyState；分页边距；登录窄屏；删除 ProfileSettings；阅读类名 plan-page
 - （原暂缓项已在「全站优化收尾」完成）

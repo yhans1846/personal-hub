@@ -17,7 +17,7 @@ const loading = ref(true)
 const stats = ref<StatsVO | null>(null)
 const catTagTab = ref<'category' | 'tag'>('category')
 const error = ref(false)
-const activeSections = ref(['overview'])
+const activeSections = ref(['overview', 'trends', 'activity'])
 
 // ====== 统计卡片配置 ======
 const layoutStore = useLayoutStore()

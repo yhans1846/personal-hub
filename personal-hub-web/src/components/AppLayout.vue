@@ -3,7 +3,7 @@ import type { Component } from 'vue'
 import { useAuthStore } from '@/store/authStore'
 import { useLayoutStore } from '@/store/layoutStore'
 import { useRouter, useRoute } from 'vue-router'
-import { LayoutDashboard, FileText, BookOpen, CheckSquare, PenLine, Bookmark, Target, BookMarked, FolderOpen, Grid3X3, Tags, Settings, Trash2, Search, BarChart3, Sun, Moon, Menu, X, ChevronDown, Library, Archive, Cog, LogOut } from 'lucide-vue-next'
+import { LayoutDashboard, FileText, BookOpen, CheckSquare, PenLine, Bookmark, Target, BookMarked, FolderOpen, Grid3X3, Tags, Settings, Trash2, Search, BarChart3, Sun, Moon, Menu, X, ChevronDown, LogOut } from 'lucide-vue-next'
 import { ref, computed, onMounted } from 'vue'
 import CommandPalette from './CommandPalette.vue'
 import NotificationBell from './NotificationBell.vue'
@@ -36,14 +36,6 @@ const iconMap: Record<string, Component> = {
   recycle: Trash2,
   stats: BarChart3,
   settings: Settings,
-}
-
-const sectionIconMap: Record<string, Component> = {
-  workspace: LayoutDashboard,
-  knowledge: Library,
-  resource: Archive,
-  manage: Cog,
-  stats: BarChart3,
 }
 
 function isActiveRoute(item: MenuItem): boolean {
@@ -236,9 +228,8 @@ function handleQuickCreate(cmd: string) {
         <nav class="sidebar-nav">
           <div class="sidebar-section" v-for="section in layoutStore.visibleMenuSections" :key="section.key">
             <div class="section-header" :class="{ collapsed: collapsedSections.has(section.key) }" @click="toggleSection(section.key)">
+              <span class="section-title">{{ section.title }}</span>
               <ChevronDown :size="14" class="section-chevron" />
-              <component :is="sectionIconMap[section.key]" :size="14" class="section-icon" />
-              <span>{{ section.title }}</span>
             </div>
             <Transition name="section-collapse">
               <div v-if="!collapsedSections.has(section.key)" class="section-items">
@@ -402,42 +393,38 @@ function handleQuickCreate(cmd: string) {
   flex: 1; overflow-y: auto; padding: var(--sp-4) 0;
 }
 
-.sidebar-section { margin-bottom: var(--sp-4); }
+.sidebar-section { margin-bottom: var(--sp-3); }
 .sidebar-section:last-child { margin-bottom: 0; }
+.sidebar-section + .sidebar-section {
+  margin-top: var(--sp-2);
+  padding-top: var(--sp-2);
+  border-top: 1px solid color-mix(in srgb, var(--border-color) 35%, transparent);
+}
 .section-header {
-  display: flex; align-items: center; gap: 4px;
-  padding: var(--sp-2) var(--sp-4) var(--sp-2) var(--sp-4);
-  font-size: 11px; font-weight: 600;
-  color: var(--text-tertiary);
-  text-transform: uppercase; letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 18px 8px;
   user-select: none;
   cursor: pointer;
-  position: relative;
   transition: color 150ms ease;
 }
-.section-header:hover { color: var(--text-primary); }
-/* 短分割线 */
-.section-header::after {
-  content: '';
-  position: absolute;
-  left: var(--sp-4);
-  bottom: 0;
-  width: 28px;
-  height: 1px;
-  background: var(--border-color);
-  opacity: 0.4;
+.section-title {
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.12em;
+  color: var(--text-placeholder);
 }
+.section-header:hover .section-title { color: var(--text-tertiary); }
 .section-chevron {
   flex-shrink: 0;
-  transition: transform 200ms ease;
-  opacity: 0.45;
-}
-.section-icon {
-  flex-shrink: 0;
+  color: var(--text-placeholder);
   opacity: 0.7;
+  transition: transform 200ms ease, opacity 150ms ease;
 }
-.section-header:hover .section-chevron { opacity: 0.8; }
-.section-header:hover .section-icon { opacity: 0.9; }
+.section-header:hover .section-chevron { opacity: 1; color: var(--text-tertiary); }
 .section-header.collapsed .section-chevron { transform: rotate(-90deg); }
 .section-items { overflow: hidden; }
 
@@ -456,15 +443,17 @@ function handleQuickCreate(cmd: string) {
 /* 首页 — 更突出 */
 .nav-item--primary {
   font-weight: 600;
+  color: var(--text-primary);
 }
 
-/* 二级菜单 — 靠左对齐，仅字体/图标变轻 */
+/* 二级菜单 — 可点击项，明显高于分组标签 */
 .nav-item--secondary {
-  font-weight: 400;
-  color: var(--text-tertiary);
+  font-weight: 500;
+  color: var(--text-secondary);
 }
 .nav-item--secondary :deep(svg) {
-  width: 16px; height: 16px; opacity: 0.55;
+  width: 16px; height: 16px; opacity: 0.72;
+  color: var(--text-secondary);
 }
 
 /* Active — 柔和 */
