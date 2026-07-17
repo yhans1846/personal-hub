@@ -1,66 +1,57 @@
 # Personal Hub - 项目介绍
 
+> 职责：定位、模块架构、原则、路线图。版本见 `TECH_STACK.md`，变更见 `CHANGELOG.md`。
+
 ## 定位
-个人知识管理系统，Spring Boot 3 + Vue 3 前后端分离。
 
-## 设计理念
-> Notion 简洁 + Linear 精致 + Raycast 现代 + Apple 克制  
-
-非企业后台。详见 `STYLE_GUIDE.md`。
+个人知识管理系统，前后端分离。非企业后台。  
+设计气质见 `STYLE_GUIDE.md`。
 
 ## 架构
 
 ```
-Vue 3 + Vite + TS → Axios → REST → Spring Boot 3 → MyBatis-Plus → MySQL
+Vue 3 → REST → Spring Boot 3 → MyBatis-Plus → MySQL
+（登录验证码等短态数据 → Redis）
 ```
 
-## 目录
-
 ```
-personal-hub-server/ · personal-hub-web/ · sql/ · docs/ · README.md
-```
-
-## 领域模块设计
-
-```
-后端 ph-*                    前端 modules/
+后端                         前端 modules/
 ph-boot / ph-common          —
 ph-system                    system/
-ph-biz                       knowledge/ + planning/ + resource/
-                             + dashboard/ + search/ + category/
-  └ packages: knowledge, planning, resource, dashboard
+ph-biz（knowledge/planning/  knowledge/ planning/ resource/
+  resource/dashboard 包）     dashboard/ search/ category/ stats/
 ```
 
-### 划分原则
-Maven 粗粒度（common / system / biz / boot）｜细领域用 Java package｜跨包优先走 Service｜Dashboard 只聚合不落业务库
-
-## 依赖关系
+**划分：** Maven 粗粒度（common / system / biz / boot）· 细领域用 Java package · 跨包走 Service · Dashboard 只聚合不落业务库。
 
 ```
 ph-common ← ph-system ← ph-biz ← ph-boot
 ```
 
-## 项目原则
+## 原则
 
-1. 可读性优先 2. 命名/结构统一 3. 领域对齐 4. 公共沉 common  
-5. 慎加依赖 6. 前后端命名一致 7. RESTful + Result 8. 表设计一致  
-9. 纯函数优先 10. 改代码先改文档
+可读优先 · 命名/结构统一 · 领域对齐 · 公共沉 common · 慎加依赖 · 前后端命名一致 · RESTful + Result · 表设计一致 · 改代码先改文档
 
----
+## 文档分工
 
-# 开发路线图
+| 文档 | 写什么 |
+|------|--------|
+| `TECH_STACK.md` | 版本与环境 |
+| `API.md` | HTTP 契约 |
+| `DATABASE.md` | 表结构（对齐 `sql/init.sql`） |
+| `STYLE_GUIDE.md` | 编码 + Token + 组件目录 |
+| `PAGE_SPEC.md` | 页面形态与交互契约 |
+| `DEPLOYMENT.md` | 部署运维 |
+| `CHANGELOG.md` | 按日变更 |
 
-## 已完成 ✅
+## 路线图
 
 | 阶段 | 内容 |
 |------|------|
 | 一–三 | 认证/笔记/学习/待办/文件；日记/收藏/计划/阅读；Dashboard/统计/搜索/标签 |
-| 四–六 | UI/通知；工作台布局；Ui 组件 + Dialog + 统一 category |
-| 七–九 | 配置分层；回收站+审计；预览阅读体验 |
-| 十–十二 | 编辑器 UI；阅读配置进设置+JWT query；统一 Dialog；统计 V4 |
-| 十三–十五 | Profile+待办+外观；Focus Mode |
-| 十六–十七 | 部署/安全/性能；Vditor WYSIWYG |
-| 十八 | 后端 8→4 模块（ph-biz）；列表一屏铺满；设置工作台标签云；全站列表规范收口 |
+| 四–九 | UI/通知/布局；Ui 组件+分类；配置；回收站+审计；预览 |
+| 十–十七 | 编辑器；设置阅读配置；Dialog；统计；Profile；Focus；部署；Vditor |
+| 十八 | ph-biz 合并；列表一屏铺满；设置标签云；PAGE_SPEC 收口 |
 
 ## 后续可扩展
 
@@ -68,23 +59,13 @@ ph-common ← ph-system ← ph-biz ← ph-boot
 |------|--------|
 | AI 总结/问答 · OCR · 双向链接 · 附件 · Mermaid/KaTeX | 低 |
 | PDF 预览 · MD 导出 · 数据备份 | 中 |
-| Docker 部署 | ✅ 见 DEPLOYMENT.md |
+| Docker 部署 | ✅ 见 `DEPLOYMENT.md` |
 
----
+## 开发历史（摘要）
 
-# 开发历史
-
-| 步骤 | 内容 | 阶段 |
-|------|------|------|
-| 1–10 | 脚手架/DB/Swagger；笔记/学习；多模块；质量统一；Todo/文件 | 一 |
-| 11–14 | 日记/收藏；计划/阅读 | 二 |
-| 15–18 | 统一标签；Dashboard/趋势/搜索 | 三 |
-| 19–21 | 通知；UI/功能增强 | 四 |
-| 22–22b | 工作台布局；Bento 六宫格+外部快捷 | 五 |
-| 23–27 | CRUD Ui+分类合并；清理/配置/Swagger | 六–七 |
-| 28–30 | 回收站+审计；预览体验；阅读配置+JWT query | 八–十一 |
-| 31–36 | 统一 Dialog；统计 V4；Profile/待办/外观 | 十一–十三 |
-| 37 | Focus Mode | 十五 |
-| 38 | 后端模块合并 ph-biz；Entity Builder / 枚举收口 | 十八 |
-| 39 | 列表一屏铺满（fill + 10/8/6）；待办 dueScope；设置标签云 | 十八 |
-| 40 | 全站列表规范收口（工具栏 / 回收站 / 统计折叠 / 命令面板进搜索） | 十八 |
+| 步骤 | 内容 |
+|------|------|
+| 1–14 | 脚手架 → 笔记/学习/Todo/文件 → 日记/收藏/计划/阅读 |
+| 15–27 | 标签/Dashboard/通知/布局/Ui/分类/配置 |
+| 28–37 | 回收站/预览/JWT query/Dialog/统计/Profile/Focus |
+| 38–40 | ph-biz；fill 列表；规范收口 |

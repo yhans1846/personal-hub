@@ -6,21 +6,19 @@
 
 # 文档索引
 
-开发前先查阅对应文档：
+开发前按职责查阅（勿互相拷贝正文）：
 
-| 文档 | 内容 |
+| 文档 | 职责 |
 |------|------|
-| PROJECT.md | 项目概览、路线图、开发历史 |
-| TECH_STACK.md | 技术栈版本与环境要求 |
-| DEPLOYMENT.md | Ubuntu / Docker Compose / GitHub Actions 自托管部署 |
-| DATABASE.md | 表结构、ER、索引 |
-| API.md | RESTful 接口定义 |
-| STYLE_GUIDE.md | 编码规范 + UI 设计系统 + 共享组件（必读） |
-| LIST_PAGE_SPEC.md | Product 列表页（Table/Card）+ 一屏铺满规范 |
-| PREVIEW_PAGE_SPEC.md | 笔记预览页开发规范 |
-| CHANGELOG.md | 版本变更记录 |
-| qa/CURSOR_BROWSER_TESTING.md | Cursor 浏览器巡检方法 |
-| qa/2026-07-17-全站页面优化盘点.md | 全站列表/设置优化盘点与批次状态 |
+| PROJECT.md | 定位、模块架构、原则、路线图 |
+| TECH_STACK.md | 版本与环境 |
+| DEPLOYMENT.md | Ubuntu / Compose / Actions 部署运维 |
+| DATABASE.md | 表结构（对齐 sql/init.sql） |
+| API.md | HTTP 契约 |
+| STYLE_GUIDE.md | 编码 + UI Token + 组件目录 |
+| PAGE_SPEC.md | 页面形态与交互契约 |
+| CHANGELOG.md | 按日变更 |
+| qa/CURSOR_BROWSER_TESTING.md | 浏览器巡检方法 |
 
 ---
 

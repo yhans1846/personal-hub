@@ -274,6 +274,16 @@ CREATE TABLE `sys_user`  (
                              `nickname` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '昵称',
                              `avatar` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '头像URL',
                              `email` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '邮箱',
+                             `gender` tinyint NULL DEFAULT 0 COMMENT '性别 0-保密 1-男 2-女',
+                             `birthday` date NULL DEFAULT NULL COMMENT '出生日期',
+                             `phone` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '手机号',
+                             `country` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '国家',
+                             `province` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '省份',
+                             `city` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '城市',
+                             `district` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '区/县',
+                             `website` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '个人网站',
+                             `github` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT 'GitHub 地址',
+                             `bio` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '个人简介',
                              `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
                              `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
                              `is_deleted` tinyint NOT NULL DEFAULT 0 COMMENT '逻辑删除 0-正常 1-删除',
@@ -284,7 +294,7 @@ CREATE TABLE `sys_user`  (
 -- ----------------------------
 -- Records of sys_user
 -- ----------------------------
-INSERT INTO `sys_user` VALUES (1, 'admin', '$2a$10$IG8Fmoph4sKKEmPmjDat6.1x1wT9s2ghnoorQoADulBP1PxCPbCxC', '管理员', NULL, NULL, '2026-07-09 22:32:47', '2026-07-09 22:41:33', 0);
+INSERT INTO `sys_user` VALUES (1, 'admin', '$2a$10$IG8Fmoph4sKKEmPmjDat6.1x1wT9s2ghnoorQoADulBP1PxCPbCxC', '管理员', NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-07-09 22:32:47', '2026-07-09 22:41:33', 0);
 
 -- ----------------------------
 -- Table structure for tag
@@ -349,6 +359,7 @@ CREATE TABLE `todo_task`  (
                               `is_deleted` tinyint NOT NULL DEFAULT 0 COMMENT '逻辑删除',
                               `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
                               `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+                              `completed_at` datetime NULL DEFAULT NULL COMMENT '完成时间',
                               PRIMARY KEY (`id`) USING BTREE,
                               INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
                               INDEX `idx_due_date`(`due_date` ASC) USING BTREE
@@ -365,7 +376,7 @@ DROP TABLE IF EXISTS `user_layout`;
 CREATE TABLE `user_layout`  (
                                 `id` bigint NOT NULL AUTO_INCREMENT,
                                 `user_id` bigint NOT NULL COMMENT '所属用户',
-                                `layout_type` varchar(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '类型: menu / dashboard',
+                                `layout_type` varchar(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '类型: menu / dashboard / preview',
                                 `layout_json` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '布局配置 JSON',
                                 `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                 `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

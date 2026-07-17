@@ -1,76 +1,15 @@
 # Personal Hub - 版本记录
 
+> 职责：按日记录已落地变更。架构/规范正文不写在此。
+
 ## [Unreleased]
 
-### 2026-07-17 登录三步流（账号 → Loading → 安全验证）
-- 首屏仅账号密码；点「进入 Personal Hub」后 Loading「正在验证身份…」，再滑入书架验证
-- 验证通过自动登录；规格见 `docs/superpowers/specs/2026-07-17-login-product-ui-redesign.md`
-- 左侧去掉「今日概览」；补 Good Evening + 时钟、左下角每日一句、柔光/网格/知识水印漂浮；动效对齐微动画规范
-
-### 2026-07-17 登录验证改书架归位
-- 去掉滑动拼图；改为「请把知识放回书架」横向拖拽归位（`BookShelfCaptcha`）
-
-### 2026-07-17 登录页产品化 UI
-- 55/45 双栏；浅网格 + 慢漂浮光晕；Glass 登录卡；左侧 Feature + 今日概览 Preview + Quote
-- 滑块成功 ✓；按钮 Loading / Success + 页淡出；规格见 `docs/superpowers/specs/2026-07-17-login-product-ui-redesign.md`
-
-### 2026-07-17 登录页分屏 + 滑动拼图
-- 登录页改为左品牌 / 右表单（墨绿墨水 + 米黄纸感）；强制滑动拼图后方可登录
-- `GET /api/auth/captcha`；`login` 增 `captchaId` + `sliderX`（Redis TTL 120s，容差 ±4px）
-- 规格 / 计划：`docs/superpowers/specs/2026-07-17-login-split-slider-captcha-design.md`、`docs/superpowers/plans/2026-07-17-login-split-slider-captcha.md`
-
-### 2026-07-17 个人资料抽屉 UI
-- 右侧滑出；Hero（头像 + 昵称 / @用户名）；基本 / 联系 / 简介分段 Tab；底部固定重置 / 保存
-- 规格：`docs/superpowers/specs/2026-07-17-profile-drawer-ui-design.md`
-- 统计页分区默认展开；面包屑全路由统一显示，消除首页/列表高度落差
-
-### 2026-07-17 全站页面优化批次 5–6
-- 列表页去营销副标题；日记月历 overflow；搜索 EmptyState；分页边距；登录窄屏；删除 ProfileSettings；阅读类名 plan-page
-- （原暂缓项已在「全站优化收尾」完成）
-
-### 2026-07-17 全站列表 fill 批次 3–4
-- **批次 3**：新增 `useProductViewMode`；学习计划 / 阅读记录接入；Product 样式抽公共组件暂缓（P2-1 注释标记）
-- **批次 4**：笔记列表补 Table/Card 切换（默认 Card，`note-view` 持久化）；回收站接入 plan-page + fill + 矮屏降档 + 骨架屏 + 图标操作；`LIST_PAGE_SPEC` 文档化学习记录时间线例外
-
-### 2026-07-17 文档同步
-- 同步 PROJECT / STYLE_GUIDE / LIST_PAGE_SPEC / TECH_STACK / README / 前后端 README / CLAUDE 索引，反映一屏铺满、dueScope、设置标签云与全站优化收口
-
-### 2026-07-17 全站优化收尾（原暂缓项）
-- **P0-3 / P1-5**：学习计划、阅读、待办统一 `ListToolbar`；待办 Tab 改 lucide + 可横滚
-- **P1-3 / P1-4**：Dashboard 窄屏可滚、Hero 压缩与资源入口简化
-- **P1-7 / P1-8**：高级设置折叠；统计页吸顶筛选 + 分组折叠
-- **P1-12 / P1-1·2**：分类标签 el-select + ListToolbar；列表路由隐藏面包屑
-- **P2-1 / P2-7 / P2-8**：`product-list.css` 视图切换；命令面板进 `/search`；密度 Token
-- **P2-4**：列表导出仅计划/阅读有接口，不做无 API 扩展
-
-### 2026-07-17 全站列表 fill 批次 1–2
-- 学习计划 / 阅读记录：手写 fill 改为 `useMainContentFill` + `useFillPageSize`（矮屏 10/8/6）
-- 收藏夹 / 文件：接入 plan-page 一屏铺满、默认 size=10、pad 槽、分页 `total>0` 即显
-
-### 2026-07-17 全站页面优化盘点
-- 新增 `docs/qa/2026-07-17-全站页面优化盘点.md`：路由清单、LIST 对齐矩阵、P0–P2 优化项与落地批次
-
-### 2026-07-17 设置·工作台二级 Tab
-- 工作台菜单 / Dashboard / 统计统一为标签云形态，同页紧凑展示（无二级 Tab）
-- 点击标签显隐、拖把手排序；菜单固定项（首页/设置）高亮不可隐藏
-
-### 2026-07-17 一屏铺满
-- Dashboard 外锁内滚；笔记 / 日记 / 学习记录 / 待办 fill + 矮屏降档 10/8/6
-- 待办查询新增 `dueScope`（all|overdue|today|week|later|done），Tab 改服务端分页
-
-### 2026-07-17 后端模块合并
-- **重构**：Maven 模块 8→4：`ph-knowledge` / `ph-planning` / `ph-resource` / `ph-dashboard` 合并为 `ph-biz`；`ph-storage` 并入 `ph-common`
-- **包名**：`com.personalhub.module.dashboard` → `com.personalhub.dashboard`（与 knowledge/planning/resource 对齐）
-- **不变**：REST API、前端 `modules/` 目录
-
-### 2026-07-17 Entity @Builder 改造
-- **Entity**：统一 `@Data` + `@Builder` + `@NoArgsConstructor` + `@AllArgsConstructor`；初值字段加 `@Builder.Default`
-- **create**：Service 新建改为 `Xxx.builder()…build()`；update / VO 不变
-
-### 2026-07-17 后端基础数据优化
-- **枚举**：ReadingStatus / DiaryMood / StudyPlanStatus / TodoPriority，VO label 统一 `labelOf`
-- **EntityGuard**：归属校验收口到 ph-common
-- **默认值**：ReadingRecord / StudyPlan / Category 字段初值，create 去掉散落 `?: 0`
+### 2026-07-17
+- **文档**：八份主文档各司其职减重；`LIST/PREVIEW_PAGE_SPEC` → `PAGE_SPEC`；`DATABASE`/`init.sql` 对齐库（sys_user 资料字段、todo.completed_at）
+- **登录**：产品化分屏 + 书架归位验证码；三步流（账号→Loading→安全验证）；问候/时钟/每日一句/柔光水印
+- **资料**：ProfileDrawer Hero + Tab；统计默认展开；面包屑全路由统一
+- **列表**：一屏铺满 fill（10/8/6）· `ListToolbar` / `useProductViewMode` · 待办 `dueScope` · 设置工作台标签云 · 全站优化收尾
+- **后端**：Maven 8→4（`ph-biz`）；Entity Builder；枚举 `labelOf` + `EntityGuard`
 
 ### 2026-07-16 阅读记录 Product 列表改造
 - **列表**：Product Table/Card 切换、一屏铺满、PAGE_SIZE=10；卡片左侧小封面

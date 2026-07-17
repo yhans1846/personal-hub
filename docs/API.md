@@ -1,204 +1,103 @@
-# Personal Hub - API 接口设计规范
+# Personal Hub - API
 
-## 统一规范
+> 职责：HTTP 契约。表结构 → `DATABASE.md`；业务枚举文案 → 代码 `enums`。
 
-- Base：`http://localhost:8080/api`｜JSON｜`Authorization: Bearer {token}`
-- 静态资源可用 `?token=`（`<img>` 等无法带 Header）
+## 约定
 
-| 动作 | 方法 |
-|------|------|
-| 查询 / 新增 / 改 / 部分改 / 删 | GET / POST / PUT / PATCH / DELETE |
-
-### 统一返回 `Result<T>`
-`{"code":200,"message":"success","data":{}}`
-
-### 分页返回 `PageResult<T>`
-`data: { records, total, page, size }`
-
-### 错误码（`ResultCode`）
-| code | 含义 |
-|------|------|
-| 200 | SUCCESS |
-| 400 / 401 / 403 / 404 / 422 / 500 | BAD_REQUEST / UNAUTHORIZED / FORBIDDEN / NOT_FOUND / VALIDATION_FAILED / SERVER_ERROR |
-
-### 分页查询参数
-继承 `PageParam`：`page` 默认 1，`size` 默认 10。
+- Base：`/api` · JSON · `Authorization: Bearer {token}`（静态资源可用 `?token=`）
+- 方法：查询 GET · 新建 POST · 全量改 PUT · 部分改 PATCH · 删 DELETE
+- `Result<T>`：`{code,message,data}` · 分页 `data:{records,total,page,size}`
+- 错误码：200 / 400 / 401 / 403 / 404 / 422 / 500（`ResultCode`）
+- 分页：继承 `PageParam`，`page` 默认 1，`size` 默认 10
 
 ---
 
-## 第一阶段 — 接口设计
+## 认证 `/api/auth`
 
-### 一、用户认证 `/api/auth`
-| 方法 | 路径 | 说明 | 认证 |
-|------|------|------|------|
-| GET | /api/auth/captcha | 书架归位验证码 | 否 |
-| POST | /api/auth/captcha/check | 归位预检 | 否 |
-| POST | /api/auth/login | 登录（须带验证结果） | 否 |
-| POST | /api/auth/logout | 退出 | 是 |
+| 方法 | 路径 | 认证 |
+|------|------|------|
+| GET | /captcha | 否 |
+| POST | /captcha/check | 否 |
+| POST | /login | 否 |
+| POST | /logout | 是 |
 
-**captcha** → `{captchaId, slotCount, emptyIndex, shelfBooks, dragBook}`
+captcha → `{captchaId,slotCount,emptyIndex,shelfBooks,dragBook}`  
+check / login 带 `captchaId`+`sliderX`（槽位下标）；TTL 120s，一次性。  
+login → `{token,user:{id,username,nickname,avatar}}`
 
-**captcha/check** Req`{captchaId,sliderX}`（`sliderX`=槽位下标）→ `{matched}`
+## 用户 `/api/user`
 
-**login** Req`{username,password,captchaId,sliderX}` → `{token,user:{id,username,nickname,avatar}}`  
-书架空位一次性；TTL 120s。
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET/PUT | /profile | 资料；PUT 不含 id/username/avatar |
+| POST | /avatar | multipart `file` → `{url}` |
+| GET | /api/files/avatar/{filename} | 公开读（7 天缓存）|
 
-### 二、用户信息 `/api/user`
-| 方法 | 路径 | 说明 | 认证 |
-|------|------|------|------|
-| GET/PUT | /api/user/profile | 资料读写 | 是 |
-| POST | /api/user/avatar | 头像 multipart `file` | 是 |
-| GET | /api/files/avatar/{filename} | 头像公开读（7 天缓存）| 否 |
+字段：nickname/avatar/email/gender/birthday/phone/地区/website/github/bio
 
-**profile** 含 nickname/avatar/email/gender/birthday/phone/地区/website/github/bio；PUT 不含 id/username/avatar。头像返回 `{url}`。
+## 笔记 `/api/notes`
 
-### 三、Markdown 笔记 `/api/notes`
-| 方法 | 路径 | 说明 | 认证 |
-|------|------|------|------|
-| GET | /api/notes | 列表分页 | 是 |
-| GET | /api/notes/{id} | 详情 | 是 |
-| POST | /api/notes | 新建 | 是 |
-| PUT | /api/notes/{id} | 编辑 | 是 |
-| DELETE | /api/notes/{id} | 进回收站 | 是 |
-| PUT | /api/notes/{id}/favorite | 收藏切换 | 是 |
-| GET | /api/notes/recent | 最近编辑 | 是 |
-| PATCH | /api/notes/{id}/restore | 恢复 | 是 |
-| GET | /api/notes/recycle | 回收站 | 是 |
-| GET | /api/notes/{id}/preview | 只读预览（含已删）| 是 |
-| DELETE | /api/notes/{id}/permanent | 永久删除 | 是 |
-| POST | /api/notes/import | 导入 MD 文件 | 是 |
-| POST | /api/notes/import-content | 粘贴导入 | 是 |
-| GET | /api/notes/{id}/export | 导出 ZIP | 是 |
-| POST | /api/notes/{noteId}/images\|attachments | 上传配图/附件 | 是 |
-| GET | /api/notes/{noteId}/images\|attachments/{filename} | 取资源 | 是 |
+列表/详情/CRUD · favorite · recent · recycle · preview · restore · permanent · import · import-content · export ZIP · images/attachments 上传与读取。
 
-**列表参数：** page, size, keyword, categoryId, tagId, isFavorite, isDeleted  
-**recycle：** page, size, keyword；按 `deleted_at DESC`  
-**preview：** 不校验 is_deleted，只读  
-**新建：** `{title,content,categoryIds,tagIds}`  
-**import：** multipart file + 可选 title/categoryIds/tagIds/baseDir → `ImportReport{total,success,failed,skipped,resources,noteId}`  
-**import-content：** `{title,content,categoryIds,tagIds}`，可含 warning / rewrittenContent  
-**配图上传：** multipart file → `{url,name}`
+列表参数：page,size,keyword,categoryId,tagId,isFavorite,isDeleted  
+新建：`{title,content,categoryIds,tagIds}`
 
-### 四、统一分类 `/api/categories`
-| 方法 | 路径 | 说明 | 认证 |
-|------|------|------|------|
-| GET | /api/categories?type= | 按 type 列表 | 是 |
-| POST/PUT/DELETE | /api/categories[/{id}] | CRUD | 是 |
-| PUT | /api/categories/sort | 批量排序 `[{id,sortOrder}]` | 是 |
+## 分类 `/api/categories`
 
-**新建：** `{name,type,sortOrder}`；type=note|bookmark|file
+CRUD + `PUT /sort`。`type`=note|bookmark|file。新建 `{name,type,sortOrder}`
 
-### 五、学习记录 `/api/study-records`
-CRUD：`GET/POST/PUT/DELETE` + `GET/{id}`。  
-**POST：** `{subject,date,duration,content,reflection,planId?}`
+## 学习记录 `/api/study-records`
 
-### 七、Todo `/api/todos`
+CRUD。POST：`{subject,date,duration,content,reflection,planId?}`
+
+## 待办 `/api/todos`
+
 CRUD + `PATCH /{id}/done`。  
-列表参数：`page`,`size`,`keyword`,`priority`,`dueScope`  
-`dueScope`：`all`（默认）| `overdue` | `today` | `week` | `later` | `done`  
-**POST：** `{title,content,priority,dueDate}`
+列表：keyword,priority,`dueScope`=`all|overdue|today|week|later|done`  
+POST：`{title,content,priority,dueDate}`
 
-### 八、文件管理 `/api/files`
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | /api/files | 分页：page,size,keyword,type,categoryId |
-| GET | /api/files/{id} | 详情 |
-| POST | /api/files/upload | multipart file + categoryId? |
-| GET | /api/files/{id}/download\|preview | 下载 / inline 预览 |
-| DELETE | /api/files/{id} | 删除 |
+## 文件 `/api/files`
 
----
+分页 · 详情 · upload · download/preview · 删除。参数：keyword,type,categoryId
 
-## 第二阶段 — 接口设计
+## 日记 `/api/diaries`
 
-### 十、日记 `/api/diaries`
-CRUD + `GET /month?month=YYYY-MM`。  
-列表参数：page,size,keyword,startDate,endDate,mood,month  
-**POST：** `{date,title,content,mood,weather}`
+CRUD + `GET /month?month=YYYY-MM`。列表：keyword,startDate,endDate,mood,month
 
-### 十一、收藏夹 `/api/bookmarks`
-CRUD + `GET /dashboard?limit=`（默认 8，最大 20；`show_on_dashboard=1`）。  
-列表：page,size,keyword,categoryId,tagId  
-**POST：** `{title,url,description,categoryId,tagIds,showOnDashboard}`
+## 收藏 `/api/bookmarks`
 
-### 十二、学习计划 `/api/study-plans`
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | /api/study-plans | 分页 |
-| GET | /api/study-plans/stats | `{total,pending,learning,done,paused}` |
-| GET | /api/study-plans/export | XLSX 导出（内存流，不落盘） |
-| GET/POST/PUT/DELETE | /api/study-plans[/{id}] | CRUD |
+CRUD + `GET /dashboard?limit=`（默认 8，`show_on_dashboard=1`）。  
+POST 可含 `tagIds`、`showOnDashboard`
 
-**列表：** keyword(name/source/author/remark), status, tagId, sortBy(updatedAt 默认|createdAt|startDate|endDate|name), sortDir  
-**export：** `scope=filtered|all`（默认 filtered）；filtered 时带与列表相同的筛选/排序参数（不分页）；返回 `.xlsx` 附件；列：名称,分类,状态,进度,开始,结束,来源,作者,URL,备注,更新时间  
-**POST/PUT：** `{name,source,author,url,remark,progress,startDate,endDate,status,tagIds}`  
-状态：0 未开始 / 1 学习中 / 2 已完成 / 3 已暂停；分类靠 tagIds（`entity_type=study_plan`）  
-学习记录可用 `planId` 关联。
+## 学习计划 `/api/study-plans`
 
-### 十四、阅读记录 `/api/readings`
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | /api/readings | 分页 |
-| GET | /api/readings/export | XLSX 导出（内存流，不落盘） |
-| GET/POST/PUT/DELETE | /api/readings[/{id}] | CRUD |
+分页 · `GET /stats` · `GET /export?scope=filtered|all` · CRUD  
+列表：keyword,status,tagId,sortBy,sortDir。状态 0–3；分类靠 `tagIds`
 
-列表：page,size,keyword(书名/作者),status, sortBy(updatedAt 默认\|createdAt\|progress\|startDate\|bookTitle), sortDir  
-**export：** `scope=filtered|all`（默认 filtered）；filtered 时带列表同款筛选/排序（不分页）；列：书名,作者,状态,进度,当前章,总章,评分,时长(分),开始,结束,备注,更新时间  
-**POST：** `{bookTitle,author,totalChapters,currentChapter,progress,status,notes}`
+## 阅读 `/api/readings`
 
----
+分页 · `GET /export` · CRUD。列表：keyword,status,sortBy,sortDir
 
-## 第三阶段 — 接口设计
+## Dashboard `/api/dashboard`
 
-### 十五、Dashboard `/api/dashboard`
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | /stats | 首页计数汇总 |
-| GET | /trends?days= | 学习/笔记/Todo/阅读趋势 |
-| GET | /search?keyword= | 跨 8 模块搜索 |
-| GET | /detail?days= | 统计页 8 模块综合数据 |
+| 路径 | 说明 |
+|------|------|
+| /stats | 首页计数 |
+| /trends?days= | 趋势 |
+| /search?keyword= | 跨模块搜索 |
+| /detail?days= | 统计页综合（见 `StatsVO`）|
 
-**stats：** note/study/todo/file/diary/bookmark/reading/studyPlan 等计数与时长  
-**search 字段：** 笔记/日记/待办(标题+内容)、学习(主题+内容)、收藏(标题+网址+描述)、阅读(书名+作者+笔记)、文件(名称)、计划(名称+来源+作者+备注)  
-**detail：** KPI、趋势、热力、分类/标签、活动、insights 等（见实现 `StatsVO`）
+## 标签 `/api/tags`
 
-### 十六、统一标签 `/api/tags`
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET/POST/PUT/DELETE | /api/tags[/{id}] | CRUD（列表含 usageCount） |
-| POST/DELETE | /{id}/bind\|unbind | 绑定/解绑 |
-| PUT | /entities/{entityType}/{entityId} | 批量设标签（先清空） |
-| GET | /entities | 实体标签列表 |
+CRUD（含 usageCount）· bind/unbind · 实体批量设标签 · 实体标签列表。  
+`entityType` 取值见 `DATABASE.md` · `tag_rel`
 
-**POST：** `{name,color}`｜bind 参数 entityType + entityId
+## 通知 `/api/notifications`
 
-### 十七、系统通知 `/api/notifications`
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | / | 分页，未读优先 |
-| GET | /unread-count | 未读数 |
-| PUT | /read \| /read-all | 批量/全部已读 |
-| DELETE | / | 清空（软清除 is_dismissed） |
-| POST | /check | 触发检测生成 |
+分页 · unread-count · read / read-all · 清空（`is_dismissed`）· `POST /check`  
+类型：TODO_OVERDUE / PLAN_DEADLINE / PLAN_COMPLETED
 
-类型：TODO_OVERDUE / PLAN_DEADLINE / PLAN_COMPLETED。读：`[id…]`
+## 布局 `/api/layout`
 
-### 十八、布局配置 `/api/layout`
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | / \| /{type} | 全部 / 指定类型 |
-| PUT | / | 保存 `{layoutType,layoutJson}` |
-| POST | /import | 导入 |
-| DELETE | /{type} | 恢复默认 |
-
-**layout_type：** menu / dashboard / preview
-
----
-
-### 标签关联实体类型
-note · bookmark · diary · study · todo · file · reading · study_plan
-
-### 变更说明
-- 统一标签替换 `note_tag`；收藏标签改 `tag_rel`
-- 旧数据 `@PostConstruct` 迁移
+GET 全部或 `/{type}` · PUT 保存 · POST import · DELETE 恢复默认  
+`layoutType`：menu | dashboard | preview
