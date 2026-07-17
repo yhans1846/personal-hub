@@ -1,30 +1,35 @@
 <script setup lang="ts">
-import { FileText, CheckCircle, BookOpen, PenLine } from 'lucide-vue-next'
+import type { Component } from 'vue'
+import { FileText, PenLine, BookMarked, BookOpen, CheckSquare, Target } from 'lucide-vue-next'
 import DashCard from './DashCard.vue'
 
 const emit = defineEmits<{
   create: [type: string]
 }>()
+
+/** 与侧栏「知识」分组一致：笔记 → 日记 → 阅读 → 学习记录 → 待办 → 学习计划 */
+const actions: { type: string; label: string; icon: Component }[] = [
+  { type: 'note', label: '新建笔记', icon: FileText },
+  { type: 'diary', label: '写日记', icon: PenLine },
+  { type: 'reading', label: '添加书籍', icon: BookMarked },
+  { type: 'study', label: '开始学习', icon: BookOpen },
+  { type: 'todo', label: '新建任务', icon: CheckSquare },
+  { type: 'plan', label: '新建计划', icon: Target },
+]
 </script>
 
 <template>
   <DashCard title="快捷操作" :icon="PenLine">
     <div class="quick-grid">
-      <button class="quick-btn" @click="emit('create', 'note')">
-        <FileText :size="18" />
-        <span>新建笔记</span>
-      </button>
-      <button class="quick-btn" @click="emit('create', 'todo')">
-        <CheckCircle :size="18" />
-        <span>新建任务</span>
-      </button>
-      <button class="quick-btn" @click="emit('create', 'study')">
-        <BookOpen :size="18" />
-        <span>开始学习</span>
-      </button>
-      <button class="quick-btn" @click="emit('create', 'diary')">
-        <PenLine :size="18" />
-        <span>写日记</span>
+      <button
+        v-for="a in actions"
+        :key="a.type"
+        class="quick-btn"
+        type="button"
+        @click="emit('create', a.type)"
+      >
+        <component :is="a.icon" :size="18" />
+        <span>{{ a.label }}</span>
       </button>
     </div>
   </DashCard>
@@ -33,7 +38,7 @@ const emit = defineEmits<{
 <style scoped>
 .quick-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: var(--sp-2);
   padding: var(--sp-3);
 }
@@ -43,7 +48,7 @@ const emit = defineEmits<{
   align-items: center;
   justify-content: center;
   gap: var(--sp-2);
-  padding: var(--sp-4) var(--sp-3);
+  padding: var(--sp-3) var(--sp-2);
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
   background: var(--bg-card);
@@ -58,5 +63,11 @@ const emit = defineEmits<{
   border-color: var(--accent);
   color: var(--accent);
   background: var(--accent-light);
+}
+
+@media (max-width: 720px) {
+  .quick-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 </style>

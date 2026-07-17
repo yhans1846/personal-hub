@@ -6,6 +6,7 @@
 
 ### 2026-07-17
 - **修复（QA）**：布局 `save` 幂等 upsert（含软删恢复 + DuplicateKey 回退）；上传异常（Multipart / 错误 Content-Type）→ 400「请上传文件」；收藏夹接入 `useDeepLinkDialog`
+- **工作台**：快捷操作补齐知识区 6 项（笔记/日记/阅读/学习记录/待办/学习计划）
 - **QA**：全功能/全按钮巡检报告 `docs/qa/2026-07-17-功能巡检报告.md`；脚本 `scripts/qa/full_button_scan.py`（验证码 API 登录 + 深链 + 按钮）；发现布局保存 DuplicateKey 500、头像非 multipart 500、收藏深链未接 `useDeepLinkDialog`
 - **后端规约**：Flags 常量；toggleFavorite NPE；流关闭；空 catch；PageParam `@Max(100)`；BusinessException 统一；markAsRead 空列表；验证码不下发 emptyIndex；`NoteServiceImpl` 分类关联 SQL 迁入 Mapper；踩坑点写入 `STYLE_GUIDE`（跳过实体 isXxx 重命名）
 - **治理（V2 标准档）**：删死代码/空 SQL/无用资源；`formatTime`+`CurrentUser`+`EnumLabels`+product-list/stats-row CSS DRY；`category` 迁入 `knowledge`；系统 API 归位；STYLE_GUIDE/PROJECT/README/API 对齐；`docs/superpowers` 归档说明

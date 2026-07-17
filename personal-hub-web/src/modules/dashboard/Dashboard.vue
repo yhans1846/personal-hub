@@ -106,6 +106,8 @@ function quickCreate(type: string) {
     case 'todo': router.push(buildCreatePath('/todos')); break
     case 'diary': router.push(buildCreatePath('/diaries')); break
     case 'study': router.push(buildCreatePath('/study-records')); break
+    case 'reading': router.push(buildCreatePath('/readings')); break
+    case 'plan': router.push(buildCreatePath('/study-plans')); break
   }
 }
 
