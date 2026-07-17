@@ -238,6 +238,7 @@ Topbar 56px｜Sidebar 240px｜Main max-width 1600、padding 32
 - Hero → 12 列 Bento；`visibleDashboardCards` 显隐排序；`useMainContentFill` + DashCard 体内滚
 - 默认：today_plan / quick_actions / external_links / recent_notes / recent_studies / recent_reading（span 4）
 - 趋势/KPI/活动仅 `/stats`；已移除 weekly_trend / recent_activity / kpi_strip / pending_todos / resource_snapshot
+- 外部快捷：收藏 `show_on_dashboard`；`DASHBOARD_CARD_SPAN` + `ensureDashboardCards` + `REMOVED_DASHBOARD_CODES`
 - 窄屏（≤900）：整页可滚、Hero 压缩；资源 chips 收成链到 `/stats`
 - 组件：`widgets/*` + `DashCard` + `format.ts`
 - 设置「工作台」：菜单 / Dashboard / 统计统一**标签云**（点击显隐、拖把手排序）

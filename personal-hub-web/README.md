@@ -22,22 +22,23 @@ Personal Hub 前端 — Vue 3 + TypeScript + Vite + Element Plus。
 src/
 ├── api/              # API 接口封装（按模块聚合）
 ├── components/
-│   ├── ui/           # Ui-* 基础组件（UiDialog/UiInput/UiButton 等 8 个）
-│   └── index.ts      # 共享组件导出
+│   ├── ui/           # Ui-* 基础组件
+│   └── index.ts      # 共享组件导出（PageHeader / ListToolbar / EmptyState …）
+├── composables/      # useMainContentFill / useFillPageSize / useProductViewMode / useDeepLinkDialog
 ├── modules/          # 领域模块
-│   ├── category/     # 统一分类管理（Tab 切换）
-│   ├── system/       # 登录 / 系统设置（布局自定义）
-│   ├── knowledge/    # 笔记 / 笔记回收站 / 只读预览（MdPreview）/ 日记 / 学习记录 / 阅读记录 / 标签
+│   ├── category/     # 统一分类管理
+│   ├── system/       # 登录 / 系统设置（工作台标签云）
+│   ├── knowledge/    # 笔记 / 回收站 / 预览 / 日记 / 学习 / 阅读 / 标签
 │   ├── planning/     # Todo / 学习计划
-│   ├── resource/     # 收藏夹 / 文件管理
-│   ├── dashboard/    # Dashboard 首页
+│   ├── resource/     # 收藏夹 / 文件
+│   ├── dashboard/    # Dashboard（fill + Bento）
 │   ├── search/       # 全局搜索
-│   └── stats/        # 数据统计趋势图
-├── router/           # 路由配置
-├── stores/           # Pinia（auth / theme / layout / notification）
-├── styles/           # 全局样式 / 设计令牌 / 深色模式 / 5 种强调色 / Markdown 排版系统
-├── types/            # TypeScript 类型定义
-└── utils/            # 工具函数
+│   └── stats/        # 数据统计（折叠分组）
+├── router/           # 路由（列表页 hideBreadcrumb）
+├── store/            # Pinia
+├── styles/           # global / product-list / markdown-prose
+├── types/
+└── utils/
 ```
 
 ## 启动
