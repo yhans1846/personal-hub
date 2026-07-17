@@ -13,6 +13,7 @@ import type { TagVO } from '@/types/tag'
 import type { CategoryVO } from '@/types/category'
 import { useMainContentFill } from '@/composables/useMainContentFill'
 import { useFillPageSize } from '@/composables/useFillPageSize'
+import { useDeepLinkDialog } from '@/composables/useDeepLinkDialog'
 
 const router = useRouter()
 const list = ref<BookmarkVO[]>([])
@@ -41,6 +42,8 @@ function openEdit(id: number) {
   editId.value = id
   dialogVisible.value = true
 }
+
+useDeepLinkDialog({ openCreate, openEdit })
 
 onMounted(() => {
   fetchCategories()

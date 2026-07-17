@@ -35,7 +35,7 @@ Playwright 批量脚本（路由/深链/API≥400）
 | 工具 | 适用 | 产物 |
 |------|------|------|
 | **cursor-ide-browser** | 关键路径、弹窗、通知 | 截图 + Console |
-| **Playwright** `scripts/qa/full_feature_test.py` | 16+ 路由、深链 | `logs/qa-artifacts/full_feature_result.json` |
+| **Playwright** `scripts/qa/full_button_scan.py`（首选；含验证码登录+按钮） / `full_feature_test.py`（旧，登录占位已过时） | 16+ 路由、深链、按钮 | `logs/qa-artifacts/full_button_scan_result.json` |
 | **日志** | 后端故障判定 | ERROR / Exception |
 
 ---
@@ -81,8 +81,9 @@ Playwright 批量脚本（路由/深链/API≥400）
 
 | 路径 | 说明 |
 |------|------|
-| `scripts/qa/full_feature_test.py` | 巡检脚本 |
-| `logs/qa-artifacts/full_feature_result.json` | 结果（gitignore） |
+| `scripts/qa/full_button_scan.py` | 全路由+深链+按钮巡检（API 验证码登录） |
+| `scripts/qa/full_feature_test.py` | 旧烟测（登录需改适配新验证码） |
+| `logs/qa-artifacts/full_button_scan_result.json` | 结果（gitignore） |
 | `logs/qa-artifacts/screenshots/` | 截图（gitignore） |
 
 ### 4.2 Windows 启动方式

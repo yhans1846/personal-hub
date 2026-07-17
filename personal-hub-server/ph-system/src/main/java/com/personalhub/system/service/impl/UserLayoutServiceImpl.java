@@ -7,6 +7,7 @@ import com.personalhub.system.service.UserLayoutService;
 import com.personalhub.system.vo.LayoutVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,19 +40,31 @@ public class UserLayoutServiceImpl implements UserLayoutService {
     @Override
     @Transactional
     public void save(Long userId, String layoutType, String layoutJson) {
-        UserLayout existing = userLayoutMapper.selectByUserAndType(userId, layoutType);
+        UserLayout existing = userLayoutMapper.selectByUserAndTypeAny(userId, layoutType);
         if (existing != null) {
             existing.setLayoutJson(layoutJson);
-            userLayoutMapper.updateById(existing);
-            log.info("更新布局配置: userId={}, type={}", userId, layoutType);
-        } else {
-            var entity = UserLayout.builder()
-                    .userId(userId)
-                    .layoutType(layoutType)
-                    .layoutJson(layoutJson)
-                    .build();
+            userLayoutMapper.restoreAndUpdate(existing);
+            log.info("更新布局配置: userId={}, type={}, restoredSoftDelete={}",
+                    userId, layoutType, existing.getIsDeleted() != null && existing.getIsDeleted() == 1);
+            return;
+        }
+        var entity = UserLayout.builder()
+                .userId(userId)
+                .layoutType(layoutType)
+                .layoutJson(layoutJson)
+                .build();
+        try {
             userLayoutMapper.insert(entity);
             log.info("创建布局配置: userId={}, type={}", userId, layoutType);
+        } catch (DuplicateKeyException e) {
+            // 并发插入或软删行仍占唯一键：回退为更新
+            UserLayout raced = userLayoutMapper.selectByUserAndTypeAny(userId, layoutType);
+            if (raced == null) {
+                throw e;
+            }
+            raced.setLayoutJson(layoutJson);
+            userLayoutMapper.restoreAndUpdate(raced);
+            log.info("布局配置并发冲突已回退更新: userId={}, type={}", userId, layoutType);
         }
     }
 
