@@ -4,6 +4,7 @@ import { getDetailedStats } from '@/modules/dashboard/api'
 import type { StatsVO, InsightItem, ActivityItem, NamedStat } from '@/modules/dashboard/api'
 import * as echarts from 'echarts'
 import { useLayoutStore } from '@/store/layoutStore'
+import { PageHeader } from '@/components'
 import {
   BookOpen, FileText, CheckSquare, BookMarked,
   TrendingUp, Clock, Lightbulb, Layers, Tag,
@@ -16,6 +17,7 @@ const loading = ref(true)
 const stats = ref<StatsVO | null>(null)
 const catTagTab = ref<'category' | 'tag'>('category')
 const error = ref(false)
+const activeSections = ref(['overview'])
 
 // ====== 统计卡片配置 ======
 const layoutStore = useLayoutStore()
@@ -86,6 +88,12 @@ function disposeCharts() {
 
 function handleResize() {
   ;[studyChart, noteChart, todoChart, catTagChart].forEach(c => c?.resize())
+}
+
+function onSectionChange() {
+  nextTick(() => {
+    window.setTimeout(() => handleResize(), 320)
+  })
 }
 
 function initChart(el: HTMLDivElement, existing: echarts.ECharts | null): echarts.ECharts {
@@ -420,21 +428,16 @@ const groupedActivities = computed(() => {
 
 <template>
   <div class="stats-page">
-    <!-- ====== 页面头部 ====== -->
-    <div class="page-header">
-      <div class="page-header-left">
-        <h2>数据统计</h2>
-        <p class="page-subtitle">学习习惯与知识沉淀的可视化洞察</p>
-      </div>
-      <div class="range-picker">
-        <el-radio-group v-model="days" size="small">
-          <el-radio-button :value="3">近 3 天</el-radio-button>
-          <el-radio-button :value="7">近 7 天</el-radio-button>
-          <el-radio-button :value="15">近 15 天</el-radio-button>
-          <el-radio-button :value="30">近 30 天</el-radio-button>
-          <el-radio-button :value="90">近 90 天</el-radio-button>
-        </el-radio-group>
-      </div>
+    <PageHeader title="数据统计" subtitle="学习习惯与知识沉淀的可视化洞察" />
+
+    <div class="stats-sticky-bar">
+      <el-radio-group v-model="days" size="small">
+        <el-radio-button :value="3">近 3 天</el-radio-button>
+        <el-radio-button :value="7">近 7 天</el-radio-button>
+        <el-radio-button :value="15">近 15 天</el-radio-button>
+        <el-radio-button :value="30">近 30 天</el-radio-button>
+        <el-radio-button :value="90">近 90 天</el-radio-button>
+      </el-radio-group>
     </div>
 
     <!-- ====== 错误状态 ====== -->
@@ -458,184 +461,191 @@ const groupedActivities = computed(() => {
 
     <!-- ====== 主内容 ====== -->
     <template v-else-if="stats">
+      <el-collapse v-model="activeSections" class="stats-sections" @change="onSectionChange">
 
-      <!-- ====== ① KPI Summary ====== -->
-      <div v-if="hasCard('kpi')" class="kpi-grid">
-        <div class="kpi-card">
-          <div class="kpi-icon" style="--kpi-color: var(--accent); --kpi-bg: var(--accent-light);">
-            <FileText :size="18" />
-          </div>
-          <div class="kpi-body">
-            <div class="kpi-value">{{ stats.noteCount }}</div>
-            <div class="kpi-label">笔记</div>
-          </div>
-          <div class="kpi-change" :style="{ color: changeColor(stats.noteCountChange) }">
-            <component :is="changeIcon(stats.noteCountChange)" :size="12" />
-            <span>{{ changeText(stats.noteCountChange) }}</span>
-          </div>
-        </div>
-
-        <div class="kpi-card">
-          <div class="kpi-icon" style="--kpi-color: var(--info); --kpi-bg: var(--info-light);">
-            <BookMarked :size="18" />
-          </div>
-          <div class="kpi-body">
-            <div class="kpi-value">{{ formatReadingHours(stats.readingHours) }}</div>
-            <div class="kpi-label">阅读</div>
-          </div>
-          <div class="kpi-change" :style="{ color: changeColor(stats.readingHoursChange) }">
-            <component :is="changeIcon(stats.readingHoursChange)" :size="12" />
-            <span>{{ changeText(stats.readingHoursChange) }}</span>
-          </div>
-        </div>
-
-        <div class="kpi-card">
-          <div class="kpi-icon" style="--kpi-color: var(--success); --kpi-bg: var(--success-light);">
-            <CheckSquare :size="18" />
-          </div>
-          <div class="kpi-body">
-            <div class="kpi-value">{{ Math.round(stats.todoCompletionRate) }}<span class="kpi-unit">%</span></div>
-            <div class="kpi-label">Todo 完成率</div>
-          </div>
-          <div class="kpi-change" :style="{ color: changeColor(stats.todoCompletionChange) }">
-            <component :is="changeIcon(stats.todoCompletionChange)" :size="12" />
-            <span>{{ stats.todoCompletionChange != null && stats.todoCompletionChange > 0 ? '+' : '' }}{{ stats.todoCompletionChange ?? 0 }}pp</span>
-          </div>
-        </div>
-
-        <div class="kpi-card">
-          <div class="kpi-icon" style="--kpi-color: var(--warning); --kpi-bg: var(--warning-light);">
-            <TrendingUp :size="18" />
-          </div>
-          <div class="kpi-body">
-            <div class="kpi-value">{{ stats.streakDays }}<span class="kpi-unit">天</span></div>
-            <div class="kpi-label">连续学习</div>
-          </div>
-          <div class="kpi-change" :style="{ color: 'var(--text-tertiary)' }">
-            <Clock :size="12" />
-            <span>最长 {{ stats.bestStreakDays }} 天</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- ====== 图表网格 ====== -->
-      <div class="chart-grid">
-
-        <!-- ====== ② 学习趋势 - 面积图 ====== -->
-        <div v-if="hasCard('study-trend')" class="chart-card">
-          <div class="chart-header">
-            <BookOpen :size="16" stroke="var(--accent)" />
-            <span>学习趋势</span>
-          </div>
-          <div ref="studyChartRef" class="chart-container" />
-        </div>
-
-        <!-- ====== ③ 笔记新增趋势 - 柱状图 ====== -->
-        <div v-if="hasCard('note-trend')" class="chart-card">
-          <div class="chart-header">
-            <FileText :size="16" stroke="var(--success)" />
-            <span>笔记新增趋势</span>
-          </div>
-          <div class="chart-meta" v-if="stats.avgDailyNotes > 0">
-            <span>日均 {{ stats.avgDailyNotes.toFixed(1) }}</span>
-            <span class="meta-divider">·</span>
-            <span>最高 {{ stats.maxDailyNotes }}</span>
-            <span class="meta-divider" v-if="stats.minDailyNotes > 0">·</span>
-            <span v-if="stats.minDailyNotes > 0">最低 {{ stats.minDailyNotes }}</span>
-          </div>
-          <div ref="noteChartRef" class="chart-container" />
-        </div>
-
-        <!-- ====== ④ Todo 完成率 - 环形图 ====== -->
-        <div v-if="hasCard('todo-donut')" class="chart-card">
-          <div class="chart-header">
-            <CheckSquare :size="16" stroke="var(--warning)" />
-            <span>Todo 完成率</span>
-          </div>
-          <div ref="todoChartRef" class="chart-container chart-container--donut" />
-          <div class="todo-legend">
-            <div class="legend-item">
-              <span class="legend-dot" style="background: var(--success)" />
-              <span>完成 {{ stats.todoDone }}</span>
+        <!-- ====== ① KPI Summary ====== -->
+        <el-collapse-item v-if="hasCard('kpi')" title="核心指标" name="overview">
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-icon" style="--kpi-color: var(--accent); --kpi-bg: var(--accent-light);">
+                <FileText :size="18" />
+              </div>
+              <div class="kpi-body">
+                <div class="kpi-value">{{ stats.noteCount }}</div>
+                <div class="kpi-label">笔记</div>
+              </div>
+              <div class="kpi-change" :style="{ color: changeColor(stats.noteCountChange) }">
+                <component :is="changeIcon(stats.noteCountChange)" :size="12" />
+                <span>{{ changeText(stats.noteCountChange) }}</span>
+              </div>
             </div>
-            <div class="legend-item">
-              <span class="legend-dot" style="background: var(--warning)" />
-              <span>进行中 {{ stats.todoPending }}</span>
+
+            <div class="kpi-card">
+              <div class="kpi-icon" style="--kpi-color: var(--info); --kpi-bg: var(--info-light);">
+                <BookMarked :size="18" />
+              </div>
+              <div class="kpi-body">
+                <div class="kpi-value">{{ formatReadingHours(stats.readingHours) }}</div>
+                <div class="kpi-label">阅读</div>
+              </div>
+              <div class="kpi-change" :style="{ color: changeColor(stats.readingHoursChange) }">
+                <component :is="changeIcon(stats.readingHoursChange)" :size="12" />
+                <span>{{ changeText(stats.readingHoursChange) }}</span>
+              </div>
             </div>
-            <div class="legend-item">
-              <span class="legend-dot" style="background: var(--danger)" />
-              <span>超期 {{ stats.todoOverdue }}</span>
+
+            <div class="kpi-card">
+              <div class="kpi-icon" style="--kpi-color: var(--success); --kpi-bg: var(--success-light);">
+                <CheckSquare :size="18" />
+              </div>
+              <div class="kpi-body">
+                <div class="kpi-value">{{ Math.round(stats.todoCompletionRate) }}<span class="kpi-unit">%</span></div>
+                <div class="kpi-label">Todo 完成率</div>
+              </div>
+              <div class="kpi-change" :style="{ color: changeColor(stats.todoCompletionChange) }">
+                <component :is="changeIcon(stats.todoCompletionChange)" :size="12" />
+                <span>{{ stats.todoCompletionChange != null && stats.todoCompletionChange > 0 ? '+' : '' }}{{ stats.todoCompletionChange ?? 0 }}pp</span>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-icon" style="--kpi-color: var(--warning); --kpi-bg: var(--warning-light);">
+                <TrendingUp :size="18" />
+              </div>
+              <div class="kpi-body">
+                <div class="kpi-value">{{ stats.streakDays }}<span class="kpi-unit">天</span></div>
+                <div class="kpi-label">连续学习</div>
+              </div>
+              <div class="kpi-change" :style="{ color: 'var(--text-tertiary)' }">
+                <Clock :size="12" />
+                <span>最长 {{ stats.bestStreakDays }} 天</span>
+              </div>
             </div>
           </div>
-        </div>
+        </el-collapse-item>
 
-        <!-- ====== ⑤ 分类/标签统计 ====== -->
-        <div v-if="hasCard('cat-tag')" class="chart-card">
-          <div class="chart-header">
-            <Layers :size="16" stroke="var(--accent)" />
-            <div class="chart-header-tabs">
-              <button
-                :class="['tab-btn', { active: catTagTab === 'category' }]"
-                @click="catTagTab = 'category'"
-              >分类</button>
-              <button
-                :class="['tab-btn', { active: catTagTab === 'tag' }]"
-                @click="catTagTab = 'tag'"
-              >标签</button>
+        <!-- ====== 图表网格 ====== -->
+        <el-collapse-item
+          v-if="hasCard('study-trend') || hasCard('note-trend') || hasCard('todo-donut') || hasCard('cat-tag')"
+          title="趋势分析"
+          name="trends"
+        >
+          <div class="chart-grid">
+            <div v-show="hasCard('study-trend')" class="chart-card">
+              <div class="chart-header">
+                <BookOpen :size="16" stroke="var(--accent)" />
+                <span>学习趋势</span>
+              </div>
+              <div ref="studyChartRef" class="chart-container" />
             </div>
-          </div>
-          <div ref="catTagChartRef" class="chart-container" />
-        </div>
 
-      </div>
+            <div v-show="hasCard('note-trend')" class="chart-card">
+              <div class="chart-header">
+                <FileText :size="16" stroke="var(--success)" />
+                <span>笔记新增趋势</span>
+              </div>
+              <div class="chart-meta" v-if="stats.avgDailyNotes > 0">
+                <span>日均 {{ stats.avgDailyNotes.toFixed(1) }}</span>
+                <span class="meta-divider">·</span>
+                <span>最高 {{ stats.maxDailyNotes }}</span>
+                <span class="meta-divider" v-if="stats.minDailyNotes > 0">·</span>
+                <span v-if="stats.minDailyNotes > 0">最低 {{ stats.minDailyNotes }}</span>
+              </div>
+              <div ref="noteChartRef" class="chart-container" />
+            </div>
 
-      <!-- ====== 底部双栏 ====== -->
-      <div class="bottom-grid" :class="{ 'bottom-grid--single': !hasCard('timeline') !== !hasCard('insight') }">
-
-        <!-- ====== ⑦ 最近活动 Timeline ====== -->
-        <div v-if="hasCard('timeline')" class="bottom-card">
-          <div class="chart-header">
-            <Clock :size="16" stroke="var(--text-secondary)" />
-            <span>最近活动</span>
-          </div>
-          <div class="timeline" v-if="groupedActivities.length > 0">
-            <template v-for="group in groupedActivities" :key="group.label">
-              <div class="timeline-date">{{ group.label }}</div>
-              <div class="timeline-items">
-                <div v-for="item in group.items" :key="item.id" class="timeline-item">
-                  <div class="tl-dot" :class="`tl-dot--${item.action.toLowerCase()}`" />
-                  <div class="tl-body">
-                    <span class="tl-module">{{ moduleLabel(item.module) }}</span>
-                    <span class="tl-action">{{ actionLabel(item.action) }}</span>
-                    <span class="tl-content">{{ item.content }}</span>
-                  </div>
-                  <span class="tl-time">{{ item.timeLabel }}</span>
+            <div v-show="hasCard('todo-donut')" class="chart-card">
+              <div class="chart-header">
+                <CheckSquare :size="16" stroke="var(--warning)" />
+                <span>Todo 完成率</span>
+              </div>
+              <div ref="todoChartRef" class="chart-container chart-container--donut" />
+              <div class="todo-legend">
+                <div class="legend-item">
+                  <span class="legend-dot" style="background: var(--success)" />
+                  <span>完成 {{ stats.todoDone }}</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-dot" style="background: var(--warning)" />
+                  <span>进行中 {{ stats.todoPending }}</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-dot" style="background: var(--danger)" />
+                  <span>超期 {{ stats.todoOverdue }}</span>
                 </div>
               </div>
-            </template>
-          </div>
-          <div v-else class="empty-box">暂无活动记录</div>
-        </div>
+            </div>
 
-        <!-- ====== ⑧ 学习洞察 ====== -->
-        <div v-if="hasCard('insight')" class="bottom-card">
-          <div class="chart-header">
-            <Lightbulb :size="16" stroke="var(--warning)" />
-            <span>学习洞察</span>
-          </div>
-          <div class="insights" v-if="stats.insights.length > 0">
-            <div v-for="(insight, i) in stats.insights" :key="i" class="insight-item" :style="{ '--delay': `${i * 0.1}s` }">
-              <span class="insight-icon">{{ insight.icon }}</span>
-              <div class="insight-body">
-                <span class="insight-title">{{ insight.title }}</span>
-                <span class="insight-desc">{{ insight.description }}</span>
+            <div v-show="hasCard('cat-tag')" class="chart-card">
+              <div class="chart-header">
+                <Layers :size="16" stroke="var(--accent)" />
+                <div class="chart-header-tabs">
+                  <button
+                    :class="['tab-btn', { active: catTagTab === 'category' }]"
+                    @click="catTagTab = 'category'"
+                  >分类</button>
+                  <button
+                    :class="['tab-btn', { active: catTagTab === 'tag' }]"
+                    @click="catTagTab = 'tag'"
+                  >标签</button>
+                </div>
               </div>
+              <div ref="catTagChartRef" class="chart-container" />
             </div>
           </div>
-          <div v-else class="empty-box">数据不足，继续使用后将生成洞察</div>
-        </div>
+        </el-collapse-item>
 
-      </div>
+        <!-- ====== 底部双栏 ====== -->
+        <el-collapse-item
+          v-if="hasCard('timeline') || hasCard('insight')"
+          title="活动与洞察"
+          name="activity"
+        >
+          <div class="bottom-grid" :class="{ 'bottom-grid--single': !hasCard('timeline') !== !hasCard('insight') }">
+            <div v-show="hasCard('timeline')" class="bottom-card">
+              <div class="chart-header">
+                <Clock :size="16" stroke="var(--text-secondary)" />
+                <span>最近活动</span>
+              </div>
+              <div class="timeline" v-if="groupedActivities.length > 0">
+                <template v-for="group in groupedActivities" :key="group.label">
+                  <div class="timeline-date">{{ group.label }}</div>
+                  <div class="timeline-items">
+                    <div v-for="item in group.items" :key="item.id" class="timeline-item">
+                      <div class="tl-dot" :class="`tl-dot--${item.action.toLowerCase()}`" />
+                      <div class="tl-body">
+                        <span class="tl-module">{{ moduleLabel(item.module) }}</span>
+                        <span class="tl-action">{{ actionLabel(item.action) }}</span>
+                        <span class="tl-content">{{ item.content }}</span>
+                      </div>
+                      <span class="tl-time">{{ item.timeLabel }}</span>
+                    </div>
+                  </div>
+                </template>
+              </div>
+              <div v-else class="empty-box">暂无活动记录</div>
+            </div>
+
+            <div v-show="hasCard('insight')" class="bottom-card">
+              <div class="chart-header">
+                <Lightbulb :size="16" stroke="var(--warning)" />
+                <span>学习洞察</span>
+              </div>
+              <div class="insights" v-if="stats.insights.length > 0">
+                <div v-for="(insight, i) in stats.insights" :key="i" class="insight-item" :style="{ '--delay': `${i * 0.1}s` }">
+                  <span class="insight-icon">{{ insight.icon }}</span>
+                  <div class="insight-body">
+                    <span class="insight-title">{{ insight.title }}</span>
+                    <span class="insight-desc">{{ insight.description }}</span>
+                  </div>
+                </div>
+              </div>
+              <div v-else class="empty-box">数据不足，继续使用后将生成洞察</div>
+            </div>
+          </div>
+        </el-collapse-item>
+
+      </el-collapse>
     </template>
   </div>
 </template>
@@ -650,24 +660,34 @@ const groupedActivities = computed(() => {
   animation: fadeIn 0.4s ease;
 }
 
-/* ====== 页面头部 ====== */
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  margin-bottom: var(--sp-6);
-  gap: var(--sp-4);
+.stats-sticky-bar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--bg-body);
+  padding: var(--sp-2) 0 var(--sp-4);
+  margin-top: calc(var(--sp-6) * -1 + var(--sp-2));
+  margin-bottom: var(--sp-4);
 }
-.page-header-left h2 {
-  font-size: var(--text-2xl);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  margin: 0 0 2px 0;
+
+.stats-sections {
+  border: none;
 }
-.page-subtitle {
-  font-size: var(--text-sm);
-  color: var(--text-tertiary);
-  margin: 0;
+.stats-sections :deep(.el-collapse-item__header) {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--text-primary);
+  background: transparent;
+  border-bottom: 1px solid var(--border-color);
+  height: auto;
+  line-height: 1.4;
+  padding: var(--sp-3) 0;
+}
+.stats-sections :deep(.el-collapse-item__wrap) {
+  border-bottom: none;
+}
+.stats-sections :deep(.el-collapse-item__content) {
+  padding: var(--sp-4) 0 var(--sp-2);
 }
 
 /* ====== 状态容器 ====== */
@@ -728,7 +748,6 @@ const groupedActivities = computed(() => {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: var(--sp-4);
-  margin-bottom: var(--sp-5);
 }
 .kpi-card {
   display: flex;
@@ -798,7 +817,6 @@ const groupedActivities = computed(() => {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--sp-4);
-  margin-bottom: var(--sp-5);
 }
 
 .chart-card {
@@ -1062,7 +1080,7 @@ const groupedActivities = computed(() => {
   .skeleton-row { grid-template-columns: repeat(2, 1fr) !important; }
 }
 @media (max-width: 640px) {
-  .page-header { flex-direction: column; align-items: flex-start; gap: var(--sp-3); }
+  .stats-sticky-bar { margin-top: calc(var(--sp-4) * -1 + var(--sp-2)); }
   .kpi-grid { grid-template-columns: 1fr 1fr; }
   .kpi-card { padding: var(--sp-3); }
   .kpi-change { position: static; }

@@ -84,6 +84,7 @@ const sectionMap: Record<string, string> = {
   tags: '管理', stats: '统计', settings: '系统',
 }
 const breadcrumbItems = computed(() => {
+  if (route.meta.hideBreadcrumb) return []
   if (route.path === '/dashboard') return [{ label: '首页' }]
   const items: { label: string }[] = []
   const seg = route.path.split('/')[1]
@@ -92,6 +93,7 @@ const breadcrumbItems = computed(() => {
   if (title) items.push({ label: title })
   return items.length ? items : [{ label: '首页' }]
 })
+const hideBreadcrumb = computed(() => route.meta.hideBreadcrumb === true || breadcrumbItems.value.length === 0)
 function closeSidebar() { sidebarOpen.value = false }
 
 // Focus Mode — 由 Editor.vue 通过 body class 控制
@@ -214,7 +216,7 @@ function handleQuickCreate(cmd: string) {
     </header>
 
     <!-- 面包屑导航 -->
-    <div class="header-breadcrumb" :class="{ 'focus-hidden': isEditorFocusMode }">
+    <div v-if="!hideBreadcrumb" class="header-breadcrumb" :class="{ 'focus-hidden': isEditorFocusMode }">
       <template v-for="(item, idx) in breadcrumbItems" :key="idx">
         <span v-if="idx > 0" class="breadcrumb-sep">/</span>
         <span class="breadcrumb-item">{{ item.label }}</span>

@@ -2,10 +2,9 @@
 import { ref, onMounted, onUnmounted, computed, watch, nextTick } from 'vue'
 import { getCategories, createCategory, updateCategory, deleteCategory, batchUpdateCategorySort } from '@/api/categoryApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Pencil, Trash2, FolderOpen, Folder, Bookmark, GripVertical, Search, ArrowUpDown } from 'lucide-vue-next'
+import { Pencil, Trash2, FolderOpen, Folder, Bookmark, GripVertical, Search, ArrowUpDown } from 'lucide-vue-next'
 import Sortable from 'sortablejs'
-import PageHeader from '@/components/PageHeader.vue'
-import EmptyState from '@/components/EmptyState.vue'
+import { PageHeader, EmptyState, ListToolbar } from '@/components'
 import { UiDialog, UiInput, UiButton } from '@/components/ui'
 import type { CategoryVO } from '@/types/category'
 import CategoryStatsCards from './CategoryStatsCards.vue'
@@ -178,9 +177,7 @@ function getTypeIcon(type: string) {
 <template>
   <div class="category-manage">
     <!-- ========== Header ========== -->
-    <PageHeader title="分类管理" subtitle="管理所有模块分类，可拖拽排序">
-      <span class="header-count">{{ stats.total }} 个分类</span>
-    </PageHeader>
+    <PageHeader title="分类管理" />
 
     <!-- ========== 统计卡片 ========== -->
     <CategoryStatsCards :total="stats.total" :in-use="stats.inUse" :unused="stats.unused" />
@@ -201,33 +198,25 @@ function getTypeIcon(type: string) {
     </div>
 
     <!-- ========== 工具栏 ========== -->
-    <div class="toolbar">
-      <div class="toolbar-left">
-        <div class="search-box">
-          <Search :size="16" class="search-icon" />
-          <input
-            v-model="searchQuery"
-            type="text"
-            class="search-input"
-            placeholder="搜索分类..."
-          />
-          <button v-if="searchQuery" class="search-clear" @click="searchQuery = ''">✕</button>
-        </div>
-        <div class="sort-group">
-          <select v-model="sortBy" class="sort-select">
-            <option value="createdAt">创建时间</option>
-            <option value="name">名称</option>
-            <option value="count">使用次数</option>
-          </select>
-          <button class="sort-dir-btn" @click="toggleSortDir" :title="sortDir === 'asc' ? '正序' : '倒序'">
-            <ArrowUpDown :size="15" class="sort-icon" :class="{ reversed: sortDir === 'desc' }" />
-          </button>
-        </div>
-      </div>
-      <el-button type="primary" size="default" @click="openCreate">
-        <Plus :size="16" /> 新建分类
-      </el-button>
-    </div>
+    <ListToolbar
+      :search="searchQuery"
+      search-placeholder="搜索分类..."
+      search-width="280px"
+      create-label="新建分类"
+      @update:search="searchQuery = $event"
+      @create="openCreate"
+    >
+      <template #filters>
+        <el-select v-model="sortBy" style="width: 120px">
+          <el-option value="createdAt" label="创建时间" />
+          <el-option value="name" label="名称" />
+          <el-option value="count" label="使用次数" />
+        </el-select>
+        <button class="sort-dir-btn" @click="toggleSortDir" :title="sortDir === 'asc' ? '正序' : '倒序'">
+          <ArrowUpDown :size="15" class="sort-icon" :class="{ reversed: sortDir === 'desc' }" />
+        </button>
+      </template>
+    </ListToolbar>
 
     <!-- ========== 内容区 ========== -->
     <div v-if="loading" class="grid-skeleton">
@@ -301,13 +290,6 @@ function getTypeIcon(type: string) {
   max-width: 960px;
 }
 
-/* ---- Header ---- */
-.header-count {
-  font-size: var(--text-sm);
-  color: var(--text-tertiary);
-  margin-top: 2px;
-}
-
 /* ---- Segment 切换 ---- */
 .segment-group {
   display: flex;
@@ -349,78 +331,6 @@ function getTypeIcon(type: string) {
   margin-left: 2px;
 }
 
-/* ---- 工具栏 ---- */
-.toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: var(--sp-3);
-  margin-bottom: var(--sp-5);
-  flex-wrap: wrap;
-}
-
-.toolbar-left {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-3);
-  flex: 1;
-}
-
-.search-box {
-  position: relative;
-  display: flex;
-  align-items: center;
-  flex: 1;
-  max-width: 280px;
-}
-.search-icon {
-  position: absolute;
-  left: 10px;
-  color: var(--text-tertiary);
-  pointer-events: none;
-}
-.search-input {
-  width: 100%;
-  padding: 8px 32px 8px 34px;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  background: var(--bg-card);
-  font-size: var(--text-sm);
-  color: var(--text-primary);
-  outline: none;
-  transition: border-color var(--transition);
-}
-.search-input:focus { border-color: var(--accent); }
-.search-input::placeholder { color: var(--text-placeholder); }
-.search-clear {
-  position: absolute;
-  right: 6px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--text-tertiary);
-  font-size: 13px;
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-.search-clear:hover { color: var(--text-primary); background: var(--bg-hover); }
-
-.sort-group {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.sort-select {
-  padding: 7px 10px;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  background: var(--bg-card);
-  font-size: var(--text-sm);
-  color: var(--text-secondary);
-  outline: none;
-  cursor: pointer;
-}
-.sort-select:focus { border-color: var(--accent); }
 .sort-dir-btn {
   display: flex;
   align-items: center;

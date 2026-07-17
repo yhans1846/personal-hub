@@ -2,10 +2,9 @@
 import { ref, onMounted, computed } from 'vue'
 import { getTags, createTag, updateTag, deleteTag } from '@/modules/knowledge/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Tags, Plus, Pencil, Trash2, Search, ArrowUpDown } from 'lucide-vue-next'
+import { Tags, Pencil, Trash2, Search, ArrowUpDown } from 'lucide-vue-next'
 import type { TagVO } from '@/types/tag'
-import PageHeader from '@/components/PageHeader.vue'
-import EmptyState from '@/components/EmptyState.vue'
+import { PageHeader, EmptyState, ListToolbar } from '@/components'
 import { UiDialog, UiInput } from '@/components/ui'
 import TagStatsCards from './TagStatsCards.vue'
 
@@ -142,49 +141,36 @@ function formatDate(dateStr?: string) {
 <template>
   <div class="tag-manage">
     <!-- ========== Header ========== -->
-    <PageHeader title="标签管理" subtitle="管理所有模块的标签，支持颜色标记和使用统计">
-      <span class="header-count">{{ stats.total }} 个标签 · 引用 {{ stats.totalUsage }} 次 · 本周新增 {{ stats.recentAdded }}</span>
-    </PageHeader>
+    <PageHeader title="标签管理" />
 
     <!-- ========== 统计卡片 ========== -->
     <TagStatsCards :total="stats.total" :total-usage="stats.totalUsage" :recent-added="stats.recentAdded" />
 
     <!-- ========== 工具栏 ========== -->
-    <div class="toolbar">
-      <div class="toolbar-left">
-        <div class="search-box">
-          <Search :size="16" class="search-icon" />
-          <input
-            v-model="searchQuery"
-            type="text"
-            class="search-input"
-            placeholder="搜索标签..."
-          />
-          <button v-if="searchQuery" class="search-clear" @click="searchQuery = ''">✕</button>
-        </div>
-
-        <select v-model="colorFilter" class="filter-select">
-          <option value="">全部颜色</option>
-          <option v-for="c in uniqueColors" :key="c" :value="c">
-            ● {{ colorNames[c] || c }}
-          </option>
-        </select>
-
-        <div class="sort-group">
-          <select v-model="sortBy" class="sort-select">
-            <option value="usageCount">使用次数</option>
-            <option value="name">名称</option>
-            <option value="createdAt">创建时间</option>
-          </select>
-          <button class="sort-dir-btn" @click="toggleSortDir" :title="sortDir === 'asc' ? '正序' : '倒序'">
-            <ArrowUpDown :size="15" class="sort-icon" :class="{ reversed: sortDir === 'desc' }" />
-          </button>
-        </div>
-      </div>
-      <el-button type="primary" size="default" @click="openCreate">
-        <Plus :size="16" /> 新建标签
-      </el-button>
-    </div>
+    <ListToolbar
+      :search="searchQuery"
+      search-placeholder="搜索标签..."
+      search-width="260px"
+      create-label="新建标签"
+      @update:search="searchQuery = $event"
+      @create="openCreate"
+    >
+      <template #filters>
+        <el-select v-model="colorFilter" placeholder="全部颜色" clearable style="width: 120px">
+          <el-option v-for="c in uniqueColors" :key="c" :value="c" :label="colorNames[c] || c">
+            <span class="color-option">● {{ colorNames[c] || c }}</span>
+          </el-option>
+        </el-select>
+        <el-select v-model="sortBy" style="width: 120px">
+          <el-option value="usageCount" label="使用次数" />
+          <el-option value="name" label="名称" />
+          <el-option value="createdAt" label="创建时间" />
+        </el-select>
+        <button class="sort-dir-btn" @click="toggleSortDir" :title="sortDir === 'asc' ? '正序' : '倒序'">
+          <ArrowUpDown :size="15" class="sort-icon" :class="{ reversed: sortDir === 'desc' }" />
+        </button>
+      </template>
+    </ListToolbar>
 
     <!-- ========== 内容区 ========== -->
     <EmptyState
@@ -272,91 +258,8 @@ function formatDate(dateStr?: string) {
   max-width: 1100px;
 }
 
-/* ---- Header ---- */
-.header-count {
-  font-size: var(--text-sm);
-  color: var(--text-tertiary);
-  margin-top: 2px;
-}
+.color-option { font-size: var(--text-sm); }
 
-/* ---- 工具栏 ---- */
-.toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: var(--sp-3);
-  margin-bottom: var(--sp-5);
-  flex-wrap: wrap;
-}
-
-.toolbar-left {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-3);
-  flex: 1;
-  flex-wrap: wrap;
-}
-
-.search-box {
-  position: relative;
-  display: flex;
-  align-items: center;
-  flex: 1;
-  min-width: 160px;
-  max-width: 260px;
-}
-.search-icon {
-  position: absolute;
-  left: 10px;
-  color: var(--text-tertiary);
-  pointer-events: none;
-}
-.search-input {
-  width: 100%;
-  padding: 8px 32px 8px 34px;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  background: var(--bg-card);
-  font-size: var(--text-sm);
-  color: var(--text-primary);
-  outline: none;
-  transition: border-color var(--transition);
-}
-.search-input:focus { border-color: var(--accent); }
-.search-input::placeholder { color: var(--text-placeholder); }
-.search-clear {
-  position: absolute;
-  right: 6px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--text-tertiary);
-  font-size: 13px;
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-.search-clear:hover { color: var(--text-primary); background: var(--bg-hover); }
-
-.filter-select,
-.sort-select {
-  padding: 7px 10px;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  background: var(--bg-card);
-  font-size: var(--text-sm);
-  color: var(--text-secondary);
-  outline: none;
-  cursor: pointer;
-  min-width: 90px;
-}
-.filter-select:focus,
-.sort-select:focus { border-color: var(--accent); }
-
-.sort-group {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
 .sort-dir-btn {
   display: flex;
   align-items: center;

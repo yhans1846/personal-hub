@@ -2,8 +2,8 @@
 import { ref, computed, nextTick, watch } from 'vue'
 import { getTodoList, deleteTodo, toggleDone } from '@/modules/planning/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Check, Pencil, Trash2, Calendar, GripVertical, CheckCircle } from 'lucide-vue-next'
-import { EmptyState, PageHeader, ListPagination } from '@/components'
+import { Plus, Check, Pencil, Trash2, Calendar, GripVertical, CheckCircle, ListTodo, AlertCircle, Sun, CalendarRange, Archive, CheckCheck } from 'lucide-vue-next'
+import { EmptyState, PageHeader, ListPagination, ListToolbar } from '@/components'
 import TodoDialog from './TodoDialog.vue'
 import type { TodoVO, TodoQuery } from '@/types/todo'
 import Sortable from 'sortablejs'
@@ -93,13 +93,13 @@ function dueDateLabel(todo: TodoVO): { text: string; type: 'overdue' | 'today' |
   return { text: todo.dueDate, type: 'future' }
 }
 
-const TAB_META: { key: TabKey; label: string; icon: string }[] = [
-  { key: 'all', label: '全部', icon: '📋' },
-  { key: 'overdue', label: '已超期', icon: '🔴' },
-  { key: 'today', label: '今天', icon: '🟡' },
-  { key: 'week', label: '本周', icon: '🟢' },
-  { key: 'later', label: '以后', icon: '📦' },
-  { key: 'done', label: '已完成', icon: '✅' },
+const TAB_META: { key: TabKey; label: string; icon: typeof ListTodo }[] = [
+  { key: 'all', label: '全部', icon: ListTodo },
+  { key: 'overdue', label: '已超期', icon: AlertCircle },
+  { key: 'today', label: '今天', icon: Sun },
+  { key: 'week', label: '本周', icon: CalendarRange },
+  { key: 'later', label: '以后', icon: Archive },
+  { key: 'done', label: '已完成', icon: CheckCheck },
 ]
 
 const tabs = computed(() =>
@@ -108,6 +108,11 @@ const tabs = computed(() =>
     count: currentTab.value === t.key ? total.value : undefined as number | undefined,
   })),
 )
+
+function onSearch() {
+  query.value.page = 1
+  fetchList()
+}
 
 function onTabChange(key: TabKey) {
   currentTab.value = key
@@ -146,14 +151,17 @@ const priorityOptions = [
 <template>
   <div class="plan-page">
     <div class="plan-top">
-      <PageHeader title="待办任务" />
+      <PageHeader title="待办任务" :subtitle="`共 ${total} 项`" />
 
-      <div class="todo-bar">
-        <span class="todo-bar-count">共 {{ total }} 项</span>
-        <button class="todo-bar-btn primary" @click="goCreate">
-          <Plus :size="14" /> 新建任务
-        </button>
-      </div>
+      <ListToolbar
+        :search="query.keyword ?? ''"
+        search-placeholder="搜索任务..."
+        search-width="200px"
+        create-label="新建任务"
+        @update:search="query.keyword = $event"
+        @search="onSearch"
+        @create="goCreate"
+      />
 
       <div class="todo-tabs">
         <button
@@ -163,7 +171,7 @@ const priorityOptions = [
           :class="{ active: currentTab === tab.key }"
           @click="onTabChange(tab.key)"
         >
-          <span class="tab-icon">{{ tab.icon }}</span>
+          <component :is="tab.icon" :size="14" class="tab-icon" />
           {{ tab.label }}
           <span v-if="tab.count != null" class="tab-count" :class="tab.key">{{ tab.count }}</span>
         </button>
@@ -270,42 +278,13 @@ const priorityOptions = [
 }
 .plan-foot { flex-shrink: 0; padding-top: 8px; }
 
-.todo-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--sp-3);
-}
-.todo-bar-count {
-  font-size: var(--text-sm);
-  color: var(--text-tertiary);
-  user-select: none;
-}
-.todo-bar-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  height: 32px;
-  padding: 0 14px;
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: var(--text-sm);
-  cursor: pointer;
-  transition: all var(--transition);
-  white-space: nowrap;
-}
-.todo-bar-btn.primary {
-  background: var(--accent);
-  color: #fff;
-}
-.todo-bar-btn.primary:hover { opacity: 0.9; }
-
 .todo-tabs {
   display: flex;
   gap: 2px;
   background: var(--bg-hover);
   padding: 3px;
   border-radius: var(--radius-lg);
+  margin-top: var(--sp-3);
   margin-bottom: var(--sp-3);
   overflow-x: auto;
 }
@@ -330,7 +309,8 @@ const priorityOptions = [
   font-weight: 500;
   box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 }
-.tab-icon { font-size: 13px; line-height: 1; }
+.tab-icon { flex-shrink: 0; opacity: 0.85; }
+.todo-tab.active .tab-icon { opacity: 1; }
 .tab-count {
   font-size: 11px;
   min-width: 18px;

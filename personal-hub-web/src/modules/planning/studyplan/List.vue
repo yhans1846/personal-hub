@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { PageHeader, EmptyState, ListPagination } from '@/components'
+import { PageHeader, EmptyState, ListPagination, ListToolbar } from '@/components'
 import {
   getStudyPlanList, getStudyPlanStats, deleteStudyPlan,
   createStudyPlan, updateStudyPlan, exportStudyPlans,
@@ -290,27 +290,23 @@ const headerSubtitle = computed(() => `共 ${stats.value.total} 个计划`)
         </div>
       </PageHeader>
 
-      <div class="toolbar">
-        <div class="toolbar-left">
-          <el-input
-            v-model="query.keyword"
-            placeholder="搜索计划..."
-            clearable
-            class="search-input"
-            @clear="onSearch"
-            @keyup.enter="onSearch"
-          >
-            <template #prefix>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-            </template>
-          </el-input>
-          <el-select v-model="query.tagId" placeholder="分类" clearable class="filter-select" @change="onFilterChange">
+      <ListToolbar
+        :search="query.keyword ?? ''"
+        search-placeholder="搜索计划..."
+        search-width="200px"
+        create-label="新建计划"
+        @update:search="query.keyword = $event"
+        @search="onSearch"
+        @create="openCreate"
+      >
+        <template #filters>
+          <el-select v-model="query.tagId" placeholder="分类" clearable style="width:120px" @change="onFilterChange">
             <el-option v-for="t in tags" :key="t.id" :value="t.id" :label="t.name" />
           </el-select>
-          <el-select v-model="query.status" placeholder="状态" clearable class="filter-select" @change="onFilterChange">
+          <el-select v-model="query.status" placeholder="状态" clearable style="width:110px" @change="onFilterChange">
             <el-option v-for="s in statusOptions" :key="s.label" :value="s.value" :label="s.label" />
           </el-select>
-          <el-select v-model="query.sortBy" class="filter-select sort-select" @change="onFilterChange">
+          <el-select v-model="query.sortBy" style="width:120px" @change="onFilterChange">
             <el-option v-for="s in sortOptions" :key="s.value" :value="s.value" :label="s.label" />
           </el-select>
           <div class="view-toggle">
@@ -321,8 +317,8 @@ const headerSubtitle = computed(() => `共 ${stats.value.total} 个计划`)
               <LayoutGrid :size="15" />
             </button>
           </div>
-        </div>
-        <div class="toolbar-actions">
+        </template>
+        <template #actions>
           <el-dropdown trigger="click" :disabled="exporting" @command="(cmd: string) => handleExport(cmd as 'filtered' | 'all')">
             <el-button :loading="exporting">
               <Download :size="14" /> 导出
@@ -334,11 +330,8 @@ const headerSubtitle = computed(() => `共 ${stats.value.total} 个计划`)
               </el-dropdown-menu>
             </template>
           </el-dropdown>
-          <el-button type="primary" @click="openCreate">
-            <Plus :size="14" /> 新建计划
-          </el-button>
-        </div>
-      </div>
+        </template>
+      </ListToolbar>
     </div>
 
     <div class="plan-middle">
@@ -540,7 +533,7 @@ const headerSubtitle = computed(() => `共 ${stats.value.total} 个计划`)
 </template>
 
 <style scoped>
-/* Product list styles — shared extract deferred (盘点 P2-1) */
+/* Product Table/Card 主体样式仍本页维护；视图切换见 styles/product-list.css */
 .plan-page {
   width: 100%;
   height: 100%;
@@ -554,7 +547,7 @@ const headerSubtitle = computed(() => `共 ${stats.value.total} 个计划`)
   flex-shrink: 0;
 }
 .plan-top :deep(.page-header) {
-  margin-bottom: 12px;
+  margin-bottom: var(--sp-3);
 }
 .plan-middle {
   flex: 1;
@@ -564,7 +557,7 @@ const headerSubtitle = computed(() => `共 ${stats.value.total} 个计划`)
 }
 .plan-foot {
   flex-shrink: 0;
-  padding-top: 8px;
+  padding-top: var(--sp-2);
 }
 .plan-foot :deep(.el-pagination) {
   margin-top: 0 !important;
@@ -595,52 +588,6 @@ const headerSubtitle = computed(() => `共 ${stats.value.total} 个计划`)
 .dot.learning, .dot.done { background: #67c23a; }
 .dot.paused { background: #e6a23c; }
 .dot.pending { background: #c0c4cc; }
-
-.toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 12px;
-  flex-wrap: wrap;
-}
-.toolbar-left {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  flex: 1;
-}
-.toolbar-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.search-input { width: 200px; }
-.filter-select { width: 120px; }
-.sort-select { width: 130px; }
-
-.view-toggle {
-  display: inline-flex;
-  border: 1px solid var(--border-light);
-  border-radius: 8px;
-  overflow: hidden;
-}
-.view-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border: none;
-  background: transparent;
-  color: var(--text-tertiary);
-  cursor: pointer;
-}
-.view-btn.active {
-  background: var(--bg-hover);
-  color: var(--text-primary);
-}
 
 .loading-skeleton {
   display: flex;
@@ -819,7 +766,7 @@ const headerSubtitle = computed(() => `共 ${stats.value.total} 个计划`)
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   grid-template-rows: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  gap: var(--sp-3);
   align-content: stretch;
 }
 .plan-card {
@@ -827,7 +774,7 @@ const headerSubtitle = computed(() => `共 ${stats.value.total} 个计划`)
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding: 12px 14px;
+  padding: var(--sp-3) var(--sp-4);
   border: 1px solid var(--border-light);
   border-radius: 12px;
   background: var(--bg-card);

@@ -12,6 +12,14 @@
 - **批次 3**：新增 `useProductViewMode`；学习计划 / 阅读记录接入；Product 样式抽公共组件暂缓（P2-1 注释标记）
 - **批次 4**：笔记列表补 Table/Card 切换（默认 Card，`note-view` 持久化）；回收站接入 plan-page + fill + 矮屏降档 + 骨架屏 + 图标操作；`LIST_PAGE_SPEC` 文档化学习记录时间线例外
 
+### 2026-07-17 全站优化收尾（原暂缓项）
+- **P0-3 / P1-5**：学习计划、阅读、待办统一 `ListToolbar`；待办 Tab 改 lucide + 可横滚
+- **P1-3 / P1-4**：Dashboard 窄屏可滚、Hero 压缩与资源入口简化
+- **P1-7 / P1-8**：高级设置折叠；统计页吸顶筛选 + 分组折叠
+- **P1-12 / P1-1·2**：分类标签 el-select + ListToolbar；列表路由隐藏面包屑
+- **P2-1 / P2-7 / P2-8**：`product-list.css` 视图切换；命令面板进 `/search`；密度 Token
+- **P2-4**：列表导出仅计划/阅读有接口，不做无 API 扩展
+
 ### 2026-07-17 全站列表 fill 批次 1–2
 - 学习计划 / 阅读记录：手写 fill 改为 `useMainContentFill` + `useFillPageSize`（矮屏 10/8/6）
 - 收藏夹 / 文件：接入 plan-page 一屏铺满、默认 size=10、pad 槽、分页 `total>0` 即显

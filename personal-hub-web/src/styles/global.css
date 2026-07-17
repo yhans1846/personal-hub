@@ -467,6 +467,8 @@ a:hover { color: var(--accent-hover); }
 }
 .page-header p { font-size: var(--text-sm); color: var(--text-secondary); }
 
+/* plan-page 列表卡片内边距应使用 --sp-*（layoutStore 密度会缩放 --sp-*） */
+
 /* --- 工具栏 --- */
 .toolbar {
   display: flex;

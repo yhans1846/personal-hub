@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { PageHeader, EmptyState, ListPagination } from '@/components'
+import { PageHeader, EmptyState, ListPagination, ListToolbar } from '@/components'
 import {
   getReadingList, deleteReading, createReading, exportReadings,
 } from '@/modules/knowledge/api'
@@ -236,24 +236,20 @@ const headerSubtitle = computed(() => `共 ${total.value} 本`)
     <div class="plan-top">
       <PageHeader title="阅读记录" :subtitle="headerSubtitle" />
 
-      <div class="toolbar">
-        <div class="toolbar-left">
-          <el-input
-            v-model="query.keyword"
-            placeholder="搜索书名/作者..."
-            clearable
-            class="search-input"
-            @clear="onSearch"
-            @keyup.enter="onSearch"
-          >
-            <template #prefix>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-            </template>
-          </el-input>
-          <el-select v-model="query.status" placeholder="状态" clearable class="filter-select" @change="onFilterChange">
+      <ListToolbar
+        :search="query.keyword ?? ''"
+        search-placeholder="搜索书名/作者..."
+        search-width="200px"
+        create-label="添加书籍"
+        @update:search="query.keyword = $event"
+        @search="onSearch"
+        @create="openCreate"
+      >
+        <template #filters>
+          <el-select v-model="query.status" placeholder="状态" clearable style="width:110px" @change="onFilterChange">
             <el-option v-for="s in statusOptions" :key="s.label" :value="s.value" :label="s.label" />
           </el-select>
-          <el-select v-model="query.sortBy" class="filter-select sort-select" @change="onFilterChange">
+          <el-select v-model="query.sortBy" style="width:120px" @change="onFilterChange">
             <el-option v-for="s in sortOptions" :key="s.value" :value="s.value" :label="s.label" />
           </el-select>
           <div class="view-toggle">
@@ -264,8 +260,8 @@ const headerSubtitle = computed(() => `共 ${total.value} 本`)
               <LayoutGrid :size="15" />
             </button>
           </div>
-        </div>
-        <div class="toolbar-actions">
+        </template>
+        <template #actions>
           <el-dropdown trigger="click" :disabled="exporting" @command="(cmd: string) => handleExport(cmd as 'filtered' | 'all')">
             <el-button :loading="exporting">
               <Download :size="14" /> 导出
@@ -277,11 +273,8 @@ const headerSubtitle = computed(() => `共 ${total.value} 本`)
               </el-dropdown-menu>
             </template>
           </el-dropdown>
-          <el-button type="primary" @click="openCreate">
-            <Plus :size="14" /> 添加书籍
-          </el-button>
-        </div>
-      </div>
+        </template>
+      </ListToolbar>
     </div>
 
     <div class="plan-middle">
@@ -475,7 +468,7 @@ const headerSubtitle = computed(() => `共 ${total.value} 本`)
 </template>
 
 <style scoped>
-/* Product list styles — shared extract deferred (盘点 P2-1) */
+/* Product Table/Card 主体样式仍本页维护；视图切换见 styles/product-list.css */
 .plan-page {
   display: flex;
   flex-direction: column;
@@ -492,52 +485,6 @@ const headerSubtitle = computed(() => `共 ${total.value} 本`)
   overflow: hidden;
 }
 .plan-foot { flex-shrink: 0; padding-top: 8px; }
-
-.toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 12px;
-  flex-wrap: wrap;
-}
-.toolbar-left {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  flex: 1;
-}
-.toolbar-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.search-input { width: 200px; }
-.filter-select { width: 120px; }
-.sort-select { width: 130px; }
-
-.view-toggle {
-  display: inline-flex;
-  border: 1px solid var(--border-light);
-  border-radius: 8px;
-  overflow: hidden;
-}
-.view-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border: none;
-  background: transparent;
-  color: var(--text-tertiary);
-  cursor: pointer;
-}
-.view-btn.active {
-  background: var(--bg-hover);
-  color: var(--text-primary);
-}
 
 .loading-skeleton {
   display: flex;

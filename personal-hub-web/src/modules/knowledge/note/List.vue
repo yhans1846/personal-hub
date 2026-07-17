@@ -413,28 +413,6 @@ async function onCardMenuAction(actionId: string) {
   background: var(--accent-light);
 }
 
-.view-toggle {
-  display: inline-flex;
-  border: 1px solid var(--border-light);
-  border-radius: 8px;
-  overflow: hidden;
-}
-.view-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border: none;
-  background: transparent;
-  color: var(--text-tertiary);
-  cursor: pointer;
-}
-.view-btn.active {
-  background: var(--bg-hover);
-  color: var(--text-primary);
-}
-
 .table-skeleton {
   flex: 1;
   min-height: 0;

@@ -51,6 +51,15 @@ const filteredPages = computed(() => {
 
 const allResults = computed(() => {
   const items: { type: string; label: string; path?: string; item?: any; icon?: any }[] = []
+  const kw = keyword.value.trim()
+  if (kw) {
+    items.push({
+      type: 'search',
+      label: `在全站搜索「${kw}」`,
+      path: `/search?q=${encodeURIComponent(kw)}`,
+      icon: Search,
+    })
+  }
   for (const p of filteredPages.value) {
     items.push({ type: 'page', label: p.label, path: p.path, icon: p.icon })
   }
@@ -63,6 +72,14 @@ const allResults = computed(() => {
   }
   return items
 })
+
+function submitGlobalSearch(kw?: string) {
+  const q = (kw ?? keyword.value).trim()
+  if (!q) return
+  saveSearchHistory(q)
+  router.push({ path: '/search', query: { q } })
+  visible.value = false
+}
 
 let debounceTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -119,11 +136,14 @@ function onKeydown(e: KeyboardEvent) {
   }
   if (e.key === 'Enter') {
     e.preventDefault()
+    const kw = keyword.value.trim()
     const hit = allResults.value[activeIndex.value]
-    if (hit) {
-      if (keyword.value.trim()) saveSearchHistory(keyword.value.trim())
-      if (hit.path) router.push(hit.path)
+    if (hit?.path) {
+      if (kw) saveSearchHistory(kw)
+      router.push(hit.path)
       visible.value = false
+    } else if (kw) {
+      submitGlobalSearch(kw)
     }
   }
 }
@@ -132,8 +152,15 @@ onMounted(() => window.addEventListener('keydown', onKeydown))
 onUnmounted(() => window.removeEventListener('keydown', onKeydown))
 
 function selectItem(item: { path?: string }) {
+  const kw = keyword.value.trim()
+  if (kw) saveSearchHistory(kw)
   if (item.path) router.push(item.path)
   visible.value = false
+}
+
+function goToSearchPage(kw: string) {
+  keyword.value = kw
+  submitGlobalSearch(kw)
 }
 
 function onOverlayClick() {
@@ -180,14 +207,17 @@ defineExpose({ open })
           >
             <component :is="item.icon" v-if="item.icon" :size="14" class="cp-item-icon" />
             <span class="cp-item-label">{{ item.label }}</span>
-            <span v-if="item.type === 'page'" class="cp-item-badge">页面</span>
+            <span v-if="item.type === 'search'" class="cp-item-badge">搜索</span>
+            <span v-else-if="item.type === 'page'" class="cp-item-badge">页面</span>
             <span v-else class="cp-item-badge cp-item-badge--api">{{ item.type }}</span>
           </div>
           <div v-if="loading" class="cp-loading">搜索中...</div>
         </div>
 
         <div v-else-if="keyword.trim().length > 0 && !loading" class="cp-empty">
-          没有匹配结果
+          <button type="button" class="cp-search-fallback" @click="submitGlobalSearch()">
+            在全站搜索「{{ keyword.trim() }}」
+          </button>
         </div>
 
         <div v-else-if="!keyword.trim() && searchHistory.length > 0" class="cp-history">
@@ -199,7 +229,7 @@ defineExpose({ open })
             v-for="(item, idx) in searchHistory"
             :key="idx"
             class="cp-history-item"
-            @click="keyword = item; activeIndex = 0; saveSearchHistory(item); onSearch()"
+            @click="goToSearchPage(item)"
           >
             <Search :size="12" class="cp-history-search-icon" />
             <span>{{ item }}</span>
@@ -276,6 +306,13 @@ defineExpose({ open })
   text-align: center; padding: var(--sp-6);
   font-size: var(--text-sm); color: var(--text-tertiary);
 }
+.cp-search-fallback {
+  background: none; border: none; cursor: pointer;
+  font-size: var(--text-sm); color: var(--accent);
+  padding: var(--sp-2) var(--sp-3); border-radius: var(--radius-sm);
+  transition: background var(--transition);
+}
+.cp-search-fallback:hover { background: var(--bg-hover); }
 .cp-hint {
   text-align: center; padding: var(--sp-6);
   font-size: var(--text-sm); color: var(--text-tertiary);

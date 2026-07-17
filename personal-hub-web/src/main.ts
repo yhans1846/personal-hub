@@ -4,6 +4,7 @@ import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import './styles/global.css'
 import './styles/markdown-prose.css'
+import './styles/product-list.css'
 import App from './App.vue'
 import router from './router'
 

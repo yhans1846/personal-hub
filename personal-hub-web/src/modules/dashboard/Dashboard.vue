@@ -143,6 +143,7 @@ function widgetProps(code: string) {
           <router-link to="/files" class="resource-chip">文件 {{ stats.fileCount ?? 0 }}</router-link>
           <router-link to="/readings" class="resource-chip">在读 {{ stats.readingInProgress ?? 0 }}</router-link>
         </div>
+        <router-link v-if="stats" to="/stats" class="hero-resources-compact">资源</router-link>
         <router-link to="/stats" class="stats-link">查看数据统计 →</router-link>
       </div>
       <button
@@ -230,6 +231,14 @@ function widgetProps(code: string) {
   color: var(--accent);
   background: var(--accent-light);
 }
+.hero-resources-compact {
+  display: none;
+  font-size: var(--text-xs);
+  color: var(--accent);
+  text-decoration: none;
+  margin-bottom: var(--sp-2);
+}
+.hero-resources-compact:hover { text-decoration: underline; }
 .stats-link {
   font-size: var(--text-xs);
   color: var(--accent);
@@ -291,11 +300,23 @@ function widgetProps(code: string) {
 }
 
 @media (max-width: 900px) {
-  .bento-cell { grid-column: span 12 !important; min-height: 180px; }
+  .dashboard {
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+  .bento {
+    flex: none;
+    overflow: visible;
+    grid-auto-rows: auto;
+  }
+  .bento-cell { grid-column: span 12 !important; min-height: 140px; }
   .skeleton-block { grid-column: span 12 !important; }
+  .hero-resources { display: none; }
+  .hero-resources-compact { display: inline-block; }
 }
 @media (max-width: 768px) {
   .hero-text h1 { font-size: var(--text-xl); }
+  .hero-resources-compact { display: none; }
 }
 @media (max-width: 640px) {
   .hero {
@@ -304,5 +325,20 @@ function widgetProps(code: string) {
   }
   .hero-sub { display: none; }
   .hero-text h1 { margin-bottom: var(--sp-1); }
+}
+@media (max-height: 640px) {
+  .hero {
+    margin-bottom: var(--sp-2);
+    align-items: center;
+  }
+  .hero-text h1 {
+    font-size: var(--text-lg);
+    margin-bottom: 0;
+  }
+  .hero-sub,
+  .hero-resources,
+  .hero-resources-compact,
+  .stats-link { display: none; }
+  .overdue-chip { padding: 4px 8px; }
 }
 </style>

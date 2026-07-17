@@ -1,0 +1,26 @@
+/* Product 列表共享：视图切换（Table/Card）— 盘点 P2-1 */
+.view-toggle {
+  display: inline-flex;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.view-toggle .view-btn,
+.view-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition);
+}
+.view-toggle .view-btn.active,
+.view-btn.active {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}

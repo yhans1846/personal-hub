@@ -253,7 +253,7 @@ function goCategories() { router.push('/categories') }
   display: flex;
   align-items: center;
   gap: var(--sp-3);
-  padding: 10px 12px;
+  padding: var(--sp-3);
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
