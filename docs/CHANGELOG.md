@@ -3,10 +3,8 @@
 ## [Unreleased]
 
 ### 2026-07-17 全站页面优化批次 5–6
-- **批次 5（P1，部分）**：列表页移除营销副标题（笔记/日记/回收站）；保留动态计数副标题（收藏/文件/学习记录/计划/阅读）；日记月历容器 `overflow-y: auto`；搜索页改用共享 `EmptyState`；`ListPagination` 顶边距归零（配合 `plan-foot`）；高级设置卡片间距收紧；Dashboard ≤640px 隐藏 `hero-sub` 并压缩 Hero 间距
-- **批次 5 暂缓**：P1-4 Dashboard 窄屏单列滚动、P1-5 待办 Tab 统一、P1-8 统计页折叠、P1-11 收藏分页条件、P1-12 分类/标签控件对齐
-- **批次 6（P2，部分）**：删除无引用的 `ProfileSettings.vue`；登录页 ≤480px 卡片全宽；阅读记录列表类名统一为 `plan-page` / `plan-middle` / `plan-foot`
-- **批次 6 暂缓**：P2-1 Product CSS 抽取、P2-4 导出扩展、P2-7 Ctrl+K 与搜索合并
+- 列表页去营销副标题；日记月历 overflow；搜索 EmptyState；分页边距；登录窄屏；删除 ProfileSettings；阅读类名 plan-page
+- （原暂缓项已在「全站优化收尾」完成）
 
 ### 2026-07-17 全站列表 fill 批次 3–4
 - **批次 3**：新增 `useProductViewMode`；学习计划 / 阅读记录接入；Product 样式抽公共组件暂缓（P2-1 注释标记）
