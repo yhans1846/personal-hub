@@ -2,7 +2,7 @@
 import { ref, onMounted, nextTick, onUnmounted } from 'vue'
 import { useLayoutStore } from '@/store/layoutStore'
 import { ElMessage } from 'element-plus'
-import { GripVertical, Eye, EyeOff } from 'lucide-vue-next'
+import { GripVertical } from 'lucide-vue-next'
 import Sortable from 'sortablejs'
 import type { CardItem } from '@/types/layout'
 
@@ -14,16 +14,16 @@ onMounted(async () => {
   await nextTick()
   if (listRef.value) {
     sortable = Sortable.create(listRef.value, {
-      animation: 200,
-      handle: '.drag-handle',
-      ghostClass: 'card-item--ghost',
+      animation: 180,
+      handle: '.chip-handle',
+      ghostClass: 'card-chip--ghost',
       onEnd: (evt) => {
         const items = layoutStore.dashboardCards as any[]
         const item = items.splice(evt.oldIndex!, 1)[0]
         items.splice(evt.newIndex!, 0, item)
         items.forEach((it: any, idx: number) => { it.order = idx + 1 })
         persist()
-      }
+      },
     })
   }
 })
@@ -46,58 +46,81 @@ async function handleReset() {
 </script>
 
 <template>
-  <div class="dashboard-manager">
+  <div class="card-manager">
     <div class="manager-toolbar">
-      <span class="manager-hint">拖拽排序，点击切换显示/隐藏</span>
+      <span class="manager-hint">点击标签显隐 · 拖把手排序</span>
       <el-button size="small" text @click="handleReset">恢复默认</el-button>
     </div>
-    <div ref="listRef" class="card-list">
-      <div
+    <div ref="listRef" class="chip-row">
+      <button
         v-for="card in layoutStore.dashboardCards"
         :key="card.code"
-        class="card-item"
-        :class="{ 'card-item--hidden': !card.visible }"
+        type="button"
+        class="card-chip"
+        :class="{ 'card-chip--hidden': !card.visible }"
+        :title="card.visible ? '点击隐藏' : '点击显示'"
+        @click="toggleVisibility(card)"
       >
-        <span class="drag-handle"><GripVertical :size="16" /></span>
-        <span class="card-item-title">{{ card.title }}</span>
-        <button
-          class="vis-toggle"
-          :class="{ 'is-hidden': !card.visible }"
-          :title="card.visible ? '点击隐藏' : '点击显示'"
-          @click="toggleVisibility(card)"
-        >
-          <Eye v-if="card.visible" :size="16" />
-          <EyeOff v-else :size="16" />
-        </button>
-      </div>
+        <span class="chip-handle" title="拖拽排序" @click.stop>
+          <GripVertical :size="12" />
+        </span>
+        <span class="chip-title">{{ card.title }}</span>
+      </button>
     </div>
   </div>
 </template>
 
 <style scoped>
-.manager-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--sp-4); }
-.manager-hint { font-size: var(--text-xs); color: var(--text-tertiary); }
-.card-list { display: flex; flex-direction: column; gap: var(--sp-1); }
-.card-item {
-  display: flex; align-items: center; gap: var(--sp-3);
-  padding: 6px var(--sp-3);
-  border-radius: var(--radius-sm);
-  transition: background var(--transition);
-  cursor: default;
+.manager-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--sp-3);
 }
-.card-item:hover { background: var(--bg-hover); }
-.card-item--hidden { opacity: 0.5; }
-.card-item-title { flex: 1; font-size: var(--text-sm); }
-.drag-handle { cursor: grab; color: var(--text-tertiary); display: flex; }
-.drag-handle:active { cursor: grabbing; }
-.vis-toggle {
-  width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
-  border: none; background: transparent; color: var(--text-secondary);
-  cursor: pointer; border-radius: var(--radius-sm);
+.manager-hint { font-size: var(--text-xs); color: var(--text-tertiary); }
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 28px;
+}
+.card-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 28px;
+  padding: 0 10px 0 4px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 12px;
+  cursor: pointer;
   transition: all var(--transition);
 }
-.vis-toggle:hover { background: var(--bg-hover); }
-.vis-toggle.is-hidden { color: var(--text-placeholder); }
-.vis-toggle:disabled { opacity: 0.4; cursor: not-allowed; }
-.card-item--ghost { opacity: 0.3; background: var(--accent-light); }
+.card-chip:hover {
+  border-color: var(--accent-border, var(--accent));
+  background: var(--bg-hover);
+}
+.card-chip--hidden {
+  opacity: 0.45;
+  color: var(--text-tertiary);
+  background: var(--bg-hover);
+}
+.card-chip--hidden .chip-title { text-decoration: line-through; }
+.card-chip--ghost { opacity: 0.35; background: var(--accent-light); }
+.chip-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  color: var(--text-tertiary);
+  cursor: grab;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.chip-handle:hover { color: var(--text-secondary); background: var(--bg-hover); }
+.chip-handle:active { cursor: grabbing; }
+.chip-title { line-height: 1; white-space: nowrap; }
 </style>

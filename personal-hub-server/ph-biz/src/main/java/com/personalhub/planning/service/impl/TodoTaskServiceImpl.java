@@ -17,6 +17,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDate;
+
 /**
  * 待办任务服务实现
  */
@@ -43,6 +45,28 @@ public class TodoTaskServiceImpl implements TodoTaskService {
         // 完成状态筛选
         if (query.getIsDone() != null) {
             wrapper.eq(TodoTask::getIsDone, query.getIsDone() ? 1 : 0);
+        }
+
+        String scope = query.getDueScope();
+        if (StringUtils.hasText(scope) && !"all".equalsIgnoreCase(scope)) {
+            LocalDate today = LocalDate.now();
+            switch (scope.toLowerCase()) {
+                case "done" -> wrapper.eq(TodoTask::getIsDone, 1);
+                case "overdue" -> wrapper.eq(TodoTask::getIsDone, 0)
+                        .isNotNull(TodoTask::getDueDate)
+                        .lt(TodoTask::getDueDate, today);
+                case "today" -> wrapper.eq(TodoTask::getIsDone, 0)
+                        .eq(TodoTask::getDueDate, today);
+                case "week" -> wrapper.eq(TodoTask::getIsDone, 0)
+                        .isNotNull(TodoTask::getDueDate)
+                        .gt(TodoTask::getDueDate, today)
+                        .le(TodoTask::getDueDate, today.plusDays(7));
+                case "later" -> wrapper.eq(TodoTask::getIsDone, 0)
+                        .and(w -> w.isNull(TodoTask::getDueDate)
+                                .or()
+                                .gt(TodoTask::getDueDate, today.plusDays(7)));
+                default -> { /* ignore unknown */ }
+            }
         }
 
         // 按创建时间倒序，未完成排前

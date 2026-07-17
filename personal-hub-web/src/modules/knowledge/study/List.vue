@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { getStudyRecordList, deleteStudyRecord, getStudyStats } from '@/modules/knowledge/api'
 import type { StudyStats } from '@/modules/knowledge/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -8,15 +8,24 @@ import type { StudyRecordVO, StudyRecordQuery } from '@/types/study'
 import { PageHeader, EmptyState, ListToolbar, ListPagination } from '@/components'
 import StudyDialog from './StudyDialog.vue'
 import { useDeepLinkDialog } from '@/composables/useDeepLinkDialog'
+import { useMainContentFill } from '@/composables/useMainContentFill'
+import { useFillPageSize } from '@/composables/useFillPageSize'
 
 const list = ref<StudyRecordVO[]>([])
 const total = ref(0)
 const loading = ref(false)
 const stats = ref<StudyStats | null>(null)
-const query = ref<StudyRecordQuery>({ page: 1, size: 20, keyword: '' })
+const query = ref<StudyRecordQuery>({ page: 1, size: 10, keyword: '' })
 
 const drawerVisible = ref(false)
 const editId = ref<number | undefined>()
+
+useMainContentFill()
+const { pageSize } = useFillPageSize((size) => {
+  query.value.size = size
+  query.value.page = 1
+  fetchList()
+})
 
 function openCreate() {
   editId.value = undefined
@@ -30,7 +39,6 @@ function openEdit(id: number) {
 
 useDeepLinkDialog({ openCreate, openEdit })
 
-onMounted(() => { fetchList(); fetchStats() })
 async function fetchStats() {
   try {
     const res = await getStudyStats()
@@ -48,6 +56,8 @@ async function fetchList() {
     loading.value = false
   }
 }
+
+fetchStats()
 
 function onSearch() { query.value.page = 1; fetchList() }
 function onPageChange(page: number) { query.value.page = page; fetchList() }
@@ -83,65 +93,94 @@ watch(list, (val) => { groupedList.value = groupByDate(val) }, { immediate: true
 </script>
 
 <template>
-  <div>
-    <PageHeader title="学习记录" :subtitle="`共 ${total} 条记录`" />
+  <div class="plan-page">
+    <div class="plan-top">
+      <PageHeader title="学习记录" :subtitle="`共 ${total} 条记录`" />
 
-    <!-- 统计条 -->
-    <div v-if="stats" class="study-stats">
-      <div class="stat-item"><span class="stat-num">{{ stats.todayDuration }}</span> 分钟 <span class="stat-label">今日学习</span></div>
-      <div class="stat-divider" />
-      <div class="stat-item"><span class="stat-num">{{ stats.weekDuration }}</span> 分钟 <span class="stat-label">本周</span></div>
-      <div class="stat-divider" />
-      <div class="stat-item"><span class="stat-num">{{ stats.streak }}</span> 天 <span class="stat-label">连续学习</span></div>
+      <div v-if="stats" class="study-stats">
+        <div class="stat-item"><span class="stat-num">{{ stats.todayDuration }}</span> 分钟 <span class="stat-label">今日学习</span></div>
+        <div class="stat-divider" />
+        <div class="stat-item"><span class="stat-num">{{ stats.weekDuration }}</span> 分钟 <span class="stat-label">本周</span></div>
+        <div class="stat-divider" />
+        <div class="stat-item"><span class="stat-num">{{ stats.streak }}</span> 天 <span class="stat-label">连续学习</span></div>
+      </div>
+
+      <ListToolbar :search="query.keyword" search-placeholder="搜索学习记录..." search-width="240px" create-label="新建记录" @update:search="query.keyword = $event" @search="onSearch" @create="goCreate" />
     </div>
 
-    <ListToolbar :search="query.keyword" search-placeholder="搜索学习记录..." search-width="240px" create-label="新建记录" @update:search="query.keyword = $event" @search="onSearch" @create="goCreate" />
+    <div class="plan-middle">
+      <div v-if="loading" class="loading-skeleton">
+        <div v-for="i in pageSize" :key="i" class="skeleton-study" />
+      </div>
 
-    <div v-if="loading" class="loading-skeleton">
-      <div v-for="i in 5" :key="i" class="skeleton-study" />
-    </div>
+      <EmptyState v-else-if="list.length === 0" :icon="BookOpen" illustration="study" text="还没有学习记录，开始记录今天的学习吧" action-label="开始记录" @action="goCreate" />
 
-    <EmptyState v-else-if="list.length === 0" :icon="BookOpen" illustration="study" text="还没有学习记录，开始记录今天的学习吧" action-label="开始记录" @action="goCreate" />
-
-    <!-- 时间线 -->
-    <div v-else class="timeline">
-      <div v-for="(records, date) in groupedList" :key="date" class="timeline-group">
-        <div class="timeline-date">
-          <span class="timeline-date-badge">{{ date }}</span>
-          <span class="timeline-date-total">{{ records.reduce((s, r) => s + r.duration, 0) }} 分钟</span>
-        </div>
-        <div class="timeline-items">
-          <div v-for="r in records" :key="r.id" class="tl-item" @click="goEdit(r.id)">
-            <div class="tl-item-dot" />
-            <div class="tl-item-content">
-              <div class="tl-item-header">
-                <span class="tl-item-subject">{{ r.subject }}</span>
-                <span class="tl-item-duration">{{ formatHours(r.duration) }}</span>
+      <div v-else class="timeline">
+        <div v-for="(records, date) in groupedList" :key="date" class="timeline-group">
+          <div class="timeline-date">
+            <span class="timeline-date-badge">{{ date }}</span>
+            <span class="timeline-date-total">{{ records.reduce((s, r) => s + r.duration, 0) }} 分钟</span>
+          </div>
+          <div class="timeline-items">
+            <div v-for="r in records" :key="r.id" class="tl-item" @click="goEdit(r.id)">
+              <div class="tl-item-dot" />
+              <div class="tl-item-content">
+                <div class="tl-item-header">
+                  <span class="tl-item-subject">{{ r.subject }}</span>
+                  <span class="tl-item-duration">{{ formatHours(r.duration) }}</span>
+                </div>
+                <p v-if="r.content" class="tl-item-desc">{{ r.content.slice(0, 100) }}</p>
+                <p v-if="r.reflection" class="tl-item-reflection">💡 {{ r.reflection.slice(0, 80) }}</p>
               </div>
-              <p v-if="r.content" class="tl-item-desc">{{ r.content.slice(0, 100) }}</p>
-              <p v-if="r.reflection" class="tl-item-reflection">💡 {{ r.reflection.slice(0, 80) }}</p>
-            </div>
-            <div class="tl-item-actions" @click.stop>
-              <button class="icon-btn" @click="goEdit(r.id)"><Pencil :size="14" /></button>
-              <button class="icon-btn icon-btn--danger" @click="handleDelete(r.id)"><Trash2 :size="14" /></button>
+              <div class="tl-item-actions" @click.stop>
+                <button class="icon-btn" @click="goEdit(r.id)"><Pencil :size="14" /></button>
+                <button class="icon-btn icon-btn--danger" @click="handleDelete(r.id)"><Trash2 :size="14" /></button>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <ListPagination v-if="total > query.size" :total="total" :page="query.page" :size="query.size" @update:page="onPageChange" />
+    <div class="plan-foot">
+      <ListPagination v-if="total > 0" :total="total" :page="query.page" :size="pageSize" @update:page="onPageChange" />
+    </div>
 
     <StudyDialog v-model="drawerVisible" :entity-id="editId" @saved="fetchList" />
   </div>
 </template>
 
 <style scoped>
-.loading-skeleton { display: flex; flex-direction: column; gap: var(--sp-3); }
-.skeleton-study { height: 80px; border-radius: var(--radius-md); background: var(--bg-hover); animation: pulse 1.5s ease-in-out infinite; }
+.plan-page {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.plan-top { flex-shrink: 0; }
+.plan-middle {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.plan-foot { flex-shrink: 0; padding-top: 8px; }
 
-.timeline { display: flex; flex-direction: column; gap: var(--sp-8); }
-.timeline-date { display: flex; align-items: center; gap: var(--sp-3); margin-bottom: var(--sp-4); padding-left: 12px; }
+.loading-skeleton { display: flex; flex-direction: column; gap: var(--sp-3); flex: 1; }
+.skeleton-study { flex: 1; min-height: 48px; border-radius: var(--radius-md); background: var(--bg-hover); animation: pulse 1.5s ease-in-out infinite; }
+
+.timeline {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-6);
+}
+.timeline-date { display: flex; align-items: center; gap: var(--sp-3); margin-bottom: var(--sp-3); padding-left: 12px; }
 .timeline-date-badge { font-size: var(--text-sm); font-weight: 600; }
 .timeline-date-total { font-size: var(--text-xs); color: var(--text-tertiary); }
 .timeline-items {
@@ -177,7 +216,7 @@ watch(list, (val) => { groupedList.value = groupByDate(val) }, { immediate: true
 .icon-btn:hover { color: var(--accent); background: var(--accent-light); }
 .icon-btn--danger:hover { color: var(--danger); background: var(--danger-light); }
 
-.study-stats { display: flex; align-items: center; gap: var(--sp-4); padding: var(--sp-3) var(--sp-4); background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); margin-bottom: var(--sp-5); }
+.study-stats { display: flex; align-items: center; gap: var(--sp-4); padding: var(--sp-3) var(--sp-4); background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); margin-bottom: var(--sp-3); }
 .stat-item { font-size: var(--text-xs); color: var(--text-secondary); }
 .stat-num { font-size: var(--text-lg); font-weight: 700; color: var(--accent); }
 .stat-label { color: var(--text-tertiary); }

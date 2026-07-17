@@ -1,25 +1,35 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, nextTick, watch } from 'vue'
 import { getTodoList, deleteTodo, toggleDone } from '@/modules/planning/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Check, Pencil, Trash2, Calendar, GripVertical } from 'lucide-vue-next'
-import { EmptyState, PageHeader } from '@/components'
+import { Plus, Check, Pencil, Trash2, Calendar, GripVertical, CheckCircle } from 'lucide-vue-next'
+import { EmptyState, PageHeader, ListPagination } from '@/components'
 import TodoDialog from './TodoDialog.vue'
 import type { TodoVO, TodoQuery } from '@/types/todo'
 import Sortable from 'sortablejs'
 import { useDeepLinkDialog } from '@/composables/useDeepLinkDialog'
+import { useMainContentFill } from '@/composables/useMainContentFill'
+import { useFillPageSize } from '@/composables/useFillPageSize'
 
 type TabKey = 'all' | 'overdue' | 'today' | 'week' | 'later' | 'done'
 
 const list = ref<TodoVO[]>([])
+const total = ref(0)
 const loading = ref(false)
-const query = ref<TodoQuery>({ page: 1, size: 9999, keyword: '' })
+const query = ref<TodoQuery>({ page: 1, size: 10, keyword: '', dueScope: 'all' })
 const currentTab = ref<TabKey>('all')
 const listRef = ref<HTMLElement | null>(null)
 let sortable: Sortable | null = null
 
 const dialogVisible = ref(false)
 const editId = ref<number | undefined>()
+
+useMainContentFill()
+const { pageSize } = useFillPageSize((size) => {
+  query.value.size = size
+  query.value.page = 1
+  fetchList()
+})
 
 function openCreate() {
   editId.value = undefined
@@ -32,23 +42,23 @@ function openEdit(id: number) {
 
 useDeepLinkDialog({ openCreate, openEdit })
 
-onMounted(async () => {
-  await fetchList()
+watch(list, async () => {
   await nextTick()
   initSortable()
 })
-onUnmounted(() => { sortable?.destroy() })
 
 function initSortable() {
+  sortable?.destroy()
+  sortable = null
   if (listRef.value) {
     sortable = Sortable.create(listRef.value, {
       animation: 200,
       handle: '.drag-handle',
       ghostClass: 'todo-item--ghost',
       onEnd: (evt) => {
-        const item = filteredList.value.splice(evt.oldIndex!, 1)[0]
-        filteredList.value.splice(evt.newIndex!, 0, item)
-      }
+        const item = list.value.splice(evt.oldIndex!, 1)[0]
+        list.value.splice(evt.newIndex!, 0, item)
+      },
     })
   }
 }
@@ -58,19 +68,12 @@ async function fetchList() {
   try {
     const res = await getTodoList(query.value)
     list.value = res.data.data.records
+    total.value = res.data.data.total
   } finally {
     loading.value = false
   }
 }
 
-// ── 日期工具 ──
-function isSameDay(a: string | null, b: Date): boolean {
-  if (!a) return false
-  const d = new Date(a)
-  return d.getFullYear() === b.getFullYear() &&
-    d.getMonth() === b.getMonth() &&
-    d.getDate() === b.getDate()
-}
 function diffDays(dateStr: string): number {
   const now = new Date()
   now.setHours(0, 0, 0, 0)
@@ -78,6 +81,7 @@ function diffDays(dateStr: string): number {
   d.setHours(0, 0, 0, 0)
   return Math.round((d.getTime() - now.getTime()) / 86400000)
 }
+
 function dueDateLabel(todo: TodoVO): { text: string; type: 'overdue' | 'today' | 'tomorrow' | 'soon' | 'future' } {
   if (!todo.dueDate) return { text: '', type: 'future' }
   if (todo.isDone === 1) return { text: todo.dueDate, type: 'future' }
@@ -89,52 +93,32 @@ function dueDateLabel(todo: TodoVO): { text: string; type: 'overdue' | 'today' |
   return { text: todo.dueDate, type: 'future' }
 }
 
-const today = new Date()
-
-// ── 分组数据 ──
-interface Group { key: TabKey; label: string; icon: string; items: TodoVO[] }
-
-const groups = computed<Group[]>(() => {
-  const all: TodoVO[] = [...list.value]
-  const overdue: TodoVO[] = []
-  const dueToday: TodoVO[] = []
-  const thisWeek: TodoVO[] = []
-  const later: TodoVO[] = []
-  const done: TodoVO[] = []
-
-  for (const t of list.value) {
-    if (t.isDone === 1) { done.push(t); continue }
-    if (t.isOverdue) { overdue.push(t) }
-    else if (t.dueDate && isSameDay(t.dueDate, today)) { dueToday.push(t) }
-    else if (t.dueDate && diffDays(t.dueDate) <= 7) { thisWeek.push(t) }
-    else { later.push(t) }
-  }
-
-  return [
-    { key: 'all', label: '全部', icon: '📋', items: all },
-    { key: 'overdue', label: '已超期', icon: '🔴', items: overdue },
-    { key: 'today', label: '今天', icon: '🟡', items: dueToday },
-    { key: 'week', label: '本周', icon: '🟢', items: thisWeek },
-    { key: 'later', label: '以后', icon: '📦', items: later },
-    { key: 'done', label: '已完成', icon: '✅', items: done },
-  ]
-})
+const TAB_META: { key: TabKey; label: string; icon: string }[] = [
+  { key: 'all', label: '全部', icon: '📋' },
+  { key: 'overdue', label: '已超期', icon: '🔴' },
+  { key: 'today', label: '今天', icon: '🟡' },
+  { key: 'week', label: '本周', icon: '🟢' },
+  { key: 'later', label: '以后', icon: '📦' },
+  { key: 'done', label: '已完成', icon: '✅' },
+]
 
 const tabs = computed(() =>
-  groups.value.map(g => ({
-    key: g.key,
-    label: g.label,
-    icon: g.icon,
-    count: g.items.length,
-  }))
-)
-
-const filteredList = computed(() =>
-  groups.value.find(g => g.key === currentTab.value)?.items || []
+  TAB_META.map(t => ({
+    ...t,
+    count: currentTab.value === t.key ? total.value : undefined as number | undefined,
+  })),
 )
 
 function onTabChange(key: TabKey) {
   currentTab.value = key
+  query.value.dueScope = key
+  query.value.page = 1
+  fetchList()
+}
+
+function onPageChange(page: number) {
+  query.value.page = page
+  fetchList()
 }
 
 function goCreate() { openCreate() }
@@ -160,89 +144,107 @@ const priorityOptions = [
 </script>
 
 <template>
-  <div>
-    <PageHeader title="待办任务" subtitle="管理日常任务" />
+  <div class="plan-page">
+    <div class="plan-top">
+      <PageHeader title="待办任务" />
 
-    <!-- 快捷操作条 -->
-    <div class="todo-bar">
-      <span class="todo-bar-count">共 {{ list.length }} 项</span>
-      <button class="todo-bar-btn primary" @click="goCreate">
-        <Plus :size="14" /> 新建任务
-      </button>
-    </div>
-
-    <!-- Tab 导航 -->
-    <div class="todo-tabs">
-      <button
-        v-for="tab in tabs"
-        :key="tab.key"
-        class="todo-tab"
-        :class="{ active: currentTab === tab.key, 'tab-overdue': tab.key === 'overdue' && tab.count > 0 }"
-        @click="onTabChange(tab.key)"
-      >
-        <span class="tab-icon">{{ tab.icon }}</span>
-        {{ tab.label }}
-        <span class="tab-count" :class="tab.key">{{ tab.count }}</span>
-      </button>
-    </div>
-
-    <div v-if="loading" class="loading-skeleton">
-      <div v-for="i in 4" :key="i" class="skeleton-todo" />
-    </div>
-
-    <template v-else-if="filteredList.length === 0">
-      <EmptyState :icon="CheckCircle" illustration="todo" text="没有匹配的任务" action-label="新建任务" :action-icon="Plus" @action="goCreate" />
-    </template>
-
-    <div v-else ref="listRef" class="todo-list">
-      <div
-        v-for="todo in filteredList"
-        :key="todo.id"
-        class="todo-card"
-        :class="{ 'todo-card--done': todo.isDone === 1 }"
-      >
-        <div class="todo-card-left">
-          <div class="drag-handle"><GripVertical :size="13" /></div>
-          <label class="todo-checkbox" @click="handleToggleDone(todo.id)">
-            <div class="todo-check" :class="{ checked: todo.isDone === 1 }">
-              <Check v-if="todo.isDone === 1" :size="12" stroke="#fff" stroke-width="3" />
-            </div>
-          </label>
-        </div>
-
-        <div class="todo-card-body" @click="goEdit(todo.id)">
-          <div class="todo-title-row">
-            <span class="todo-title" :class="{ 'line-through': todo.isDone === 1 }">{{ todo.title }}</span>
-            <el-tag
-              v-if="todo.priority"
-              :type="priorityOptions.find(p => p.value === todo.priority)?.type"
-              size="small"
-              class="priority-tag"
-            >{{ todo.priorityLabel }}</el-tag>
-          </div>
-
-          <div v-if="todo.content" class="todo-desc">{{ todo.content.slice(0, 100) }}</div>
-
-          <div class="todo-meta">
-            <span
-              v-if="todo.dueDate"
-              class="due-badge"
-              :class="`due--${dueDateLabel(todo).type}`"
-            >
-              <Calendar :size="12" />
-              {{ dueDateLabel(todo).text }}
-            </span>
-          </div>
-        </div>
-
-        <div class="todo-card-actions">
-          <span v-if="todo.isDone === 1 && todo.completedAt" class="completed-time">
-            {{ todo.completedAt.slice(0, 16) }}
-          </span>
-          <button class="icon-btn" title="编辑" @click.stop="goEdit(todo.id)"><Pencil :size="13" /></button>
-          <button class="icon-btn icon-btn--danger" title="删除" @click.stop="handleDelete(todo.id)"><Trash2 :size="13" /></button>
-        </div>
+      <div class="todo-bar">
+        <span class="todo-bar-count">共 {{ total }} 项</span>
+        <button class="todo-bar-btn primary" @click="goCreate">
+          <Plus :size="14" /> 新建任务
+        </button>
       </div>
+
+      <div class="todo-tabs">
+        <button
+          v-for="tab in tabs"
+          :key="tab.key"
+          class="todo-tab"
+          :class="{ active: currentTab === tab.key }"
+          @click="onTabChange(tab.key)"
+        >
+          <span class="tab-icon">{{ tab.icon }}</span>
+          {{ tab.label }}
+          <span v-if="tab.count != null" class="tab-count" :class="tab.key">{{ tab.count }}</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="plan-middle">
+      <div v-if="loading" class="loading-skeleton">
+        <div v-for="i in pageSize" :key="i" class="skeleton-todo" />
+      </div>
+
+      <EmptyState
+        v-else-if="list.length === 0"
+        :icon="CheckCircle"
+        illustration="todo"
+        text="没有匹配的任务"
+        action-label="新建任务"
+        :action-icon="Plus"
+        @action="goCreate"
+      />
+
+      <div v-else ref="listRef" class="todo-list">
+        <div
+          v-for="todo in list"
+          :key="todo.id"
+          class="todo-card"
+          :class="{ 'todo-card--done': todo.isDone === 1 }"
+        >
+          <div class="todo-card-left">
+            <div class="drag-handle" title="仅当前页可排序"><GripVertical :size="13" /></div>
+            <label class="todo-checkbox" @click="handleToggleDone(todo.id)">
+              <div class="todo-check" :class="{ checked: todo.isDone === 1 }">
+                <Check v-if="todo.isDone === 1" :size="12" stroke="#fff" stroke-width="3" />
+              </div>
+            </label>
+          </div>
+
+          <div class="todo-card-body" @click="goEdit(todo.id)">
+            <div class="todo-title-row">
+              <span class="todo-title" :class="{ 'line-through': todo.isDone === 1 }">{{ todo.title }}</span>
+              <el-tag
+                v-if="todo.priority"
+                :type="priorityOptions.find(p => p.value === todo.priority)?.type"
+                size="small"
+                class="priority-tag"
+              >{{ todo.priorityLabel }}</el-tag>
+            </div>
+
+            <div v-if="todo.content" class="todo-desc">{{ todo.content.slice(0, 100) }}</div>
+
+            <div class="todo-meta">
+              <span
+                v-if="todo.dueDate"
+                class="due-badge"
+                :class="`due--${dueDateLabel(todo).type}`"
+              >
+                <Calendar :size="12" />
+                {{ dueDateLabel(todo).text }}
+              </span>
+            </div>
+          </div>
+
+          <div class="todo-card-actions">
+            <span v-if="todo.isDone === 1 && todo.completedAt" class="completed-time">
+              {{ todo.completedAt.slice(0, 16) }}
+            </span>
+            <button class="icon-btn" title="编辑" @click.stop="goEdit(todo.id)"><Pencil :size="13" /></button>
+            <button class="icon-btn icon-btn--danger" title="删除" @click.stop="handleDelete(todo.id)"><Trash2 :size="13" /></button>
+          </div>
+        </div>
+        <div
+          v-for="n in Math.max(0, pageSize - list.length)"
+          :key="'pad-' + n"
+          class="todo-card todo-card--pad"
+          aria-hidden="true"
+        />
+      </div>
+    </div>
+
+    <div class="plan-foot">
+      <ListPagination v-if="total > 0" :total="total" :page="query.page ?? 1" :size="pageSize" @update:page="onPageChange" />
     </div>
 
     <TodoDialog v-model="dialogVisible" :entity-id="editId" @saved="fetchList" />
@@ -250,12 +252,29 @@ const priorityOptions = [
 </template>
 
 <style scoped>
-/* ── 操作栏 ── */
+.plan-page {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.plan-top { flex-shrink: 0; }
+.plan-middle {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.plan-foot { flex-shrink: 0; padding-top: 8px; }
+
 .todo-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: var(--sp-4);
+  margin-bottom: var(--sp-3);
 }
 .todo-bar-count {
   font-size: var(--text-sm);
@@ -281,14 +300,13 @@ const priorityOptions = [
 }
 .todo-bar-btn.primary:hover { opacity: 0.9; }
 
-/* ── Tab ── */
 .todo-tabs {
   display: flex;
   gap: 2px;
   background: var(--bg-hover);
   padding: 3px;
   border-radius: var(--radius-lg);
-  margin-bottom: var(--sp-5);
+  margin-bottom: var(--sp-3);
   overflow-x: auto;
 }
 .todo-tab {
@@ -328,11 +346,17 @@ const priorityOptions = [
 .tab-count.today { background: var(--accent-light); color: var(--accent); }
 .tab-count.done { background: var(--success-light, #e6f7e6); color: var(--success); }
 
-/* ── 卡片列表 ── */
 .todo-list {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: 1fr;
+  gap: 8px;
+  align-content: stretch;
+}
+@media (max-width: 768px) {
+  .todo-list { grid-template-columns: 1fr; }
 }
 .todo-card {
   display: flex;
@@ -341,10 +365,19 @@ const priorityOptions = [
   padding: var(--sp-3) var(--sp-4);
   border-radius: var(--radius-md);
   background: var(--bg-card);
-  border: 1px solid transparent;
+  border: 1px solid var(--border-color);
   transition: all var(--transition);
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
 }
-.todo-card:hover:not(.todo-card--done) {
+.todo-card--pad {
+  visibility: hidden;
+  pointer-events: none;
+  background: transparent;
+  border-color: transparent;
+}
+.todo-card:hover:not(.todo-card--done):not(.todo-card--pad) {
   border-color: var(--border-color);
   box-shadow: var(--shadow-sm);
 }
@@ -385,19 +418,27 @@ const priorityOptions = [
   flex: 1;
   min-width: 0;
   cursor: pointer;
+  overflow: hidden;
 }
 .todo-title-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--sp-2);
   margin-bottom: 4px;
 }
 .todo-title {
+  flex: 1;
   font-size: var(--text-sm);
   font-weight: 500;
   color: var(--text-primary);
+  min-width: 0;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-word;
 }
-.line-through { color: var(--text-tertiary); }
+.line-through { color: var(--text-tertiary); text-decoration: line-through; }
 .priority-tag { flex-shrink: 0; }
 
 .todo-desc {
@@ -405,10 +446,11 @@ const priorityOptions = [
   color: var(--text-secondary);
   line-height: var(--leading-normal);
   display: -webkit-box;
-  -webkit-line-clamp: 1;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   margin-bottom: 6px;
+  word-break: break-word;
 }
 
 .todo-meta {
@@ -484,6 +526,16 @@ const priorityOptions = [
 .icon-btn:hover { color: var(--accent); background: var(--accent-light); }
 .icon-btn--danger:hover { color: var(--danger); background: var(--danger-light); }
 
-.loading-skeleton { display: flex; flex-direction: column; gap: var(--sp-3); }
-.skeleton-todo { height: 72px; border-radius: var(--radius-md); background: var(--bg-hover); animation: pulse 1.5s ease-in-out infinite; }
+.loading-skeleton {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: 1fr;
+  gap: 8px;
+  flex: 1;
+  min-height: 0;
+}
+@media (max-width: 768px) {
+  .loading-skeleton { grid-template-columns: 1fr; }
+}
+.skeleton-todo { min-height: 64px; border-radius: var(--radius-md); background: var(--bg-hover); animation: pulse 1.5s ease-in-out infinite; }
 </style>

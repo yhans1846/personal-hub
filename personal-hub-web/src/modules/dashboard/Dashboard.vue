@@ -17,6 +17,7 @@ import type { BookmarkVO } from '@/types/bookmark'
 import { buildCreatePath } from '@/utils/deepLink'
 import { DASHBOARD_CARD_SPAN, REMOVED_DASHBOARD_CODES } from './defaultLayouts'
 import { formatDuration } from './format'
+import { useMainContentFill } from '@/composables/useMainContentFill'
 
 import TodayWidget from './widgets/TodayWidget.vue'
 import QuickActionsWidget from './widgets/QuickActionsWidget.vue'
@@ -28,6 +29,8 @@ import RecentReadingWidget from './widgets/RecentReadingWidget.vue'
 const router = useRouter()
 const authStore = useAuthStore()
 const layoutStore = useLayoutStore()
+
+useMainContentFill()
 
 const stats = ref<DashboardStats | null>(null)
 const recentNotes = ref<NoteVO[]>([])
@@ -178,7 +181,11 @@ function widgetProps(code: string) {
 <style scoped>
 .dashboard {
   width: 100%;
-  /* 宽度由 .content-container 的 --content-max-width 统一约束 */
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .hero {
@@ -188,6 +195,7 @@ function widgetProps(code: string) {
   gap: var(--sp-4);
   margin-bottom: var(--sp-5);
   flex-wrap: wrap;
+  flex-shrink: 0;
 }
 .hero-text h1 {
   font-size: var(--text-2xl);
@@ -250,10 +258,18 @@ function widgetProps(code: string) {
   grid-template-columns: repeat(12, 1fr);
   gap: var(--sp-4);
   align-items: stretch;
+  align-content: stretch;
+  grid-auto-rows: minmax(0, 1fr);
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 .bento-cell {
   min-width: 0;
-  min-height: 220px;
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .loading-skeleton {

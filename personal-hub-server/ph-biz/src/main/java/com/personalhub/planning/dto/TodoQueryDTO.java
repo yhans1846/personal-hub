@@ -21,4 +21,7 @@ public class TodoQueryDTO extends PageParam {
 
     @Schema(description = "完成状态筛选")
     private Boolean isDone;
+
+    @Schema(description = "日期范围：all|overdue|today|week|later|done；空同 all")
+    private String dueScope;
 }

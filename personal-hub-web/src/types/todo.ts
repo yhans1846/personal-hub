@@ -28,4 +28,6 @@ export interface TodoQuery {
   keyword?: string
   priority?: number
   isDone?: boolean
+  /** all|overdue|today|week|later|done */
+  dueScope?: string
 }

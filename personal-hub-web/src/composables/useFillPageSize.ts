@@ -8,13 +8,16 @@ import { resolveFillPageSize } from './resolveFillPageSize'
 export function useFillPageSize(onSizeChange?: (size: number) => void) {
   const pageSize = ref(10)
   let timer: ReturnType<typeof setTimeout> | null = null
+  let primed = false
 
   function measure() {
     const el = document.querySelector('.main-content') as HTMLElement | null
     const h = el?.clientHeight ?? window.innerHeight
     const next = resolveFillPageSize(h)
-    if (next !== pageSize.value) {
-      pageSize.value = next
+    const changed = next !== pageSize.value
+    pageSize.value = next
+    if (!primed || changed) {
+      primed = true
       onSizeChange?.(next)
     }
   }

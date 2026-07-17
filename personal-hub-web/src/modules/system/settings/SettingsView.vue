@@ -79,21 +79,19 @@ function onAutoSaved() {
       <Transition name="tab-fade" mode="out-in">
         <div class="tab-pane" :key="activeTab">
           <!-- 工作台 -->
-          <div v-if="activeTab === 'workspace'" class="workspace-grid">
-            <UiCard class="settings-card">
+          <div v-if="activeTab === 'workspace'" class="workspace-stack">
+            <UiCard class="settings-card settings-card--flush">
               <h3 class="card-title">菜单管理</h3>
               <MenuManager />
             </UiCard>
-            <div class="workspace-right">
-              <UiCard class="settings-card">
-                <h3 class="card-title">Dashboard 卡片</h3>
-                <DashboardManager />
-              </UiCard>
-              <UiCard class="settings-card">
-                <h3 class="card-title">统计卡片</h3>
-                <StatsManager />
-              </UiCard>
-            </div>
+            <UiCard class="settings-card settings-card--flush">
+              <h3 class="card-title">Dashboard 卡片</h3>
+              <DashboardManager />
+            </UiCard>
+            <UiCard class="settings-card settings-card--flush">
+              <h3 class="card-title">统计卡片</h3>
+              <StatsManager />
+            </UiCard>
           </div>
 
           <!-- 阅读 -->
@@ -189,33 +187,26 @@ function onAutoSaved() {
 .settings-card {
   margin-bottom: 20px;
 }
+.settings-card--flush {
+  margin-bottom: 0;
+}
 
 /* Card 标题（去掉下边距，内容直接跟上） */
 .card-header {
   width: 100%;
 }
 .card-title {
-  margin: 0 0 12px;
+  margin: 0 0 8px;
   font-size: 15px;
   font-weight: 700;
   color: var(--text-primary);
 }
 
-/* ─── 左右双列布局 ─── */
-.workspace-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-  align-items: start;
-}
-.workspace-grid > .settings-card {
-  margin-bottom: 0;
-  min-width: 0;
-}
-.workspace-right {
+/* ─── 工作台：三块纵向紧凑堆叠 ─── */
+.workspace-stack {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 12px;
 }
 
 /* ─── 自动保存条 ─── */

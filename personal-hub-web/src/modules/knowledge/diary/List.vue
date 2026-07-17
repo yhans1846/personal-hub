@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { getDiaryList, getDiaryByMonth, deleteDiary } from '@/modules/knowledge/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Pencil, Trash2, PenLine, Sun, Cloud, CloudRain, Smile, Frown, Meh, MapPin, ImageIcon, CalendarDays } from 'lucide-vue-next'
@@ -7,11 +7,20 @@ import { EmptyState, PageHeader, ListToolbar, ListPagination } from '@/component
 import DiaryDialog from './DiaryDialog.vue'
 import type { DiaryVO, DiaryQuery } from '@/types/diary'
 import { useDeepLinkDialog } from '@/composables/useDeepLinkDialog'
+import { useMainContentFill } from '@/composables/useMainContentFill'
+import { useFillPageSize } from '@/composables/useFillPageSize'
 
 const list = ref<DiaryVO[]>([])
 const total = ref(0)
 const loading = ref(false)
-const query = ref<DiaryQuery>({ page: 1, size: 20, keyword: '' })
+const query = ref<DiaryQuery>({ page: 1, size: 10, keyword: '' })
+
+useMainContentFill()
+const { pageSize } = useFillPageSize((size) => {
+  query.value.size = size
+  query.value.page = 1
+  fetchList()
+})
 
 const dialogVisible = ref(false)
 const editId = ref<number | undefined>()
@@ -79,8 +88,6 @@ function goDate(day: number) {
   else openCreate(d)
 }
 
-onMounted(() => fetchList())
-
 async function fetchList() {
   loading.value = true
   try {
@@ -112,16 +119,38 @@ function getMoodIcon(mood: number) {
 }
 
 function getMoodColor(mood: number) {
+  // 很好→绿 · 好→蓝 · 一般→琥珀 · 不好→橙 · 很差→红
   if (mood === 1) return 'var(--success)'
   if (mood === 2) return 'var(--accent)'
-  if (mood === 3) return 'var(--text-secondary)'
+  if (mood === 3) return 'var(--warning)'
+  if (mood === 4) return '#F97316'
   return 'var(--danger)'
 }
 
 function getWeatherIcon(weather: string | null) {
   if (!weather) return null
-  const icons: Record<string, any> = { '晴': Sun, '多云': Cloud, '阴': Cloud, '雨': CloudRain, '雪': CloudRain }
+  const icons: Record<string, any> = {
+    晴: Sun, '☀️': Sun,
+    多云: Cloud, '🌤️': Cloud,
+    阴: Cloud, '☁️': Cloud,
+    雨: CloudRain, '🌧️': CloudRain,
+    雷阵雨: CloudRain, '⛈️': CloudRain,
+    雪: CloudRain, '❄️': CloudRain,
+  }
   return icons[weather] || null
+}
+
+function getWeatherColor(weather: string | null) {
+  if (!weather) return 'var(--text-secondary)'
+  const colors: Record<string, string> = {
+    晴: '#EAB308', '☀️': '#EAB308',
+    多云: '#64748B', '🌤️': '#64748B',
+    阴: '#94A3B8', '☁️': '#94A3B8',
+    雨: '#3B82F6', '🌧️': '#3B82F6',
+    雷阵雨: '#6366F1', '⛈️': '#6366F1',
+    雪: '#38BDF8', '❄️': '#38BDF8',
+  }
+  return colors[weather] || 'var(--text-secondary)'
 }
 
 const moodOptions = [
@@ -135,95 +164,141 @@ const moodOptions = [
 </script>
 
 <template>
-  <div>
-    <PageHeader title="日记" subtitle="记录每天的生活" />
+  <div class="plan-page">
+    <div class="plan-top">
+      <PageHeader title="日记" subtitle="记录每天的生活" />
 
-    <ListToolbar :search="query.keyword" search-placeholder="搜索日记..." search-width="200px" create-label="写日记" @update:search="query.keyword = $event" @search="onSearch" @create="goCreate">
-      <template #filters>
-        <el-select v-model="query.mood" placeholder="心情" style="width:120px" clearable @change="onFilterChange">
-          <el-option v-for="item in moodOptions" :key="item.label" :value="item.value" :label="item.label" />
-        </el-select>
-        <el-date-picker v-model="query.month" type="month" value-format="YYYY-MM" placeholder="按月筛选" style="width:140px" clearable @change="onFilterChange" />
-        <el-button :type="showCalendar ? 'default' : 'primary'" @click="toggleCalendar">
-          <CalendarDays :size="14" /> {{ showCalendar ? '列表' : '月历' }}
-        </el-button>
-      </template>
-    </ListToolbar>
-
-    <!-- 日历视图 -->
-    <div v-if="showCalendar" class="calendar-view">
-      <div class="cal-header">
-        <button class="cal-nav" @click="prevMonth">&lt;</button>
-        <span class="cal-title">{{ calendarMonth.getFullYear() }} 年 {{ calendarMonth.getMonth() + 1 }} 月</span>
-        <button class="cal-nav" @click="nextMonth">&gt;</button>
-      </div>
-      <div v-if="calendarLoading" class="loading-skeleton" style="padding: 16px 0;">
-        <div v-for="i in 3" :key="i" class="skeleton-diary" style="height:60px" />
-      </div>
-      <div v-else class="cal-grid">
-        <div v-for="wd in WEEKDAYS" :key="wd" class="cal-weekday">{{ wd }}</div>
-        <div v-for="(day, idx) in calendarDays" :key="idx" class="cal-day" :class="{ 'cal-day--empty': day.date === 0, 'cal-day--has': day.entries.length > 0 }" @click="day.date > 0 && goDate(day.date)">
-          <span class="cal-day-num">{{ day.date || '' }}</span>
-          <div v-if="day.entries.length > 0" class="cal-day-dots">
-            <span v-for="e in day.entries.slice(0, 3)" :key="e.id" class="cal-dot" :style="{ background: e.mood && e.mood <= 2 ? 'var(--accent)' : e.mood === 3 ? 'var(--text-tertiary)' : 'var(--warning)' }" />
-          </div>
-        </div>
-      </div>
+      <ListToolbar :search="query.keyword" search-placeholder="搜索日记..." search-width="200px" create-label="写日记" @update:search="query.keyword = $event" @search="onSearch" @create="goCreate">
+        <template #filters>
+          <el-select v-model="query.mood" placeholder="心情" style="width:120px" clearable @change="onFilterChange">
+            <el-option v-for="item in moodOptions" :key="item.label" :value="item.value" :label="item.label" />
+          </el-select>
+          <el-date-picker v-model="query.month" type="month" value-format="YYYY-MM" placeholder="按月筛选" style="width:140px" clearable @change="onFilterChange" />
+          <el-button :type="showCalendar ? 'default' : 'primary'" @click="toggleCalendar">
+            <CalendarDays :size="14" /> {{ showCalendar ? '列表' : '月历' }}
+          </el-button>
+        </template>
+      </ListToolbar>
     </div>
 
-    <div v-if="loading" class="loading-skeleton">
-      <div v-for="i in 5" :key="i" class="skeleton-diary" />
-    </div>
-
-    <EmptyState v-else-if="list.length === 0" :icon="PenLine" illustration="diary" text="还没有日记，开始记录吧" action-label="写日记" :action-icon="Plus" @action="goCreate" />
-
-    <div v-else class="diary-list">
-      <div v-for="entry in list" :key="entry.id" class="diary-item" @click="goEdit(entry.id)">
-        <div class="diary-date">
-          <div class="diary-date-day">{{ entry.date.slice(8) }}</div>
-          <div class="diary-date-month">{{ entry.date.slice(0, 7) }}</div>
+    <div class="plan-middle">
+      <!-- 日历视图：块内滚动 -->
+      <div v-if="showCalendar" class="calendar-view">
+        <div class="cal-header">
+          <button class="cal-nav" @click="prevMonth">&lt;</button>
+          <span class="cal-title">{{ calendarMonth.getFullYear() }} 年 {{ calendarMonth.getMonth() + 1 }} 月</span>
+          <button class="cal-nav" @click="nextMonth">&gt;</button>
         </div>
-        <div class="diary-body">
-          <div class="diary-header">
-            <span class="diary-title">{{ entry.title || '无题' }}</span>
-            <div class="diary-meta">
-              <span v-if="entry.mood" class="diary-mood" :style="{ color: getMoodColor(entry.mood) }">
-                <component :is="getMoodIcon(entry.mood)" :size="14" />
-                {{ entry.moodLabel }}
-              </span>
-              <span v-if="entry.weather" class="diary-weather">
-                <component :is="getWeatherIcon(entry.weather)" v-if="getWeatherIcon(entry.weather)" :size="14" />
-                {{ entry.weather }}
-              </span>
-              <span v-if="entry.location" class="diary-location"><MapPin :size="12" /> {{ entry.location }}</span>
+        <div v-if="calendarLoading" class="loading-skeleton" style="padding: 16px 0;">
+          <div v-for="i in 3" :key="i" class="skeleton-diary" style="height:60px" />
+        </div>
+        <div v-else class="cal-grid">
+          <div v-for="wd in WEEKDAYS" :key="wd" class="cal-weekday">{{ wd }}</div>
+          <div v-for="(day, idx) in calendarDays" :key="idx" class="cal-day" :class="{ 'cal-day--empty': day.date === 0, 'cal-day--has': day.entries.length > 0 }" @click="day.date > 0 && goDate(day.date)">
+            <span class="cal-day-num">{{ day.date || '' }}</span>
+            <div v-if="day.entries.length > 0" class="cal-day-dots">
+              <span v-for="e in day.entries.slice(0, 3)" :key="e.id" class="cal-dot" :style="{ background: getMoodColor(e.mood || 3) }" />
             </div>
           </div>
-          <div v-if="entry.contentSummary" class="diary-summary">{{ entry.contentSummary }}</div>
-          <img v-if="entry.imageFileId" :src="`/api/files/${entry.imageFileId}/download`" class="diary-image" />
-        </div>
-        <div class="diary-actions" @click.stop>
-          <button class="icon-btn" @click.stop="goEdit(entry.id)"><Pencil :size="14" /></button>
-          <button class="icon-btn icon-btn--danger" @click.stop="handleDelete(entry.id)"><Trash2 :size="14" /></button>
         </div>
       </div>
+
+      <template v-else>
+        <div v-if="loading" class="loading-skeleton">
+          <div v-for="i in pageSize" :key="i" class="skeleton-diary" />
+        </div>
+
+        <EmptyState v-else-if="list.length === 0" :icon="PenLine" illustration="diary" text="还没有日记，开始记录吧" action-label="写日记" :action-icon="Plus" @action="goCreate" />
+
+        <div v-else class="diary-list">
+          <div v-for="entry in list" :key="entry.id" class="diary-item" @click="goEdit(entry.id)">
+            <div class="diary-date">
+              <div class="diary-date-day">{{ entry.date.slice(8) }}</div>
+              <div class="diary-date-month">{{ entry.date.slice(0, 7) }}</div>
+            </div>
+            <div class="diary-body">
+              <div class="diary-header">
+                <span class="diary-title">{{ entry.title || '无题' }}</span>
+                <div class="diary-meta">
+                  <span v-if="entry.mood" class="diary-mood" :style="{ color: getMoodColor(entry.mood) }">
+                    <component :is="getMoodIcon(entry.mood)" :size="14" />
+                    {{ entry.moodLabel }}
+                  </span>
+                  <span v-if="entry.weather" class="diary-weather" :style="{ color: getWeatherColor(entry.weather) }">
+                    <component :is="getWeatherIcon(entry.weather)" v-if="getWeatherIcon(entry.weather)" :size="14" />
+                    {{ entry.weather }}
+                  </span>
+                  <span v-if="entry.location" class="diary-location"><MapPin :size="12" /> {{ entry.location }}</span>
+                </div>
+              </div>
+              <div v-if="entry.contentSummary" class="diary-summary">{{ entry.contentSummary }}</div>
+              <img v-if="entry.imageFileId" :src="`/api/files/${entry.imageFileId}/download`" class="diary-image" />
+            </div>
+            <div class="diary-actions" @click.stop>
+              <button class="icon-btn" @click.stop="goEdit(entry.id)"><Pencil :size="14" /></button>
+              <button class="icon-btn icon-btn--danger" @click.stop="handleDelete(entry.id)"><Trash2 :size="14" /></button>
+            </div>
+          </div>
+          <div
+            v-for="n in Math.max(0, pageSize - list.length)"
+            :key="'pad-' + n"
+            class="diary-item diary-item--pad"
+            aria-hidden="true"
+          />
+        </div>
+      </template>
     </div>
 
-    <ListPagination v-if="total > (query.size ?? 20)" :total="total" :page="query.page" :size="query.size" @update:page="onPageChange" />
+    <div v-if="!showCalendar" class="plan-foot">
+      <ListPagination v-if="total > 0" :total="total" :page="query.page" :size="pageSize" @update:page="onPageChange" />
+    </div>
 
     <DiaryDialog v-model="dialogVisible" :entity-id="editId" :initial-date="initialDate" @saved="fetchList" />
   </div>
 </template>
 
 <style scoped>
-.loading-skeleton { display: flex; flex-direction: column; gap: var(--sp-3); }
-.skeleton-diary { height: 80px; border-radius: var(--radius-md); background: var(--bg-hover); animation: pulse 1.5s ease-in-out infinite; }
+.plan-page {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.plan-top { flex-shrink: 0; }
+.plan-middle {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.plan-foot { flex-shrink: 0; padding-top: 8px; }
 
-.diary-list { display: flex; flex-direction: column; gap: var(--sp-2); }
+.loading-skeleton { display: flex; flex-direction: column; gap: var(--sp-3); flex: 1; min-height: 0; }
+.skeleton-diary { flex: 1; min-height: 48px; border-radius: var(--radius-md); background: var(--bg-hover); animation: pulse 1.5s ease-in-out infinite; }
+
+.diary-list {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
 .diary-item {
   display: flex; align-items: flex-start; gap: var(--sp-4);
   padding: var(--sp-4) var(--sp-5); background: var(--bg-card);
   border: 1px solid var(--border-color); border-radius: var(--radius-md);
   cursor: pointer; transition: all var(--transition);
+  flex: 1;
+  min-height: 0;
+}
+.diary-item--pad {
+  visibility: hidden;
+  pointer-events: none;
+  border: none;
+  background: transparent;
 }
 .diary-item:hover { box-shadow: var(--shadow-sm); border-color: var(--accent-border); }
 
@@ -251,7 +326,15 @@ const moodOptions = [
 .icon-btn:hover { color: var(--accent); background: var(--accent-light); }
 .icon-btn--danger:hover { color: var(--danger); background: var(--danger-light); }
 
-.calendar-view { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: var(--sp-4); margin-bottom: var(--sp-5); }
+.calendar-view {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-4);
+}
 .cal-header { display: flex; align-items: center; justify-content: center; gap: var(--sp-4); margin-bottom: var(--sp-4); }
 .cal-nav { background: none; border: 1px solid var(--border-color); border-radius: var(--radius-sm); cursor: pointer; padding: 4px 12px; color: var(--text-secondary); font-size: var(--text-sm); transition: all var(--transition); }
 .cal-nav:hover { background: var(--bg-hover); color: var(--text-primary); }

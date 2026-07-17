@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### 2026-07-17 全站页面优化盘点
+- 新增 `docs/qa/2026-07-17-全站页面优化盘点.md`：路由清单、LIST 对齐矩阵、P0–P2 优化项与落地批次
+
+### 2026-07-17 设置·工作台二级 Tab
+- 工作台菜单 / Dashboard / 统计统一为标签云形态，同页紧凑展示（无二级 Tab）
+- 点击标签显隐、拖把手排序；菜单固定项（首页/设置）高亮不可隐藏
+
+### 2026-07-17 一屏铺满
+- Dashboard 外锁内滚；笔记 / 日记 / 学习记录 / 待办 fill + 矮屏降档 10/8/6
+- 待办查询新增 `dueScope`（all|overdue|today|week|later|done），Tab 改服务端分页
+
 ### 2026-07-17 后端模块合并
 - **重构**：Maven 模块 8→4：`ph-knowledge` / `ph-planning` / `ph-resource` / `ph-dashboard` 合并为 `ph-biz`；`ph-storage` 并入 `ph-common`
 - **包名**：`com.personalhub.module.dashboard` → `com.personalhub.dashboard`（与 knowledge/planning/resource 对齐）

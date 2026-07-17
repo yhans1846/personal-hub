@@ -2,7 +2,7 @@
 import { ref, computed, onMounted, nextTick, onUnmounted } from 'vue'
 import { useLayoutStore } from '@/store/layoutStore'
 import { ElMessage } from 'element-plus'
-import { GripVertical, Eye, EyeOff, ChevronDown } from 'lucide-vue-next'
+import { GripVertical } from 'lucide-vue-next'
 import Sortable from 'sortablejs'
 import type { MenuItem } from '@/types/layout'
 
@@ -17,7 +17,6 @@ const SECTION_LABELS: Record<string, string> = {
 }
 const SECTION_ORDER = ['workspace', 'knowledge', 'resource', 'manage', 'stats']
 
-// 按 section 分组
 const menuGroups = computed(() => {
   const grouped = new Map<string, MenuItem[]>()
   for (const item of layoutStore.menuItems) {
@@ -29,39 +28,20 @@ const menuGroups = computed(() => {
     .map(key => ({ key, title: SECTION_LABELS[key], items: grouped.get(key)! }))
 })
 
-// 分组折叠
-const MGR_COLLAPSE_KEY = 'menu-mgr-collapsed'
-const collapsedGroups = ref<Set<string>>(new Set(loadCollapsed()))
-function loadCollapsed(): string[] {
-  try { return JSON.parse(localStorage.getItem(MGR_COLLAPSE_KEY) || '[]') } catch { return [] }
-}
-function saveCollapsed() {
-  localStorage.setItem(MGR_COLLAPSE_KEY, JSON.stringify([...collapsedGroups.value]))
-}
-function toggleGroup(key: string) {
-  if (collapsedGroups.value.has(key)) collapsedGroups.value.delete(key)
-  else collapsedGroups.value.add(key)
-  saveCollapsed()
-}
-
-// Sortable：每组独立实例
 const groupEls = ref<Record<string, HTMLElement | null>>({})
 let sortableInstances: Sortable[] = []
 
-/** 拖拽结束后按 DOM 顺序重建 sort order */
 function rebuildOrder() {
   const ordered: MenuItem[] = []
   for (const group of menuGroups.value) {
     const el = groupEls.value[group.key]
     if (!el) continue
-    const itemEls = el.querySelectorAll('.menu-item')
-    itemEls.forEach(itemEl => {
+    el.querySelectorAll('.menu-chip').forEach(itemEl => {
       const code = (itemEl as HTMLElement).dataset.code
       const found = layoutStore.menuItems.find(m => m.code === code)
       if (found) ordered.push(found)
     })
   }
-  // 补充游离项（防御）
   for (const item of layoutStore.menuItems) {
     if (!ordered.find(m => m.code === item.code)) ordered.push(item)
   }
@@ -69,25 +49,28 @@ function rebuildOrder() {
   persist(ordered)
 }
 
-onMounted(async () => {
+function destroySortables() {
+  sortableInstances.forEach(s => s.destroy())
+  sortableInstances = []
+}
+
+async function initSortables() {
+  destroySortables()
   await nextTick()
   for (const group of menuGroups.value) {
     const el = groupEls.value[group.key]
     if (!el) continue
-    const sort = Sortable.create(el, {
-      animation: 200,
-      handle: '.drag-handle',
-      ghostClass: 'menu-item--ghost',
+    sortableInstances.push(Sortable.create(el, {
+      animation: 180,
+      handle: '.chip-handle',
+      ghostClass: 'menu-chip--ghost',
       onEnd: rebuildOrder,
-    })
-    sortableInstances.push(sort)
+    }))
   }
-})
+}
 
-onUnmounted(() => {
-  sortableInstances.forEach(s => s.destroy())
-  sortableInstances = []
-})
+onMounted(() => { initSortables() })
+onUnmounted(() => { destroySortables() })
 
 function toggleVisibility(item: MenuItem) {
   if (item.fixed) return
@@ -108,122 +91,151 @@ async function persist(items: MenuItem[]) {
 async function handleReset() {
   await layoutStore.resetMenuConfig()
   ElMessage.success('菜单已恢复默认')
+  await initSortables()
 }
 </script>
 
 <template>
   <div class="menu-manager">
     <div class="manager-toolbar">
-      <span class="manager-hint">拖拽排序，点击切换显示/隐藏</span>
+      <span class="manager-hint">点击标签显隐 · 拖把手排序</span>
       <el-button size="small" text @click="handleReset">恢复默认</el-button>
     </div>
-    <div class="menu-groups">
-      <div v-for="group in menuGroups" :key="group.key" class="menu-group">
+
+    <div class="menu-matrix">
+      <div v-for="group in menuGroups" :key="group.key" class="matrix-row">
+        <div class="matrix-label">{{ group.title }}</div>
         <div
-          class="group-header"
-          :class="{ collapsed: collapsedGroups.has(group.key) }"
-          @click="toggleGroup(group.key)"
+          :ref="(el: any) => groupEls[group.key] = el as HTMLElement"
+          class="matrix-chips"
         >
-          <ChevronDown :size="14" class="group-chevron" />
-          <span>{{ group.title }}</span>
-        </div>
-        <Transition name="collapse">
-          <div
-            v-if="!collapsedGroups.has(group.key)"
-            :ref="(el: any) => groupEls[group.key] = el as HTMLElement"
-            class="group-items"
+          <button
+            v-for="item in group.items"
+            :key="item.code"
+            type="button"
+            class="menu-chip"
+            :class="{
+              'menu-chip--hidden': !item.visible,
+              'menu-chip--fixed': item.fixed,
+            }"
+            :data-code="item.code"
+            :title="item.fixed ? fixedHint(item) : (item.visible ? '点击隐藏' : '点击显示')"
+            @click="toggleVisibility(item)"
           >
-            <div
-              v-for="item in group.items"
-              :key="item.code"
-              :data-code="item.code"
-              class="menu-item"
-              :class="{ 'menu-item--hidden': !item.visible, 'menu-item--fixed': item.fixed }"
-            >
-              <span class="drag-handle"><GripVertical :size="16" /></span>
-              <span class="menu-item-title">{{ item.title }}</span>
-              <button
-                class="vis-toggle"
-                :class="{ 'is-hidden': !item.visible }"
-                :disabled="item.fixed"
-                :title="item.fixed ? fixedHint(item) : item.visible ? '点击隐藏' : '点击显示'"
-                @click="toggleVisibility(item)"
-              >
-                <Eye v-if="item.visible" :size="16" />
-                <EyeOff v-else :size="16" />
-              </button>
-            </div>
-          </div>
-        </Transition>
+            <span class="chip-handle" title="拖拽排序" @click.stop>
+              <GripVertical :size="12" />
+            </span>
+            <span class="chip-title">{{ item.title }}</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.manager-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--sp-4); }
-.manager-hint { font-size: var(--text-xs); color: var(--text-tertiary); }
+.manager-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--sp-3);
+}
+.manager-hint {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
 
-.menu-groups { display: flex; flex-direction: column; gap: 20px; }
+.menu-matrix {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
 
-/* 分组标题 — Section 规范 */
-.group-header {
-  display: flex; align-items: center; gap: 6px;
-  font-size: 14px; font-weight: 700;
+.matrix-row {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  gap: 10px 12px;
+  align-items: start;
+}
+
+.matrix-label {
+  padding-top: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  letter-spacing: 0.02em;
+  user-select: none;
+}
+
+.matrix-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 28px;
+}
+
+.menu-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 28px;
+  padding: 0 10px 0 4px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
   color: var(--text-primary);
-  padding: 0 0 10px 0;
-  cursor: pointer; user-select: none;
-  border-bottom: 1.5px solid var(--border-color);
-  transition: color 150ms ease;
-}
-.group-header:hover { color: var(--text-primary); }
-.group-chevron {
-  flex-shrink: 0; transition: transform 200ms ease; opacity: 0.45;
-}
-.group-header:hover .group-chevron { opacity: 0.8; }
-.group-header.collapsed .group-chevron { transform: rotate(-90deg); }
-
-/* 分组内列表 */
-.group-items { display: flex; flex-direction: column; gap: 2px; padding-top: 10px; }
-
-.menu-item {
-  display: flex; align-items: center; gap: var(--sp-3);
-  padding: 6px var(--sp-3) 6px 28px;
-  border-radius: var(--radius-sm);
-  transition: background var(--transition);
-  cursor: default;
-}
-.menu-item:hover { background: var(--bg-hover); }
-.menu-item--hidden { opacity: 0.5; }
-.menu-item--fixed { border-left: 3px solid var(--accent); }
-.menu-item-title { flex: 1; font-size: var(--text-sm); }
-.drag-handle { cursor: grab; color: var(--text-tertiary); display: flex; }
-.drag-handle:active { cursor: grabbing; }
-.vis-toggle {
-  width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
-  border: none; background: transparent; color: var(--text-secondary);
-  cursor: pointer; border-radius: var(--radius-sm);
+  font-size: 12px;
+  cursor: pointer;
   transition: all var(--transition);
 }
-.vis-toggle:hover { background: var(--bg-hover); }
-.vis-toggle.is-hidden { color: var(--text-placeholder); }
-.vis-toggle:disabled { opacity: 0.4; cursor: not-allowed; }
-.menu-item--ghost { opacity: 0.3; background: var(--accent-light); }
+.menu-chip:hover {
+  border-color: var(--accent-border, var(--accent));
+  background: var(--bg-hover);
+}
+.menu-chip--fixed {
+  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  color: var(--accent);
+  font-weight: 600;
+  cursor: default;
+}
+.menu-chip--hidden {
+  opacity: 0.45;
+  color: var(--text-tertiary);
+  background: var(--bg-hover);
+}
+.menu-chip--hidden .chip-title {
+  text-decoration: line-through;
+}
+.menu-chip--ghost {
+  opacity: 0.35;
+  background: var(--accent-light);
+}
 
-/* 折叠动画 */
-.collapse-enter-active,
-.collapse-leave-active {
-  transition: max-height 200ms ease, opacity 200ms ease;
-  overflow: hidden;
+.chip-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  color: var(--text-tertiary);
+  cursor: grab;
+  border-radius: 4px;
+  flex-shrink: 0;
 }
-.collapse-enter-from,
-.collapse-leave-to {
-  max-height: 0;
-  opacity: 0;
+.chip-handle:hover { color: var(--text-secondary); background: var(--bg-hover); }
+.chip-handle:active { cursor: grabbing; }
+
+.chip-title {
+  line-height: 1;
+  white-space: nowrap;
 }
-.collapse-enter-to,
-.collapse-leave-from {
-  max-height: 400px;
-  opacity: 1;
+
+@media (max-width: 480px) {
+  .matrix-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+  .matrix-label { padding-top: 0; }
 }
 </style>

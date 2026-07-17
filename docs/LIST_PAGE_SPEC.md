@@ -26,8 +26,21 @@
 → `plan-middle`（flex:1）：loading | EmptyState | Table | Card  
 → `plan-foot`：ListPagination
 
-### 一屏铺满（可选）
-挂载加 / 卸载移 `main-content--fill`（见 AppLayout）。笔记/收藏等浏览型可不启用。
+### 一屏铺满（默认）
+
+挂载加 / 卸载移 `main-content--fill`（见 AppLayout）。适用：学习计划、阅读记录、笔记、日记、学习记录、待办、Dashboard。
+
+使用 `useMainContentFill()` + `useFillPageSize()`。
+
+#### 矮屏降档（内容区可视高）
+
+| 高度 | PAGE_SIZE | Card 桌面网格 |
+|------|-----------|---------------|
+| ≥640px | 10 | 5×2 |
+| 520–639 | 8 | 4×2 |
+| &lt;520 | 6 | 3×2 |
+
+`size` 变化时 `page=1` 重拉；不足条数用空槽占位。
 
 ---
 

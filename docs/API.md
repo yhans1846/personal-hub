@@ -88,6 +88,8 @@ CRUD：`GET/POST/PUT/DELETE` + `GET/{id}`。
 
 ### 七、Todo `/api/todos`
 CRUD + `PATCH /{id}/done`。  
+列表参数：`page`,`size`,`keyword`,`priority`,`dueScope`  
+`dueScope`：`all`（默认）| `overdue` | `today` | `week` | `later` | `done`  
 **POST：** `{title,content,priority,dueDate}`
 
 ### 八、文件管理 `/api/files`
