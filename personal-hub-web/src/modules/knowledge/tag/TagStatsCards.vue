@@ -24,32 +24,9 @@ defineProps<{
 </template>
 
 <style scoped>
+/* 共享壳见 styles/stats-row.css */
 .stats-row {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--sp-3);
   margin-bottom: var(--sp-4);
-}
-.stat-card {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: var(--sp-4);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border-color);
-  background: var(--bg-card);
-  transition: all var(--transition);
-}
-.stat-card:hover { box-shadow: var(--shadow-sm); }
-.stat-value {
-  font-size: 24px;
-  font-weight: 700;
-  line-height: 1.2;
-}
-.stat-label {
-  font-size: var(--text-xs);
-  color: var(--text-tertiary);
-  font-weight: 500;
 }
 .stat-card--total .stat-value { color: var(--accent); }
 .stat-card--usage .stat-value { color: var(--success); }

@@ -1,6 +1,7 @@
 package com.personalhub.system.controller;
 
 import com.personalhub.common.result.Result;
+import com.personalhub.common.util.CurrentUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +21,7 @@ public class BackupController {
     @Operation(summary = "立即备份")
     @PostMapping("/now")
     public Result<Map<String, Object>> backupNow(Authentication auth) {
-        Long userId = Long.valueOf(auth.getName());
+        Long userId = CurrentUser.id(auth);
         return Result.success(Map.of(
             "id", 0,
             "downloadUrl", ""

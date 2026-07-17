@@ -52,5 +52,3 @@ export function useEditorPreferences() {
 
   return instance
 }
-
-export type EditorPreferencesReturn = ReturnType<typeof useEditorPreferences>

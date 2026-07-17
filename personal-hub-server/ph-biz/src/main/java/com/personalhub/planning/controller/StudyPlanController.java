@@ -3,6 +3,7 @@ package com.personalhub.planning.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.personalhub.common.result.PageResult;
 import com.personalhub.common.result.Result;
+import com.personalhub.common.util.CurrentUser;
 import com.personalhub.planning.dto.StudyPlanCreateDTO;
 import com.personalhub.planning.dto.StudyPlanQueryDTO;
 import com.personalhub.planning.service.StudyPlanService;
@@ -38,7 +39,7 @@ public class StudyPlanController {
     public Result<PageResult<StudyPlanVO>> list(
             @Parameter(hidden = true) Authentication authentication,
             StudyPlanQueryDTO query) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         IPage<StudyPlanVO> page = studyPlanService.list(userId, query);
         return Result.success(PageResult.of(page));
     }
@@ -47,7 +48,7 @@ public class StudyPlanController {
     @GetMapping("/stats")
     public Result<StudyPlanStatsVO> stats(
             @Parameter(hidden = true) Authentication authentication) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         return Result.success(studyPlanService.stats(userId));
     }
 
@@ -57,7 +58,7 @@ public class StudyPlanController {
             @Parameter(hidden = true) Authentication authentication,
             @RequestParam(defaultValue = "filtered") String scope,
             StudyPlanQueryDTO query) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         byte[] xlsx = studyPlanService.exportXlsx(userId, query, scope);
         String filename = URLEncoder.encode("学习计划.xlsx", StandardCharsets.UTF_8).replace("+", "%20");
         return ResponseEntity.ok()
@@ -72,7 +73,7 @@ public class StudyPlanController {
     public Result<StudyPlanVO> getById(
             @Parameter(hidden = true) Authentication authentication,
             @PathVariable Long id) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         return Result.success(studyPlanService.getById(id, userId));
     }
 
@@ -81,7 +82,7 @@ public class StudyPlanController {
     public Result<StudyPlanVO> create(
             @Parameter(hidden = true) Authentication authentication,
             @Valid @RequestBody StudyPlanCreateDTO dto) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         return Result.success(studyPlanService.create(userId, dto));
     }
 
@@ -91,7 +92,7 @@ public class StudyPlanController {
             @Parameter(hidden = true) Authentication authentication,
             @PathVariable Long id,
             @Valid @RequestBody StudyPlanCreateDTO dto) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         return Result.success(studyPlanService.update(id, userId, dto));
     }
 
@@ -100,7 +101,7 @@ public class StudyPlanController {
     public Result<Void> delete(
             @Parameter(hidden = true) Authentication authentication,
             @PathVariable Long id) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         studyPlanService.delete(id, userId);
         return Result.success();
     }

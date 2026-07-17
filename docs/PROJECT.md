@@ -18,8 +18,8 @@ Vue 3 → REST → Spring Boot 3 → MyBatis-Plus → MySQL
 后端                         前端 modules/
 ph-boot / ph-common          —
 ph-system                    system/
-ph-biz（knowledge/planning/  knowledge/ planning/ resource/
-  resource/dashboard 包）     dashboard/ search/ category/ stats/
+ph-biz（knowledge/planning/  knowledge/（含 category）· planning/ · resource/
+  resource/dashboard 包）     dashboard/ · search/ · stats/ · system/
 ```
 
 **划分：** Maven 粗粒度（common / system / biz / boot）· 细领域用 Java package · 跨包走 Service · Dashboard 只聚合不落业务库。
@@ -52,6 +52,7 @@ ph-common ← ph-system ← ph-biz ← ph-boot
 | 四–九 | UI/通知/布局；Ui 组件+分类；配置；回收站+审计；预览 |
 | 十–十七 | 编辑器；设置阅读配置；Dialog；统计；Profile；Focus；部署；Vditor |
 | 十八 | ph-biz 合并；列表一屏铺满；设置标签云；PAGE_SPEC 收口 |
+| 十九 | V2 项目治理（死代码清理 · DRY · 目录对齐 · 文档归档） |
 
 ## 后续可扩展
 

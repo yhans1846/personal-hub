@@ -3,6 +3,7 @@ package com.personalhub.knowledge.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.personalhub.common.result.PageResult;
 import com.personalhub.common.result.Result;
+import com.personalhub.common.util.CurrentUser;
 import com.personalhub.knowledge.dto.StudyRecordCreateDTO;
 import com.personalhub.knowledge.dto.StudyRecordQueryDTO;
 import com.personalhub.knowledge.service.StudyRecordService;
@@ -32,7 +33,7 @@ public class StudyRecordController {
     public Result<PageResult<StudyRecordVO>> list(
             @Parameter(hidden = true) Authentication authentication,
             StudyRecordQueryDTO query) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         IPage<StudyRecordVO> page = service.list(userId, query);
         return Result.success(PageResult.of(page));
     }
@@ -42,7 +43,7 @@ public class StudyRecordController {
     public Result<StudyRecordVO> getById(
             @Parameter(hidden = true) Authentication authentication,
             @PathVariable Long id) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         return Result.success(service.getById(id, userId));
     }
 
@@ -51,7 +52,7 @@ public class StudyRecordController {
     public Result<StudyRecordVO> create(
             @Parameter(hidden = true) Authentication authentication,
             @Valid @RequestBody StudyRecordCreateDTO dto) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         return Result.success(service.create(userId, dto));
     }
 
@@ -61,14 +62,14 @@ public class StudyRecordController {
             @Parameter(hidden = true) Authentication authentication,
             @PathVariable Long id,
             @Valid @RequestBody StudyRecordCreateDTO dto) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         return Result.success(service.update(id, userId, dto));
     }
 
     @Operation(summary = "学习统计", description = "今日学习时长、本周统计、连续学习天数")
     @GetMapping("/stats")
     public Result<StudyStatsVO> stats(@Parameter(hidden = true) Authentication authentication) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         return Result.success(service.stats(userId));
     }
 
@@ -77,7 +78,7 @@ public class StudyRecordController {
     public Result<Void> delete(
             @Parameter(hidden = true) Authentication authentication,
             @PathVariable Long id) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         service.delete(id, userId);
         return Result.success();
     }

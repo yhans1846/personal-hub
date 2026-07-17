@@ -3,6 +3,7 @@ package com.personalhub.planning.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.personalhub.common.result.PageResult;
 import com.personalhub.common.result.Result;
+import com.personalhub.common.util.CurrentUser;
 import com.personalhub.planning.dto.TodoCreateDTO;
 import com.personalhub.planning.dto.TodoQueryDTO;
 import com.personalhub.planning.service.TodoTaskService;
@@ -32,7 +33,7 @@ public class TodoTaskController {
     public Result<PageResult<TodoVO>> list(
             @Parameter(hidden = true) Authentication authentication,
             TodoQueryDTO query) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         IPage<TodoVO> page = todoTaskService.list(userId, query);
         return Result.success(PageResult.of(page));
     }
@@ -42,7 +43,7 @@ public class TodoTaskController {
     public Result<TodoVO> getById(
             @Parameter(hidden = true) Authentication authentication,
             @PathVariable Long id) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         return Result.success(todoTaskService.getById(id, userId));
     }
 
@@ -51,7 +52,7 @@ public class TodoTaskController {
     public Result<TodoVO> create(
             @Parameter(hidden = true) Authentication authentication,
             @Valid @RequestBody TodoCreateDTO dto) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         return Result.success(todoTaskService.create(userId, dto));
     }
 
@@ -61,7 +62,7 @@ public class TodoTaskController {
             @Parameter(hidden = true) Authentication authentication,
             @PathVariable Long id,
             @Valid @RequestBody TodoCreateDTO dto) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         return Result.success(todoTaskService.update(id, userId, dto));
     }
 
@@ -70,7 +71,7 @@ public class TodoTaskController {
     public Result<Void> delete(
             @Parameter(hidden = true) Authentication authentication,
             @PathVariable Long id) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         todoTaskService.delete(id, userId);
         return Result.success();
     }
@@ -78,7 +79,7 @@ public class TodoTaskController {
     @Operation(summary = "今日待办", description = "查询今日到期的未完成待办")
     @GetMapping("/today")
     public Result<List<TodoVO>> today(@Parameter(hidden = true) Authentication authentication) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         return Result.success(todoTaskService.today(userId));
     }
 
@@ -87,7 +88,7 @@ public class TodoTaskController {
     public Result<TodoVO> toggleDone(
             @Parameter(hidden = true) Authentication authentication,
             @PathVariable Long id) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         return Result.success(todoTaskService.toggleDone(id, userId));
     }
 }

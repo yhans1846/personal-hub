@@ -5,6 +5,7 @@ import type { DiaryVO, DiaryCreateDTO, DiaryQuery } from '@/types/diary'
 import type { StudyRecordVO, StudyRecordCreateDTO, StudyRecordQuery } from '@/types/study'
 import type { ReadingVO, ReadingCreateDTO, ReadingQuery } from '@/types/reading'
 import type { TagVO, TagCreateDTO, TagUpdateDTO } from '@/types/tag'
+import type { CategoryVO, CategoryCreateDTO } from '@/types/category'
 
 // ====== 笔记 ======
 export function getNoteList(params: NoteQuery) {
@@ -162,4 +163,21 @@ export function updateTag(id: number, data: TagUpdateDTO) {
 }
 export function deleteTag(id: number) {
   return request.delete<Result<void>>(`/tags/${id}`)
+}
+
+// ====== 分类 ======
+export function getCategories(type: string) {
+  return request.get<Result<CategoryVO[]>>('/categories', { params: { type } })
+}
+export function createCategory(data: CategoryCreateDTO) {
+  return request.post<Result<CategoryVO>>('/categories', data)
+}
+export function updateCategory(id: number, data: { name: string; sortOrder?: number }) {
+  return request.put<Result<CategoryVO>>(`/categories/${id}`, data)
+}
+export function deleteCategory(id: number) {
+  return request.delete<Result<void>>(`/categories/${id}`)
+}
+export function batchUpdateCategorySort(list: { id: number; sortOrder: number }[]) {
+  return request.put<Result<void>>('/categories/sort', list)
 }

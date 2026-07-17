@@ -7,6 +7,7 @@ import type { TagVO } from '@/types/tag'
 import { PageHeader, EmptyState, ListToolbar } from '@/components'
 import { UiDialog, UiInput } from '@/components/ui'
 import TagStatsCards from './TagStatsCards.vue'
+import { formatDate } from '@/utils/formatTime'
 
 // ============ 状态 ============
 const list = ref<TagVO[]>([])
@@ -130,11 +131,6 @@ function onColorInput(e: Event) {
 
 function toggleSortDir() {
   sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc'
-}
-
-function formatDate(dateStr?: string) {
-  if (!dateStr) return ''
-  return dateStr.slice(0, 10)
 }
 </script>
 

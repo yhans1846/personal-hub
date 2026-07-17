@@ -1,7 +1,7 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { ref, watch, computed, toRef } from 'vue'
 import { createBookmark, updateBookmark, getBookmarkById } from '@/modules/resource/api'
-import { getCategories } from '@/api/categoryApi'
+import { getCategories } from '@/modules/knowledge/api'
 import { getTags } from '@/modules/knowledge/api'
 import { ElMessage } from 'element-plus'
 import { FolderOpen, Link } from 'lucide-vue-next'

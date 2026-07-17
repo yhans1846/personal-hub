@@ -54,3 +54,27 @@ export function uploadAvatar(file: File) {
     headers: { 'Content-Type': undefined }
   })
 }
+
+// ====== 数据管理（占位接口，与后端 Export/Backup 对齐）======
+
+/** 导出数据 */
+export function exportData(params: { modules: string[]; format: 'markdown' | 'json' }) {
+  return request.post<Result<{ downloadUrl: string }>>('/export', params)
+}
+
+/** 立即备份 */
+export function backupNow() {
+  return request.post<Result<{ id: number; downloadUrl: string }>>('/backup/now')
+}
+
+/** 获取备份列表 */
+export function getBackupList() {
+  return request.get<Result<any[]>>('/backup/list')
+}
+
+/** 导入备份 */
+export function importBackup(file: File) {
+  const formData = new FormData()
+  formData.append('file', file)
+  return request.post<Result<void>>('/backup/import', formData)
+}

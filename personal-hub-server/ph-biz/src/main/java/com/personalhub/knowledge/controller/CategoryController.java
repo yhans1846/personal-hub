@@ -1,6 +1,7 @@
 package com.personalhub.knowledge.controller;
 
 import com.personalhub.common.result.Result;
+import com.personalhub.common.util.CurrentUser;
 import com.personalhub.knowledge.dto.CategoryCreateDTO;
 import com.personalhub.knowledge.dto.CategoryUpdateDTO;
 import com.personalhub.knowledge.service.CategoryService;
@@ -33,7 +34,7 @@ public class CategoryController {
     public Result<List<CategoryVO>> list(
             @Parameter(hidden = true) Authentication authentication,
             @RequestParam String type) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         return Result.success(categoryService.listByType(userId, type));
     }
 
@@ -42,7 +43,7 @@ public class CategoryController {
     public Result<CategoryVO> create(
             @Parameter(hidden = true) Authentication authentication,
             @Valid @RequestBody CategoryCreateDTO dto) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         return Result.success(categoryService.create(userId, dto));
     }
 
@@ -52,7 +53,7 @@ public class CategoryController {
             @Parameter(hidden = true) Authentication authentication,
             @PathVariable Long id,
             @Valid @RequestBody CategoryUpdateDTO dto) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         return Result.success(categoryService.update(id, userId, dto));
     }
 
@@ -61,7 +62,7 @@ public class CategoryController {
     public Result<Void> delete(
             @Parameter(hidden = true) Authentication authentication,
             @PathVariable Long id) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         categoryService.delete(id, userId);
         return Result.success();
     }

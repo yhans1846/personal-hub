@@ -1,5 +1,6 @@
 package com.personalhub.knowledge.enums;
 
+import com.personalhub.common.util.EnumLabels;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -21,14 +22,6 @@ public enum ReadingStatus {
      * @return 中文标签；null → null；未知 → 「未知」
      */
     public static String labelOf(Integer code) {
-        if (code == null) {
-            return null;
-        }
-        for (ReadingStatus s : values()) {
-            if (s.code == code) {
-                return s.label;
-            }
-        }
-        return "未知";
+        return EnumLabels.labelOf(code, values(), ReadingStatus::getCode, ReadingStatus::getLabel);
     }
 }

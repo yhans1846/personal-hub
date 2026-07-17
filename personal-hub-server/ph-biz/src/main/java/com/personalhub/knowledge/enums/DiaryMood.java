@@ -1,5 +1,6 @@
 package com.personalhub.knowledge.enums;
 
+import com.personalhub.common.util.EnumLabels;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -23,14 +24,6 @@ public enum DiaryMood {
      * @return 中文标签；null → null；未知 → 「未知」
      */
     public static String labelOf(Integer code) {
-        if (code == null) {
-            return null;
-        }
-        for (DiaryMood m : values()) {
-            if (m.code == code) {
-                return m.label;
-            }
-        }
-        return "未知";
+        return EnumLabels.labelOf(code, values(), DiaryMood::getCode, DiaryMood::getLabel);
     }
 }

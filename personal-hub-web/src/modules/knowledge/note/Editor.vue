@@ -1,8 +1,8 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { ref, computed, onMounted, watch, onUnmounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getNoteById, toggleFavorite, deleteNote } from '@/modules/knowledge/api'
-import { getCategories } from '@/api/categoryApi'
+import { getCategories } from '@/modules/knowledge/api'
 import { getTags } from '@/modules/knowledge/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useAutoSave } from './editor/useAutoSave'

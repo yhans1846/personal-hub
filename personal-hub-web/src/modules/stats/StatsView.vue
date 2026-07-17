@@ -8,7 +8,7 @@ import { PageHeader } from '@/components'
 import {
   BookOpen, FileText, CheckSquare, BookMarked,
   TrendingUp, Clock, Lightbulb, Layers, Tag,
-  ArrowUp, ArrowDown, Minus
+  ArrowUp, ArrowDown, Minus,
 } from 'lucide-vue-next'
 
 // ====== 状态 ======
@@ -337,13 +337,6 @@ function updateCatTagChart() {
 }
 
 // ====== 格式化工具 ======
-function formatDuration(minutes: number): string {
-  if (minutes < 60) return `${minutes} 分钟`
-  const h = Math.floor(minutes / 60)
-  const m = minutes % 60
-  return m > 0 ? `${h} 小时 ${m} 分钟` : `${h} 小时`
-}
-
 function formatReadingHours(hours: number): string {
   if (hours < 1) return `${Math.round(hours * 60)} 分钟`
   return `${hours.toFixed(1)} 小时`

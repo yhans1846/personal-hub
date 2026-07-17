@@ -2,6 +2,7 @@ package com.personalhub.knowledge.controller;
 
 import com.personalhub.common.result.PageResult;
 import com.personalhub.common.result.Result;
+import com.personalhub.common.util.CurrentUser;
 import com.personalhub.knowledge.dto.ReadingCreateDTO;
 import com.personalhub.knowledge.dto.ReadingQueryDTO;
 import com.personalhub.knowledge.service.ReadingRecordService;
@@ -30,7 +31,7 @@ public class ReadingRecordController {
     @Operation(summary = "阅读列表")
     @GetMapping
     public Result<PageResult<ReadingVO>> list(@Parameter(hidden = true) Authentication auth, ReadingQueryDTO q) {
-        return Result.success(PageResult.of(readingService.list(Long.valueOf(auth.getName()), q)));
+        return Result.success(PageResult.of(readingService.list(CurrentUser.id(auth), q)));
     }
 
     @Operation(summary = "导出 XLSX", description = "scope=filtered 带当前筛选；scope=all 导出全部。内存生成，不落盘。")
@@ -39,7 +40,7 @@ public class ReadingRecordController {
             @Parameter(hidden = true) Authentication auth,
             @RequestParam(defaultValue = "filtered") String scope,
             ReadingQueryDTO query) {
-        byte[] xlsx = readingService.exportXlsx(Long.valueOf(auth.getName()), query, scope);
+        byte[] xlsx = readingService.exportXlsx(CurrentUser.id(auth), query, scope);
         String filename = URLEncoder.encode("阅读记录.xlsx", StandardCharsets.UTF_8).replace("+", "%20");
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(
@@ -51,13 +52,13 @@ public class ReadingRecordController {
     @Operation(summary = "阅读详情")
     @GetMapping("/{id}")
     public Result<ReadingVO> getById(@Parameter(hidden = true) Authentication auth, @PathVariable Long id) {
-        return Result.success(readingService.getById(id, Long.valueOf(auth.getName())));
+        return Result.success(readingService.getById(id, CurrentUser.id(auth)));
     }
 
     @Operation(summary = "新建记录")
     @PostMapping
     public Result<ReadingVO> create(@Parameter(hidden = true) Authentication auth, @Valid @RequestBody ReadingCreateDTO dto) {
-        return Result.success(readingService.create(Long.valueOf(auth.getName()), dto));
+        return Result.success(readingService.create(CurrentUser.id(auth), dto));
     }
 
     @Operation(summary = "编辑记录")
@@ -66,13 +67,13 @@ public class ReadingRecordController {
             @Parameter(hidden = true) Authentication auth,
             @PathVariable Long id,
             @Valid @RequestBody ReadingCreateDTO dto) {
-        return Result.success(readingService.update(id, Long.valueOf(auth.getName()), dto));
+        return Result.success(readingService.update(id, CurrentUser.id(auth), dto));
     }
 
     @Operation(summary = "删除记录")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@Parameter(hidden = true) Authentication auth, @PathVariable Long id) {
-        readingService.delete(id, Long.valueOf(auth.getName()));
+        readingService.delete(id, CurrentUser.id(auth));
         return Result.success();
     }
 }

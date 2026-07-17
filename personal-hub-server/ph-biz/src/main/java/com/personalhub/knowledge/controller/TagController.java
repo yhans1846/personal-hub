@@ -1,6 +1,7 @@
 package com.personalhub.knowledge.controller;
 
 import com.personalhub.common.result.Result;
+import com.personalhub.common.util.CurrentUser;
 import com.personalhub.knowledge.dto.TagCreateDTO;
 import com.personalhub.knowledge.dto.TagUpdateDTO;
 import com.personalhub.knowledge.service.TagService;
@@ -30,21 +31,21 @@ public class TagController {
     @GetMapping
     @Operation(summary = "获取所有标签")
     public Result<List<TagVO>> list(Authentication authentication) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         return Result.success(tagService.listByUser(userId));
     }
 
     @PostMapping
     @Operation(summary = "创建标签")
     public Result<TagVO> create(@Valid @RequestBody TagCreateDTO dto, Authentication authentication) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         return Result.success(tagService.create(userId, dto.getName(), dto.getColor()));
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "更新标签")
     public Result<Void> update(@PathVariable Long id, @Valid @RequestBody TagUpdateDTO dto, Authentication authentication) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         tagService.update(id, userId, dto.getName(), dto.getColor());
         return Result.success();
     }
@@ -52,7 +53,7 @@ public class TagController {
     @DeleteMapping("/{id}")
     @Operation(summary = "删除标签")
     public Result<Void> delete(@PathVariable Long id, Authentication authentication) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         tagService.delete(id, userId);
         return Result.success();
     }

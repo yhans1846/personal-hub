@@ -427,62 +427,14 @@ async function onCardMenuAction(actionId: string) {
   animation: pulse 1.5s ease-in-out infinite;
 }
 
-.product-table {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  border: 1px solid var(--border-light);
-  border-radius: 12px;
-  overflow: hidden;
-  background: var(--bg-card);
-}
+/* 本页列宽（共享壳见 styles/product-list.css） */
 .pt-head, .pt-row {
-  display: grid;
   grid-template-columns:
     minmax(160px, 2fr)
     minmax(100px, 1fr)
     minmax(120px, 1.2fr)
     120px
     72px;
-  align-items: center;
-  column-gap: 12px;
-  padding: 0 16px;
-}
-.pt-head {
-  flex-shrink: 0;
-  height: 36px;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-tertiary);
-  border-bottom: 1px solid var(--border-light);
-}
-.pt-body {
-  flex: 1;
-  min-height: 0;
-  display: grid;
-}
-.pt-row {
-  min-height: 0;
-  height: 100%;
-  cursor: pointer;
-  border-bottom: 1px solid var(--border-light);
-  transition: background 0.15s ease;
-}
-.pt-row:last-child { border-bottom: none; }
-.pt-row:hover:not(.pt-row--pad) { background: var(--bg-hover); }
-.pt-row--pad {
-  cursor: default;
-  pointer-events: none;
-}
-.name-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text-primary);
-  line-height: 1.3;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 .soft-tag {
   display: inline-flex;
@@ -502,16 +454,7 @@ async function onCardMenuAction(actionId: string) {
   font-size: 12px;
   color: var(--text-tertiary);
 }
-.muted { color: var(--text-placeholder); font-size: 13px; }
-.cell-date {
-  font-size: 13px;
-  color: var(--text-secondary);
-  white-space: nowrap;
-}
 .col-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
   gap: 2px;
 }
 .icon-action {

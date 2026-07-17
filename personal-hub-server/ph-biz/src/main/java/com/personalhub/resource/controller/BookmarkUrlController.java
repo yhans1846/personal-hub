@@ -3,6 +3,7 @@ package com.personalhub.resource.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.personalhub.common.result.PageResult;
 import com.personalhub.common.result.Result;
+import com.personalhub.common.util.CurrentUser;
 import com.personalhub.resource.dto.BookmarkCreateDTO;
 import com.personalhub.resource.dto.BookmarkQueryDTO;
 import com.personalhub.resource.service.BookmarkUrlService;
@@ -31,7 +32,7 @@ public class BookmarkUrlController {
     public Result<java.util.List<BookmarkVO>> dashboardList(
             @Parameter(hidden = true) Authentication authentication,
             @RequestParam(defaultValue = "8") int limit) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         return Result.success(bookmarkUrlService.listForDashboard(userId, limit));
     }
 
@@ -40,7 +41,7 @@ public class BookmarkUrlController {
     public Result<PageResult<BookmarkVO>> list(
             @Parameter(hidden = true) Authentication authentication,
             BookmarkQueryDTO query) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         IPage<BookmarkVO> page = bookmarkUrlService.list(userId, query);
         return Result.success(PageResult.of(page));
     }
@@ -50,7 +51,7 @@ public class BookmarkUrlController {
     public Result<BookmarkVO> getById(
             @Parameter(hidden = true) Authentication authentication,
             @PathVariable Long id) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         return Result.success(bookmarkUrlService.getById(id, userId));
     }
 
@@ -59,7 +60,7 @@ public class BookmarkUrlController {
     public Result<BookmarkVO> create(
             @Parameter(hidden = true) Authentication authentication,
             @Valid @RequestBody BookmarkCreateDTO dto) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         return Result.success(bookmarkUrlService.create(userId, dto));
     }
 
@@ -69,7 +70,7 @@ public class BookmarkUrlController {
             @Parameter(hidden = true) Authentication authentication,
             @PathVariable Long id,
             @Valid @RequestBody BookmarkCreateDTO dto) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         return Result.success(bookmarkUrlService.update(id, userId, dto));
     }
 
@@ -78,7 +79,7 @@ public class BookmarkUrlController {
     public Result<Void> delete(
             @Parameter(hidden = true) Authentication authentication,
             @PathVariable Long id) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         bookmarkUrlService.delete(id, userId);
         return Result.success();
     }

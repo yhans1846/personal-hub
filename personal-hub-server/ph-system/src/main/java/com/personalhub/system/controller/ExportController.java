@@ -1,6 +1,7 @@
 package com.personalhub.system.controller;
 
 import com.personalhub.common.result.Result;
+import com.personalhub.common.util.CurrentUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +22,7 @@ public class ExportController {
     public Result<Map<String, String>> export(
             Authentication auth,
             @RequestBody ExportRequest request) {
-        Long userId = Long.valueOf(auth.getName());
+        Long userId = CurrentUser.id(auth);
         // 简单返回成功，实际导出异步处理
         return Result.success(Map.of(
             "downloadUrl", "/api/export/download/" + userId + "?format=" + request.format

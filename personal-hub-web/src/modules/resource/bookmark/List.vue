@@ -1,9 +1,9 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { PageHeader, EmptyState, ListToolbar, ListPagination } from '@/components'
 import { getBookmarkList, deleteBookmark, updateBookmark } from '@/modules/resource/api'
-import { getCategories } from '@/api/categoryApi'
+import { getCategories } from '@/modules/knowledge/api'
 import { getTags } from '@/modules/knowledge/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Pencil, Trash2, FolderOpen, Bookmark, House } from 'lucide-vue-next'

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.personalhub.common.result.PageParam;
 import com.personalhub.common.result.PageResult;
 import com.personalhub.common.result.Result;
+import com.personalhub.common.util.CurrentUser;
 import com.personalhub.knowledge.dto.ImportContentDTO;
 import com.personalhub.knowledge.dto.NoteCreateDTO;
 import com.personalhub.knowledge.dto.NoteQueryDTO;
@@ -47,7 +48,7 @@ public class NoteController {
     public Result<PageResult<NoteVO>> list(
             @Parameter(hidden = true) Authentication authentication,
             NoteQueryDTO query) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         IPage<NoteVO> page = noteService.listNotes(userId, query);
         return Result.success(PageResult.of(page));
     }
@@ -57,7 +58,7 @@ public class NoteController {
     public Result<NoteVO> getById(
             @Parameter(hidden = true) Authentication authentication,
             @PathVariable Long id) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         return Result.success(noteService.getById(id, userId));
     }
 
@@ -66,7 +67,7 @@ public class NoteController {
     public Result<NoteVO> create(
             @Parameter(hidden = true) Authentication authentication,
             @Valid @RequestBody NoteCreateDTO dto) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         return Result.success(noteService.create(userId, dto));
     }
 
@@ -76,7 +77,7 @@ public class NoteController {
             @Parameter(hidden = true) Authentication authentication,
             @PathVariable Long id,
             @Valid @RequestBody NoteCreateDTO dto) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         return Result.success(noteService.update(id, userId, dto));
     }
 
@@ -85,7 +86,7 @@ public class NoteController {
     public Result<Void> delete(
             @Parameter(hidden = true) Authentication authentication,
             @PathVariable Long id) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         noteService.delete(id, userId);
         return Result.success();
     }
@@ -95,7 +96,7 @@ public class NoteController {
     public Result<Void> toggleFavorite(
             @Parameter(hidden = true) Authentication authentication,
             @PathVariable Long id) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         noteService.toggleFavorite(id, userId);
         return Result.success();
     }
@@ -105,7 +106,7 @@ public class NoteController {
     public Result<PageResult<NoteVO>> recent(
             @Parameter(hidden = true) Authentication authentication,
             PageParam pageParam) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         IPage<NoteVO> result = noteService.getRecent(userId, pageParam.getPage(), pageParam.getSize());
         return Result.success(PageResult.of(result));
     }
@@ -115,7 +116,7 @@ public class NoteController {
     public Result<Void> restore(
             @Parameter(hidden = true) Authentication authentication,
             @PathVariable Long id) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         noteService.restore(id, userId);
         return Result.success();
     }
@@ -125,7 +126,7 @@ public class NoteController {
     public Result<Void> permanentDelete(
             @Parameter(hidden = true) Authentication authentication,
             @PathVariable Long id) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         noteService.permanentDelete(id, userId);
         return Result.success();
     }
@@ -139,7 +140,7 @@ public class NoteController {
             @RequestParam(value = "categoryIds", required = false) List<Long> categoryIds,
             @RequestParam(value = "tagIds", required = false) List<Long> tagIds,
             @RequestParam(value = "baseDir", required = false) String baseDir) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         ImportReport report = importService.importFromFile(userId, title, categoryIds, tagIds, file, baseDir);
         return Result.success(report);
     }
@@ -149,7 +150,7 @@ public class NoteController {
     public Result<ImportReport> importContent(
             @Parameter(hidden = true) Authentication authentication,
             @Valid @RequestBody ImportContentDTO dto) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         ImportReport report = importService.importFromContent(
                 userId, dto.getTitle(), dto.getContent(),
                 dto.getCategoryIds(), dto.getTagIds());
@@ -161,7 +162,7 @@ public class NoteController {
     public Result<PageResult<NoteVO>> recycle(
             @Parameter(hidden = true) Authentication authentication,
             NoteQueryDTO query) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         IPage<NoteVO> page = noteService.getRecycleList(userId, query);
         return Result.success(PageResult.of(page));
     }
@@ -171,7 +172,7 @@ public class NoteController {
     public Result<NoteVO> preview(
             @Parameter(hidden = true) Authentication authentication,
             @PathVariable Long id) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         return Result.success(noteService.getPreview(id, userId));
     }
 
@@ -180,7 +181,7 @@ public class NoteController {
     public ResponseEntity<byte[]> export(
             @Parameter(hidden = true) Authentication authentication,
             @PathVariable Long id) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         byte[] zipData = noteExportService.exportNote(id, userId);
         String encodedName = URLEncoder.encode("笔记导出", StandardCharsets.UTF_8).replace("+", "%20");
         return ResponseEntity.ok()

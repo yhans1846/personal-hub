@@ -2,7 +2,7 @@
 import { ref, onMounted, reactive } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Trash2, Download, Upload, RotateCcw, FileArchive, Loader2 } from 'lucide-vue-next'
-import { exportData, backupNow, getBackupList, importBackup } from '@/api/systemApi'
+import { exportData, backupNow, getBackupList, importBackup } from '@/modules/system/api'
 
 // ===== 缓存 =====
 const cacheSize = ref('计算中...')

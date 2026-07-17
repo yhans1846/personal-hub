@@ -1,5 +1,6 @@
 package com.personalhub.planning.enums;
 
+import com.personalhub.common.util.EnumLabels;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -22,14 +23,6 @@ public enum StudyPlanStatus {
      * @return 中文标签；null → null；未知 → 「未知」
      */
     public static String labelOf(Integer code) {
-        if (code == null) {
-            return null;
-        }
-        for (StudyPlanStatus s : values()) {
-            if (s.code == code) {
-                return s.label;
-            }
-        }
-        return "未知";
+        return EnumLabels.labelOf(code, values(), StudyPlanStatus::getCode, StudyPlanStatus::getLabel);
     }
 }

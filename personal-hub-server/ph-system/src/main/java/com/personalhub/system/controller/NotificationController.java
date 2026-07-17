@@ -2,6 +2,7 @@ package com.personalhub.system.controller;
 
 import com.personalhub.common.result.PageResult;
 import com.personalhub.common.result.Result;
+import com.personalhub.common.util.CurrentUser;
 import com.personalhub.system.dto.NotificationQueryDTO;
 import com.personalhub.system.service.NotificationService;
 import com.personalhub.system.vo.NotificationVO;
@@ -24,21 +25,21 @@ public class NotificationController {
     @Operation(summary = "通知列表（分页，未读优先）")
     @GetMapping
     public Result<PageResult<NotificationVO>> list(Authentication auth, NotificationQueryDTO query) {
-        Long userId = Long.valueOf(auth.getName());
+        Long userId = CurrentUser.id(auth);
         return Result.success(PageResult.of(notificationService.list(userId, query)));
     }
 
     @Operation(summary = "未读通知数")
     @GetMapping("/unread-count")
     public Result<Long> getUnreadCount(Authentication auth) {
-        Long userId = Long.valueOf(auth.getName());
+        Long userId = CurrentUser.id(auth);
         return Result.success(notificationService.getUnreadCount(userId));
     }
 
     @Operation(summary = "标记已读（支持批量）")
     @PutMapping("/read")
     public Result<Void> markAsRead(Authentication auth, @RequestBody List<Long> ids) {
-        Long userId = Long.valueOf(auth.getName());
+        Long userId = CurrentUser.id(auth);
         notificationService.markAsRead(userId, ids);
         return Result.success();
     }
@@ -46,7 +47,7 @@ public class NotificationController {
     @Operation(summary = "全部标记已读")
     @PutMapping("/read-all")
     public Result<Void> markAllAsRead(Authentication auth) {
-        Long userId = Long.valueOf(auth.getName());
+        Long userId = CurrentUser.id(auth);
         notificationService.markAllAsRead(userId);
         return Result.success();
     }
@@ -54,7 +55,7 @@ public class NotificationController {
     @Operation(summary = "清空所有通知")
     @DeleteMapping
     public Result<Void> clearAll(Authentication auth) {
-        Long userId = Long.valueOf(auth.getName());
+        Long userId = CurrentUser.id(auth);
         notificationService.clearAll(userId);
         return Result.success();
     }
@@ -62,7 +63,7 @@ public class NotificationController {
     @Operation(summary = "触发系统通知检测生成")
     @PostMapping("/check")
     public Result<Void> checkNotifications(Authentication auth) {
-        Long userId = Long.valueOf(auth.getName());
+        Long userId = CurrentUser.id(auth);
         notificationService.generateSystemNotifications(userId);
         return Result.success();
     }

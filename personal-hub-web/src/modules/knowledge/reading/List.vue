@@ -14,6 +14,7 @@ import { useDeepLinkDialog } from '@/composables/useDeepLinkDialog'
 import { useMainContentFill } from '@/composables/useMainContentFill'
 import { useFillPageSize } from '@/composables/useFillPageSize'
 import { useProductViewMode } from '@/composables/useProductViewMode'
+import { formatDate, formatRelativeUpdated, formatUpdated } from '@/utils/formatTime'
 
 const list = ref<ReadingVO[]>([])
 const total = ref(0)
@@ -127,32 +128,6 @@ function statusMeta(status: number) {
   if (status === 1) return { color: '#409eff', label: '在读', done: false }
   if (status === 2) return { color: '#67c23a', label: '读完', done: true }
   return { color: '#c0c4cc', label: '未读', done: false }
-}
-
-function formatDate(d: string | null) {
-  if (!d) return '—'
-  return d.slice(0, 10)
-}
-
-function formatUpdated(d: string | null | undefined) {
-  if (!d) return '—'
-  const s = d.replace('T', ' ')
-  return s.length >= 16 ? s.slice(0, 16) : s.slice(0, 10)
-}
-
-function formatRelativeUpdated(d: string | null | undefined) {
-  if (!d) return '更新于 —'
-  const t = new Date(d.replace(' ', 'T')).getTime()
-  if (Number.isNaN(t)) return `更新于 ${formatDate(d)}`
-  const diff = Date.now() - t
-  const m = Math.floor(diff / 60000)
-  if (m < 1) return '更新于 刚刚'
-  if (m < 60) return `更新于 ${m} 分钟前`
-  const h = Math.floor(m / 60)
-  if (h < 24) return `更新于 ${h} 小时前`
-  const days = Math.floor(h / 24)
-  if (days < 7) return `更新于 ${days} 天前`
-  return `更新于 ${formatDate(d)}`
 }
 
 function chapterText(book: ReadingVO) {
@@ -352,8 +327,8 @@ const headerSubtitle = computed(() => `共 ${total.value} 本`)
               </span>
               <span v-else class="muted">—</span>
             </div>
-            <div class="col-date cell-date">{{ formatDate(book.startDate) }}</div>
-            <div class="col-date cell-date">{{ formatDate(book.endDate) }}</div>
+            <div class="col-date cell-date">{{ formatDate(book.startDate, '—') }}</div>
+            <div class="col-date cell-date">{{ formatDate(book.endDate, '—') }}</div>
             <div class="col-updated cell-date">{{ formatUpdated(book.updatedAt) }}</div>
             <div class="col-actions" @click.stop>
               <el-dropdown trigger="click" @command="(cmd: string) => onRowAction(cmd, book)">
@@ -468,7 +443,7 @@ const headerSubtitle = computed(() => `共 ${total.value} 本`)
 </template>
 
 <style scoped>
-/* Product Table/Card 主体样式仍本页维护；视图切换见 styles/product-list.css */
+/* 共享 .product-table / .card-grid / 单元格见 styles/product-list.css */
 .plan-page {
   display: flex;
   flex-direction: column;
@@ -503,18 +478,8 @@ const headerSubtitle = computed(() => `共 ${total.value} 本`)
   50% { opacity: 0.5; }
 }
 
-.product-table {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  border: 1px solid var(--border-light);
-  border-radius: 12px;
-  overflow: hidden;
-  background: var(--bg-card);
-}
+/* 本页列宽 */
 .pt-head, .pt-row {
-  display: grid;
   grid-template-columns:
     minmax(160px, 2fr)
     100px
@@ -526,36 +491,9 @@ const headerSubtitle = computed(() => `共 ${total.value} 本`)
     96px
     120px
     48px;
-  align-items: center;
-  column-gap: 12px;
-  padding: 0 16px;
-}
-.pt-head {
-  flex-shrink: 0;
-  height: 36px;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-tertiary);
-  border-bottom: 1px solid var(--border-light);
 }
 .pt-body {
-  flex: 1;
-  min-height: 0;
-  display: grid;
   grid-template-rows: repeat(10, minmax(0, 1fr));
-}
-.pt-row {
-  min-height: 0;
-  height: 100%;
-  cursor: pointer;
-  border-bottom: 1px solid var(--border-light);
-  transition: background 0.15s ease;
-}
-.pt-row:last-child { border-bottom: none; }
-.pt-row:hover:not(.pt-row--pad) { background: var(--bg-hover); }
-.pt-row--pad {
-  cursor: default;
-  pointer-events: none;
 }
 
 .title-cell {
@@ -592,56 +530,10 @@ const headerSubtitle = computed(() => `共 ${total.value} 本`)
   border: 1px solid var(--border-light);
 }
 
-.name-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text-primary);
-  line-height: 1.3;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.cell-text {
-  font-size: 13px;
-  color: var(--text-secondary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.cell-date {
-  font-size: 13px;
-  color: var(--text-secondary);
-  white-space: nowrap;
-}
-.muted { color: var(--text-placeholder); font-size: 13px; }
-
-.status-dot-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  color: var(--text-secondary);
-}
-.status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  display: inline-block;
-  flex-shrink: 0;
-}
-.col-progress :deep(.el-progress__text) {
-  font-size: 12px !important;
-  min-width: 36px;
-}
 .rating-cell {
   display: inline-flex;
   align-items: center;
   gap: 2px;
-}
-.col-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
 }
 .icon-action {
   display: inline-flex;
@@ -658,27 +550,6 @@ const headerSubtitle = computed(() => `共 ${total.value} 本`)
 .icon-action:hover {
   color: var(--text-primary);
   background: var(--bg-hover);
-}
-
-.card-grid {
-  flex: 1;
-  min-height: 0;
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  grid-template-rows: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-@media (max-width: 1100px) {
-  .card-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    grid-template-rows: repeat(3, minmax(0, 1fr));
-  }
-}
-@media (max-width: 720px) {
-  .card-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-rows: repeat(5, minmax(0, 1fr));
-  }
 }
 
 .book-card {

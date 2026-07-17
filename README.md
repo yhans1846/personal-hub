@@ -49,10 +49,9 @@ personal-hub-server/
 ```
 personal-hub-web/src/modules/
 ├── dashboard/       首页仪表盘     8 项统计卡片 + 趋势图
-├── knowledge/       知识模块       笔记 · 日记 · 学习 · 阅读 · 标签
+├── knowledge/       知识模块       笔记 · 日记 · 学习 · 阅读 · 标签 · 分类
 ├── planning/        规划模块       Todo · 学习计划
 ├── resource/        资源模块       收藏夹 · 文件管理
-├── category/        分类管理       笔记 / 收藏夹 / 文件 统一分类
 ├── search/          全局搜索       跨 8 模块全文检索
 ├── stats/           数据统计       ECharts 可视化
 └── system/          系统模块       登录 · 工作台设置

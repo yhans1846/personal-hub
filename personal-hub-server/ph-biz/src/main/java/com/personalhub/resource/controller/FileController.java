@@ -3,6 +3,7 @@ package com.personalhub.resource.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.personalhub.common.result.PageResult;
 import com.personalhub.common.result.Result;
+import com.personalhub.common.util.CurrentUser;
 import com.personalhub.resource.dto.FileQueryDTO;
 import com.personalhub.resource.service.FileResourceService;
 import com.personalhub.resource.vo.FileVO;
@@ -42,7 +43,7 @@ public class FileController {
     public Result<PageResult<FileVO>> list(
             @Parameter(hidden = true) Authentication authentication,
             FileQueryDTO query) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         IPage<FileVO> page = fileResourceService.list(userId, query);
         return Result.success(PageResult.of(page));
     }
@@ -52,7 +53,7 @@ public class FileController {
     public Result<FileVO> getById(
             @Parameter(hidden = true) Authentication authentication,
             @PathVariable Long id) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         return Result.success(fileResourceService.getById(id, userId));
     }
 
@@ -62,7 +63,7 @@ public class FileController {
             @Parameter(hidden = true) Authentication authentication,
             @NotNull @RequestParam("file") MultipartFile file,
             @RequestParam(value = "categoryId", required = false) Long categoryId) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         return Result.success(fileResourceService.upload(userId, file, categoryId));
     }
 
@@ -71,7 +72,7 @@ public class FileController {
     public ResponseEntity<Resource> download(
             @Parameter(hidden = true) Authentication authentication,
             @PathVariable Long id) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         var fileEntity = fileResourceService.getFileResource(id, userId);
         Resource resource = storageService.load(fileEntity.getPath());
 
@@ -90,7 +91,7 @@ public class FileController {
     public ResponseEntity<Resource> preview(
             @Parameter(hidden = true) Authentication authentication,
             @PathVariable Long id) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         var fileEntity = fileResourceService.getFileResource(id, userId);
         Resource resource = storageService.load(fileEntity.getPath());
 
@@ -149,7 +150,7 @@ public class FileController {
     public Result<Void> delete(
             @Parameter(hidden = true) Authentication authentication,
             @PathVariable Long id) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         fileResourceService.delete(id, userId);
         return Result.success();
     }

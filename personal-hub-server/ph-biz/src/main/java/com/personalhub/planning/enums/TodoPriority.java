@@ -1,5 +1,6 @@
 package com.personalhub.planning.enums;
 
+import com.personalhub.common.util.EnumLabels;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -21,14 +22,6 @@ public enum TodoPriority {
      * @return 中文标签；null → null；未知 → 「未知」
      */
     public static String labelOf(Integer code) {
-        if (code == null) {
-            return null;
-        }
-        for (TodoPriority p : values()) {
-            if (p.code == code) {
-                return p.label;
-            }
-        }
-        return "未知";
+        return EnumLabels.labelOf(code, values(), TodoPriority::getCode, TodoPriority::getLabel);
     }
 }

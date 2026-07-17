@@ -1,7 +1,7 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { importMarkdownFile, importMarkdownContent } from '@/modules/knowledge/api'
-import { getCategories } from '@/api/categoryApi'
+import { getCategories } from '@/modules/knowledge/api'
 import { getTags } from '@/modules/knowledge/api'
 import { ElMessage } from 'element-plus'
 import { Upload, FileText, CheckCircle, XCircle, AlertTriangle } from 'lucide-vue-next'

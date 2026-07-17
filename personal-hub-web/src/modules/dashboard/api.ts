@@ -28,14 +28,6 @@ export interface TrendPoint {
   value: number
 }
 
-/** 趋势数据 */
-export interface TrendData {
-  studyTrend: TrendPoint[]
-  noteTrend: TrendPoint[]
-  todoTrend: TrendPoint[]
-  readingTrend: TrendPoint[]
-}
-
 /** 搜索结果条目 */
 export interface SearchItem {
   id: number
@@ -63,11 +55,6 @@ export interface SearchResult {
 /** 获取 Dashboard 统计数据 */
 export function getDashboardStats() {
   return request.get<Result<DashboardStats>>('/dashboard/stats')
-}
-
-/** 获取趋势数据 */
-export function getTrends(days = 30) {
-  return request.get<Result<TrendData>>('/dashboard/trends', { params: { days } })
 }
 
 /** 全局搜索 */

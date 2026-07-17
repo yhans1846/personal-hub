@@ -3,6 +3,7 @@ package com.personalhub.knowledge.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.personalhub.common.result.PageResult;
 import com.personalhub.common.result.Result;
+import com.personalhub.common.util.CurrentUser;
 import com.personalhub.knowledge.dto.DiaryCreateDTO;
 import com.personalhub.knowledge.dto.DiaryQueryDTO;
 import com.personalhub.knowledge.service.DiaryEntryService;
@@ -33,7 +34,7 @@ public class DiaryEntryController {
     public Result<PageResult<DiaryVO>> list(
             @Parameter(hidden = true) Authentication authentication,
             DiaryQueryDTO query) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         IPage<DiaryVO> page = diaryEntryService.list(userId, query);
         return Result.success(PageResult.of(page));
     }
@@ -43,7 +44,7 @@ public class DiaryEntryController {
     public Result<List<DiaryVO>> listByMonth(
             @Parameter(hidden = true) Authentication authentication,
             @RequestParam String month) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         return Result.success(diaryEntryService.listByMonth(userId, month));
     }
 
@@ -52,7 +53,7 @@ public class DiaryEntryController {
     public Result<DiaryVO> getById(
             @Parameter(hidden = true) Authentication authentication,
             @PathVariable Long id) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         return Result.success(diaryEntryService.getById(id, userId));
     }
 
@@ -61,7 +62,7 @@ public class DiaryEntryController {
     public Result<DiaryVO> create(
             @Parameter(hidden = true) Authentication authentication,
             @Valid @RequestBody DiaryCreateDTO dto) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         return Result.success(diaryEntryService.create(userId, dto));
     }
 
@@ -71,7 +72,7 @@ public class DiaryEntryController {
             @Parameter(hidden = true) Authentication authentication,
             @PathVariable Long id,
             @Valid @RequestBody DiaryCreateDTO dto) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         return Result.success(diaryEntryService.update(id, userId, dto));
     }
 
@@ -80,7 +81,7 @@ public class DiaryEntryController {
     public Result<Void> delete(
             @Parameter(hidden = true) Authentication authentication,
             @PathVariable Long id) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         diaryEntryService.delete(id, userId);
         return Result.success();
     }

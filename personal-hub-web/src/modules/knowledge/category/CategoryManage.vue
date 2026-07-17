@@ -1,6 +1,6 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed, watch, nextTick } from 'vue'
-import { getCategories, createCategory, updateCategory, deleteCategory, batchUpdateCategorySort } from '@/api/categoryApi'
+import { getCategories, createCategory, updateCategory, deleteCategory, batchUpdateCategorySort } from '@/modules/knowledge/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Pencil, Trash2, FolderOpen, Folder, Bookmark, GripVertical, Search, ArrowUpDown } from 'lucide-vue-next'
 import Sortable from 'sortablejs'
@@ -8,6 +8,7 @@ import { PageHeader, EmptyState, ListToolbar } from '@/components'
 import { UiDialog, UiInput, UiButton } from '@/components/ui'
 import type { CategoryVO } from '@/types/category'
 import CategoryStatsCards from './CategoryStatsCards.vue'
+import { formatDate } from '@/utils/formatTime'
 
 // ============ 状态 ============
 const activeType = ref<'note' | 'bookmark' | 'file'>('note')
@@ -161,11 +162,6 @@ async function handleDelete(id: number) {
 
 function toggleSortDir() {
   sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc'
-}
-
-function formatDate(dateStr?: string) {
-  if (!dateStr) return ''
-  return dateStr.slice(0, 10)
 }
 
 function getTypeIcon(type: string) {

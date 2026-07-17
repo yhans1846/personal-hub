@@ -1,6 +1,7 @@
 package com.personalhub.resource.controller;
 
 import com.personalhub.common.result.Result;
+import com.personalhub.common.util.CurrentUser;
 import com.personalhub.resource.service.NoteFileService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -32,7 +33,7 @@ public class NoteFileController {
             @Parameter(hidden = true) Authentication authentication,
             @PathVariable Long noteId,
             @RequestParam("file") MultipartFile file) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         return Result.success(noteFileService.uploadImage(noteId, userId, file));
     }
 
@@ -42,7 +43,7 @@ public class NoteFileController {
             @Parameter(hidden = true) Authentication authentication,
             @PathVariable Long noteId,
             @RequestParam("file") MultipartFile file) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         return Result.success(noteFileService.uploadAttachment(noteId, userId, file));
     }
 
@@ -52,7 +53,7 @@ public class NoteFileController {
             @Parameter(hidden = true) Authentication authentication,
             @PathVariable Long noteId,
             @PathVariable String filename) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         Resource resource = noteFileService.load(noteId, userId, "images", filename);
         return ResponseEntity.ok()
                 .contentType(MediaType.IMAGE_PNG)
@@ -65,7 +66,7 @@ public class NoteFileController {
             @Parameter(hidden = true) Authentication authentication,
             @PathVariable Long noteId,
             @PathVariable String filename) {
-        Long userId = Long.valueOf(authentication.getName());
+        Long userId = CurrentUser.id(authentication);
         Resource resource = noteFileService.load(noteId, userId, "attachments", filename);
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)

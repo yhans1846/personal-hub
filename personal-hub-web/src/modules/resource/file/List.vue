@@ -1,8 +1,8 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getFileList, uploadFile, deleteFile, getFileDownloadUrl } from '@/modules/resource/api'
-import { getCategories } from '@/api/categoryApi'
+import { getCategories } from '@/modules/knowledge/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Upload, FileIcon, ImageIcon, FileText, Archive, Download, Trash2 } from 'lucide-vue-next'
 import type { FileVO, FileQuery } from '@/types/file'
