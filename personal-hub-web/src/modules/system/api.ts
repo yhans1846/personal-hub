@@ -22,7 +22,6 @@ export function getCaptcha() {
   return request.get<Result<{
     captchaId: string
     slotCount: number
-    emptyIndex: number
     shelfBooks: string[]
     dragBook: string
   }>>('/auth/captcha')

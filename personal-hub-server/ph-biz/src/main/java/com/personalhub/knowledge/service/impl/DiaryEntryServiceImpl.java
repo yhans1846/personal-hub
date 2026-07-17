@@ -1,9 +1,10 @@
 package com.personalhub.knowledge.service.impl;
 
+import com.personalhub.common.exception.BusinessException;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.personalhub.common.exception.NotFoundException;
 import com.personalhub.common.util.EntityGuard;
 import com.personalhub.knowledge.dto.DiaryCreateDTO;
 import com.personalhub.knowledge.dto.DiaryQueryDTO;
@@ -72,7 +73,7 @@ public class DiaryEntryServiceImpl implements DiaryEntryService {
     @Override
     public List<DiaryVO> listByMonth(Long userId, String month) {
         if (!StringUtils.hasText(month) || !month.matches("\\d{4}-\\d{2}")) {
-            throw new IllegalArgumentException("月份格式错误，应为 YYYY-MM");
+            throw new BusinessException("月份格式错误，应为 YYYY-MM");
         }
         String[] parts = month.split("-");
         int year = Integer.parseInt(parts[0]);

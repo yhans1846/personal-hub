@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLConnection;
@@ -63,8 +64,17 @@ public class ResourceResolver {
             URLConnection conn = uri.toURL().openConnection();
             conn.setConnectTimeout(10000);
             conn.setReadTimeout(15000);
-            byte[] data = conn.getInputStream().readAllBytes();
-            String contentType = conn.getContentType();
+            conn.setRequestProperty("User-Agent", "PersonalHub/1.0");
+            String contentType;
+            byte[] data;
+            try (InputStream in = conn.getInputStream()) {
+                data = in.readAllBytes();
+                contentType = conn.getContentType();
+            }
+            // 限制单文件 20MB，避免 OOM
+            if (data.length > 20 * 1024 * 1024) {
+                return ResolveResult.fail(ref, "远程资源过大（超过 20MB）");
+            }
             String ext = detectExtension(ref, contentType);
             return ResolveResult.success(ref, data, ext);
         } catch (IOException | URISyntaxException e) {

@@ -13,9 +13,11 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.InvalidMediaTypeException;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -33,6 +35,7 @@ import java.util.concurrent.TimeUnit;
 @RestController
 @RequestMapping("/api/files")
 @RequiredArgsConstructor
+@Slf4j
 public class FileController {
 
     private final FileResourceService fileResourceService;
@@ -99,7 +102,8 @@ public class FileController {
         if (fileEntity.getMimeType() != null) {
             try {
                 mediaType = MediaType.parseMediaType(fileEntity.getMimeType());
-            } catch (Exception ignored) {
+            } catch (InvalidMediaTypeException e) {
+                log.debug("无法解析 MIME 类型，回退 octet-stream: {}", fileEntity.getMimeType());
             }
         }
 

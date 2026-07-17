@@ -1,5 +1,7 @@
 package com.personalhub.system.controller;
 
+import com.personalhub.common.exception.BusinessException;
+
 import com.personalhub.common.result.Result;
 import com.personalhub.common.util.CurrentUser;
 import com.personalhub.system.dto.UserProfileUpdateDTO;
@@ -57,7 +59,7 @@ public class UserController {
         Long userId = CurrentUser.id(auth);
 
         if (file.isEmpty()) {
-            throw new IllegalArgumentException("上传文件不能为空");
+            throw new BusinessException("上传文件不能为空");
         }
 
         String originalName = file.getOriginalFilename();
@@ -67,10 +69,10 @@ public class UserController {
             if (dot > 0) ext = originalName.substring(dot + 1).toLowerCase();
         }
         if (!ALLOWED_EXT.contains(ext)) {
-            throw new IllegalArgumentException("仅支持 JPG/PNG/GIF/WebP 格式");
+            throw new BusinessException("仅支持 JPG/PNG/GIF/WebP 格式");
         }
         if (file.getSize() > MAX_AVATAR_SIZE) {
-            throw new IllegalArgumentException("头像文件不能超过 5MB");
+            throw new BusinessException("头像文件不能超过 5MB");
         }
 
         String storedName = UUID.randomUUID().toString().replace("-", "") + "." + ext;

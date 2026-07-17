@@ -1,5 +1,7 @@
 package com.personalhub.knowledge.imports;
 
+import com.personalhub.common.exception.BusinessException;
+
 import com.personalhub.knowledge.dto.NoteCreateDTO;
 import com.personalhub.knowledge.imports.ResourceResolver.ResolveResult;
 import com.personalhub.knowledge.service.NoteService;
@@ -181,7 +183,7 @@ public class ImportService {
             }
             return sb.toString();
         } catch (Exception e) {
-            throw new RuntimeException("读取 Markdown 文件失败", e);
+            throw new BusinessException("读取 Markdown 文件失败", e);
         }
     }
 

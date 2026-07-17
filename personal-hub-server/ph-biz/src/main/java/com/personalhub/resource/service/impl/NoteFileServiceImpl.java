@@ -1,6 +1,7 @@
 package com.personalhub.resource.service.impl;
 
-import com.personalhub.common.exception.NotFoundException;
+import com.personalhub.common.exception.BusinessException;
+
 import com.personalhub.common.util.EntityGuard;
 import com.personalhub.knowledge.entity.Note;
 import com.personalhub.knowledge.mapper.NoteMapper;
@@ -39,10 +40,10 @@ public class NoteFileServiceImpl implements NoteFileService {
 
     private void validateFile(MultipartFile file) {
         if (file.isEmpty()) {
-            throw new IllegalArgumentException("上传文件不能为空");
+            throw new BusinessException("上传文件不能为空");
         }
         if (file.getSize() > storageProperties.getMaxSize()) {
-            throw new IllegalArgumentException("文件大小超过限制（最大 50MB）");
+            throw new BusinessException("文件大小超过限制（最大 50MB）");
         }
     }
 

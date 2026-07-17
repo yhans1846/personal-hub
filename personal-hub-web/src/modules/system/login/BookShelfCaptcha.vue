@@ -46,8 +46,8 @@ async function load() {
     const res = await getCaptcha()
     const data = res.data.data
     captchaId.value = data.captchaId
-    emptyIndex.value = data.emptyIndex
     shelfBooks.value = data.shelfBooks
+    emptyIndex.value = data.shelfBooks.findIndex((b) => !b)
     dragBook.value = data.dragBook
     slotRefs.value = Array.from({ length: data.slotCount }, () => null)
   } catch {

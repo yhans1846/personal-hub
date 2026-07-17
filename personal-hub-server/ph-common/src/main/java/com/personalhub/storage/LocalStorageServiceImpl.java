@@ -1,5 +1,6 @@
 package com.personalhub.storage;
 
+import com.personalhub.common.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.FileSystemResource;
@@ -39,7 +40,7 @@ public class LocalStorageServiceImpl implements StorageService {
             log.debug("文件存储成功: {}", relativePath);
             return relativePath;
         } catch (IOException e) {
-            throw new RuntimeException("文件存储失败: " + relativePath, e);
+            throw new BusinessException("文件存储失败: " + relativePath, e);
         }
     }
 
@@ -52,7 +53,7 @@ public class LocalStorageServiceImpl implements StorageService {
             log.debug("文件字节存储成功: {}", relativePath);
             return relativePath;
         } catch (IOException e) {
-            throw new RuntimeException("文件字节存储失败: " + relativePath, e);
+            throw new BusinessException("文件字节存储失败: " + relativePath, e);
         }
     }
 
@@ -60,7 +61,7 @@ public class LocalStorageServiceImpl implements StorageService {
     public Resource load(String relativePath) {
         Path targetPath = resolve(relativePath);
         if (!Files.exists(targetPath)) {
-            throw new RuntimeException("文件不存在: " + relativePath);
+            throw new BusinessException("文件不存在: " + relativePath);
         }
         return new FileSystemResource(targetPath);
     }
@@ -73,7 +74,11 @@ public class LocalStorageServiceImpl implements StorageService {
                 try (var files = Files.walk(targetPath)) {
                     files.sorted(Comparator.reverseOrder())
                             .forEach(p -> {
-                                try { Files.deleteIfExists(p); } catch (IOException ignored) {}
+                                try {
+                                    Files.deleteIfExists(p);
+                                } catch (IOException e) {
+                                    log.debug("删除路径失败: {}", p, e);
+                                }
                             });
                 }
             } else {
@@ -98,7 +103,7 @@ public class LocalStorageServiceImpl implements StorageService {
             Files.writeString(targetPath, content, StandardCharsets.UTF_8);
             log.debug("文本写入成功: {}", relativePath);
         } catch (IOException e) {
-            throw new RuntimeException("文本写入失败: " + relativePath, e);
+            throw new BusinessException("文本写入失败: " + relativePath, e);
         }
     }
 
@@ -108,7 +113,7 @@ public class LocalStorageServiceImpl implements StorageService {
             Path targetPath = resolve(relativePath);
             return Files.readString(targetPath, StandardCharsets.UTF_8);
         } catch (IOException e) {
-            throw new RuntimeException("文本读取失败: " + relativePath, e);
+            throw new BusinessException("文本读取失败: " + relativePath, e);
         }
     }
 
@@ -121,7 +126,7 @@ public class LocalStorageServiceImpl implements StorageService {
             Files.move(source, target, StandardCopyOption.REPLACE_EXISTING);
             log.debug("文件移动成功: {} -> {}", sourcePath, targetPath);
         } catch (IOException e) {
-            throw new RuntimeException("文件移动失败: " + sourcePath + " -> " + targetPath, e);
+            throw new BusinessException("文件移动失败: " + sourcePath + " -> " + targetPath, e);
         }
     }
 
@@ -134,7 +139,7 @@ public class LocalStorageServiceImpl implements StorageService {
             Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
             log.debug("文件复制成功: {} -> {}", sourcePath, targetPath);
         } catch (IOException e) {
-            throw new RuntimeException("文件复制失败: " + sourcePath + " -> " + targetPath, e);
+            throw new BusinessException("文件复制失败: " + sourcePath + " -> " + targetPath, e);
         }
     }
 

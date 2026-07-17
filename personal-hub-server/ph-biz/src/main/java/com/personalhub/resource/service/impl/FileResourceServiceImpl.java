@@ -1,9 +1,10 @@
 package com.personalhub.resource.service.impl;
 
+import com.personalhub.common.exception.BusinessException;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.personalhub.common.exception.NotFoundException;
 import com.personalhub.common.util.EntityGuard;
 import com.personalhub.resource.dto.FileQueryDTO;
 import com.personalhub.knowledge.service.CategoryService;
@@ -93,10 +94,10 @@ public class FileResourceServiceImpl implements FileResourceService {
     @Transactional
     public FileVO upload(Long userId, MultipartFile multipartFile, Long categoryId) {
         if (multipartFile.isEmpty()) {
-            throw new IllegalArgumentException("上传文件不能为空");
+            throw new BusinessException("上传文件不能为空");
         }
         if (multipartFile.getSize() > storageProperties.getMaxSize()) {
-            throw new IllegalArgumentException("文件大小超过限制（最大 50MB）");
+            throw new BusinessException("文件大小超过限制（最大 50MB）");
         }
 
         String originalName = multipartFile.getOriginalFilename();

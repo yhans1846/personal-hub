@@ -5,6 +5,7 @@
 ## [Unreleased]
 
 ### 2026-07-17
+- **后端规约**：Flags 常量；toggleFavorite NPE；流关闭；空 catch；PageParam `@Max(100)`；BusinessException 统一；markAsRead 空列表；验证码不下发 emptyIndex；`NoteServiceImpl` 分类关联 SQL 迁入 Mapper；踩坑点写入 `STYLE_GUIDE`（跳过实体 isXxx 重命名）
 - **治理（V2 标准档）**：删死代码/空 SQL/无用资源；`formatTime`+`CurrentUser`+`EnumLabels`+product-list/stats-row CSS DRY；`category` 迁入 `knowledge`；系统 API 归位；STYLE_GUIDE/PROJECT/README/API 对齐；`docs/superpowers` 归档说明
 - **文档**：八份主文档各司其职减重；`LIST/PREVIEW_PAGE_SPEC` → `PAGE_SPEC`；`DATABASE`/`init.sql` 对齐库（sys_user 资料字段、todo.completed_at）
 - **登录**：产品化分屏 + 书架归位验证码；三步流（账号→Loading→安全验证）；问候/时钟/每日一句/柔光水印

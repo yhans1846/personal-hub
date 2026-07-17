@@ -3,7 +3,7 @@ package com.personalhub.planning.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.personalhub.common.exception.NotFoundException;
+import com.personalhub.common.constant.Flags;
 import com.personalhub.common.util.EntityGuard;
 import com.personalhub.planning.dto.TodoCreateDTO;
 import com.personalhub.planning.dto.TodoQueryDTO;
@@ -44,24 +44,24 @@ public class TodoTaskServiceImpl implements TodoTaskService {
         }
         // 完成状态筛选
         if (query.getIsDone() != null) {
-            wrapper.eq(TodoTask::getIsDone, query.getIsDone() ? 1 : 0);
+            wrapper.eq(TodoTask::getIsDone, query.getIsDone() ? Flags.YES : Flags.NO);
         }
 
         String scope = query.getDueScope();
         if (StringUtils.hasText(scope) && !"all".equalsIgnoreCase(scope)) {
             LocalDate today = LocalDate.now();
             switch (scope.toLowerCase()) {
-                case "done" -> wrapper.eq(TodoTask::getIsDone, 1);
-                case "overdue" -> wrapper.eq(TodoTask::getIsDone, 0)
+                case "done" -> wrapper.eq(TodoTask::getIsDone, Flags.YES);
+                case "overdue" -> wrapper.eq(TodoTask::getIsDone, Flags.NO)
                         .isNotNull(TodoTask::getDueDate)
                         .lt(TodoTask::getDueDate, today);
-                case "today" -> wrapper.eq(TodoTask::getIsDone, 0)
+                case "today" -> wrapper.eq(TodoTask::getIsDone, Flags.NO)
                         .eq(TodoTask::getDueDate, today);
-                case "week" -> wrapper.eq(TodoTask::getIsDone, 0)
+                case "week" -> wrapper.eq(TodoTask::getIsDone, Flags.NO)
                         .isNotNull(TodoTask::getDueDate)
                         .gt(TodoTask::getDueDate, today)
                         .le(TodoTask::getDueDate, today.plusDays(7));
-                case "later" -> wrapper.eq(TodoTask::getIsDone, 0)
+                case "later" -> wrapper.eq(TodoTask::getIsDone, Flags.NO)
                         .and(w -> w.isNull(TodoTask::getDueDate)
                                 .or()
                                 .gt(TodoTask::getDueDate, today.plusDays(7)));
@@ -129,8 +129,8 @@ public class TodoTaskServiceImpl implements TodoTaskService {
     public TodoVO toggleDone(Long id, Long userId) {
         TodoTask task = EntityGuard.requireOwned(
                 todoTaskMapper.selectById(id), userId, TodoTask::getUserId, "任务不存在");
-        task.setIsDone(task.getIsDone() == null || task.getIsDone() == 0 ? 1 : 0);
-        if (task.getIsDone() == 1) {
+        task.setIsDone(Integer.valueOf(Flags.YES).equals(task.getIsDone()) ? Flags.NO : Flags.YES);
+        if (Integer.valueOf(Flags.YES).equals(task.getIsDone())) {
             task.setCompletedAt(java.time.LocalDateTime.now());
         } else {
             task.setCompletedAt(null);
@@ -144,7 +144,7 @@ public class TodoTaskServiceImpl implements TodoTaskService {
     public java.util.List<TodoVO> today(Long userId) {
         LambdaQueryWrapper<TodoTask> w = new LambdaQueryWrapper<>();
         w.eq(TodoTask::getUserId, userId);
-        w.eq(TodoTask::getIsDone, 0);
+        w.eq(TodoTask::getIsDone, Flags.NO);
         w.eq(TodoTask::getDueDate, java.time.LocalDate.now());
         w.orderByAsc(TodoTask::getPriority);
         return todoTaskMapper.selectList(w).stream().map(TodoVO::from).toList();

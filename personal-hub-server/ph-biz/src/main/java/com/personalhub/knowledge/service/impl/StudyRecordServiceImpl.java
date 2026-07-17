@@ -3,7 +3,6 @@ package com.personalhub.knowledge.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.personalhub.common.exception.NotFoundException;
 import com.personalhub.common.util.EntityGuard;
 import com.personalhub.knowledge.dto.StudyRecordCreateDTO;
 import com.personalhub.knowledge.dto.StudyRecordQueryDTO;

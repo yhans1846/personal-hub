@@ -18,15 +18,35 @@
 | Swagger | Controller `@Tag`+`@Operation`；DTO/VO `@Schema`；Auth 参数 `hidden` |
 | 分页 | 查询 DTO 继承 `PageParam` |
 | 返回码 | 用 `ResultCode` 枚举，禁硬编码数字 |
+| 标志位 | 0/1 用 `Flags.YES` / `Flags.NO`，禁魔法数字 |
 | 日志 | 增删改 info；权限/业务 warn；未知 error+堆栈；过滤器 debug |
 | 状态文案 | 模块 `enums` + `labelOf`，禁 VO/Service 内嵌业务 switch |
 | 归属 | `EntityGuard.requireOwned(...)` |
 | Entity | `@Data`+`@Builder`+无参/全参；初值 `@Builder.Default`；create 用 builder，update 用 setter |
 | 分层 | Controller 校验返回 · Service 业务 · Mapper · DTO/VO/Entity 不外露 |
-| SQL | 简单 MP；联表/聚合进 `mapper.xml`，禁 Service 拼 SQL |
+| SQL | 简单 MP；联表/聚合进 `mapper.xml`，禁 Service 拼 SQL / `JdbcTemplate` 硬编码 |
 | 时间 | `LocalDateTime` |
 
 命名：包小写 · 类 Pascal · 方法 camel · 表字段 snake · `XxxDTO/VO`。
+
+### 后端踩坑点（对照阿里手册 · 已踩过）
+
+| 坑 | 正确做法 |
+|----|----------|
+| `Integer == 1` 自动拆箱 | 用 `Integer.valueOf(Flags.YES).equals(x)` 或 `Objects.equals` |
+| `entity.getUserId().equals(userId)` | 用 `EntityGuard.requireOwned` / `Objects.equals` |
+| `getInputStream().readAllBytes()` 不关流 | `try (InputStream in = …)`；远端下载加体积上限 |
+| `catch (Exception ignored) {}` | 收窄类型并打日志；禁止空 catch |
+| `@Transactional` 内 broad catch | 失败应回滚或按用户隔离；勿吞掉后部分提交 |
+| 分页只有 `@Min` | `PageParam` 必须 `@Max(100)`（`MAX_PAGE_SIZE`） |
+| `throw new RuntimeException` / 未处理的 `IllegalArgumentException` | 业务用 `BusinessException`；全局已映射 `IllegalArgumentException`→400 |
+| 魔法 `0`/`1` | `Flags.YES` / `Flags.NO` |
+| `markAsRead(ids)` 空列表进 `.in()` | 空/null 直接 return |
+| 验证码把答案字段下发客户端 | 书架验证码不下发 `emptyIndex`，由 `shelfBooks` 空串推导；答案只存 Redis |
+| Service 内 `JdbcTemplate` / 字符串 SQL | 迁入对应 `Mapper` + `mapper.xml`（`#{}`）；禁在 Service 拼 SQL |
+| 实体字段 `isDeleted` 等 | **存量保留**（改名成本高）；新字段勿用 `is` 前缀，用 `@TableField("is_xxx")` 映射列名 |
+
+完整手册正文见 `docs/alibaba-java-specification.md`（参考，非日常 SSOT）。
 
 ---
 

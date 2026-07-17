@@ -57,7 +57,6 @@ public class CaptchaService {
         return CaptchaVO.builder()
                 .captchaId(id)
                 .slotCount(SLOT_COUNT)
-                .emptyIndex(emptyIndex)
                 .shelfBooks(shelf)
                 .dragBook(dragBook)
                 .build();

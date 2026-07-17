@@ -1,6 +1,7 @@
 package com.personalhub.common.result;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.Getter;
 import lombok.Setter;
@@ -15,13 +16,17 @@ import lombok.Setter;
 @Setter
 public class PageParam {
 
+    public static final int DEFAULT_PAGE_SIZE = 10;
+    public static final int MAX_PAGE_SIZE = 100;
+
     @Schema(description = "页码", example = "1")
     @Min(value = 1, message = "页码最小为 1")
     private int page = 1;
 
     @Schema(description = "每页条数", example = "10")
     @Min(value = 1, message = "每页条数最小为 1")
-    private int size = 10;
+    @Max(value = MAX_PAGE_SIZE, message = "每页条数最大为 " + MAX_PAGE_SIZE)
+    private int size = DEFAULT_PAGE_SIZE;
 
     /**
      * MyBatis-Plus 分页偏移量（从 0 开始）

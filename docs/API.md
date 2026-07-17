@@ -21,7 +21,7 @@
 | POST | /login | 否 |
 | POST | /logout | 是 |
 
-captcha → `{captchaId,slotCount,emptyIndex,shelfBooks,dragBook}`  
+captcha → `{captchaId,slotCount,shelfBooks,dragBook}`（空位由 `shelfBooks` 空串推导，不下发 emptyIndex）  
 check / login 带 `captchaId`+`sliderX`（槽位下标）；TTL 120s，一次性。  
 login → `{token,user:{id,username,nickname,avatar}}`
 

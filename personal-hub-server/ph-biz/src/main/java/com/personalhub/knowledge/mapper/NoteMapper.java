@@ -28,4 +28,10 @@ public interface NoteMapper extends BaseMapper<Note> {
 
     /** 分页查询回收站（已删除笔记，按删除时间倒序） */
     IPage<Note> selectRecyclePage(Page<?> page, @Param("userId") Long userId, @Param("query") NoteQueryDTO query);
+
+    /** 按笔记删除分类关联 */
+    void deleteCategoryRelsByNoteId(@Param("noteId") Long noteId);
+
+    /** 批量插入笔记-分类关联 */
+    void insertCategoryRels(@Param("noteId") Long noteId, @Param("categoryIds") List<Long> categoryIds);
 }

@@ -18,10 +18,7 @@ public class CaptchaVO {
     @Schema(description = "书架格数")
     private int slotCount;
 
-    @Schema(description = "空位下标（从 0 开始）")
-    private int emptyIndex;
-
-    @Schema(description = "书架上已有书本 emoji")
+    @Schema(description = "书架上已有书本 emoji（空串表示空位）")
     private java.util.List<String> shelfBooks;
 
     @Schema(description = "待归位书本 emoji")

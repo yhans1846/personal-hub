@@ -17,6 +17,7 @@ import com.personalhub.resource.entity.FileResource;
 import com.personalhub.resource.mapper.FileResourceMapper;
 import com.personalhub.knowledge.entity.DiaryEntry;
 import com.personalhub.knowledge.mapper.DiaryEntryMapper;
+import com.personalhub.common.constant.Flags;
 import com.personalhub.knowledge.entity.Note;
 import com.personalhub.knowledge.mapper.NoteMapper;
 import com.personalhub.knowledge.entity.ReadingRecord;
@@ -34,15 +35,11 @@ import org.springframework.stereotype.Service;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -78,8 +75,8 @@ public class DashboardServiceImpl implements DashboardService {
 
         // 待办
         stats.setTodoTotal(countTodos(userId, null));
-        stats.setTodoDone(countTodos(userId, 1));
-        stats.setTodoPending(countTodos(userId, 0));
+        stats.setTodoDone(countTodos(userId, Flags.YES));
+        stats.setTodoPending(countTodos(userId, Flags.NO));
         stats.setTodoOverdue(countOverdueTodos(userId));
 
         // 文件
@@ -201,9 +198,9 @@ public class DashboardServiceImpl implements DashboardService {
         // ========== 1. KPI 数据 ==========
         long noteCount = countNotes(userId);
         long readingMinutes = sumReadingDuration(userId);
-        long todoDone = countTodos(userId, 1);
+        long todoDone = countTodos(userId, Flags.YES);
         long todoTotal = countTodos(userId, null);
-        long todoPend = countTodos(userId, 0);
+        long todoPend = countTodos(userId, Flags.NO);
         long todoOver = countOverdueTodos(userId);
 
         vo.setNoteCount(noteCount);
@@ -476,7 +473,7 @@ public class DashboardServiceImpl implements DashboardService {
         return noteMapper.selectCount(
                 new LambdaQueryWrapper<Note>()
                         .eq(Note::getUserId, userId)
-                        .eq(Note::getIsDeleted, 0));
+                        .eq(Note::getIsDeleted, Flags.NO));
     }
 
     private Long countStudies(Long userId) {
@@ -514,7 +511,7 @@ public class DashboardServiceImpl implements DashboardService {
         return todoTaskMapper.selectCount(
                 new LambdaQueryWrapper<TodoTask>()
                         .eq(TodoTask::getUserId, userId)
-                        .eq(TodoTask::getIsDone, 0)
+                        .eq(TodoTask::getIsDone, Flags.NO)
                         .lt(TodoTask::getDueDate, LocalDate.now()));
     }
 

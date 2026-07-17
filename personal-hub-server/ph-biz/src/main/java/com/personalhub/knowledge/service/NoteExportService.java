@@ -1,6 +1,8 @@
 package com.personalhub.knowledge.service;
 
+import com.personalhub.common.exception.BusinessException;
 import com.personalhub.common.exception.NotFoundException;
+import com.personalhub.common.util.EntityGuard;
 import com.personalhub.knowledge.entity.Note;
 import com.personalhub.knowledge.mapper.NoteMapper;
 import com.personalhub.storage.StorageService;
@@ -10,6 +12,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -26,10 +29,8 @@ public class NoteExportService {
     private final StorageService storageService;
 
     public byte[] exportNote(Long noteId, Long userId) {
-        Note note = noteMapper.selectById(noteId);
-        if (note == null || !note.getUserId().equals(userId)) {
-            throw new NotFoundException("笔记不存在");
-        }
+        Note note = EntityGuard.requireOwned(
+                noteMapper.selectById(noteId), userId, Note::getUserId, "笔记不存在");
 
         String noteDir = "notes/" + noteId;
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -41,19 +42,18 @@ public class NoteExportService {
                 mdContent = storageService.read(mdFilePath);
             }
 
-            // 写入 note.md（使用标题作为文件名）
             String mdFileName = sanitizeFileName(note.getTitle()) + ".md";
             zos.putNextEntry(new ZipEntry(mdFileName));
             zos.write(mdContent.getBytes(StandardCharsets.UTF_8));
             zos.closeEntry();
 
-            // 写入 images/
             addToZip(zos, noteDir + "/images/", "images/");
-            // 写入 attachments/
             addToZip(zos, noteDir + "/attachments/", "attachments/");
 
+        } catch (BusinessException | NotFoundException e) {
+            throw e;
         } catch (Exception e) {
-            throw new RuntimeException("笔记导出失败", e);
+            throw new BusinessException("笔记导出失败");
         }
 
         return baos.toByteArray();
@@ -64,10 +64,12 @@ public class NoteExportService {
         for (String name : files) {
             try {
                 Resource resource = storageService.load(dirPath + "/" + name);
-                byte[] data = resource.getInputStream().readAllBytes();
-                zos.putNextEntry(new ZipEntry(prefix + name));
-                zos.write(data);
-                zos.closeEntry();
+                try (InputStream in = resource.getInputStream()) {
+                    byte[] data = in.readAllBytes();
+                    zos.putNextEntry(new ZipEntry(prefix + name));
+                    zos.write(data);
+                    zos.closeEntry();
+                }
             } catch (Exception e) {
                 log.warn("导出文件失败: {}/{}", dirPath, name, e);
             }

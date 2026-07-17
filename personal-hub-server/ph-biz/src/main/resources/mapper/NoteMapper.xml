@@ -62,4 +62,17 @@
         </if>
     </select>
 
+    <!-- 按笔记删除分类关联 -->
+    <delete id="deleteCategoryRelsByNoteId">
+        DELETE FROM note_category_rel WHERE note_id = #{noteId}
+    </delete>
+
+    <!-- 批量插入笔记-分类关联 -->
+    <insert id="insertCategoryRels">
+        INSERT INTO note_category_rel (note_id, category_id) VALUES
+        <foreach collection="categoryIds" item="cid" separator=",">
+            (#{noteId}, #{cid})
+        </foreach>
+    </insert>
+
 </mapper>

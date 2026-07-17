@@ -1,7 +1,6 @@
 package com.personalhub.common.exception;
 
 import com.personalhub.common.result.Result;
-import com.personalhub.common.result.ResultCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.FieldError;
@@ -58,6 +57,16 @@ public class GlobalExceptionHandler {
     public Result<Void> handleNotFound(NotFoundException e) {
         log.warn("资源不存在: {}", e.getMessage());
         return Result.notFound(e.getMessage());
+    }
+
+    /**
+     * 非法参数（业务侧参数错误）
+     */
+    @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Result<Void> handleIllegalArgument(IllegalArgumentException e) {
+        log.warn("参数错误: {}", e.getMessage());
+        return Result.badRequest(e.getMessage());
     }
 
     /**

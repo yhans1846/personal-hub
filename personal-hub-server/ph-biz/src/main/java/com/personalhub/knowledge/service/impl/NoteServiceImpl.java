@@ -3,6 +3,7 @@ package com.personalhub.knowledge.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.personalhub.common.constant.Flags;
 import com.personalhub.common.exception.NotFoundException;
 import com.personalhub.common.util.EntityGuard;
 import com.personalhub.knowledge.dto.NoteCreateDTO;
@@ -18,7 +19,6 @@ import com.personalhub.system.service.AuditLogService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,7 +42,6 @@ public class NoteServiceImpl implements NoteService {
 
     private final NoteMapper noteMapper;
     private final TagService tagService;
-    private final JdbcTemplate jdbcTemplate;
     private final StorageService storageService;
     private final AuditLogService auditLogService;
 
@@ -57,7 +56,7 @@ public class NoteServiceImpl implements NoteService {
     public NoteVO getById(Long id, Long userId) {
         Note note = EntityGuard.requireOwned(
                 noteMapper.selectById(id), userId, Note::getUserId, "笔记不存在");
-        if (Integer.valueOf(1).equals(note.getIsDeleted())) {
+        if (Integer.valueOf(Flags.YES).equals(note.getIsDeleted())) {
             log.warn("笔记不存在或无权访问: id={}, userId={}", id, userId);
             throw new NotFoundException("笔记不存在");
         }
@@ -99,7 +98,7 @@ public class NoteServiceImpl implements NoteService {
     public NoteVO update(Long id, Long userId, NoteCreateDTO dto) {
         Note note = EntityGuard.requireOwned(
                 noteMapper.selectById(id), userId, Note::getUserId, "笔记不存在");
-        if (Integer.valueOf(1).equals(note.getIsDeleted())) {
+        if (Integer.valueOf(Flags.YES).equals(note.getIsDeleted())) {
             log.warn("编辑笔记不存在或无权访问: id={}, userId={}", id, userId);
             throw new NotFoundException("笔记不存在");
         }
@@ -115,7 +114,7 @@ public class NoteServiceImpl implements NoteService {
 
         log.info("编辑笔记: id={}, userId={}", id, userId);
 
-        jdbcTemplate.update("DELETE FROM note_category_rel WHERE note_id = ?", id);
+        noteMapper.deleteCategoryRelsByNoteId(id);
         saveCategoryRels(id, dto.getCategoryIds());
         tagService.bindTags(id, "note", dto.getTagIds());
 
@@ -129,7 +128,7 @@ public class NoteServiceImpl implements NoteService {
         Note note = EntityGuard.requireOwned(
                 noteMapper.selectById(id), userId, Note::getUserId, "笔记不存在");
         LocalDateTime now = LocalDateTime.now();
-        note.setIsDeleted(1);
+        note.setIsDeleted(Flags.YES);
         note.setDeletedAt(now);
         note.setDeleteReason("USER_DELETE");
         noteMapper.updateById(note);
@@ -145,7 +144,7 @@ public class NoteServiceImpl implements NoteService {
                 noteMapper.selectById(id), userId, Note::getUserId, "笔记不存在");
         noteMapper.update(null, new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<Note>()
                 .eq(Note::getId, id)
-                .set(Note::getIsDeleted, 0)
+                .set(Note::getIsDeleted, Flags.NO)
                 .set(Note::getDeletedAt, null)
                 .set(Note::getDeleteReason, null));
         auditLogService.log("NOTE", id, "RESTORE",
@@ -158,7 +157,7 @@ public class NoteServiceImpl implements NoteService {
     public void permanentDelete(Long id, Long userId) {
         Note note = EntityGuard.requireOwned(
                 noteMapper.selectById(id), userId, Note::getUserId, "笔记不存在");
-        jdbcTemplate.update("DELETE FROM note_category_rel WHERE note_id = ?", id);
+        noteMapper.deleteCategoryRelsByNoteId(id);
         tagService.unbindAll("note", id);
         if (note.getMdPath() != null) {
             String noteDir = note.getMdPath().substring(0, note.getMdPath().indexOf("/note.md"));
@@ -172,11 +171,11 @@ public class NoteServiceImpl implements NoteService {
     public void toggleFavorite(Long id, Long userId) {
         Note note = EntityGuard.requireOwned(
                 noteMapper.selectById(id), userId, Note::getUserId, "笔记不存在");
-        if (Integer.valueOf(1).equals(note.getIsDeleted())) {
+        if (Integer.valueOf(Flags.YES).equals(note.getIsDeleted())) {
             log.warn("切换收藏笔记不存在或无权访问: id={}, userId={}", id, userId);
             throw new NotFoundException("笔记不存在");
         }
-        note.setIsFavorite(note.getIsFavorite() == 1 ? 0 : 1);
+        note.setIsFavorite(Integer.valueOf(Flags.YES).equals(note.getIsFavorite()) ? Flags.NO : Flags.YES);
         noteMapper.updateById(note);
         log.info("切换笔记收藏: id={}, userId={}, isFavorite={}", id, userId, note.getIsFavorite());
     }
@@ -203,7 +202,7 @@ public class NoteServiceImpl implements NoteService {
     public IPage<NoteVO> getRecent(Long userId, int page, int size) {
         LambdaQueryWrapper<Note> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Note::getUserId, userId)
-                .eq(Note::getIsDeleted, 0)
+                .eq(Note::getIsDeleted, Flags.NO)
                 .orderByDesc(Note::getUpdatedAt);
         Page<Note> p = new Page<>(page, size);
         IPage<Note> notePage = noteMapper.selectPage(p, wrapper);
@@ -293,9 +292,7 @@ public class NoteServiceImpl implements NoteService {
 
     private void saveCategoryRels(Long noteId, List<Long> categoryIds) {
         if (categoryIds != null && !categoryIds.isEmpty()) {
-            for (Long cid : categoryIds) {
-                jdbcTemplate.update("INSERT INTO note_category_rel (note_id, category_id) VALUES (?, ?)", noteId, cid);
-            }
+            noteMapper.insertCategoryRels(noteId, categoryIds);
         }
     }
 

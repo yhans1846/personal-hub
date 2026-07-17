@@ -2,7 +2,6 @@ package com.personalhub.knowledge.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.personalhub.common.exception.BusinessException;
-import com.personalhub.common.exception.NotFoundException;
 import com.personalhub.common.util.EntityGuard;
 import com.personalhub.knowledge.entity.Tag;
 import com.personalhub.knowledge.entity.TagRel;
