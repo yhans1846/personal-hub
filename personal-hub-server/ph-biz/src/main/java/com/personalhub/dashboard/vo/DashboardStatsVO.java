@@ -1,4 +1,4 @@
-package com.personalhub.module.dashboard.vo;
+package com.personalhub.dashboard.vo;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;

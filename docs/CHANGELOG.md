@@ -4,7 +4,8 @@
 
 ### 2026-07-17 后端模块合并
 - **重构**：Maven 模块 8→4：`ph-knowledge` / `ph-planning` / `ph-resource` / `ph-dashboard` 合并为 `ph-biz`；`ph-storage` 并入 `ph-common`
-- **不变**：Java 包名、REST API、前端 `modules/` 目录
+- **包名**：`com.personalhub.module.dashboard` → `com.personalhub.dashboard`（与 knowledge/planning/resource 对齐）
+- **不变**：REST API、前端 `modules/` 目录
 
 ### 2026-07-17 Entity @Builder 改造
 - **Entity**：统一 `@Data` + `@Builder` + `@NoArgsConstructor` + `@AllArgsConstructor`；初值字段加 `@Builder.Default`

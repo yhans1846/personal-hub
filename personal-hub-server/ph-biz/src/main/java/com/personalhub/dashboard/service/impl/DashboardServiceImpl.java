@@ -1,16 +1,16 @@
-package com.personalhub.module.dashboard.service.impl;
+package com.personalhub.dashboard.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.personalhub.module.dashboard.mapper.DashboardMapper;
-import com.personalhub.module.dashboard.service.DashboardService;
-import com.personalhub.module.dashboard.vo.DashboardStatsVO;
-import com.personalhub.module.dashboard.vo.SearchVO;
-import com.personalhub.module.dashboard.vo.StatsVO;
-import com.personalhub.module.dashboard.vo.StatsVO.ActivityItem;
-import com.personalhub.module.dashboard.vo.StatsVO.DataPoint;
-import com.personalhub.module.dashboard.vo.StatsVO.InsightItem;
-import com.personalhub.module.dashboard.vo.StatsVO.NamedStat;
-import com.personalhub.module.dashboard.vo.TrendVO;
+import com.personalhub.dashboard.mapper.DashboardMapper;
+import com.personalhub.dashboard.service.DashboardService;
+import com.personalhub.dashboard.vo.DashboardStatsVO;
+import com.personalhub.dashboard.vo.SearchVO;
+import com.personalhub.dashboard.vo.StatsVO;
+import com.personalhub.dashboard.vo.StatsVO.ActivityItem;
+import com.personalhub.dashboard.vo.StatsVO.DataPoint;
+import com.personalhub.dashboard.vo.StatsVO.InsightItem;
+import com.personalhub.dashboard.vo.StatsVO.NamedStat;
+import com.personalhub.dashboard.vo.TrendVO;
 import com.personalhub.resource.entity.BookmarkUrl;
 import com.personalhub.resource.mapper.BookmarkUrlMapper;
 import com.personalhub.resource.entity.FileResource;

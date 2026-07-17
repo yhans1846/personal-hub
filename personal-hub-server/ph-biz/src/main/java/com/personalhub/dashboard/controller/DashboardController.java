@@ -1,11 +1,11 @@
-package com.personalhub.module.dashboard.controller;
+package com.personalhub.dashboard.controller;
 
 import com.personalhub.common.result.Result;
-import com.personalhub.module.dashboard.service.DashboardService;
-import com.personalhub.module.dashboard.vo.DashboardStatsVO;
-import com.personalhub.module.dashboard.vo.SearchVO;
-import com.personalhub.module.dashboard.vo.StatsVO;
-import com.personalhub.module.dashboard.vo.TrendVO;
+import com.personalhub.dashboard.service.DashboardService;
+import com.personalhub.dashboard.vo.DashboardStatsVO;
+import com.personalhub.dashboard.vo.SearchVO;
+import com.personalhub.dashboard.vo.StatsVO;
+import com.personalhub.dashboard.vo.TrendVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

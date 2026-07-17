@@ -1,9 +1,9 @@
-package com.personalhub.module.dashboard.service;
+package com.personalhub.dashboard.service;
 
-import com.personalhub.module.dashboard.vo.DashboardStatsVO;
-import com.personalhub.module.dashboard.vo.SearchVO;
-import com.personalhub.module.dashboard.vo.StatsVO;
-import com.personalhub.module.dashboard.vo.TrendVO;
+import com.personalhub.dashboard.vo.DashboardStatsVO;
+import com.personalhub.dashboard.vo.SearchVO;
+import com.personalhub.dashboard.vo.StatsVO;
+import com.personalhub.dashboard.vo.TrendVO;
 
 /**
  * Dashboard 服务接口

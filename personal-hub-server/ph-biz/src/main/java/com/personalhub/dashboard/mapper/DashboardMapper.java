@@ -1,4 +1,4 @@
-package com.personalhub.module.dashboard.mapper;
+package com.personalhub.dashboard.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;

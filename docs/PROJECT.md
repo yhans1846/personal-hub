@@ -28,7 +28,7 @@ ph-boot / ph-common          —
 ph-system                    system/
 ph-biz                       knowledge/ + planning/ + resource/
                              + dashboard/ + search/ + category/
-  └ packages: knowledge, planning, resource, module.dashboard
+  └ packages: knowledge, planning, resource, dashboard
 ```
 
 ### 划分原则

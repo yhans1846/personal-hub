@@ -75,7 +75,7 @@ personal-hub-server/
 ├── pom.xml
 ├── ph-common    # 含 storage SPI（com.personalhub.storage）
 ├── ph-system
-├── ph-biz       # knowledge / planning / resource / module.dashboard
+├── ph-biz       # knowledge / planning / resource / dashboard
 └── ph-boot      # resources: application.yml + -dev / -prod
 ```
 
