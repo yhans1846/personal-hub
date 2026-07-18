@@ -11,6 +11,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,62 +26,55 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @TableName("diary_entry")
 public class DiaryEntry {
 
-    /** 主键 */
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    /** 所属用户ID */
     private Long userId;
 
-    /** 日记日期 */
     private LocalDate date;
 
-    /** 日记标题 */
     private String title;
 
-    /** 日记内容（Markdown） */
     private String content;
 
-    /** 心情 1-很好 2-好 3-一般 4-不好 5-很差 */
     private Integer mood;
 
-    /** 天气 */
     private String weather;
 
-    /** 地点 */
     private String location;
 
-    /** 纬度（浏览器定位，无反查） */
     @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private BigDecimal latitude;
 
-    /** 经度（浏览器定位，无反查） */
     @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private BigDecimal longitude;
 
-    /** 配图文件ID列表(JSON数组) */
-    private String imageFileIds;
+    /** 配图文件名列表(JSON字符串数组) */
+    private String imageFiles;
 
-    /** 解析 imageFileIds 为列表 */
-    public List<Long> parseImageFileIds() {
-        if (imageFileIds == null || imageFileIds.isBlank()) return Collections.emptyList();
+    /**
+     * 解析为文件名列表；历史数字 id JSON 视为无效返回空。
+     */
+    public List<String> parseImageFiles() {
+        if (imageFiles == null || imageFiles.isBlank()) return Collections.emptyList();
         try {
-            return new ObjectMapper().readValue(imageFileIds,
-                    new TypeReference<List<Long>>() {});
+            List<?> raw = new ObjectMapper().readValue(imageFiles, new TypeReference<List<?>>() {});
+            return raw.stream()
+                    .filter(String.class::isInstance)
+                    .map(String.class::cast)
+                    .filter(s -> !s.isBlank() && !s.contains("..") && !s.contains("/") && !s.contains("\\"))
+                    .collect(Collectors.toList());
         } catch (Exception e) {
             return Collections.emptyList();
         }
     }
 
-    /** 逻辑删除 0-正常 1-删除 */
     @TableLogic
     private Integer isDeleted;
 
-    /** 创建时间 */
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
 
-    /** 更新时间 */
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updatedAt;
 }

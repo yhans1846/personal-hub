@@ -65,7 +65,8 @@ POST：`{title,content,priority,dueDate}`
 ## 日记 `/api/diaries`
 
 CRUD + `GET /month?month=YYYY-MM`。列表：keyword,startDate,endDate,mood,month  
-创建/更新可含 `location`、`latitude`、`longitude`（定位仅存坐标，不反查地名）
+创建/更新可含 `location`、`latitude`、`longitude`、`imageFiles`（文件名字符串数组）  
+配图（不进 `file_resource`）：`POST|GET|DELETE /{id}/images[/{filename}]` → 目录 `diaries/{id}/images/`
 
 ## 收藏 `/api/bookmarks`
 

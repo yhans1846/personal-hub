@@ -49,7 +49,7 @@ CREATE TABLE `diary_entry`  (
                                 `location` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '地点',
                                 `latitude` decimal(10, 7) NULL DEFAULT NULL COMMENT '纬度',
                                 `longitude` decimal(10, 7) NULL DEFAULT NULL COMMENT '经度',
-                                `image_file_ids` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '配图文件ID列表(JSON数组)',
+                                `image_files` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '配图文件名列表(JSON字符串数组)',
                                 PRIMARY KEY (`id`) USING BTREE,
                                 INDEX `idx_user_id_date`(`user_id` ASC, `date` ASC) USING BTREE,
                                 INDEX `idx_date`(`date` ASC) USING BTREE

@@ -5,10 +5,11 @@
 ## [Unreleased]
 
 ### 2026-07-18
+- **日记配图资源包**：配图改存 `diaries/{id}/images/`，字段 `image_files`（文件名 JSON）；不进 `file_resource`；新建须先保存再上传；迁移 `sql/alter_2026-07-18_diary_image_files.sql`（不做历史数据迁移）
 - **清理未用字段**：删除 `bookmark_url.tags`/`favicon`（+ 启动迁移）、`file_resource.source`/`ref_id`/`stored_name`、`study_record.plan_id`；迁移 `sql/alter_2026-07-18_drop_unused_columns.sql`；收藏图标改由前端按域名拉取；`audit_log.business_id` 保留
 - **审计日志**：登录成功写入 `audit_log`（module=`AUTH`, action=`LOGIN`）；此前仅笔记删除/恢复会记，导致「最近活动」看不到登录
 - **日记定位**：浏览器 `geolocation` 写入 `latitude`/`longitude`（不接地图反查）；弹窗「定位」按钮 + 坐标展示/清除；迁移 `sql/alter_2026-07-18_diary_geolocation.sql`
-- **日记配图**：缩略图支持拖拽排序（SortableJS），顺序写入 `imageFileIds`，首张作封面
+- **日记配图排序**：缩略图支持拖拽排序（SortableJS），顺序写入 `imageFiles`，首张作封面
 - **文件预览**：列表内嵌预览（图片 Lightbox / PDF iframe / txt·md）；Office/压缩包提示下载；axios blob 鉴权下载；类型筛选分组对齐后端
 - **文件分类/类型**：上传可选分类；`PATCH /api/files/{id}/category`；卡片可改分类；筛选真正按 type/category 生效
 - **编辑框编辑器气质（方案 B）**：积木 `DialogTitleField` / `PropGrid` / `PropCard` / `ChoiceRow` / `ChipRow` / `DateChip` / `Editor`；待办/日记/阅读/计划/学习/收藏/标签/分类 + ProfileDrawer 对齐；笔记不动

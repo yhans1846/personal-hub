@@ -7,27 +7,34 @@ import com.personalhub.common.util.CurrentUser;
 import com.personalhub.knowledge.dto.DiaryCreateDTO;
 import com.personalhub.knowledge.dto.DiaryQueryDTO;
 import com.personalhub.knowledge.service.DiaryEntryService;
+import com.personalhub.knowledge.service.DiaryFileService;
 import com.personalhub.knowledge.vo.DiaryVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 日记控制器
  */
-@Tag(name = "日记", description = "日记的增删改查、月视图聚合")
+@Tag(name = "日记", description = "日记的增删改查、月视图聚合、配图资源")
 @RestController
 @RequestMapping("/api/diaries")
 @RequiredArgsConstructor
 public class DiaryEntryController {
 
     private final DiaryEntryService diaryEntryService;
+    private final DiaryFileService diaryFileService;
 
     @Operation(summary = "日记列表", description = "分页查询日记，支持关键词搜索、日期范围筛选、心情筛选、按月查询")
     @GetMapping
@@ -84,5 +91,48 @@ public class DiaryEntryController {
         Long userId = CurrentUser.id(authentication);
         diaryEntryService.delete(id, userId);
         return Result.success();
+    }
+
+    @Operation(summary = "上传日记配图")
+    @PostMapping("/{id}/images")
+    public Result<Map<String, String>> uploadImage(
+            @Parameter(hidden = true) Authentication authentication,
+            @PathVariable Long id,
+            @RequestParam("file") MultipartFile file) {
+        Long userId = CurrentUser.id(authentication);
+        return Result.success(diaryFileService.uploadImage(id, userId, file));
+    }
+
+    @Operation(summary = "获取日记配图")
+    @GetMapping("/{id}/images/{filename}")
+    public ResponseEntity<Resource> getImage(
+            @Parameter(hidden = true) Authentication authentication,
+            @PathVariable Long id,
+            @PathVariable String filename) {
+        Long userId = CurrentUser.id(authentication);
+        Resource resource = diaryFileService.loadImage(id, userId, filename);
+        return ResponseEntity.ok()
+                .contentType(guessImageMediaType(filename))
+                .body(resource);
+    }
+
+    @Operation(summary = "删除日记配图")
+    @DeleteMapping("/{id}/images/{filename}")
+    public Result<Void> deleteImage(
+            @Parameter(hidden = true) Authentication authentication,
+            @PathVariable Long id,
+            @PathVariable String filename) {
+        Long userId = CurrentUser.id(authentication);
+        diaryFileService.deleteImage(id, userId, filename);
+        return Result.success();
+    }
+
+    private static MediaType guessImageMediaType(String filename) {
+        String lower = filename == null ? "" : filename.toLowerCase();
+        if (lower.endsWith(".png")) return MediaType.IMAGE_PNG;
+        if (lower.endsWith(".gif")) return MediaType.IMAGE_GIF;
+        if (lower.endsWith(".webp")) return MediaType.parseMediaType("image/webp");
+        if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return MediaType.IMAGE_JPEG;
+        return MediaType.APPLICATION_OCTET_STREAM;
     }
 }

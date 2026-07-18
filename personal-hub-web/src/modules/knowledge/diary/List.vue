@@ -5,7 +5,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Pencil, Trash2, PenLine, Sun, Cloud, CloudRain, Smile, Frown, Meh, MapPin, Images, CalendarDays, LayoutList, LayoutGrid, Camera, Calendar, MoreHorizontal, Type } from 'lucide-vue-next'
 import { EmptyState, PageHeader, ListToolbar, ListPagination } from '@/components'
 import ImageLightbox from '@/components/ImageLightbox.vue'
-import { getFilePreviewUrl, revokePreviewUrl } from '@/utils/file'
+import { getDiaryImagePreviewUrl, revokePreviewUrl } from '@/utils/file'
 import DiaryDialog from './DiaryDialog.vue'
 import type { DiaryVO, DiaryQuery } from '@/types/diary'
 import { useDeepLinkDialog } from '@/composables/useDeepLinkDialog'
@@ -36,11 +36,11 @@ async function loadCardImages(entries: DiaryVO[]) {
   const map = new Map<number, string[]>()
   const promises: Promise<void>[] = []
   for (const entry of entries) {
-    const ids = entry.imageFileIds?.slice(0, 4) || []
-    if (!ids.length) continue
+    const names = entry.imageFiles?.slice(0, 4) || []
+    if (!names.length) continue
     promises.push(
       (async () => {
-        const urls = await Promise.all(ids.map(id => getFilePreviewUrl(id)))
+        const urls = await Promise.all(names.map(name => getDiaryImagePreviewUrl(entry.id, name)))
         map.set(entry.id, urls)
       })()
     )
@@ -297,7 +297,7 @@ const moodOptions = [
               <div v-if="entry.contentSummary" class="diary-summary">{{ entry.contentSummary }}</div>
             </div>
             <!-- 配图缩略图：固定尺寸，避免一屏铺满行高把徽章裁掉 -->
-            <div v-if="entry.imageFileIds?.length" class="diary-thumbs" @click.stop>
+            <div v-if="entry.imageFiles?.length" class="diary-thumbs" @click.stop>
               <template v-if="cardImages.get(entry.id)?.length">
                 <img
                   v-for="(url, i) in cardImages.get(entry.id)!.slice(0, 3)"
@@ -307,13 +307,13 @@ const moodOptions = [
                   alt=""
                   @click="openLightbox(cardImages.get(entry.id)!, i)"
                 />
-                <span v-if="entry.imageFileIds.length > 3" class="diary-thumb-more">
-                  +{{ entry.imageFileIds.length - 3 }}
+                <span v-if="entry.imageFiles.length > 3" class="diary-thumb-more">
+                  +{{ entry.imageFiles.length - 3 }}
                 </span>
               </template>
               <span v-else class="diary-thumbs-pending">
                 <Images :size="14" />
-                {{ entry.imageFileIds.length }}
+                {{ entry.imageFiles.length }}
               </span>
             </div>
             <div class="diary-actions" @click.stop>
@@ -338,7 +338,7 @@ const moodOptions = [
             @click="goEdit(entry.id)"
           >
             <!-- 封面：仅有配图时占位，点击预览 -->
-            <div v-if="entry.imageFileIds?.length" class="dc-cover" @click.stop>
+            <div v-if="entry.imageFiles?.length" class="dc-cover" @click.stop>
               <img
                 v-if="cardImages.get(entry.id)?.[0]"
                 :src="cardImages.get(entry.id)![0]"
@@ -346,9 +346,9 @@ const moodOptions = [
                 alt=""
                 @click="openLightbox(cardImages.get(entry.id)!, 0)"
               />
-              <span v-if="entry.imageFileIds.length > 1" class="dc-cover-count">
+              <span v-if="entry.imageFiles.length > 1" class="dc-cover-count">
                 <Camera :size="12" />
-                {{ entry.imageFileIds.length }}
+                {{ entry.imageFiles.length }}
               </span>
             </div>
 
@@ -377,9 +377,9 @@ const moodOptions = [
                   <Type :size="12" />
                   {{ charCount(entry) }}字
                 </span>
-                <span v-if="entry.imageFileIds?.length" class="dc-chip dc-chip--muted">
+                <span v-if="entry.imageFiles?.length" class="dc-chip dc-chip--muted">
                   <Camera :size="12" />
-                  {{ entry.imageFileIds.length }}张
+                  {{ entry.imageFiles.length }}张
                 </span>
               </div>
 
@@ -420,7 +420,13 @@ const moodOptions = [
       <ListPagination v-if="total > 0" :total="total" :page="query.page" :size="pageSize" @update:page="onPageChange" />
     </div>
 
-    <DiaryDialog v-model="dialogVisible" :entity-id="editId" :initial-date="initialDate" @saved="fetchList" />
+    <DiaryDialog
+      v-model="dialogVisible"
+      :entity-id="editId"
+      :initial-date="initialDate"
+      @saved="fetchList"
+      @created="(id) => { editId = id; fetchList() }"
+    />
     <ImageLightbox
       v-model="lightboxOpen"
       v-model:index="lightboxIndex"

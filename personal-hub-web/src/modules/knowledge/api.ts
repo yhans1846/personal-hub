@@ -98,6 +98,14 @@ export function updateDiary(id: number, data: DiaryCreateDTO) {
 export function deleteDiary(id: number) {
   return request.delete<Result<void>>(`/diaries/${id}`)
 }
+export function uploadDiaryImage(diaryId: number, file: File) {
+  const form = new FormData()
+  form.append('file', file)
+  return request.post<Result<{ name: string }>>(`/diaries/${diaryId}/images`, form)
+}
+export function deleteDiaryImage(diaryId: number, filename: string) {
+  return request.delete<Result<void>>(`/diaries/${diaryId}/images/${encodeURIComponent(filename)}`)
+}
 
 // ====== 学习记录 ======
 export function getStudyRecordList(params: StudyRecordQuery) {

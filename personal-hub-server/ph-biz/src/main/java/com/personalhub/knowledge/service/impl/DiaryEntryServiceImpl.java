@@ -12,6 +12,7 @@ import com.personalhub.knowledge.entity.DiaryEntry;
 import com.personalhub.knowledge.mapper.DiaryEntryMapper;
 import com.personalhub.knowledge.service.DiaryEntryService;
 import com.personalhub.knowledge.vo.DiaryVO;
+import com.personalhub.storage.StorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -32,30 +33,27 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class DiaryEntryServiceImpl implements DiaryEntryService {
 
     private final DiaryEntryMapper diaryEntryMapper;
+    private final StorageService storageService;
 
     @Override
     public IPage<DiaryVO> list(Long userId, DiaryQueryDTO query) {
         LambdaQueryWrapper<DiaryEntry> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(DiaryEntry::getUserId, userId);
 
-        // 搜索关键词（标题+内容）
         if (StringUtils.hasText(query.getKeyword())) {
             wrapper.and(w -> w.like(DiaryEntry::getTitle, query.getKeyword())
                     .or()
                     .like(DiaryEntry::getContent, query.getKeyword()));
         }
-        // 日期范围筛选
         if (query.getStartDate() != null) {
             wrapper.ge(DiaryEntry::getDate, query.getStartDate());
         }
         if (query.getEndDate() != null) {
             wrapper.le(DiaryEntry::getDate, query.getEndDate());
         }
-        // 心情筛选
         if (query.getMood() != null) {
             wrapper.eq(DiaryEntry::getMood, query.getMood());
         }
-        // 按月查询
         if (StringUtils.hasText(query.getMonth()) && query.getMonth().matches("\\d{4}-\\d{2}")) {
             String[] parts = query.getMonth().split("-");
             int year = Integer.parseInt(parts[0]);
@@ -110,7 +108,7 @@ public class DiaryEntryServiceImpl implements DiaryEntryService {
                 .location(dto.getLocation())
                 .latitude(dto.getLatitude())
                 .longitude(dto.getLongitude())
-                .imageFileIds(toImageFileIdsJson(dto.getImageFileIds()))
+                .imageFiles(toImageFilesJson(dto.getImageFiles()))
                 .build();
         diaryEntryMapper.insert(entry);
         log.info("新建日记: id={}, userId={}, date={}", entry.getId(), userId, entry.getDate());
@@ -130,7 +128,7 @@ public class DiaryEntryServiceImpl implements DiaryEntryService {
         if (dto.getLocation() != null) entry.setLocation(dto.getLocation());
         entry.setLatitude(dto.getLatitude());
         entry.setLongitude(dto.getLongitude());
-        if (dto.getImageFileIds() != null) entry.setImageFileIds(toImageFileIdsJson(dto.getImageFileIds()));
+        if (dto.getImageFiles() != null) entry.setImageFiles(toImageFilesJson(dto.getImageFiles()));
         diaryEntryMapper.updateById(entry);
         log.info("编辑日记: id={}, userId={}", id, userId);
         return DiaryVO.from(entry);
@@ -142,16 +140,25 @@ public class DiaryEntryServiceImpl implements DiaryEntryService {
         EntityGuard.requireOwned(
                 diaryEntryMapper.selectById(id), userId, DiaryEntry::getUserId, "日记不存在");
         diaryEntryMapper.deleteById(id);
+        try {
+            storageService.delete("diaries/" + id);
+        } catch (Exception e) {
+            log.warn("删除日记配图目录失败: diaryId={}", id, e);
+        }
         log.info("删除日记: id={}, userId={}", id, userId);
     }
 
-    /** 将文件ID列表转为JSON字符串存储 */
-    private String toImageFileIdsJson(List<Long> ids) {
-        if (ids == null || ids.isEmpty()) return null;
+    private String toImageFilesJson(List<String> names) {
+        if (names == null || names.isEmpty()) return null;
+        List<String> safe = names.stream()
+                .filter(s -> s != null && !s.isBlank()
+                        && !s.contains("..") && !s.contains("/") && !s.contains("\\"))
+                .toList();
+        if (safe.isEmpty()) return null;
         try {
-            return new ObjectMapper().writeValueAsString(ids);
+            return new ObjectMapper().writeValueAsString(safe);
         } catch (Exception e) {
-            log.warn("序列化 imageFileIds 失败", e);
+            log.warn("序列化 imageFiles 失败", e);
             return null;
         }
     }

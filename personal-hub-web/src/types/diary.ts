@@ -11,7 +11,7 @@ export interface DiaryVO {
   location?: string
   latitude?: number | null
   longitude?: number | null
-  imageFileIds?: number[]
+  imageFiles?: string[]
   createdAt: string
   updatedAt: string
 }
@@ -26,7 +26,7 @@ export interface DiaryCreateDTO {
   location?: string
   latitude?: number | null
   longitude?: number | null
-  imageFileIds?: number[]
+  imageFiles?: string[]
 }
 
 /** 查询参数 */

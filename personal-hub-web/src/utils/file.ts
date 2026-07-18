@@ -11,6 +11,14 @@ export async function getFilePreviewUrl(fileId: number): Promise<string> {
   return URL.createObjectURL(res.data)
 }
 
+/** 日记配图预览 Blob URL（鉴权） */
+export async function getDiaryImagePreviewUrl(diaryId: number, filename: string): Promise<string> {
+  const res = await request.get(`/diaries/${diaryId}/images/${encodeURIComponent(filename)}`, {
+    responseType: 'blob',
+  })
+  return URL.createObjectURL(res.data)
+}
+
 /** 释放 Blob URL */
 export function revokePreviewUrl(url: string) {
   if (url?.startsWith('blob:')) {

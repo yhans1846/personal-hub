@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ref, watch, computed, toRef, onUnmounted, nextTick } from 'vue'
-import { createDiary, updateDiary, getDiaryById } from '@/modules/knowledge/api'
-import { uploadFile, deleteFile } from '@/modules/resource/api'
-import { getFilePreviewUrl, revokePreviewUrl } from '@/utils/file'
+import {
+  createDiary, updateDiary, getDiaryById,
+  uploadDiaryImage, deleteDiaryImage,
+} from '@/modules/knowledge/api'
+import { getDiaryImagePreviewUrl, revokePreviewUrl } from '@/utils/file'
 import { ElMessage } from 'element-plus'
 import { ImagePlus, X, MapPin, LocateFixed, Loader2 } from 'lucide-vue-next'
 import Sortable from 'sortablejs'
@@ -28,10 +30,11 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
   'saved': []
+  'created': [id: number]
 }>()
 
 interface ImageItem {
-  id: number
+  name: string
   url: string
 }
 
@@ -44,7 +47,7 @@ const form = ref({
   location: '',
   latitude: null as number | null,
   longitude: null as number | null,
-  imageFileIds: [] as number[],
+  imageFiles: [] as string[],
 })
 const saving = ref(false)
 const locating = ref(false)
@@ -55,6 +58,7 @@ const lightboxOpen = ref(false)
 const lightboxIndex = ref(0)
 const fileInputRef = ref<HTMLInputElement | null>(null)
 const imageGridRef = ref<HTMLElement | null>(null)
+const workingId = ref<number | undefined>()
 let imageSortable: Sortable | null = null
 let suppressLightboxClick = false
 
@@ -75,8 +79,9 @@ const weatherOptions = [
   { emoji: '❄️', label: '雪' },
 ]
 
-const dialogTitle = computed(() => props.entityId ? '编辑日记' : '今天')
-const dialogSubtitle = computed(() => props.entityId ? '' : '记录今天发生的事情')
+const canUploadImages = computed(() => !!workingId.value)
+const dialogTitle = computed(() => workingId.value ? '编辑日记' : '今天')
+const dialogSubtitle = computed(() => workingId.value ? '' : '记录今天发生的事情')
 
 const dateModel = computed({
   get: () => form.value.date || null,
@@ -84,6 +89,7 @@ const dateModel = computed({
 })
 
 async function loadEntity(id: number) {
+  workingId.value = id
   const res = await getDiaryById(id)
   const r = res.data.data
   form.value = {
@@ -95,27 +101,36 @@ async function loadEntity(id: number) {
     location: r.location || '',
     latitude: r.latitude ?? null,
     longitude: r.longitude ?? null,
-    imageFileIds: r.imageFileIds || [],
+    imageFiles: r.imageFiles || [],
   }
   previewImages.value.forEach(img => revokePreviewUrl(img.url))
   previewImages.value = []
-  for (const fileId of form.value.imageFileIds) {
-    const url = await getFilePreviewUrl(fileId)
-    previewImages.value.push({ id: fileId, url })
+  for (const name of form.value.imageFiles) {
+    const url = await getDiaryImagePreviewUrl(id, name)
+    previewImages.value.push({ name, url })
   }
 }
 
 watch(() => props.modelValue, (val) => {
-  if (!val || props.entityId) return
+  if (!val) {
+    workingId.value = undefined
+    return
+  }
+  if (props.entityId) return
+  workingId.value = undefined
   const now = new Date()
   const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
   form.value = {
     date: props.initialDate || today,
     title: '', content: '', mood: 3, weather: '', location: '',
-    latitude: null, longitude: null, imageFileIds: [],
+    latitude: null, longitude: null, imageFiles: [],
   }
   previewImages.value.forEach(img => revokePreviewUrl(img.url))
   previewImages.value = []
+})
+
+watch(() => props.entityId, (id) => {
+  if (id) workingId.value = id
 })
 
 const { onSaved } = useEntityDialog({
@@ -128,14 +143,18 @@ const { onSaved } = useEntityDialog({
 async function handleSave() {
   saving.value = true
   try {
-    if (props.entityId) {
-      await updateDiary(props.entityId, form.value)
+    const payload = { ...form.value }
+    if (workingId.value) {
+      await updateDiary(workingId.value, payload)
       ElMessage.success('已更新')
+      onSaved()
     } else {
-      await createDiary(form.value)
-      ElMessage.success('已创建')
+      const res = await createDiary(payload)
+      const id = res.data.data.id
+      workingId.value = id
+      emit('created', id)
+      ElMessage.success('已创建，可以添加配图')
     }
-    onSaved()
   } finally { saving.value = false }
 }
 
@@ -183,6 +202,11 @@ function locateHere() {
 }
 
 async function handleImageUpload(files: FileList | File[]) {
+  if (!workingId.value) {
+    ElMessage.warning('请先保存日记，再添加配图')
+    return
+  }
+  const diaryId = workingId.value
   const valid: File[] = []
   for (const f of files) {
     if (f.type.startsWith('image/')) valid.push(f)
@@ -193,11 +217,11 @@ async function handleImageUpload(files: FileList | File[]) {
   uploading.value = true
   try {
     for (const file of valid) {
-      const res = await uploadFile(file)
-      const fileId = res.data.data.id
-      form.value.imageFileIds.push(fileId)
-      const url = await getFilePreviewUrl(fileId)
-      previewImages.value.push({ id: fileId, url })
+      const res = await uploadDiaryImage(diaryId, file)
+      const name = res.data.data.name
+      form.value.imageFiles.push(name)
+      const url = await getDiaryImagePreviewUrl(diaryId, name)
+      previewImages.value.push({ name, url })
     }
   } finally { uploading.value = false }
 }
@@ -224,7 +248,8 @@ function destroyImageSortable() {
 async function initImageSortable() {
   await nextTick()
   destroyImageSortable()
-  if (!imageGridRef.value || previewImages.value.length < 2) return
+  if (!imageGridRef.value || previewImages.value.length < 2 || !workingId.value) return
+  const diaryId = workingId.value
   imageSortable = Sortable.create(imageGridRef.value, {
     animation: 200,
     easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
@@ -236,7 +261,7 @@ async function initImageSortable() {
     onStart() {
       suppressLightboxClick = true
     },
-    onEnd(evt) {
+    async onEnd(evt) {
       const { oldIndex, newIndex } = evt
       window.setTimeout(() => { suppressLightboxClick = false }, 0)
       if (oldIndex == null || newIndex == null || oldIndex === newIndex) return
@@ -244,24 +269,30 @@ async function initImageSortable() {
       const [item] = list.splice(oldIndex, 1)
       list.splice(newIndex, 0, item)
       previewImages.value = list
-      form.value.imageFileIds = list.map(i => i.id)
+      form.value.imageFiles = list.map(i => i.name)
+      try {
+        await updateDiary(diaryId, { ...form.value, imageFiles: form.value.imageFiles })
+      } catch {
+        ElMessage.warning('顺序保存失败，请再试一次')
+      }
     },
   })
 }
 
-watch(() => previewImages.value.map(i => i.id).join(','), () => {
+watch(() => previewImages.value.map(i => i.name).join(','), () => {
   initImageSortable()
 })
 
 async function handleRemoveImage(img: ImageItem) {
+  if (!workingId.value) return
   try {
-    await deleteFile(img.id)
+    await deleteDiaryImage(workingId.value, img.name)
   } catch {
-    // 后端删除失败不阻断本地清理
+    // ignore
   }
   revokePreviewUrl(img.url)
-  form.value.imageFileIds = form.value.imageFileIds.filter(id => id !== img.id)
-  previewImages.value = previewImages.value.filter(p => p.id !== img.id)
+  form.value.imageFiles = form.value.imageFiles.filter(n => n !== img.name)
+  previewImages.value = previewImages.value.filter(p => p.name !== img.name)
 }
 
 function onDragOver(e: DragEvent) {
@@ -285,6 +316,7 @@ onUnmounted(() => {
   previewImages.value.forEach(img => revokePreviewUrl(img.url))
 })
 </script>
+
 
 <template>
   <UiDialog
@@ -354,10 +386,11 @@ onUnmounted(() => {
       </DialogPropCard>
 
       <DialogPropCard label="配图">
+        <p v-if="!canUploadImages" class="image-need-save">请先保存日记，再添加配图</p>
         <div v-if="previewImages.length" ref="imageGridRef" class="image-grid">
           <div
             v-for="(img, idx) in previewImages"
-            :key="img.id"
+            :key="img.name"
             class="image-item"
             :title="previewImages.length > 1 ? '拖拽调整顺序' : undefined"
           >
@@ -388,14 +421,14 @@ onUnmounted(() => {
 
         <div
           class="dropzone"
-          :class="{ 'dropzone--dragging': isDragging }"
-          @dragover="onDragOver"
+          :class="{ 'dropzone--dragging': isDragging, 'dropzone--disabled': !canUploadImages }"
+          @dragover="canUploadImages && onDragOver($event)"
           @dragleave="onDragLeave"
-          @drop="onDrop"
-          @click="fileInputRef?.click()"
+          @drop="canUploadImages && onDrop($event)"
+          @click="canUploadImages && fileInputRef?.click()"
         >
           <ImagePlus :size="28" class="dropzone-icon" />
-          <span class="dropzone-text">拖拽图片到这里，或点击上传</span>
+          <span class="dropzone-text">{{ canUploadImages ? '拖拽图片到这里，或点击上传' : '保存后可上传配图' }}</span>
           <span class="dropzone-hint">支持 JPG、PNG、WEBP，可多选</span>
           <input
             ref="fileInputRef"
@@ -403,6 +436,7 @@ onUnmounted(() => {
             accept="image/*"
             multiple
             class="dropzone-input"
+            :disabled="!canUploadImages"
             @change="onFileChange"
           />
         </div>
@@ -580,6 +614,12 @@ onUnmounted(() => {
   color: var(--text-tertiary);
 }
 
+.image-need-save {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--text-xs);
+  color: var(--warning);
+}
+
 .image-sortable-ghost {
   opacity: 0.35;
 }
@@ -637,6 +677,14 @@ onUnmounted(() => {
 .dropzone--dragging {
   border-color: var(--accent);
   background: var(--accent-light);
+}
+.dropzone--disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.dropzone--disabled:hover {
+  border-color: var(--border-color);
+  background: transparent;
 }
 
 .dropzone-icon {

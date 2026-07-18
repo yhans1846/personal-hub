@@ -49,8 +49,8 @@ public class DiaryVO {
     @Schema(description = "经度")
     private java.math.BigDecimal longitude;
 
-    @Schema(description = "配图文件ID列表")
-    private List<Long> imageFileIds;
+    @Schema(description = "配图文件名列表")
+    private List<String> imageFiles;
 
     @Schema(description = "创建时间")
     private LocalDateTime createdAt;
@@ -69,7 +69,7 @@ public class DiaryVO {
         vo.setLocation(entry.getLocation());
         vo.setLatitude(entry.getLatitude());
         vo.setLongitude(entry.getLongitude());
-        vo.setImageFileIds(entry.parseImageFileIds());
+        vo.setImageFiles(entry.parseImageFiles());
         vo.setCreatedAt(entry.getCreatedAt());
         vo.setUpdatedAt(entry.getUpdatedAt());
 

@@ -36,7 +36,7 @@ user_id · title · content · is_done · priority(1高2中3低) · due_date · 
 user_id · name · path · size · type · mime_type · category_id · is_deleted · 时间
 
 ### `diary_entry`
-user_id · date · title · content · mood(1–5) · weather/location · latitude/longitude（浏览器定位，可空）· image_file_ids · is_deleted · 时间  
+user_id · date · title · content · mood(1–5) · weather/location · latitude/longitude（浏览器定位，可空）· image_files（文件名 JSON，目录 `diaries/{id}/images/`）· is_deleted · 时间  
 索引 `(user_id,date)` / date
 
 ### `bookmark_url`
