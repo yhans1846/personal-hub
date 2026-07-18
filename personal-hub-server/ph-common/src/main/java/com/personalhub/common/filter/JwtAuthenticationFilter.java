@@ -51,9 +51,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         new UsernamePasswordAuthenticationToken(
                                 String.valueOf(userId), null, Collections.emptyList());
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-                log.debug("JWT 认证通过: userId={}, uri={}", userId, request.getRequestURI());
+                log.trace("JWT 认证通过: userId={}, uri={}", userId, request.getRequestURI());
             } else {
-                log.debug("JWT 令牌无效: uri={}", request.getRequestURI());
+                log.trace("JWT 令牌无效: uri={}", request.getRequestURI());
             }
         }
 

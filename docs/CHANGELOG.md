@@ -4,6 +4,11 @@
 
 ## [Unreleased]
 
+### 2026-07-19
+- **移除**：设置页「数据导出」占位（UI + `/api/export`）；列表 XLSX / 笔记 ZIP 导出保留
+- **日志**：JWT 过滤器认证通过/无效改为 `trace`，避免通知轮询刷屏
+- **演示数据**：`scripts/seed_demo_data.py`（admin 下全模块样例 + `D:/PersonalHub/uploads` 真实文件）
+
 ### 2026-07-18
 - **日记配图资源包**：`diaries/{id}/images/` + `image_files`；新建先保存再上传；不进 `file_resource`；不做历史迁移
 - **文件模块**：内嵌预览（图/PDF/文本）；上传/卡片可改分类；`type` 分组筛选；列表边界=本页上传

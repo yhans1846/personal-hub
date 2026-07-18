@@ -54,12 +54,7 @@ export function uploadAvatar(file: File) {
   })
 }
 
-// ====== 数据管理（占位接口，与后端 Export/Backup 对齐）======
-
-/** 导出数据 */
-export function exportData(params: { modules: string[]; format: 'markdown' | 'json' }) {
-  return request.post<Result<{ downloadUrl: string }>>('/export', params)
-}
+// ====== 数据管理（备份占位，与后端 Backup 对齐）======
 
 /** 立即备份 */
 export function backupNow() {
