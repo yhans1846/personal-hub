@@ -11,14 +11,13 @@ import { PageHeader, EmptyState, ListToolbar, ListPagination } from '@/component
 import FilePreviewDialog from '@/components/FilePreviewDialog.vue'
 import { useMainContentFill } from '@/composables/useMainContentFill'
 import { useFillPageSize } from '@/composables/useFillPageSize'
+import { usePaginatedList, type PageQuery } from '@/composables/usePaginatedList'
 import { downloadFileBlob, getFilePreviewUrl, revokePreviewUrl, getFilePreviewKind } from '@/utils/file'
+import { handleApiError, unwrapPage, unwrapResult } from '@/utils/apiResult'
 
 const router = useRouter()
-const list = ref<FileVO[]>([])
-const total = ref(0)
-const loading = ref(false)
+type FileListQuery = FileQuery & PageQuery
 const uploadLoading = ref(false)
-const query = ref<FileQuery>({ page: 1, size: 10, keyword: '' })
 const categories = ref<CategoryVO[]>([])
 const showUpload = ref(false)
 const uploadCategoryId = ref<number | null>(null)
@@ -31,6 +30,22 @@ const typeOptions = [
   { value: 'doc', label: '文档' },
   { value: 'archive', label: '压缩包' },
 ]
+
+const { list, total, loading, query, fetchList, onSearch, onPageChange } = usePaginatedList<FileVO, FileListQuery>({
+  initialQuery: { page: 1, size: 10, keyword: '' },
+  fetchPage: async (q) => {
+    const params: FileQuery = {
+      page: q.page,
+      size: q.size,
+      keyword: q.keyword || undefined,
+      type: q.type || undefined,
+      categoryId: q.categoryId || undefined,
+    }
+    return unwrapPage(getFileList(params))
+  },
+  onFetched: (records) => loadThumbs(records),
+  errorMessage: '加载文件失败',
+})
 
 useMainContentFill()
 const { pageSize } = useFillPageSize((size) => {
@@ -47,25 +62,6 @@ onUnmounted(() => {
   Object.values(thumbMap.value).forEach(revokePreviewUrl)
 })
 
-async function fetchList() {
-  loading.value = true
-  try {
-    const params: FileQuery = {
-      page: query.value.page,
-      size: query.value.size,
-      keyword: query.value.keyword || undefined,
-      type: query.value.type || undefined,
-      categoryId: query.value.categoryId || undefined,
-    }
-    const res = await getFileList(params)
-    list.value = res.data.data.records
-    total.value = res.data.data.total
-    await loadThumbs(list.value)
-  } finally {
-    loading.value = false
-  }
-}
-
 async function loadThumbs(files: FileVO[]) {
   Object.values(thumbMap.value).forEach(revokePreviewUrl)
   thumbMap.value = {}
@@ -80,12 +76,9 @@ async function loadThumbs(files: FileVO[]) {
 
 async function fetchCategories() {
   try {
-    categories.value = (await getCategories('file')).data.data
+    categories.value = await unwrapResult(getCategories('file'))
   } catch { /* ignore */ }
 }
-
-function onSearch() { query.value.page = 1; fetchList() }
-function onPageChange(page: number) { query.value.page = page; fetchList() }
 
 async function handleUpload(files: FileList | null) {
   if (!files || files.length === 0) return
@@ -97,8 +90,8 @@ async function handleUpload(files: FileList | null) {
     ElMessage.success(`上传成功 ${files.length} 个文件`)
     showUpload.value = false
     fetchList()
-  } catch (e: any) {
-    ElMessage.error(e?.response?.data?.message || '上传失败')
+  } catch (e) {
+    handleApiError(e, '上传失败')
   } finally {
     uploadLoading.value = false
   }
@@ -107,13 +100,12 @@ async function handleUpload(files: FileList | null) {
 async function handleCategoryChange(file: FileVO, categoryId: number | null, e?: Event) {
   e?.stopPropagation()
   try {
-    const res = await updateFileCategory(file.id, categoryId)
-    const updated = res.data.data
+    const updated = await unwrapResult(updateFileCategory(file.id, categoryId))
     const idx = list.value.findIndex(f => f.id === file.id)
     if (idx >= 0) list.value[idx] = { ...list.value[idx], ...updated }
     ElMessage.success(categoryId ? '已更新分类' : '已清除分类')
-  } catch (err: any) {
-    ElMessage.error(err?.response?.data?.message || '更新分类失败')
+  } catch (err) {
+    handleApiError(err, '更新分类失败')
   }
 }
 
@@ -121,17 +113,21 @@ async function handleDownload(file: FileVO, e?: Event) {
   e?.stopPropagation()
   try {
     await downloadFileBlob(file.id, file.name)
-  } catch {
-    ElMessage.error('下载失败')
+  } catch (err) {
+    handleApiError(err, '下载失败')
   }
 }
 
 async function handleDelete(id: number, e?: Event) {
   e?.stopPropagation()
   await ElMessageBox.confirm('确定删除该文件？', '提示', { type: 'warning' })
-  await deleteFile(id)
-  ElMessage.success('已删除')
-  fetchList()
+  try {
+    await deleteFile(id)
+    ElMessage.success('已删除')
+    fetchList()
+  } catch (err) {
+    handleApiError(err, '删除失败')
+  }
 }
 
 function openPreview(file: FileVO) {

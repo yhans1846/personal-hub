@@ -12,11 +12,17 @@ import { useDeepLinkDialog } from '@/composables/useDeepLinkDialog'
 import { useMainContentFill } from '@/composables/useMainContentFill'
 import { useFillPageSize } from '@/composables/useFillPageSize'
 import { useProductViewMode } from '@/composables/useProductViewMode'
+import { usePaginatedList, type PageQuery } from '@/composables/usePaginatedList'
+import { handleApiError, unwrapPage } from '@/utils/apiResult'
 
-const list = ref<DiaryVO[]>([])
-const total = ref(0)
-const loading = ref(false)
-const query = ref<DiaryQuery>({ page: 1, size: 10, keyword: '' })
+type DiaryListQuery = DiaryQuery & PageQuery
+
+const { list, total, loading, query, fetchList, onSearch, onPageChange } = usePaginatedList<DiaryVO, DiaryListQuery>({
+  initialQuery: { page: 1, size: 10, keyword: '' },
+  fetchPage: (q) => unwrapPage(getDiaryList(q)),
+  onFetched: (records) => loadCardImages(records),
+  errorMessage: '加载日记失败',
+})
 
 // ---- 视图模式（localStorage 持久化） ----
 const { viewMode, setViewMode } = useProductViewMode('diary-view', 'list')
@@ -136,29 +142,19 @@ function goDate(day: number) {
   else openCreate(d)
 }
 
-async function fetchList() {
-  loading.value = true
-  try {
-    const res = await getDiaryList(query.value)
-    list.value = res.data.data.records
-    total.value = res.data.data.total
-    loadCardImages(list.value)
-  } finally {
-    loading.value = false
-  }
-}
-
-function onSearch() { query.value.page = 1; fetchList() }
-function onPageChange(page: number) { query.value.page = page; fetchList() }
 function onFilterChange() { query.value.page = 1; fetchList() }
 function goCreate() { openCreate() }
 function goEdit(id: number) { openEdit(id) }
 
 async function handleDelete(id: number) {
   await ElMessageBox.confirm('确定删除这篇日记？', '提示', { type: 'warning' })
-  await deleteDiary(id)
-  ElMessage.success('已删除')
-  fetchList()
+  try {
+    await deleteDiary(id)
+    ElMessage.success('已删除')
+    fetchList()
+  } catch (e) {
+    handleApiError(e, '删除失败')
+  }
 }
 
 function getMoodIcon(mood: number) {

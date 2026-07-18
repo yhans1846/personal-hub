@@ -2,7 +2,6 @@
 import { ref, watch, computed, toRef } from 'vue'
 import { createStudyPlan, updateStudyPlan, getStudyPlanById } from '@/modules/planning/api'
 import { getTags } from '@/modules/knowledge/api'
-import { ElMessage } from 'element-plus'
 import { Link } from 'lucide-vue-next'
 import {
   UiDialog,
@@ -16,7 +15,8 @@ import {
   DialogEditor,
   DialogFooterActions,
 } from '@/components/ui'
-import { useEntityDialog } from '@/composables/useEntityDialog'
+import { useEntityDialog, useEntityFormSave } from '@/composables/useEntityDialog'
+import { unwrapResult } from '@/utils/apiResult'
 import type { TagVO } from '@/types/tag'
 
 const props = withDefaults(defineProps<{
@@ -44,7 +44,7 @@ const emptyForm = () => ({
 
 const form = ref(emptyForm())
 const tags = ref<TagVO[]>([])
-const saving = ref(false)
+const entityIdRef = toRef(props, 'entityId')
 
 const statusOptions = [
   { value: 0, label: '未开始', emoji: '⚪' },
@@ -65,7 +65,7 @@ const progressColor = computed(() => {
 })
 
 async function loadEntity(id: number) {
-  const r = (await getStudyPlanById(id)).data.data
+  const r = await unwrapResult(getStudyPlanById(id))
   form.value = {
     name: r.name,
     source: r.source || '',
@@ -76,15 +76,14 @@ async function loadEntity(id: number) {
     startDate: r.startDate,
     endDate: r.endDate,
     status: r.status,
-    tagIds: (r.tags || []).map((t: TagVO) => t.id),
+    tagIds: (r.tags || []).map((t) => t.id),
   }
 }
 
 watch(() => props.modelValue, async (val) => {
   if (!val) return
   try {
-    const tagRes = await getTags()
-    tags.value = tagRes.data.data
+    tags.value = await unwrapResult(getTags())
   } catch { /* ignore */ }
   if (!props.entityId) {
     form.value = emptyForm()
@@ -93,46 +92,38 @@ watch(() => props.modelValue, async (val) => {
 
 const { onSaved } = useEntityDialog({
   modelValue: toRef(props, 'modelValue'),
-  entityId: toRef(props, 'entityId'),
+  entityId: entityIdRef,
   emit,
   loadEntity,
 })
 
-async function handleSave() {
-  if (!form.value.name.trim()) {
-    ElMessage.warning('请输入计划名称')
-    return
-  }
+function buildPayload() {
   let url = form.value.url.trim()
   if (url && !/^https?:\/\//i.test(url)) {
     url = 'https://' + url
   }
-  saving.value = true
-  try {
-    const payload = {
-      name: form.value.name.trim(),
-      source: form.value.source.trim() || null,
-      author: form.value.author.trim() || null,
-      url: url || null,
-      remark: form.value.remark.trim() || null,
-      progress: form.value.progress,
-      startDate: form.value.startDate,
-      endDate: form.value.endDate,
-      status: form.value.status,
-      tagIds: form.value.tagIds,
-    }
-    if (props.entityId) {
-      await updateStudyPlan(props.entityId, payload)
-      ElMessage.success('已更新')
-    } else {
-      await createStudyPlan(payload)
-      ElMessage.success('已创建')
-    }
-    onSaved()
-  } finally {
-    saving.value = false
+  return {
+    name: form.value.name.trim(),
+    source: form.value.source.trim() || null,
+    author: form.value.author.trim() || null,
+    url: url || null,
+    remark: form.value.remark.trim() || null,
+    progress: form.value.progress,
+    startDate: form.value.startDate,
+    endDate: form.value.endDate,
+    status: form.value.status,
+    tagIds: form.value.tagIds,
   }
 }
+
+const { saving, handleSave } = useEntityFormSave({
+  entityId: entityIdRef,
+  validate: () => form.value.name.trim() ? null : '请输入计划名称',
+  create: () => createStudyPlan(buildPayload()).then(() => undefined),
+  update: (id) => updateStudyPlan(id, buildPayload()).then(() => undefined),
+  onSaved,
+})
+
 </script>
 
 <template>

@@ -26,19 +26,24 @@ export function revokePreviewUrl(url: string) {
   }
 }
 
+/** 触发浏览器下载 Blob */
+export function triggerBlobDownload(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(url)
+}
+
 /** 带鉴权下载文件到本地 */
 export async function downloadFileBlob(fileId: number, fileName: string) {
   const res = await request.get(`/files/${fileId}/download`, {
     responseType: 'blob',
   })
-  const url = URL.createObjectURL(res.data)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = fileName || `file-${fileId}`
-  document.body.appendChild(a)
-  a.click()
-  a.remove()
-  URL.revokeObjectURL(url)
+  triggerBlobDownload(res.data, fileName || `file-${fileId}`)
 }
 
 /** 拉取预览文本（txt / md） */

@@ -3,7 +3,6 @@ import { ref, watch, computed, toRef } from 'vue'
 import { createBookmark, updateBookmark, getBookmarkById } from '@/modules/resource/api'
 import { getCategories } from '@/modules/knowledge/api'
 import { getTags } from '@/modules/knowledge/api'
-import { ElMessage } from 'element-plus'
 import { FolderOpen, Link } from 'lucide-vue-next'
 import {
   UiDialog,
@@ -16,7 +15,8 @@ import {
 } from '@/components/ui'
 import type { CategoryVO } from '@/types/category'
 import type { TagVO } from '@/types/tag'
-import { useEntityDialog } from '@/composables/useEntityDialog'
+import { useEntityDialog, useEntityFormSave } from '@/composables/useEntityDialog'
+import { unwrapResult } from '@/utils/apiResult'
 
 const props = withDefaults(defineProps<{
   modelValue: boolean
@@ -38,7 +38,7 @@ const form = ref({
 })
 const categories = ref<CategoryVO[]>([])
 const tags = ref<TagVO[]>([])
-const saving = ref(false)
+const entityIdRef = toRef(props, 'entityId')
 
 const dialogTitle = computed(() => props.entityId ? '编辑收藏' : '新建收藏')
 const dialogSubtitle = computed(() => props.entityId ? '' : '收藏一个值得记录的页面')
@@ -47,8 +47,7 @@ const categoryOptions = computed(() => categories.value.map(c => ({ id: c.id, na
 const tagOptions = computed(() => tags.value.map(t => ({ id: t.id, name: t.name, color: t.color })))
 
 async function loadEntity(id: number) {
-  const res = await getBookmarkById(id)
-  const r = res.data.data
+  const r = await unwrapResult(getBookmarkById(id))
   form.value = {
     title: r.title, url: r.url, description: r.description || '',
     categoryId: r.categoryId, tagIds: (r.tags || []).map((t: TagVO) => t.id),
@@ -59,9 +58,12 @@ async function loadEntity(id: number) {
 watch(() => props.modelValue, async (val) => {
   if (!val) return
   try {
-    const [catRes, tagRes] = await Promise.all([getCategories('bookmark'), getTags()])
-    categories.value = catRes.data.data
-    tags.value = tagRes.data.data
+    const [cats, tagList] = await Promise.all([
+      unwrapResult(getCategories('bookmark')),
+      unwrapResult(getTags()),
+    ])
+    categories.value = cats
+    tags.value = tagList
   } catch { /* ignore */ }
   if (!props.entityId) {
     form.value = { title: '', url: '', description: '', categoryId: null, tagIds: [], showOnDashboard: false }
@@ -70,36 +72,35 @@ watch(() => props.modelValue, async (val) => {
 
 const { onSaved } = useEntityDialog({
   modelValue: toRef(props, 'modelValue'),
-  entityId: toRef(props, 'entityId'),
+  entityId: entityIdRef,
   emit,
   loadEntity,
 })
 
-async function handleSave() {
-  if (!form.value.title.trim()) { ElMessage.warning('请输入标题'); return }
-  if (!form.value.url.trim()) { ElMessage.warning('请输入网址'); return }
+function buildPayload() {
   let url = form.value.url.trim()
   if (!/^https?:\/\//i.test(url)) url = 'https://' + url
-  saving.value = true
-  try {
-    const payload = {
-      title: form.value.title,
-      url,
-      description: form.value.description,
-      categoryId: form.value.categoryId,
-      tagIds: form.value.tagIds,
-      showOnDashboard: form.value.showOnDashboard ? 1 : 0,
-    }
-    if (props.entityId) {
-      await updateBookmark(props.entityId, payload)
-      ElMessage.success('已更新')
-    } else {
-      await createBookmark(payload)
-      ElMessage.success('已创建')
-    }
-    onSaved()
-  } finally { saving.value = false }
+  return {
+    title: form.value.title,
+    url,
+    description: form.value.description,
+    categoryId: form.value.categoryId,
+    tagIds: form.value.tagIds,
+    showOnDashboard: form.value.showOnDashboard ? 1 : 0,
+  }
 }
+
+const { saving, handleSave } = useEntityFormSave({
+  entityId: entityIdRef,
+  validate: () => {
+    if (!form.value.title.trim()) return '请输入标题'
+    if (!form.value.url.trim()) return '请输入网址'
+    return null
+  },
+  create: () => createBookmark(buildPayload()).then(() => undefined),
+  update: (id) => updateBookmark(id, buildPayload()).then(() => undefined),
+  onSaved,
+})
 </script>
 
 <template>

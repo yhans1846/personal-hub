@@ -17,34 +17,29 @@ import { useDeepLinkDialog } from '@/composables/useDeepLinkDialog'
 import { useMainContentFill } from '@/composables/useMainContentFill'
 import { useFillPageSize } from '@/composables/useFillPageSize'
 import { useProductViewMode } from '@/composables/useProductViewMode'
+import { useEntityDialogHost, usePaginatedList, type PageQuery } from '@/composables/usePaginatedList'
 import { formatDate, formatDateDot, formatRelativeUpdated, formatUpdated } from '@/utils/formatTime'
+import { handleApiError, unwrapPage, unwrapResult } from '@/utils/apiResult'
+import { triggerBlobDownload } from '@/utils/file'
 
-const list = ref<StudyPlanVO[]>([])
-const total = ref(0)
-const loading = ref(false)
+type StudyPlanListQuery = StudyPlanQuery & PageQuery
 const tags = ref<TagVO[]>([])
 const stats = ref<StudyPlanStats>({ total: 0, pending: 0, learning: 0, done: 0, paused: 0 })
 const { viewMode, setViewMode } = useProductViewMode('study-plan-view', 'table')
-const query = ref<StudyPlanQuery>({
-  page: 1,
-  size: 10,
-  keyword: '',
-  sortBy: 'updatedAt',
-  sortDir: 'desc',
+
+const { list, total, loading, query, fetchList, onSearch, onPageChange } = usePaginatedList<StudyPlanVO, StudyPlanListQuery>({
+  initialQuery: {
+    page: 1,
+    size: 10,
+    keyword: '',
+    sortBy: 'updatedAt',
+    sortDir: 'desc',
+  },
+  fetchPage: (q) => unwrapPage(getStudyPlanList(q)),
+  errorMessage: '加载学习计划失败',
 })
 
-const drawerVisible = ref(false)
-const editId = ref<number | undefined>()
-
-function openCreate() {
-  editId.value = undefined
-  drawerVisible.value = true
-}
-
-function openEdit(id: number) {
-  editId.value = id
-  drawerVisible.value = true
-}
+const { dialogVisible: drawerVisible, editId, openCreate, openEdit } = useEntityDialogHost()
 
 useDeepLinkDialog({ openCreate, openEdit })
 
@@ -62,25 +57,14 @@ onMounted(() => {
 
 async function fetchTags() {
   try {
-    tags.value = (await getTags()).data.data
+    tags.value = await unwrapResult(getTags())
   } catch { /* ignore */ }
 }
 
 async function fetchStats() {
   try {
-    stats.value = (await getStudyPlanStats()).data.data
+    stats.value = await unwrapResult(getStudyPlanStats())
   } catch { /* ignore */ }
-}
-
-async function fetchList() {
-  loading.value = true
-  try {
-    const res = await getStudyPlanList(query.value)
-    list.value = res.data.data.records
-    total.value = res.data.data.total
-  } finally {
-    loading.value = false
-  }
 }
 
 function refreshAll() {
@@ -88,18 +72,8 @@ function refreshAll() {
   fetchList()
 }
 
-function onSearch() {
-  query.value.page = 1
-  fetchList()
-}
-
 function onFilterChange() {
   query.value.page = 1
-  fetchList()
-}
-
-function onPageChange(page: number) {
-  query.value.page = page
   fetchList()
 }
 
@@ -122,15 +96,10 @@ async function handleExport(scope: 'filtered' | 'all') {
     const blob = new Blob([res.data], {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = '学习计划.xlsx'
-    a.click()
-    URL.revokeObjectURL(url)
+    triggerBlobDownload(blob, '学习计划.xlsx')
     ElMessage.success(scope === 'all' ? '已导出全部计划' : '已导出当前筛选结果')
-  } catch {
-    ElMessage.error('导出失败')
+  } catch (e) {
+    handleApiError(e, '导出失败')
   } finally {
     exporting.value = false
   }
@@ -199,9 +168,13 @@ function softTagStyle(color?: string) {
 
 async function handleDelete(id: number) {
   await ElMessageBox.confirm('确定删除该计划？', '提示', { type: 'warning' })
-  await deleteStudyPlan(id)
-  ElMessage.success('已删除')
-  refreshAll()
+  try {
+    await deleteStudyPlan(id)
+    ElMessage.success('已删除')
+    refreshAll()
+  } catch (e) {
+    handleApiError(e, '删除失败')
+  }
 }
 
 async function handleCopy(plan: StudyPlanVO) {

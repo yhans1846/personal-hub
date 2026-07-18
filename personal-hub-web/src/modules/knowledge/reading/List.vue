@@ -14,32 +14,29 @@ import { useDeepLinkDialog } from '@/composables/useDeepLinkDialog'
 import { useMainContentFill } from '@/composables/useMainContentFill'
 import { useFillPageSize } from '@/composables/useFillPageSize'
 import { useProductViewMode } from '@/composables/useProductViewMode'
+import { useEntityDialogHost, usePaginatedList, type PageQuery } from '@/composables/usePaginatedList'
 import { formatDate, formatRelativeUpdated, formatUpdated } from '@/utils/formatTime'
+import { handleApiError, unwrapPage } from '@/utils/apiResult'
+import { triggerBlobDownload } from '@/utils/file'
 
-const list = ref<ReadingVO[]>([])
-const total = ref(0)
-const loading = ref(false)
+type ReadingListQuery = ReadingQuery & PageQuery
+const coverLoadFailed = ref<Set<number>>(new Set())
 const { viewMode, setViewMode } = useProductViewMode('reading-view', 'table')
-const query = ref<ReadingQuery>({
-  page: 1,
-  size: 10,
-  keyword: '',
-  sortBy: 'updatedAt',
-  sortDir: 'desc',
+
+const { list, total, loading, query, fetchList, onSearch, onPageChange } = usePaginatedList<ReadingVO, ReadingListQuery>({
+  initialQuery: {
+    page: 1,
+    size: 10,
+    keyword: '',
+    sortBy: 'updatedAt',
+    sortDir: 'desc',
+  },
+  fetchPage: (q) => unwrapPage(getReadingList(q)),
+  onFetched: () => { coverLoadFailed.value = new Set() },
+  errorMessage: '加载阅读记录失败',
 })
 
-const drawerVisible = ref(false)
-const editId = ref<number | undefined>()
-
-function openCreate() {
-  editId.value = undefined
-  drawerVisible.value = true
-}
-
-function openEdit(id: number) {
-  editId.value = id
-  drawerVisible.value = true
-}
+const { dialogVisible: drawerVisible, editId, openCreate, openEdit } = useEntityDialogHost()
 
 useDeepLinkDialog({ openCreate, openEdit })
 
@@ -50,30 +47,8 @@ const { pageSize } = useFillPageSize((size) => {
   fetchList()
 })
 
-async function fetchList() {
-  loading.value = true
-  try {
-    const res = await getReadingList(query.value)
-    list.value = res.data.data.records
-    total.value = res.data.data.total
-    coverLoadFailed.value = new Set()
-  } finally {
-    loading.value = false
-  }
-}
-
-function onSearch() {
-  query.value.page = 1
-  fetchList()
-}
-
 function onFilterChange() {
   query.value.page = 1
-  fetchList()
-}
-
-function onPageChange(page: number) {
-  query.value.page = page
   fetchList()
 }
 
@@ -95,15 +70,10 @@ async function handleExport(scope: 'filtered' | 'all') {
     const blob = new Blob([res.data], {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = '阅读记录.xlsx'
-    a.click()
-    URL.revokeObjectURL(url)
+    triggerBlobDownload(blob, '阅读记录.xlsx')
     ElMessage.success(scope === 'all' ? '已导出全部记录' : '已导出当前筛选结果')
-  } catch {
-    ElMessage.error('导出失败')
+  } catch (e) {
+    handleApiError(e, '导出失败')
   } finally {
     exporting.value = false
   }
@@ -160,9 +130,6 @@ function coverPlaceholderStyle(title: string) {
   return { background: c.bg, color: c.fg }
 }
 
-/** 封面 URL 存在但加载失败的记录 id */
-const coverLoadFailed = ref<Set<number>>(new Set())
-
 function onCoverError(id: number) {
   const next = new Set(coverLoadFailed.value)
   next.add(id)
@@ -175,9 +142,13 @@ function showCoverImg(book: ReadingVO) {
 
 async function handleDelete(id: number) {
   await ElMessageBox.confirm('确定删除该阅读记录？', '提示', { type: 'warning' })
-  await deleteReading(id)
-  ElMessage.success('已删除')
-  fetchList()
+  try {
+    await deleteReading(id)
+    ElMessage.success('已删除')
+    fetchList()
+  } catch (e) {
+    handleApiError(e, '删除失败')
+  }
 }
 
 async function handleCopy(book: ReadingVO) {
