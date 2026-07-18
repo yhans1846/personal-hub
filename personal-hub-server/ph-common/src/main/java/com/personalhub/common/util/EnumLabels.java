@@ -12,10 +12,10 @@ public final class EnumLabels {
     }
 
     /**
-     * @param code     可为 null
-     * @param values   枚举 values()
-     * @param codeFn   取 code
-     * @param labelFn  取 label
+     * @param code    可为 null
+     * @param values  枚举 values()
+     * @param codeFn  取 code
+     * @param labelFn 取 label
      * @return null → null；匹配 → label；未知 →「未知」
      */
     public static <E> String labelOf(

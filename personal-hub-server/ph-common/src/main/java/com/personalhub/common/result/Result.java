@@ -19,7 +19,8 @@ public class Result<T> {
     @Schema(description = "返回数据")
     private T data;
 
-    private Result() {}
+    private Result() {
+    }
 
     private Result(int code, String message, T data) {
         this.code = code;

@@ -25,7 +25,8 @@ public class PageResult<T> {
     @Schema(description = "每页条数", example = "10")
     private long size;
 
-    public PageResult() {}
+    public PageResult() {
+    }
 
     /**
      * 从 MyBatis-Plus IPage 构建

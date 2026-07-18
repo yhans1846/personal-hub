@@ -32,26 +32,24 @@ public class LocalStorageServiceImpl implements StorageService {
     }
 
     @Override
-    public String store(MultipartFile file, String relativePath) {
+    public void store(MultipartFile file, String relativePath) {
         try {
             Path targetPath = resolve(relativePath);
             Files.createDirectories(targetPath.getParent());
             file.transferTo(targetPath.toFile());
             log.debug("文件存储成功: {}", relativePath);
-            return relativePath;
         } catch (IOException e) {
             throw new BusinessException("文件存储失败: " + relativePath, e);
         }
     }
 
     @Override
-    public String store(byte[] data, String relativePath) {
+    public void store(byte[] data, String relativePath) {
         try {
             Path targetPath = resolve(relativePath);
             Files.createDirectories(targetPath.getParent());
             Files.write(targetPath, data);
             log.debug("文件字节存储成功: {}", relativePath);
-            return relativePath;
         } catch (IOException e) {
             throw new BusinessException("文件字节存储失败: " + relativePath, e);
         }

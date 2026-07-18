@@ -13,9 +13,13 @@ import java.nio.file.Paths;
 @ConfigurationProperties(prefix = "personal-hub.storage")
 public class StorageProperties {
 
-    /** 文件存储根目录，默认 ./data/uploads */
+    /**
+     * 文件存储根目录，默认 ./data/uploads
+     */
     private Path location = Paths.get("data", "uploads");
 
-    /** 单文件最大字节，默认 50MB */
+    /**
+     * 单文件最大字节，默认 50MB
+     */
     private long maxSize = 50 * 1024 * 1024;
 }

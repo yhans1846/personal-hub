@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -25,16 +26,17 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    /** /api/notes/{id}/images|attachments/... */
-    private static final Pattern NOTE_STATIC_RESOURCE =
-            Pattern.compile("^/api/notes/\\d+/(images|attachments)/.+$");
+    /**
+     * /api/notes/{id}/images|attachments/...
+     */
+    private static final Pattern NOTE_STATIC_RESOURCE = Pattern.compile("^/api/notes/\\d+/(images|attachments)/.+$");
 
     private final JwtUtil jwtUtil;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
-                                     HttpServletResponse response,
-                                     FilterChain filterChain) throws ServletException, IOException {
+                                    @NonNull HttpServletResponse response,
+                                    @NonNull FilterChain filterChain) throws ServletException, IOException {
         String token = null;
         String authHeader = request.getHeader("Authorization");
 
