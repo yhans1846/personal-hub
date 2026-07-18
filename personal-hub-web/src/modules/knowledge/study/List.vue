@@ -10,16 +10,20 @@ import StudyDialog from './StudyDialog.vue'
 import { useDeepLinkDialog } from '@/composables/useDeepLinkDialog'
 import { useMainContentFill } from '@/composables/useMainContentFill'
 import { useFillPageSize } from '@/composables/useFillPageSize'
+import { useEntityDialogHost, usePaginatedList, type PageQuery } from '@/composables/usePaginatedList'
 import { formatDuration } from '@/utils/formatTime'
+import { handleApiError, unwrapPage, unwrapResult } from '@/utils/apiResult'
 
-const list = ref<StudyRecordVO[]>([])
-const total = ref(0)
-const loading = ref(false)
 const stats = ref<StudyStats | null>(null)
-const query = ref<StudyRecordQuery>({ page: 1, size: 10, keyword: '' })
+type StudyListQuery = StudyRecordQuery & PageQuery
 
-const drawerVisible = ref(false)
-const editId = ref<number | undefined>()
+const { list, total, loading, query, fetchList, onSearch, onPageChange } = usePaginatedList<StudyRecordVO, StudyListQuery>({
+  initialQuery: { page: 1, size: 10, keyword: '' },
+  fetchPage: (q) => unwrapPage(getStudyRecordList(q)),
+  errorMessage: '加载学习记录失败',
+})
+
+const { dialogVisible: drawerVisible, editId, openCreate, openEdit } = useEntityDialogHost()
 
 useMainContentFill()
 const { pageSize } = useFillPageSize((size) => {
@@ -28,48 +32,28 @@ const { pageSize } = useFillPageSize((size) => {
   fetchList()
 })
 
-function openCreate() {
-  editId.value = undefined
-  drawerVisible.value = true
-}
-
-function openEdit(id: number) {
-  editId.value = id
-  drawerVisible.value = true
-}
-
 useDeepLinkDialog({ openCreate, openEdit })
 
 async function fetchStats() {
   try {
-    const res = await getStudyStats()
-    stats.value = res.data.data
+    stats.value = await unwrapResult(getStudyStats())
   } catch { /* ignore */ }
-}
-
-async function fetchList() {
-  loading.value = true
-  try {
-    const res = await getStudyRecordList(query.value)
-    list.value = res.data.data.records
-    total.value = res.data.data.total
-  } finally {
-    loading.value = false
-  }
 }
 
 fetchStats()
 
-function onSearch() { query.value.page = 1; fetchList() }
-function onPageChange(page: number) { query.value.page = page; fetchList() }
 function goCreate() { openCreate() }
 function goEdit(id: number) { openEdit(id) }
 
 async function handleDelete(id: number) {
   await ElMessageBox.confirm('确定删除该记录？', '提示', { type: 'warning' })
-  await deleteStudyRecord(id)
-  ElMessage.success('已删除')
-  fetchList()
+  try {
+    await deleteStudyRecord(id)
+    ElMessage.success('已删除')
+    fetchList()
+  } catch (e) {
+    handleApiError(e, '删除失败')
+  }
 }
 
 function groupByDate(items: StudyRecordVO[]) {

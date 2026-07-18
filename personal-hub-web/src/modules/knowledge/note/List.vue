@@ -13,16 +13,20 @@ import NoteCardContextMenu, { type CardMenuEntry } from './NoteCardContextMenu.v
 import { useMainContentFill } from '@/composables/useMainContentFill'
 import { useFillPageSize } from '@/composables/useFillPageSize'
 import { useProductViewMode } from '@/composables/useProductViewMode'
+import { usePaginatedList } from '@/composables/usePaginatedList'
+import { handleApiError, unwrapPage } from '@/utils/apiResult'
 
 const router = useRouter()
-const list = ref<NoteVO[]>([])
-const total = ref(0)
-const loading = ref(false)
-const query = ref<NoteQuery>({ page: 1, size: 10, keyword: '' })
 const showImport = ref(false)
 const cardMenuRef = ref<InstanceType<typeof NoteCardContextMenu> | null>(null)
 const activeNote = ref<NoteVO | null>(null)
 const { viewMode, setViewMode } = useProductViewMode('note-view', 'card')
+
+const { list, total, loading, query, fetchList, onSearch, onPageChange } = usePaginatedList<NoteVO, NoteQuery & { page: number; size: number }>({
+  initialQuery: { page: 1, size: 10, keyword: '' },
+  fetchPage: (q) => unwrapPage(getNoteList(q)),
+  errorMessage: '加载笔记失败',
+})
 
 useMainContentFill()
 
@@ -45,20 +49,6 @@ const cardMenuEntries: CardMenuEntry[] = [
 function openImport() {
   showImport.value = true
 }
-
-async function fetchList() {
-  loading.value = true
-  try {
-    const res = await getNoteList(query.value)
-    list.value = res.data.data.records
-    total.value = res.data.data.total
-  } finally {
-    loading.value = false
-  }
-}
-
-function onSearch() { query.value.page = 1; fetchList() }
-function onPageChange(page: number) { query.value.page = page; fetchList() }
 function goCreate() { router.push('/notes/new') }
 function goEdit(id: number) { router.push(`/notes/${id}/edit`) }
 function goPreview(id: number) { window.open(`/notes/${id}/preview`, '_blank') }
@@ -82,9 +72,13 @@ function visibleTags(tags: NoteVO['tags']) {
 
 async function handleDelete(id: number) {
   await ElMessageBox.confirm('确定将此笔记移入回收站？', '提示', { type: 'warning' })
-  await deleteNote(id)
-  ElMessage.success('已移入回收站')
-  fetchList()
+  try {
+    await deleteNote(id)
+    ElMessage.success('已移入回收站')
+    fetchList()
+  } catch (e) {
+    handleApiError(e, '移入回收站失败')
+  }
 }
 
 async function handleToggleFavorite(note: NoteVO) {

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, computed, toRef } from 'vue'
 import { createStudyRecord, updateStudyRecord, getStudyRecordById } from '@/modules/knowledge/api'
-import { ElMessage } from 'element-plus'
 import { Clock } from 'lucide-vue-next'
 import {
   UiDialog,
@@ -12,7 +11,8 @@ import {
   DialogEditor,
   DialogFooterActions,
 } from '@/components/ui'
-import { useEntityDialog } from '@/composables/useEntityDialog'
+import { useEntityDialog, useEntityFormSave } from '@/composables/useEntityDialog'
+import { unwrapResult } from '@/utils/apiResult'
 
 const props = withDefaults(defineProps<{
   modelValue: boolean
@@ -25,7 +25,7 @@ const emit = defineEmits<{
 }>()
 
 const form = ref({ subject: '', date: '', duration: 60, content: '', reflection: '' })
-const saving = ref(false)
+const entityIdRef = toRef(props, 'entityId')
 
 const dialogTitle = computed(() => props.entityId ? '编辑学习记录' : '新建学习记录')
 const dialogSubtitle = computed(() => props.entityId ? '' : '记录今天的学习')
@@ -36,7 +36,7 @@ const dateModel = computed({
 })
 
 async function loadEntity(id: number) {
-  const r = (await getStudyRecordById(id)).data.data
+  const r = await unwrapResult(getStudyRecordById(id))
   form.value = { subject: r.subject, date: r.date, duration: r.duration, content: r.content || '', reflection: r.reflection || '' }
 }
 
@@ -50,26 +50,22 @@ watch(() => props.modelValue, (val) => {
 
 const { onSaved } = useEntityDialog({
   modelValue: toRef(props, 'modelValue'),
-  entityId: toRef(props, 'entityId'),
-  emit: (event, value) => emit(event as any, value),
+  entityId: entityIdRef,
+  emit,
   loadEntity,
 })
 
-async function handleSave() {
-  if (!form.value.subject.trim()) { ElMessage.warning('请输入学习主题'); return }
-  if (!form.value.duration || form.value.duration < 1) { ElMessage.warning('时长至少1分钟'); return }
-  saving.value = true
-  try {
-    if (props.entityId) {
-      await updateStudyRecord(props.entityId, form.value)
-      ElMessage.success('已更新')
-    } else {
-      await createStudyRecord(form.value)
-      ElMessage.success('已创建')
-    }
-    onSaved()
-  } finally { saving.value = false }
-}
+const { saving, handleSave } = useEntityFormSave({
+  entityId: entityIdRef,
+  validate: () => {
+    if (!form.value.subject.trim()) return '请输入学习主题'
+    if (!form.value.duration || form.value.duration < 1) return '时长至少1分钟'
+    return null
+  },
+  create: () => createStudyRecord(form.value).then(() => undefined),
+  update: (id) => updateStudyRecord(id, form.value).then(() => undefined),
+  onSaved,
+})
 </script>
 
 <template>

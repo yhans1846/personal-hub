@@ -94,7 +94,7 @@ watch(() => props.modelValue, async (val) => {
 const { onSaved } = useEntityDialog({
   modelValue: toRef(props, 'modelValue'),
   entityId: toRef(props, 'entityId'),
-  emit: (event, value) => emit(event as any, value),
+  emit,
   loadEntity,
 })
 

@@ -10,19 +10,23 @@ import Sortable from 'sortablejs'
 import { useDeepLinkDialog } from '@/composables/useDeepLinkDialog'
 import { useMainContentFill } from '@/composables/useMainContentFill'
 import { useFillPageSize } from '@/composables/useFillPageSize'
+import { useEntityDialogHost, usePaginatedList, type PageQuery } from '@/composables/usePaginatedList'
+import { handleApiError, unwrapPage } from '@/utils/apiResult'
 
 type TabKey = 'all' | 'overdue' | 'today' | 'week' | 'later' | 'done'
+type TodoListQuery = TodoQuery & PageQuery
 
-const list = ref<TodoVO[]>([])
-const total = ref(0)
-const loading = ref(false)
-const query = ref<TodoQuery>({ page: 1, size: 10, keyword: '', dueScope: 'all' })
 const currentTab = ref<TabKey>('all')
 const listRef = ref<HTMLElement | null>(null)
 let sortable: Sortable | null = null
 
-const dialogVisible = ref(false)
-const editId = ref<number | undefined>()
+const { list, total, loading, query, fetchList, onSearch, onPageChange } = usePaginatedList<TodoVO, TodoListQuery>({
+  initialQuery: { page: 1, size: 10, keyword: '', dueScope: 'all' },
+  fetchPage: (q) => unwrapPage(getTodoList(q)),
+  errorMessage: '加载待办失败',
+})
+
+const { dialogVisible, editId, openCreate, openEdit } = useEntityDialogHost()
 
 useMainContentFill()
 const { pageSize } = useFillPageSize((size) => {
@@ -30,15 +34,6 @@ const { pageSize } = useFillPageSize((size) => {
   query.value.page = 1
   fetchList()
 })
-
-function openCreate() {
-  editId.value = undefined
-  dialogVisible.value = true
-}
-function openEdit(id: number) {
-  editId.value = id
-  dialogVisible.value = true
-}
 
 useDeepLinkDialog({ openCreate, openEdit })
 
@@ -60,17 +55,6 @@ function initSortable() {
         list.value.splice(evt.newIndex!, 0, item)
       },
     })
-  }
-}
-
-async function fetchList() {
-  loading.value = true
-  try {
-    const res = await getTodoList(query.value)
-    list.value = res.data.data.records
-    total.value = res.data.data.total
-  } finally {
-    loading.value = false
   }
 }
 
@@ -109,11 +93,6 @@ const tabs = computed(() =>
   })),
 )
 
-function onSearch() {
-  query.value.page = 1
-  fetchList()
-}
-
 function onTabChange(key: TabKey) {
   currentTab.value = key
   query.value.dueScope = key
@@ -121,24 +100,27 @@ function onTabChange(key: TabKey) {
   fetchList()
 }
 
-function onPageChange(page: number) {
-  query.value.page = page
-  fetchList()
-}
-
 function goCreate() { openCreate() }
 function goEdit(id: number) { openEdit(id) }
 
 async function handleToggleDone(id: number) {
-  await toggleDone(id)
-  ElMessage.success('状态已更新')
-  await fetchList()
+  try {
+    await toggleDone(id)
+    ElMessage.success('状态已更新')
+    await fetchList()
+  } catch (e) {
+    handleApiError(e, '更新失败')
+  }
 }
 async function handleDelete(id: number) {
   await ElMessageBox.confirm('确定删除该任务？', '提示', { type: 'warning' })
-  await deleteTodo(id)
-  ElMessage.success('已删除')
-  await fetchList()
+  try {
+    await deleteTodo(id)
+    ElMessage.success('已删除')
+    await fetchList()
+  } catch (e) {
+    handleApiError(e, '删除失败')
+  }
 }
 
 const priorityOptions = [

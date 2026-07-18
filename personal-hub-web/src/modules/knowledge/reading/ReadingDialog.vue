@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, computed, toRef } from 'vue'
 import { createReading, updateReading, getReadingById } from '@/modules/knowledge/api'
-import { ElMessage } from 'element-plus'
 import { Star } from 'lucide-vue-next'
 import {
   UiDialog,
@@ -14,7 +13,8 @@ import {
   DialogEditor,
   DialogFooterActions,
 } from '@/components/ui'
-import { useEntityDialog } from '@/composables/useEntityDialog'
+import { useEntityDialog, useEntityFormSave } from '@/composables/useEntityDialog'
+import { unwrapResult } from '@/utils/apiResult'
 
 const props = withDefaults(defineProps<{
   modelValue: boolean
@@ -31,7 +31,7 @@ const form = ref({
   progress: 0, rating: undefined as number | undefined, totalDuration: undefined as number | undefined,
   status: 0, notes: '', startDate: null as string | null, endDate: null as string | null
 })
-const saving = ref(false)
+const entityIdRef = toRef(props, 'entityId')
 
 const statusOptions = [
   { value: 0, label: '未读', emoji: '📋' },
@@ -49,7 +49,7 @@ const progressColor = computed(() => {
 })
 
 async function loadEntity(id: number) {
-  const r = (await getReadingById(id)).data.data
+  const r = await unwrapResult(getReadingById(id))
   form.value = {
     bookTitle: r.bookTitle, author: r.author || '', coverUrl: r.coverUrl || '',
     totalChapters: r.totalChapters, currentChapter: r.currentChapter, progress: r.progress,
@@ -69,25 +69,18 @@ watch(() => props.modelValue, (val) => {
 
 const { onSaved } = useEntityDialog({
   modelValue: toRef(props, 'modelValue'),
-  entityId: toRef(props, 'entityId'),
-  emit: (event, value) => emit(event as any, value),
+  entityId: entityIdRef,
+  emit,
   loadEntity,
 })
 
-async function handleSave() {
-  if (!form.value.bookTitle.trim()) { ElMessage.warning('请输入书名'); return }
-  saving.value = true
-  try {
-    if (props.entityId) {
-      await updateReading(props.entityId, form.value)
-      ElMessage.success('已更新')
-    } else {
-      await createReading(form.value)
-      ElMessage.success('已创建')
-    }
-    onSaved()
-  } finally { saving.value = false }
-}
+const { saving, handleSave } = useEntityFormSave({
+  entityId: entityIdRef,
+  validate: () => form.value.bookTitle.trim() ? null : '请输入书名',
+  create: () => createReading(form.value).then(() => undefined),
+  update: (id) => updateReading(id, form.value).then(() => undefined),
+  onSaved,
+})
 
 function onProgressChange(e: Event) {
   const val = Number((e.target as HTMLInputElement).value)

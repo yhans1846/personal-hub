@@ -19,7 +19,7 @@ import {
   DialogFooterActions,
 } from '@/components/ui'
 import ImageLightbox from '@/components/ImageLightbox.vue'
-import { useEntityDialog } from '@/composables/useEntityDialog'
+import { useEntityDialog, type EntityDialogEmit } from '@/composables/useEntityDialog'
 
 const props = withDefaults(defineProps<{
   modelValue: boolean
@@ -133,10 +133,15 @@ watch(() => props.entityId, (id) => {
   if (id) workingId.value = id
 })
 
+const dialogEmit: EntityDialogEmit = ((event: 'update:modelValue' | 'saved', value?: boolean) => {
+  if (event === 'update:modelValue') emit('update:modelValue', value as boolean)
+  else emit('saved')
+}) as EntityDialogEmit
+
 const { onSaved } = useEntityDialog({
   modelValue: toRef(props, 'modelValue'),
   entityId: toRef(props, 'entityId'),
-  emit: (event, value) => emit(event as any, value),
+  emit: dialogEmit,
   loadEntity,
 })
 

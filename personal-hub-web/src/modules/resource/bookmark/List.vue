@@ -14,17 +14,22 @@ import type { CategoryVO } from '@/types/category'
 import { useMainContentFill } from '@/composables/useMainContentFill'
 import { useFillPageSize } from '@/composables/useFillPageSize'
 import { useDeepLinkDialog } from '@/composables/useDeepLinkDialog'
+import { useEntityDialogHost, usePaginatedList, type PageQuery } from '@/composables/usePaginatedList'
+import { handleApiError, unwrapPage, unwrapResult } from '@/utils/apiResult'
 
 const router = useRouter()
-const list = ref<BookmarkVO[]>([])
-const total = ref(0)
-const loading = ref(false)
 const categories = ref<CategoryVO[]>([])
 const tags = ref<TagVO[]>([])
-const query = ref<BookmarkQuery>({ page: 1, size: 10, keyword: '' })
 
-const dialogVisible = ref(false)
-const editId = ref<number | undefined>()
+type BookmarkListQuery = BookmarkQuery & PageQuery
+
+const { list, total, loading, query, fetchList, onSearch, onPageChange } = usePaginatedList<BookmarkVO, BookmarkListQuery>({
+  initialQuery: { page: 1, size: 10, keyword: '' },
+  fetchPage: (q) => unwrapPage(getBookmarkList(q)),
+  errorMessage: '加载收藏失败',
+})
+
+const { dialogVisible, editId, openCreate, openEdit } = useEntityDialogHost()
 
 useMainContentFill()
 const { pageSize } = useFillPageSize((size) => {
@@ -32,16 +37,6 @@ const { pageSize } = useFillPageSize((size) => {
   query.value.page = 1
   fetchList()
 })
-
-function openCreate() {
-  editId.value = undefined
-  dialogVisible.value = true
-}
-
-function openEdit(id: number) {
-  editId.value = id
-  dialogVisible.value = true
-}
 
 useDeepLinkDialog({ openCreate, openEdit })
 
@@ -52,39 +47,30 @@ onMounted(() => {
 
 async function fetchCategories() {
   try {
-    categories.value = (await getCategories('bookmark')).data.data
+    categories.value = await unwrapResult(getCategories('bookmark'))
   } catch { /* ignore */ }
 }
 
 async function fetchTags() {
   try {
-    tags.value = (await getTags()).data.data
+    tags.value = await unwrapResult(getTags())
   } catch { /* ignore */ }
 }
 
-async function fetchList() {
-  loading.value = true
-  try {
-    const res = await getBookmarkList(query.value)
-    list.value = res.data.data.records
-    total.value = res.data.data.total
-  } finally {
-    loading.value = false
-  }
-}
-
-function onSearch() { query.value.page = 1; fetchList() }
 function onFilterChange() { query.value.page = 1; fetchList() }
-function onPageChange(page: number) { query.value.page = page; fetchList() }
 function goCreate() { openCreate() }
 function goEdit(id: number) { openEdit(id) }
 function goCategories() { router.push('/categories') }
 
 async function handleDelete(id: number) {
   await ElMessageBox.confirm('确定删除该收藏？', '提示', { type: 'warning' })
-  await deleteBookmark(id)
-  ElMessage.success('已删除')
-  fetchList()
+  try {
+    await deleteBookmark(id)
+    ElMessage.success('已删除')
+    fetchList()
+  } catch (e) {
+    handleApiError(e, '删除失败')
+  }
 }
 
 async function toggleDashboard(item: BookmarkVO) {
