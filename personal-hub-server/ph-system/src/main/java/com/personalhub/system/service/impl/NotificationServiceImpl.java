@@ -13,7 +13,6 @@ import com.personalhub.system.service.NotificationService;
 import com.personalhub.system.vo.NotificationVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +20,10 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
+
+/**
+ * 用户通知 Service 实现
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -142,19 +145,6 @@ public class NotificationServiceImpl implements NotificationService {
         }
 
         log.info("系统通知生成完成: userId={}, 新增={}", userId, created);
-    }
-
-    @Scheduled(cron = "0 0 8 * * ?")
-    public void scheduledGenerate() {
-        log.info("定时任务: 开始生成系统通知");
-        List<Long> userIds = notificationMapper.selectAllUserIds();
-        for (Long userId : userIds) {
-            try {
-                generateSystemNotifications(userId);
-            } catch (Exception e) {
-                log.error("生成系统通知失败: userId={}", userId, e);
-            }
-        }
     }
 
     private boolean hasNoExistingNotification(Long userId, String type, Long relatedId) {

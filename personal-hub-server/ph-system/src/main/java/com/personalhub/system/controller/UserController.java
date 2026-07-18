@@ -1,13 +1,12 @@
 package com.personalhub.system.controller;
 
 import com.personalhub.common.exception.BusinessException;
-
 import com.personalhub.common.result.Result;
 import com.personalhub.common.util.CurrentUser;
+import com.personalhub.storage.StorageService;
 import com.personalhub.system.dto.UserProfileUpdateDTO;
 import com.personalhub.system.service.UserService;
 import com.personalhub.system.vo.UserProfileVO;
-import com.personalhub.storage.StorageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;

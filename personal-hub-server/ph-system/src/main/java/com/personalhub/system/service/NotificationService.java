@@ -1,11 +1,15 @@
 package com.personalhub.system.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.personalhub.system.vo.NotificationVO;
 import com.personalhub.system.dto.NotificationQueryDTO;
+import com.personalhub.system.vo.NotificationVO;
 
 import java.util.List;
 
+
+/**
+ * 用户通知服务
+ */
 public interface NotificationService {
 
     IPage<NotificationVO> list(Long userId, NotificationQueryDTO query);

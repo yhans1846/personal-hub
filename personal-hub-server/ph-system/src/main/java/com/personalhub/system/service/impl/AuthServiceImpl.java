@@ -2,12 +2,12 @@ package com.personalhub.system.service.impl;
 
 import com.personalhub.common.exception.BusinessException;
 import com.personalhub.common.util.JwtUtil;
-import com.personalhub.system.service.AuthService;
-import com.personalhub.system.service.AuditLogService;
-import com.personalhub.system.service.CaptchaService;
-import com.personalhub.system.vo.LoginVO;
 import com.personalhub.system.entity.User;
+import com.personalhub.system.service.AuditLogService;
+import com.personalhub.system.service.AuthService;
+import com.personalhub.system.service.CaptchaService;
 import com.personalhub.system.service.UserService;
+import com.personalhub.system.vo.LoginVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;

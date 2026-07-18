@@ -27,9 +27,7 @@ public class CaptchaService {
     public static final Duration TTL = Duration.ofSeconds(120);
 
     private static final String KEY_PREFIX = "captcha:";
-    private static final String[] BOOKS = {
-            "📕", "📗", "📘", "📙", "📓", "📔", "📒", "📚"
-    };
+    private static final String[] BOOKS = {"📕", "📗", "📘", "📙", "📓", "📔", "📒", "📚"};
 
     private final StringRedisTemplate stringRedisTemplate;
 
@@ -99,7 +97,9 @@ public class CaptchaService {
         stringRedisTemplate.delete(key);
     }
 
-    /** 供单测：槽位是否匹配 */
+    /**
+     * 供单测：槽位是否匹配
+     */
     public static boolean withinTolerance(int expected, int actual) {
         return expected == actual;
     }

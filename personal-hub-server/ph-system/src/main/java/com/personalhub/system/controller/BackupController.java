@@ -23,8 +23,8 @@ public class BackupController {
     public Result<Map<String, Object>> backupNow(Authentication auth) {
         Long userId = CurrentUser.id(auth);
         return Result.success(Map.of(
-            "id", 0,
-            "downloadUrl", ""
+                "id", 0,
+                "downloadUrl", ""
         ));
     }
 

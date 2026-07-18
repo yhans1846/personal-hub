@@ -18,26 +18,40 @@ import java.time.LocalDateTime;
 @TableName("audit_log")
 public class AuditLog {
 
-    /** 主键 */
+    /**
+     * 主键
+     */
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    /** 业务模块（NOTE/TODO/FILE...） */
+    /**
+     * 业务模块（NOTE/TODO/FILE...）
+     */
     private String module;
 
-    /** 业务ID */
+    /**
+     * 业务ID
+     */
     private Long businessId;
 
-    /** 操作类型（DELETE/RESTORE/CREATE/UPDATE...） */
+    /**
+     * 操作类型（DELETE/RESTORE/CREATE/UPDATE...）
+     */
     private String action;
 
-    /** 操作描述 */
+    /**
+     * 操作描述
+     */
     private String content;
 
-    /** 操作用户ID */
+    /**
+     * 操作用户ID
+     */
     private Long operatorId;
 
-    /** 操作时间 */
+    /**
+     * 操作时间
+     */
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
 }

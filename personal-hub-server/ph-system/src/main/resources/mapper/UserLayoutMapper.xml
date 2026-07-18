@@ -3,21 +3,25 @@
 <mapper namespace="com.personalhub.system.mapper.UserLayoutMapper">
 
     <select id="selectByUserAndType" resultType="com.personalhub.system.entity.UserLayout">
-        SELECT * FROM user_layout
-        WHERE user_id = #{userId} AND layout_type = #{layoutType} AND is_deleted = 0
+        SELECT *
+        FROM user_layout
+        WHERE user_id = #{userId}
+          AND layout_type = #{layoutType}
+          AND is_deleted = 0
     </select>
 
     <select id="selectByUserAndTypeAny" resultType="com.personalhub.system.entity.UserLayout">
-        SELECT * FROM user_layout
-        WHERE user_id = #{userId} AND layout_type = #{layoutType}
-        LIMIT 1
+        SELECT *
+        FROM user_layout
+        WHERE user_id = #{userId}
+          AND layout_type = #{layoutType} LIMIT 1
     </select>
 
     <update id="restoreAndUpdate">
         UPDATE user_layout
         SET layout_json = #{layoutJson},
-            is_deleted = 0,
-            updated_at = NOW()
+            is_deleted  = 0,
+            updated_at  = NOW()
         WHERE id = #{id}
     </update>
 

@@ -21,13 +21,19 @@ public class UserLayout {
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    /** 所属用户ID */
+    /**
+     * 所属用户ID
+     */
     private Long userId;
 
-    /** 配置类型: menu / dashboard */
+    /**
+     * 配置类型: menu / dashboard
+     */
     private String layoutType;
 
-    /** 布局配置JSON内容 */
+    /**
+     * 布局配置JSON内容
+     */
     private String layoutJson;
 
     @TableField(fill = FieldFill.INSERT)
