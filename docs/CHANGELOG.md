@@ -5,17 +5,12 @@
 ## [Unreleased]
 
 ### 2026-07-18
-- **日记配图资源包**：配图改存 `diaries/{id}/images/`，字段 `image_files`（文件名 JSON）；不进 `file_resource`；新建须先保存再上传；迁移 `sql/alter_2026-07-18_diary_image_files.sql`（不做历史数据迁移）
-- **清理未用字段**：删除 `bookmark_url.tags`/`favicon`（+ 启动迁移）、`file_resource.source`/`ref_id`/`stored_name`、`study_record.plan_id`；迁移 `sql/alter_2026-07-18_drop_unused_columns.sql`；收藏图标改由前端按域名拉取；`audit_log.business_id` 保留
-- **审计日志**：登录成功写入 `audit_log`（module=`AUTH`, action=`LOGIN`）；此前仅笔记删除/恢复会记，导致「最近活动」看不到登录
-- **日记定位**：浏览器 `geolocation` 写入 `latitude`/`longitude`（不接地图反查）；弹窗「定位」按钮 + 坐标展示/清除；迁移 `sql/alter_2026-07-18_diary_geolocation.sql`
-- **日记配图排序**：缩略图支持拖拽排序（SortableJS），顺序写入 `imageFiles`，首张作封面
-- **文件预览**：列表内嵌预览（图片 Lightbox / PDF iframe / txt·md）；Office/压缩包提示下载；axios blob 鉴权下载；类型筛选分组对齐后端
-- **文件分类/类型**：上传可选分类；`PATCH /api/files/{id}/category`；卡片可改分类；筛选真正按 type/category 生效
-- **编辑框编辑器气质（方案 B）**：积木 `DialogTitleField` / `PropGrid` / `PropCard` / `ChoiceRow` / `ChipRow` / `DateChip` / `Editor`；待办/日记/阅读/计划/学习/收藏/标签/分类 + ProfileDrawer 对齐；笔记不动
-- **对话框统一**：`UiDialog` `size` sm/md/lg；`DialogSection` / `DialogDivider` / `DialogFooterActions`；弹窗内隐藏滚动条
-- **日期面板**：产品化 `ph-date-popper` + 全局 `zh-cn` 语言包
-- **规格/计划**：`docs/superpowers/specs/2026-07-18-dialog-editor-character-design.md` · `docs/superpowers/plans/2026-07-18-dialog-editor-character.md`
+- **日记配图资源包**：`diaries/{id}/images/` + `image_files`；新建先保存再上传；不进 `file_resource`；不做历史迁移
+- **文件模块**：内嵌预览（图/PDF/文本）；上传/卡片可改分类；`type` 分组筛选；列表边界=本页上传
+- **Dialog 编辑器气质**：`DialogTitleField` 等积木；业务弹窗（笔记除外）对齐；`UiDialog` size；日期 `ph-date-popper`
+- **清理未用字段**：去 `bookmark_url.tags`/`favicon`、`file_resource.source`/`ref_id`/`stored_name`、`study_record.plan_id`
+- **其它**：登录写 `audit_log(AUTH/LOGIN)`；日记 GPS 坐标；配图拖拽排序
+- **文档**：`PAGE_SPEC`/`STYLE_GUIDE`/`PROJECT`/`README`/`DEPLOYMENT` 同步；规格见 `docs/superpowers/specs/2026-07-18-*`
 
 ### 2026-07-17
 - **修复（QA）**：布局 `save` 幂等 upsert（含软删恢复 + DuplicateKey 回退）；上传异常（Multipart / 错误 Content-Type）→ 400「请上传文件」；收藏夹接入 `useDeepLinkDialog`

@@ -42,10 +42,10 @@ $COMPOSE up -d --build    # http://<内网IP>/
 
 `sql/init.sql` 仅 MySQL 卷**首次**执行。清库：`down` → `docker volume rm personal-hub_mysql_data`（先备份）→ 再 `up`。
 
-迁移脚本 Compose **不**自动跑：
+迁移脚本 Compose **不**自动跑。已有库按日期执行 `sql/alter_*.sql`（例：日记定位、未用字段清理、`image_files` 改名）：
 
 ```bash
-$COMPOSE exec -T mysql mysql -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE" < sql/migration-….sql
+$COMPOSE exec -T mysql mysql -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE" < sql/alter_2026-07-18_….sql
 ```
 
 弱密钥时 `ProdSecretsValidator` 拒启。健康：`http://127.0.0.1:8080/actuator/health`。

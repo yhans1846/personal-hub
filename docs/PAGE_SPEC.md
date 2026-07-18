@@ -63,6 +63,17 @@ ListToolbar + 可选状态徽章（非 KPI 大卡）。禁营销副标题。
 
 交互：Dialog · `useDeepLinkDialog` · 删后刷新 · 骨架 · lucide。
 
+### 日记列表补充
+
+- 列表/卡片缩略图走 `getDiaryImagePreviewUrl(diaryId, filename)`，非 `/api/files`
+- 新建日记：**先保存**拿到 id 后再传配图；弹窗可停留编辑态继续上传
+
+### 文件列表补充
+
+- 点击卡片 → `FilePreviewDialog`（图 / PDF / txt·md；其余提示下载）
+- 下载须鉴权 blob，禁裸 `window.open`
+- 上传可选分类；卡片可改 `PATCH /category`；列表仅本页上传文件
+
 ---
 
 ## 3. 预览 / 文档页
@@ -80,7 +91,17 @@ TOC 宽 220（收起 34，拖 160–400）。主题：`data-preview-theme` → `
 
 ---
 
-## 4. Checklist
+## 4. 业务 Dialog（编辑器气质）
+
+笔记除外：`UiDialog` + **标题区 → 属性块 → 写作区 → Footer**。  
+组件目录见 `STYLE_GUIDE`；细则见规格 `2026-07-18-dialog-editor-character-design`。  
+短表单（标签/分类）无写作区；`ProfileDrawer` 例外保留抽屉。
+
+---
+
+## 5. Checklist
 
 **列表：** Header+Toolbar+Empty+Pagination · Table/Card 或例外 · 槽位/fill · Dialog+深链 · Token+骨架+深色  
-**预览：** DocLayout+prose · readingConfig · §3 注意项
+**预览：** DocLayout+prose · readingConfig · §3 注意项  
+**Dialog：** 积木骨架 · FooterActions · 日记配图先保存  
+**文件：** 内嵌预览 · 鉴权下载 · 不与笔记/日记资源混库

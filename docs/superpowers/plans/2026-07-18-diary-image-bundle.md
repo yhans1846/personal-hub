@@ -27,25 +27,25 @@
 
 ### 任务 1：DB + Entity/DTO/VO
 
-- [ ] 改名列并更新 Entity 解析为 `List<String>`
-- [ ] DTO/VO 字段替换
-- [ ] 本地执行 ALTER
+- [x] 改名列并更新 Entity 解析为 `List<String>`
+- [x] DTO/VO 字段替换
+- [x] 本地执行 ALTER
 
 ### 任务 2：DiaryFileService + Controller
 
-- [ ] 上传写入 `diaries/{id}/images/{uuid}.ext`，append 到 `image_files`
-- [ ] GET / DELETE 端点；filename 禁止 `..` 与 `/`
-- [ ] 删日记时删 `diaries/{id}` 目录
+- [x] 上传写入 `diaries/{id}/images/{uuid}.ext`，append 到 `image_files`
+- [x] GET / DELETE 端点；filename 禁止 `..` 与 `/`
+- [x] 删日记时删 `diaries/{id}` 目录
 
 ### 任务 3：前端
 
-- [ ] 新建：先保存拿 id，再允许传图
-- [ ] 预览 URL：`/api/diaries/{id}/images/{filename}`（blob + JWT）
-- [ ] 去掉对 `uploadFile` / `getFilePreviewUrl(fileId)` 的日记依赖
+- [x] 新建：先保存拿 id，再允许传图
+- [x] 预览 URL：`/api/diaries/{id}/images/{filename}`（blob + JWT）
+- [x] 去掉对 `uploadFile` / `getFilePreviewUrl(fileId)` 的日记依赖
 
 ### 任务 4：文档 + 规格状态
 
-- [ ] 更新 DATABASE / API / CHANGELOG；规格状态改为已实现
+- [x] 更新 DATABASE / API / CHANGELOG；规格状态改为已实现
 
 ---
 

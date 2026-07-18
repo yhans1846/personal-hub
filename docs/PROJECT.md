@@ -53,14 +53,16 @@ ph-common ← ph-system ← ph-biz ← ph-boot
 | 十–十七 | 编辑器；设置阅读配置；Dialog；统计；Profile；Focus；部署；Vditor |
 | 十八 | ph-biz 合并；列表一屏铺满；设置标签云；PAGE_SPEC 收口 |
 | 十九 | V2 项目治理（死代码清理 · DRY · 目录对齐 · 文档归档） |
+| 二十 | Dialog 编辑器气质；文件预览/分类；日记配图资源包；未用字段清理；登录审计 |
 
 ## 后续可扩展
 
 | 功能 | 优先级 |
 |------|--------|
-| AI 总结/问答 · OCR · 双向链接 · 附件 · Mermaid/KaTeX | 低 |
-| PDF 预览 · MD 导出 · 数据备份 | 中 |
-| Docker 部署 | ✅ 见 `DEPLOYMENT.md` |
+| AI 总结/问答 · OCR · 双向链接 · Mermaid/KaTeX | 低 |
+| 日记历史配图迁移 · 笔记附件进统一资源索引 | 低 |
+| MD 导出 · 数据备份 | 中 |
+| Docker 部署 · 文件 PDF/文本预览 | ✅ |
 
 ## 开发历史（摘要）
 
@@ -70,3 +72,4 @@ ph-common ← ph-system ← ph-biz ← ph-boot
 | 15–27 | 标签/Dashboard/通知/布局/Ui/分类/配置 |
 | 28–37 | 回收站/预览/JWT query/Dialog/统计/Profile/Focus |
 | 38–40 | ph-biz；fill 列表；规范收口 |
+| 41 | V2 治理；Dialog 积木；文件预览；日记独立配图目录 |

@@ -33,11 +33,12 @@ user_id · title · content · is_done · priority(1高2中3低) · due_date · 
 索引 user_id / due_date
 
 ### `file_resource`
-user_id · name · path · size · type · mime_type · category_id · is_deleted · 时间
+user_id · name · path · size · type · mime_type · category_id · is_deleted · 时间  
+**仅**文件管理页 `/api/files` 上传；笔记/日记配图不进本表（见存储目录约定）
 
 ### `diary_entry`
-user_id · date · title · content · mood(1–5) · weather/location · latitude/longitude（浏览器定位，可空）· image_files（文件名 JSON，目录 `diaries/{id}/images/`）· is_deleted · 时间  
-索引 `(user_id,date)` / date
+user_id · date · title · content · mood(1–5) · weather/location · latitude/longitude（浏览器定位，可空）· image_files（文件名 JSON）· is_deleted · 时间  
+索引 `(user_id,date)` / date。配图目录：`diaries/{id}/images/`（对齐笔记 `notes/{id}/images/`）
 
 ### `bookmark_url`
 user_id · title · url · description · category_id · show_on_dashboard · is_deleted · 时间  

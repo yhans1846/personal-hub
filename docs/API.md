@@ -60,13 +60,13 @@ POST：`{title,content,priority,dueDate}`
 
 分页 · 详情 · upload（可带 `categoryId`）· `PATCH /{id}/category` · download/preview · 删除。  
 列表参数：keyword，`type`（扩展名或分组 `image|pdf|doc|archive`），categoryId  
-前端：列表内嵌预览；上传可选分类；卡片可改分类；筛选按类型/分类生效
+**边界：** 只管理本页上传写入的 `file_resource`；笔记/日记配图走各自资源包 API，不会出现在本列表。
 
 ## 日记 `/api/diaries`
 
 CRUD + `GET /month?month=YYYY-MM`。列表：keyword,startDate,endDate,mood,month  
 创建/更新可含 `location`、`latitude`、`longitude`、`imageFiles`（文件名字符串数组）  
-配图（不进 `file_resource`）：`POST|GET|DELETE /{id}/images[/{filename}]` → 目录 `diaries/{id}/images/`
+配图：`POST|GET|DELETE /{id}/images[/{filename}]` → `diaries/{id}/images/`（须先有 diaryId；不进 `file_resource`）
 
 ## 收藏 `/api/bookmarks`
 
