@@ -74,20 +74,20 @@ function handleReset() {
 </template>
 
 <style scoped>
-.experimental-features { }
-
+/* 间距对齐外观/阅读：区块 20 · 标题下 10 · 行间 12 · 末项清零 */
 .beta-notice {
   display: flex; align-items: center; gap: 8px;
   padding: 10px 14px;
   background: color-mix(in srgb, var(--warning) 10%, transparent);
   border: 1px solid color-mix(in srgb, var(--warning) 30%, transparent);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   font-size: 12px;
   color: var(--warning);
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .setting-section { margin-bottom: 20px; }
+.setting-section:last-child { margin-bottom: 0; }
 
 .section-title-row {
   display: flex;
@@ -97,11 +97,12 @@ function handleReset() {
 }
 
 .section-title {
-  margin: 0;
+  margin: 0 0 10px;
   font-size: 13px;
   font-weight: 600;
   color: var(--text-secondary);
 }
+.section-title-row .section-title { margin-bottom: 0; }
 
 .reset-link {
   display: inline-flex;
@@ -113,8 +114,8 @@ function handleReset() {
   border: none;
   cursor: pointer;
   padding: 2px 6px;
-  border-radius: 4px;
-  transition: all 150ms ease;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition);
 }
 .reset-link:hover {
   color: var(--accent);
@@ -122,12 +123,12 @@ function handleReset() {
 }
 
 /* 功能开关列表 */
-.flag-list { display: flex; flex-direction: column; gap: 2px; }
+.flag-list { display: flex; flex-direction: column; gap: 4px; }
 .flag-item {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 10px 12px;
-  border-radius: 8px;
-  transition: background 150ms ease;
+  padding: 8px 0;
+  border-radius: var(--radius-md);
+  transition: background var(--transition-duration) ease;
 }
 .flag-item:hover { background: var(--bg-hover); }
 .flag-info { display: flex; align-items: center; gap: 10px; flex: 1; }
@@ -142,10 +143,10 @@ function handleReset() {
   font-size: 12px;
   border: 1px solid var(--border-color);
   background: var(--bg-card);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   color: var(--text-tertiary);
   cursor: pointer;
-  transition: all 150ms ease;
+  transition: all var(--transition);
   white-space: nowrap;
   flex-shrink: 0;
 }

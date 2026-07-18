@@ -193,7 +193,7 @@ defineExpose({ refresh: load })
   --hint: #9ca3af;
 
   width: 100%;
-  border-radius: 14px;
+  border-radius: var(--radius-xl);
   background: linear-gradient(165deg, #f3fbf6 0%, #eef8f9 100%);
   padding: 14px 14px 16px;
   user-select: none;
@@ -219,7 +219,7 @@ defineExpose({ refresh: load })
   width: 28px;
   height: 28px;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: rgba(255, 255, 255, 0.85);
   color: #8aa88f;
   display: grid;
@@ -244,7 +244,7 @@ defineExpose({ refresh: load })
 .drag-book {
   width: 44px;
   height: 44px;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   background: rgba(255, 255, 255, 0.95);
   box-shadow: 0 2px 8px rgba(17, 24, 39, 0.06);
   display: grid;
@@ -297,11 +297,11 @@ defineExpose({ refresh: load })
 .slot {
   width: 48px;
   height: 52px;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   background: rgba(255, 255, 255, 0.75);
   display: grid;
   place-items: center;
-  transition: transform 0.2s ease-out, background 0.2s ease-out, box-shadow 0.2s ease-out;
+  transition: transform var(--transition-duration) ease-out, background var(--transition-duration) ease-out, box-shadow var(--transition-duration) ease-out;
 }
 .slot:hover:not(.empty) {
   transform: translateY(-3px);
@@ -322,7 +322,7 @@ defineExpose({ refresh: load })
 .slot-gap {
   width: 16px;
   height: 26px;
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   border: 1.5px dashed rgba(143, 188, 90, 0.5);
 }
 </style>

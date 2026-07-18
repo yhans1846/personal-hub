@@ -313,7 +313,7 @@ const readingTimeText = computed(() => estimateReadingTime(form.value.content))
   height: 100vh;
   overflow: hidden;
   background: var(--bg-body);
-  transition: background 0.2s;
+  transition: background var(--transition-duration);
 }
 .editor-body {
   flex: 1;
@@ -413,7 +413,7 @@ const readingTimeText = computed(() => estimateReadingTime(form.value.content))
 }
 .editor-loading-bar {
   height: 14px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: linear-gradient(
     90deg,
     var(--bg-hover) 25%,

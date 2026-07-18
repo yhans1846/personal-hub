@@ -142,7 +142,7 @@ function highlight(text: string, kw: string): string {
 }
 .group-count {
   font-size: var(--text-xs); color: var(--text-tertiary); font-weight: 400;
-  background: var(--bg-hover); padding: 0 6px; border-radius: 10px; line-height: 18px;
+  background: var(--bg-hover); padding: 0 6px; border-radius: var(--radius-md); line-height: 18px;
 }
 
 .group-items { display: flex; flex-direction: column; gap: 2px; }
@@ -161,5 +161,5 @@ function highlight(text: string, kw: string): string {
 }
 .item-meta { font-size: var(--text-xs); color: var(--text-tertiary); margin-top: 4px; }
 
-:deep(.hl) { background: #fef3c7; color: #d97706; padding: 0 2px; border-radius: 2px; }
+:deep(.hl) { background: var(--warning-light); color: var(--warning); padding: 0 2px; border-radius: var(--radius-sm); }
 </style>

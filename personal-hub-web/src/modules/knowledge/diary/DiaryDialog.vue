@@ -506,7 +506,7 @@ onUnmounted(() => {
   flex: 1;
   min-width: 0;
   padding: 4px 10px;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-sm);
   border: 1px solid var(--border-color, var(--border));
   background: var(--bg-hover);
 }
@@ -539,7 +539,7 @@ onUnmounted(() => {
   gap: 4px;
   flex-shrink: 0;
   padding: 6px 12px;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-sm);
   border: 1px solid var(--border-color, var(--border));
   background: var(--bg-card);
   font-size: var(--text-xs);
@@ -569,7 +569,7 @@ onUnmounted(() => {
   color: var(--accent);
   background: var(--accent-light);
   padding: 2px 10px;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-sm);
 }
 
 .coords-clear {

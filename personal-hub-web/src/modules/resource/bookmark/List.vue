@@ -281,7 +281,7 @@ function getFaviconUrl(url: string) {
 }
 
 .card-top { display: flex; align-items: center; gap: var(--sp-2); }
-.card-favicon { width: 20px; height: 20px; border-radius: 4px; flex-shrink: 0; }
+.card-favicon { width: 20px; height: 20px; border-radius: var(--radius-sm); flex-shrink: 0; }
 .card-title {
   font-size: var(--text-sm);
   font-weight: 500;
@@ -337,7 +337,7 @@ function getFaviconUrl(url: string) {
   gap: 3px;
   background: var(--bg-hover);
   padding: 1px 6px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   white-space: nowrap;
 }
 .card-actions { display: flex; gap: 2px; opacity: 0; transition: opacity var(--transition); }

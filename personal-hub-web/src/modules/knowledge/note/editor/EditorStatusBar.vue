@@ -87,7 +87,7 @@ const saveTimeText = computed(() => {
   flex-shrink: 0;
   background: var(--bg-card);
   z-index: 10;
-  transition: background 0.2s;
+  transition: background var(--transition-duration);
 }
 .editor-statusbar.is-fullscreen {
   background: var(--bg-body);

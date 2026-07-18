@@ -348,7 +348,7 @@ const rules = {
   cursor: pointer;
   color: var(--text-tertiary);
   padding: 6px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   display: flex;
   transition: all var(--transition);
 }
@@ -371,7 +371,7 @@ const rules = {
   gap: 18px;
   padding: 20px 18px;
   margin-bottom: 16px;
-  border-radius: 14px;
+  border-radius: var(--radius-xl);
   background: linear-gradient(135deg, var(--bg-hover), var(--bg-card));
   border: 1px solid var(--border-color);
 }
@@ -460,7 +460,7 @@ const rules = {
   gap: 4px;
   padding: 4px;
   margin-bottom: 14px;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   background: var(--bg-hover);
 }
 
@@ -472,7 +472,7 @@ const rules = {
   font-size: 13px;
   font-weight: 500;
   padding: 8px 0;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   cursor: pointer;
   transition: all var(--transition);
 }

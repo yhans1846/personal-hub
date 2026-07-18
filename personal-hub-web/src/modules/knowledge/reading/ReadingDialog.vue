@@ -251,7 +251,7 @@ function toggleRating(r: number) {
   -webkit-appearance: none;
   appearance: none;
   height: 6px;
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   background: var(--bg-hover);
   outline: none;
   cursor: pointer;

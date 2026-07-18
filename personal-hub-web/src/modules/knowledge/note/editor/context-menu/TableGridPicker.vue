@@ -78,10 +78,10 @@ function onLeave() {
   height: 16px;
   padding: 0;
   border: 1px solid var(--border-color);
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
   background: var(--bg-body);
   cursor: pointer;
-  transition: background 0.1s, border-color 0.1s;
+  transition: background var(--transition-duration), border-color var(--transition-duration);
 }
 .grid-cell.active {
   background: color-mix(in srgb, var(--accent) 35%, transparent);

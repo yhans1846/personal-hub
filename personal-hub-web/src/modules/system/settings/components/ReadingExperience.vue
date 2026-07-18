@@ -185,9 +185,12 @@ async function handleReset() {
 <style scoped>
 .reading-experience { }
 
-/* ─── 分区 ─── */
+/* ─── 分区（节奏见 settings-layout.css，此处仅补组件私有） ─── */
 .setting-section {
   margin-bottom: 20px;
+}
+.setting-section:last-child {
+  margin-bottom: 0;
 }
 
 .section-title-row {
@@ -198,10 +201,13 @@ async function handleReset() {
 }
 
 .section-title {
-  margin: 0;
+  margin: 0 0 10px;
   font-size: 13px;
   font-weight: 600;
   color: var(--text-secondary);
+}
+.section-title-row .section-title {
+  margin-bottom: 0;
 }
 
 .reset-link {
@@ -214,8 +220,8 @@ async function handleReset() {
   border: none;
   cursor: pointer;
   padding: 2px 6px;
-  border-radius: 4px;
-  transition: all 150ms ease;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition);
 }
 .reset-link:hover {
   color: var(--accent);
@@ -227,6 +233,9 @@ async function handleReset() {
   align-items: center;
   gap: 16px;
   margin-bottom: 12px;
+}
+.setting-row:last-child {
+  margin-bottom: 0;
 }
 
 .setting-label {
@@ -248,14 +257,14 @@ async function handleReset() {
   height: 32px;
   border: 1px solid var(--border-color);
   background: var(--bg-card);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   font-size: 14px;
   color: var(--text-secondary);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 150ms ease;
+  transition: all var(--transition);
 }
 
 .size-btn:hover:not(:disabled) {
@@ -288,10 +297,10 @@ async function handleReset() {
   font-size: 13px;
   border: 1px solid var(--border-color);
   background: var(--bg-card);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all 150ms ease;
+  transition: all var(--transition);
 }
 
 .width-btn:hover {
@@ -319,7 +328,7 @@ async function handleReset() {
   flex: 1;
   max-width: 200px;
   height: 4px;
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
   background: var(--border-color);
   outline: none;
   cursor: pointer;
@@ -334,7 +343,7 @@ async function handleReset() {
   border: 2px solid var(--bg-body);
   box-shadow: 0 0 0 1px var(--accent);
   cursor: pointer;
-  transition: transform 100ms ease;
+  transition: transform var(--transition-duration) ease;
 }
 
 .lh-slider::-webkit-slider-thumb:hover {
@@ -372,10 +381,10 @@ async function handleReset() {
   padding: 12px 14px;
   border: 1px solid var(--border-color);
   background: var(--bg-card);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   cursor: pointer;
   text-align: left;
-  transition: all 150ms ease;
+  transition: all var(--transition);
 }
 
 .theme-card:hover {
@@ -426,10 +435,10 @@ async function handleReset() {
   font-weight: 500;
   border: 1px solid var(--border-color);
   background: var(--bg-card);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all 150ms ease;
+  transition: all var(--transition);
 }
 
 .pct-btn:hover {
@@ -454,10 +463,10 @@ async function handleReset() {
   font-size: 13px;
   border: 1px solid var(--border-color);
   background: var(--bg-card);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all 150ms ease;
+  transition: all var(--transition);
 }
 
 .inline-btn:hover {

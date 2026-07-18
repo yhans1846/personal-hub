@@ -5,8 +5,14 @@
 ## [Unreleased]
 
 ### 2026-07-19
+- **设置**：四 Tab 间距统一（`settings-layout.css`：卡片间距 12 / 标题下 12 / 区块 20 / 小标题 10 / 行间 12）
+- **外观**：系统主题新增「护眼」(`sepia`)；色板去掉纯白，顶栏/卡片/侧栏统一豆沙绿
+- **修复**：深色下 `el-collapse` 白条；高级设置对齐阅读页（标题进 UiCard）；统一高级区行间距（区块 20 / 标题下 10 / 行间 12）
 - **移除**：设置页「数据导出」占位（UI + `/api/export`）；列表 XLSX / 笔记 ZIP 导出保留
 - **日志**：JWT 过滤器认证通过/无效改为 `trace`，避免通知轮询刷屏
+- **UI**：全局隐藏页面/卡片滚动条（仍可滚轮与触控滚动）
+- **外观 Token**：全站硬编码圆角/过渡改为 `--radius-*` / `--transition`；主题/强调色/密度/动画经 `applyAppearanceToDOM` + EP Token 桥接；深色下 Select/按钮/分页反色
+- **通知音效**：内置 `src/assets/sounds/*.wav`；设置切换即时预览；未读增加时按偏好播放
 - **演示数据**：`scripts/seed_demo_data.py`（admin 下全模块样例 + `D:/PersonalHub/uploads` 真实文件）
 
 ### 2026-07-18

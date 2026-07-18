@@ -125,9 +125,9 @@ const sortOptions = [
 ]
 
 function statusMeta(status: number) {
-  if (status === 1) return { color: '#409eff', label: '在读', done: false }
-  if (status === 2) return { color: '#67c23a', label: '读完', done: true }
-  return { color: '#c0c4cc', label: '未读', done: false }
+  if (status === 1) return { color: 'var(--accent)', label: '在读', done: false }
+  if (status === 2) return { color: 'var(--success)', label: '读完', done: true }
+  return { color: 'var(--text-tertiary)', label: '未读', done: false }
 }
 
 function chapterText(book: ReadingVO) {
@@ -469,7 +469,7 @@ const headerSubtitle = computed(() => `共 ${total.value} 本`)
 }
 .skeleton-row {
   flex: 1;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--bg-hover);
   animation: pulse 1.5s ease-in-out infinite;
 }
@@ -506,7 +506,7 @@ const headerSubtitle = computed(() => `共 ${total.value} 本`)
   width: 32px;
   height: 32px;
   aspect-ratio: 1;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   overflow: hidden;
   flex-shrink: 0;
   background: var(--bg-hover);
@@ -544,7 +544,7 @@ const headerSubtitle = computed(() => `共 ${total.value} 本`)
   border: none;
   background: transparent;
   color: var(--text-tertiary);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
 }
 .icon-action:hover {
@@ -559,9 +559,9 @@ const headerSubtitle = computed(() => `共 ${total.value} 本`)
   padding: 14px;
   background: var(--bg-card);
   border: 1px solid var(--border-light);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   cursor: pointer;
-  transition: border-color 0.15s ease, background 0.15s ease;
+  transition: border-color var(--transition-duration) ease, background var(--transition-duration) ease;
   min-height: 0;
   overflow: hidden;
 }
@@ -593,7 +593,7 @@ const headerSubtitle = computed(() => `共 ${total.value} 本`)
   width: 96px;
   height: 96px;
   aspect-ratio: 1;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   overflow: hidden;
   flex-shrink: 0;
   background: var(--bg-hover);

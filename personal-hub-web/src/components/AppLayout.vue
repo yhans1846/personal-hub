@@ -322,7 +322,7 @@ function handleQuickCreate(cmd: string) {
 }
 .search-trigger:hover { border-color: var(--accent); color: var(--text-secondary); background: var(--bg-card); }
 .search-hint { color: var(--text-placeholder); }
-.search-kbd { margin-left: auto; font-size: 10px; padding: 1px 5px; border-radius: 4px; background: var(--bg-hover); color: var(--text-tertiary); border: 1px solid var(--border-color); font-family: var(--font-mono); }
+.search-kbd { margin-left: auto; font-size: 10px; padding: 1px 5px; border-radius: var(--radius-sm); background: var(--bg-hover); color: var(--text-tertiary); border: 1px solid var(--border-color); font-family: var(--font-mono); }
 
 .topbar-actions { display: flex; align-items: center; gap: var(--sp-2); margin: 0 var(--sp-4); }
 .topbar-date { font-size: 12px; color: var(--text-tertiary); white-space: nowrap; user-select: none; }
@@ -408,7 +408,7 @@ function handleQuickCreate(cmd: string) {
   padding: 6px 18px 8px;
   user-select: none;
   cursor: pointer;
-  transition: color 150ms ease;
+  transition: color var(--transition-duration) ease;
 }
 .section-title {
   font-size: 11px;
@@ -422,7 +422,7 @@ function handleQuickCreate(cmd: string) {
   flex-shrink: 0;
   color: var(--text-placeholder);
   opacity: 0.7;
-  transition: transform 200ms ease, opacity 150ms ease;
+  transition: transform var(--transition-duration) ease, opacity var(--transition-duration) ease;
 }
 .section-header:hover .section-chevron { opacity: 1; color: var(--text-tertiary); }
 .section-header.collapsed .section-chevron { transform: rotate(-90deg); }
@@ -435,7 +435,7 @@ function handleQuickCreate(cmd: string) {
   height: 38px; padding: 0 var(--sp-4); margin: 0 var(--sp-2) 1px;
   border-radius: var(--radius-md);
   font-size: 14px; font-weight: 500; color: var(--text-secondary); text-decoration: none;
-  transition: background 150ms ease, color 150ms ease;
+  transition: background var(--transition-duration) ease, color var(--transition-duration) ease;
 }
 .nav-item:hover { background: var(--bg-hover); color: var(--text-primary); }
 .nav-item:hover :deep(svg) { color: var(--text-primary); }
@@ -472,7 +472,7 @@ function handleQuickCreate(cmd: string) {
   width: 3px;
   height: 18px;
   background: var(--accent);
-  border-radius: 0 3px 3px 0;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
   opacity: 0.5;
 }
 
@@ -501,12 +501,12 @@ function handleQuickCreate(cmd: string) {
   display: flex; align-items: center; justify-content: center;
   background: none; border: none; color: var(--text-tertiary);
   cursor: pointer; border-radius: var(--radius-sm);
-  transition: all 150ms ease;
+  transition: all var(--transition);
 }
 .sidebar-logout:hover { background: var(--bg-hover); color: var(--danger); }
 .section-collapse-enter-active,
 .section-collapse-leave-active {
-  transition: max-height 200ms ease, opacity 200ms ease;
+  transition: max-height var(--transition-duration) ease, opacity var(--transition-duration) ease;
   overflow: hidden;
 }
 .section-collapse-enter-from,
@@ -569,7 +569,7 @@ function handleQuickCreate(cmd: string) {
 
   .sidebar {
     position: fixed; top: 0; left: 0; bottom: 0; z-index: 95;
-    transform: translateX(-100%); transition: transform 250ms ease;
+    transform: translateX(-100%); transition: transform var(--transition-duration) ease;
     padding-top: 0;
   }
   .sidebar.open { transform: translateX(0); }

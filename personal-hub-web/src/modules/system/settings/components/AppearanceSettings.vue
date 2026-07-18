@@ -2,7 +2,7 @@
 import { useLayoutStore } from '@/store/layoutStore'
 import { ElMessage } from 'element-plus'
 import { storeToRefs } from 'pinia'
-import { Sun, Moon, RotateCcw, Maximize2, Minimize2, Wind, Minus, Plus } from 'lucide-vue-next'
+import { Sun, Moon, Leaf, RotateCcw, Maximize2, Minimize2, Wind, Minus, Plus } from 'lucide-vue-next'
 import type { ExtendedAppearanceConfig } from '@/types/layout'
 
 const layoutStore = useLayoutStore()
@@ -40,7 +40,7 @@ const DENSITY_OPTIONS = [
   { value: 'compact', label: '紧凑', icon: Wind },
 ] as const
 
-function setTheme(theme: 'light' | 'dark') {
+function setTheme(theme: ExtendedAppearanceConfig['theme']) {
   layoutStore.saveAppearanceConfig({ ...appearanceConfig.value, theme })
 }
 
@@ -118,6 +118,16 @@ async function handleReset() {
           <div class="theme-card-info">
             <span class="theme-card-name">深色</span>
             <span class="theme-card-desc">深底浅色文字</span>
+          </div>
+        </button>
+        <button
+          :class="['theme-card', { active: appearanceConfig.theme === 'sepia' }]"
+          @click="setTheme('sepia')"
+        >
+          <Leaf :size="20" class="theme-card-icon" />
+          <div class="theme-card-info">
+            <span class="theme-card-name">护眼</span>
+            <span class="theme-card-desc">豆沙绿，无纯白</span>
           </div>
         </button>
       </div>
@@ -217,6 +227,7 @@ async function handleReset() {
 
 <style scoped>
 .setting-section { margin-bottom: 20px; }
+.setting-section:last-child { margin-bottom: 0; }
 
 .section-title-row {
   display: flex;
@@ -251,7 +262,14 @@ async function handleReset() {
   background: var(--accent-light);
 }
 
-.theme-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.theme-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+@media (max-width: 720px) {
+  .theme-cards { grid-template-columns: 1fr; }
+}
 .theme-card {
   display: flex; align-items: center; gap: 10px;
   padding: 14px 16px;
@@ -351,7 +369,7 @@ async function handleReset() {
   appearance: none;
   flex: 1;
   height: 4px;
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
   background: var(--border-color);
   outline: none;
   cursor: pointer;

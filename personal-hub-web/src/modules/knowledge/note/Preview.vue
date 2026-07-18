@@ -323,7 +323,7 @@ onUnmounted(() => {
   color: var(--text-secondary);
   border: 1px solid var(--border-color);
   background: transparent;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
 }
 .loading-spinner {
@@ -353,7 +353,7 @@ onUnmounted(() => {
   line-height: 1.6;
   background: color-mix(in srgb, var(--accent) 10%, transparent);
   color: var(--accent);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 }
 .taxonomy-tag[style] {
   background: color-mix(in srgb, var(--tag-color) 15%, transparent);
@@ -372,7 +372,7 @@ onUnmounted(() => {
   height: 32px;
   border: none;
   background: none;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   color: var(--text-tertiary);
   cursor: pointer;
 }

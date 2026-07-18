@@ -91,7 +91,7 @@ watch(() => props.modelValue, async (open) => {
   max-width: min(720px, 88vw);
   max-height: min(72vh, 640px);
   object-fit: contain;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.28);
   background: var(--bg-card, #fff);
 }
@@ -104,7 +104,7 @@ watch(() => props.modelValue, async (open) => {
   border: none;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.92);
-  color: #334155;
+  color: var(--text-secondary);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -121,7 +121,7 @@ watch(() => props.modelValue, async (open) => {
   border: none;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.92);
-  color: #334155;
+  color: var(--text-secondary);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -137,7 +137,7 @@ watch(() => props.modelValue, async (open) => {
   left: 50%;
   transform: translateX(-50%);
   padding: 4px 12px;
-  border-radius: 999px;
+  border-radius: var(--radius-md);
   background: rgba(15, 23, 42, 0.65);
   color: #fff;
   font-size: 12px;

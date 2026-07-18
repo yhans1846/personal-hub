@@ -4,11 +4,29 @@ import { ElMessage } from 'element-plus'
 import { Bell, BellOff, Volume2, RotateCcw, Moon } from 'lucide-vue-next'
 import { useNotificationConfigStore } from '@/store/notificationConfigStore'
 import { storeToRefs } from 'pinia'
+import { playNotificationSound } from '@/utils/notificationSound'
 
 const store = useNotificationConfigStore()
-const { config, NOTIFICATION_TYPES, SOUND_OPTIONS } = storeToRefs(store)
+const { config } = storeToRefs(store)
+// 常量数组不是 state，不能走 storeToRefs
+const NOTIFICATION_TYPES = store.NOTIFICATION_TYPES
+const SOUND_OPTIONS = store.SOUND_OPTIONS
 
 const requesting = ref(false)
+
+function handleSoundToggle() {
+  const next = !config.value.soundEnabled
+  store.updateConfig({ soundEnabled: next })
+  if (next) playNotificationSound(config.value.soundName)
+}
+
+function handleSoundSelect(soundName: string) {
+  // 先播（保留用户点击手势），再持久化；同一项再点也会再响
+  playNotificationSound(soundName)
+  if (config.value.soundName !== soundName) {
+    store.updateConfig({ soundName })
+  }
+}
 
 async function handleDesktopToggle() {
   if (!('Notification' in window)) {
@@ -16,9 +34,10 @@ async function handleDesktopToggle() {
     return
   }
 
-  if (config.desktopEnabled) {
-    // 关闭
+  // storeToRefs 得到的是 Ref，脚本内须用 .value
+  if (config.value.desktopEnabled) {
     store.updateConfig({ desktopEnabled: false })
+    ElMessage.success('已关闭桌面通知')
     return
   }
 
@@ -101,25 +120,23 @@ async function handleReset() {
         </div>
         <button
           :class="['toggle-btn', { active: config.soundEnabled }]"
-          @click="store.updateConfig({ soundEnabled: !config.soundEnabled })"
+          @click="handleSoundToggle"
         >
           <Volume2 :size="16" />
           {{ config.soundEnabled ? '已开启' : '已关闭' }}
         </button>
       </div>
-      <div v-if="config.soundEnabled" class="setting-row">
+      <div v-if="config.soundEnabled" class="sound-picker">
         <span class="setting-row-label-sm">提示音</span>
-        <select
-          :value="config.soundName"
-          class="setting-select"
-          @change="store.updateConfig({ soundName: ($event.target as HTMLSelectElement).value })"
-        >
-          <option
+        <div class="inline-options">
+          <button
             v-for="s in SOUND_OPTIONS"
             :key="s.value"
-            :value="s.value"
-          >{{ s.label }}</option>
-        </select>
+            type="button"
+            :class="['inline-btn', { active: config.soundName === s.value }]"
+            @click="handleSoundSelect(s.value)"
+          >{{ s.label }}</button>
+        </div>
       </div>
     </section>
 
@@ -166,9 +183,9 @@ async function handleReset() {
 </template>
 
 <style scoped>
-.notification-settings { }
-
+/* 间距对齐外观/阅读：区块 20 · 标题下 10 · 行间 12 · 末项清零 */
 .setting-section { margin-bottom: 20px; }
+.setting-section:last-child { margin-bottom: 0; }
 
 .section-title-row {
   display: flex;
@@ -178,11 +195,12 @@ async function handleReset() {
 }
 
 .section-title {
-  margin: 0;
+  margin: 0 0 10px;
   font-size: 13px;
   font-weight: 600;
   color: var(--text-secondary);
 }
+.section-title-row .section-title { margin-bottom: 0; }
 
 .reset-link {
   display: inline-flex;
@@ -194,8 +212,8 @@ async function handleReset() {
   border: none;
   cursor: pointer;
   padding: 2px 6px;
-  border-radius: 4px;
-  transition: all 150ms ease;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition);
 }
 .reset-link:hover {
   color: var(--accent);
@@ -210,10 +228,35 @@ async function handleReset() {
   margin-bottom: 12px;
   gap: 16px;
 }
+.setting-row:last-child { margin-bottom: 0; }
 .setting-row-info { display: flex; flex-direction: column; gap: 2px; }
 .setting-row-label { font-size: 13px; color: var(--text-primary); }
 .setting-row-label-sm { font-size: 13px; color: var(--text-secondary); min-width: 60px; }
 .setting-row-desc { font-size: 11px; color: var(--text-tertiary); }
+
+.sound-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inline-options { display: flex; gap: 6px; flex-wrap: wrap; }
+.inline-btn {
+  padding: 6px 14px;
+  font-size: 13px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.inline-btn:hover { border-color: var(--accent); color: var(--accent); }
+.inline-btn.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
 
 /* ─── 开关按钮 ─── */
 .toggle-btn {
@@ -222,10 +265,10 @@ async function handleReset() {
   font-size: 12px;
   border: 1px solid var(--border-color);
   background: var(--bg-card);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   color: var(--text-tertiary);
   cursor: pointer;
-  transition: all 150ms ease;
+  transition: all var(--transition);
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -244,10 +287,10 @@ async function handleReset() {
   font-size: 12px;
   border: 1px solid var(--border-color);
   background: var(--bg-card);
-  border-radius: 20px;
+  border-radius: var(--radius-sm);
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all 150ms ease;
+  transition: all var(--transition);
 }
 .chip:hover { border-color: var(--accent); color: var(--accent); }
 .chip.active {
@@ -256,21 +299,8 @@ async function handleReset() {
   background: color-mix(in srgb, var(--accent) 10%, transparent);
 }
 
-/* ─── 下拉选择 ─── */
-.setting-select {
-  padding: 6px 10px;
-  font-size: 13px;
-  border: 1px solid var(--border-color);
-  background: var(--bg-card);
-  border-radius: 6px;
-  color: var(--text-primary);
-  outline: none;
-  cursor: pointer;
-}
-.setting-select:focus { border-color: var(--accent); }
-
 /* ─── 免打扰时间 ─── */
-.dnd-times { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.dnd-times { display: flex; align-items: center; gap: 8px; }
 .time-field { display: flex; align-items: center; gap: 6px; }
 .time-label { font-size: 12px; color: var(--text-tertiary); }
 .time-input {
@@ -278,7 +308,7 @@ async function handleReset() {
   font-size: 13px;
   border: 1px solid var(--border-color);
   background: var(--bg-card);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   color: var(--text-primary);
   outline: none;
 }

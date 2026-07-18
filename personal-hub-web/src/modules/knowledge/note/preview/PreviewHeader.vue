@@ -98,7 +98,7 @@ const emit = defineEmits<{
   color: var(--text-secondary);
   border: none;
   background: none;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   transition: color var(--transition), background var(--transition);
 }
@@ -111,7 +111,7 @@ const emit = defineEmits<{
 .header-badge {
   font-size: 11px;
   padding: 2px 8px;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   font-weight: 500;
   line-height: 1.5;
 }
@@ -177,7 +177,7 @@ const emit = defineEmits<{
   height: 32px;
   border: none;
   background: none;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   color: var(--text-tertiary);
   cursor: pointer;
   font-size: var(--text-sm);

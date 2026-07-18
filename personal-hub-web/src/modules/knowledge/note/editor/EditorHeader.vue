@@ -120,7 +120,7 @@ const emit = defineEmits<{
   flex-shrink: 0;
   background: var(--bg-card);
   z-index: 10;
-  transition: background 0.2s, border-color 0.2s;
+  transition: background var(--transition-duration), border-color var(--transition-duration);
 }
 .editor-header.is-fullscreen {
   background: var(--bg-body);

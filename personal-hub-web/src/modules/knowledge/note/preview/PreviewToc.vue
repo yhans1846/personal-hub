@@ -117,7 +117,7 @@ function scrollTo(id: string) {
   display: flex;
   flex-shrink: 0;
   overflow: hidden;
-  transition: width 200ms ease;
+  transition: width var(--transition-duration) ease;
   border-right: 1px solid var(--border-color);
   z-index: 10;
 }
@@ -147,10 +147,10 @@ function scrollTo(id: string) {
   height: 28px;
   border: none;
   background: none;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   color: var(--text-tertiary);
   cursor: pointer;
-  transition: color 150ms ease, background 150ms ease;
+  transition: color var(--transition-duration) ease, background var(--transition-duration) ease;
 }
 
 .toc-expand-btn:hover {
@@ -182,10 +182,10 @@ function scrollTo(id: string) {
   height: 24px;
   border: none;
   background: none;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   color: var(--text-tertiary);
   cursor: pointer;
-  transition: color 150ms ease, background 150ms ease;
+  transition: color var(--transition-duration) ease, background var(--transition-duration) ease;
 }
 
 .toc-collapse-btn:hover {
@@ -216,7 +216,7 @@ function scrollTo(id: string) {
 
 .toc-wrapper:hover .preview-toc::-webkit-scrollbar-thumb {
   background: var(--border-color);
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
 }
 
 .preview-toc--empty {
@@ -248,11 +248,11 @@ function scrollTo(id: string) {
   color: var(--text-tertiary);
   border: none;
   background: none;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   text-align: left;
   width: 100%;
-  transition: color 150ms ease, background 150ms ease;
+  transition: color var(--transition-duration) ease, background var(--transition-duration) ease;
 }
 
 .toc-item:hover {
@@ -297,7 +297,7 @@ function scrollTo(id: string) {
   cursor: col-resize;
   flex-shrink: 0;
   background: transparent;
-  transition: background 0.15s;
+  transition: background var(--transition-duration);
   z-index: 2;
 }
 

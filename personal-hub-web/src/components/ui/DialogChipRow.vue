@@ -78,7 +78,7 @@ function toggle(id: number) {
   align-items: center;
   gap: 5px;
   padding: 5px 12px;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-sm);
   border: 1px solid var(--border-color, var(--border));
   background: var(--bg-card);
   font-size: var(--text-xs);

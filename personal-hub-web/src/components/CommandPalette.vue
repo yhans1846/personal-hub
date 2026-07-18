@@ -275,7 +275,7 @@ defineExpose({ open })
 .cp-input::placeholder { color: var(--text-placeholder); }
 .cp-kbd {
   font-size: 11px; padding: 2px 6px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   background: var(--bg-hover); color: var(--text-tertiary);
   border: 1px solid var(--border-color);
   font-family: var(--font-mono);
@@ -294,7 +294,7 @@ defineExpose({ open })
 .cp-item-icon { color: var(--text-secondary); flex-shrink: 0; }
 .cp-item-label { flex: 1; font-size: var(--text-sm); color: var(--text-primary); }
 .cp-item-badge {
-  font-size: 11px; padding: 0 6px; border-radius: 4px;
+  font-size: 11px; padding: 0 6px; border-radius: var(--radius-sm);
   background: var(--accent-light); color: var(--accent);
 }
 .cp-item-badge--api { background: var(--bg-hover); color: var(--text-tertiary); }
@@ -337,7 +337,7 @@ defineExpose({ open })
 .cp-history-search-icon { color: var(--text-tertiary); flex-shrink: 0; }
 .cp-hint-sub kbd {
   font-size: 11px; padding: 1px 5px;
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   background: var(--bg-hover); border: 1px solid var(--border-color);
   font-family: var(--font-mono);
 }

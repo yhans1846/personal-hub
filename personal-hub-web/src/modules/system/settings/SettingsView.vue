@@ -11,6 +11,7 @@ import StatsManager from './components/StatsManager.vue'
 import ReadingExperience from './components/ReadingExperience.vue'
 import AppearanceSettings from './components/AppearanceSettings.vue'
 import AdvancedSettings from './components/AdvancedSettings.vue'
+import './settings-layout.css'
 
 const layoutStore = useLayoutStore()
 
@@ -43,7 +44,6 @@ async function handleResetAll() {
   } catch { /* cancelled */ }
 }
 
-// 自动保存指示（其他组件修改后触发）
 function onAutoSaved() {
   showSaveHint.value = true
   setTimeout(() => { showSaveHint.value = false }, 2000)
@@ -61,7 +61,6 @@ function onAutoSaved() {
       </template>
     </PageHeader>
 
-    <!-- Tab 导航 -->
     <div class="settings-tabs-nav">
       <button
         v-for="tab in tabs"
@@ -74,51 +73,43 @@ function onAutoSaved() {
       </button>
     </div>
 
-    <!-- Tab 内容 -->
     <div class="settings-content">
       <Transition name="tab-fade" mode="out-in">
-        <div class="tab-pane" :key="activeTab">
+        <div class="tab-pane settings-stack" :key="activeTab">
           <!-- 工作台 -->
-          <div v-if="activeTab === 'workspace'" class="workspace-stack">
-            <UiCard class="settings-card settings-card--flush">
+          <template v-if="activeTab === 'workspace'">
+            <UiCard class="settings-card">
               <h3 class="card-title">菜单管理</h3>
               <MenuManager />
             </UiCard>
-            <UiCard class="settings-card settings-card--flush">
+            <UiCard class="settings-card">
               <h3 class="card-title">Dashboard 卡片</h3>
               <DashboardManager />
             </UiCard>
-            <UiCard class="settings-card settings-card--flush">
+            <UiCard class="settings-card">
               <h3 class="card-title">统计卡片</h3>
               <StatsManager />
             </UiCard>
-          </div>
+          </template>
 
           <!-- 阅读 -->
-          <div v-else-if="activeTab === 'reading'">
-            <UiCard class="settings-card">
-              <h3 class="card-title">阅读设置</h3>
-              <ReadingExperience />
-            </UiCard>
-          </div>
+          <UiCard v-else-if="activeTab === 'reading'" class="settings-card">
+            <h3 class="card-title">阅读设置</h3>
+            <ReadingExperience />
+          </UiCard>
 
           <!-- 外观 -->
-          <div v-else-if="activeTab === 'appearance'">
-            <UiCard class="settings-card">
-              <h3 class="card-title">外观</h3>
-              <AppearanceSettings />
-            </UiCard>
-          </div>
+          <UiCard v-else-if="activeTab === 'appearance'" class="settings-card">
+            <h3 class="card-title">外观</h3>
+            <AppearanceSettings />
+          </UiCard>
 
           <!-- 高级 -->
-          <div v-else-if="activeTab === 'advanced'">
-            <AdvancedSettings />
-          </div>
+          <AdvancedSettings v-else-if="activeTab === 'advanced'" />
         </div>
       </Transition>
     </div>
 
-    <!-- 底部自动保存指示 -->
     <Transition name="save-fade">
       <div v-if="showSaveHint" class="auto-save-bar">
         <span class="auto-save-dot" />
@@ -131,10 +122,8 @@ function onAutoSaved() {
 <style scoped>
 .settings-page {
   width: 100%;
-  /* 宽度由 .content-container 的 --content-max-width 统一约束 */
 }
 
-/* ─── Tab 导航 ─── */
 .settings-tabs-nav {
   display: flex;
   gap: 4px;
@@ -155,10 +144,10 @@ function onAutoSaved() {
   color: var(--text-tertiary);
   background: transparent;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   cursor: pointer;
   white-space: nowrap;
-  transition: all 150ms ease;
+  transition: all var(--transition);
   position: relative;
 }
 .tab-btn:hover { color: var(--text-secondary); background: var(--bg-hover); }
@@ -178,38 +167,11 @@ function onAutoSaved() {
   border-radius: 1px;
 }
 
-/* ─── 内容 ─── */
 .settings-content {
   margin-top: var(--sp-6);
   min-height: 300px;
 }
 
-.settings-card {
-  margin-bottom: 20px;
-}
-.settings-card--flush {
-  margin-bottom: 0;
-}
-
-/* Card 标题（去掉下边距，内容直接跟上） */
-.card-header {
-  width: 100%;
-}
-.card-title {
-  margin: 0 0 8px;
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-/* ─── 工作台：三块纵向紧凑堆叠 ─── */
-.workspace-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-/* ─── 自动保存条 ─── */
 .auto-save-bar {
   display: flex;
   align-items: center;
@@ -228,17 +190,15 @@ function onAutoSaved() {
   background: var(--success);
 }
 
-/* ─── Tab 切换动画 ─── */
 .tab-fade-enter-active,
 .tab-fade-leave-active {
-  transition: opacity 150ms ease, transform 150ms ease;
+  transition: opacity var(--transition-duration) ease, transform var(--transition-duration) ease;
 }
 .tab-fade-enter-from { opacity: 0; transform: translateY(6px); }
 .tab-fade-leave-to { opacity: 0; transform: translateY(-6px); }
 
-/* ─── 保存指示动画 ─── */
 .save-fade-enter-active,
-.save-fade-leave-active { transition: opacity 300ms ease; }
+.save-fade-leave-active { transition: opacity var(--transition-duration) ease; }
 .save-fade-enter-from,
 .save-fade-leave-to { opacity: 0; }
 </style>

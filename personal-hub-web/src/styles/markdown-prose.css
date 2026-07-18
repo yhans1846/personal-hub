@@ -86,7 +86,7 @@
 .markdown-prose li code {
   background: var(--prose-code-bg);
   padding: var(--sp-1) var(--sp-2);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-size: 0.85em;
   border: 1px solid var(--prose-border-color);
   font-family: var(--font-mono);
@@ -95,7 +95,7 @@
 /* 代码块 */
 .markdown-prose pre {
   background: var(--prose-code-bg) !important;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: var(--sp-4);
   overflow-x: auto;
   font-size: 0.875em;
@@ -120,7 +120,7 @@
   padding: 0.5em 1em;
   border-left: 3px solid var(--prose-quote-bar);
   background: var(--prose-quote-bg);
-  border-radius: 0 6px 6px 0;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
   color: var(--prose-color);
 }
 
@@ -191,10 +191,10 @@
 .markdown-prose img {
   max-width: 100%;
   height: auto;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   margin: 1em 0;
   cursor: zoom-in;
-  transition: opacity 200ms ease;
+  transition: opacity var(--transition-duration) ease;
 }
 
 .markdown-prose img:hover {
@@ -216,7 +216,7 @@
   transform: translateY(-50%);
   color: var(--accent);
   opacity: 0;
-  transition: opacity 150ms ease;
+  transition: opacity var(--transition-duration) ease;
   font-size: 0.75em;
   font-weight: 400;
   text-decoration: none !important;
@@ -247,10 +247,10 @@
   color: var(--text-tertiary);
   background: var(--prose-code-bg);
   border: 1px solid var(--prose-border-color);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   opacity: 0;
-  transition: opacity 150ms ease, color 150ms ease;
+  transition: opacity var(--transition-duration) ease, color var(--transition-duration) ease;
   z-index: 1;
 }
 

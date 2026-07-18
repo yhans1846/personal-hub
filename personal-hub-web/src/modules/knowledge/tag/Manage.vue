@@ -292,7 +292,7 @@ function toggleSortDir() {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
-  transition: all 0.2s ease;
+  transition: all var(--transition);
   cursor: default;
   overflow: hidden;
 }
@@ -341,7 +341,7 @@ function toggleSortDir() {
   color: var(--accent);
   background: var(--accent-light);
   padding: 1px 9px 1px 7px;
-  border-radius: 100px;
+  border-radius: var(--radius-md);
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -393,7 +393,7 @@ function toggleSortDir() {
 .color-btn:hover { transform: scale(1.15); }
 .color-btn.active { border-color: var(--text-primary); transform: scale(1.15); }
 .color-btn--custom {
-  position: relative; width: auto; padding: 0 10px; border-radius: 6px;
+  position: relative; width: auto; padding: 0 10px; border-radius: var(--radius-sm);
   font-size: 11px; color: #fff; font-weight: 500; line-height: 28px;
   border: 1px solid rgba(255,255,255,.25); letter-spacing: .5px;
   cursor: pointer; transition: all var(--transition);

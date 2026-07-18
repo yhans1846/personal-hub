@@ -121,7 +121,7 @@ async function handleSave() {
   align-items: center;
   gap: 6px;
   padding: var(--sp-2) var(--sp-3);
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-sm);
   border: 1px solid var(--border-color, var(--border));
   background: var(--bg-hover);
   width: fit-content;

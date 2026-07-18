@@ -201,7 +201,7 @@ watch(list, (val) => { groupedList.value = groupByDate(val) }, { immediate: true
 .tl-item-content { flex: 1; min-width: 0; }
 .tl-item-header { display: flex; align-items: center; gap: var(--sp-2); margin-bottom: 4px; }
 .tl-item-subject { font-size: var(--text-sm); font-weight: 600; }
-.tl-item-duration { font-size: var(--text-xs); color: var(--accent); background: var(--accent-light); padding: 0 8px; border-radius: 4px; height: 20px; line-height: 20px; }
+.tl-item-duration { font-size: var(--text-xs); color: var(--accent); background: var(--accent-light); padding: 0 8px; border-radius: var(--radius-sm); height: 20px; line-height: 20px; }
 .tl-item-desc { font-size: var(--text-sm); color: var(--text-secondary); line-height: var(--leading-normal); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 2px; }
 .tl-item-reflection { font-size: var(--text-xs); color: var(--text-tertiary); font-style: italic; }
 .tl-item-actions { display: flex; gap: var(--sp-1); flex-shrink: 0; opacity: 0; transition: opacity var(--transition); align-items: center; }

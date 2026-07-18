@@ -1,20 +1,26 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { Bell, Check, CheckCheck, Trash2 } from 'lucide-vue-next'
 import { ElBadge, ElSkeleton } from 'element-plus'
 import { useNotificationStore } from '@/store/notificationStore'
+import { useNotificationConfigStore } from '@/store/notificationConfigStore'
 import { checkNotifications } from '@/api/notificationApi'
 import { formatRelativeTime } from '@/utils/readingTime'
+import { playNotificationSoundIfAllowed } from '@/utils/notificationSound'
 import type { NotificationVO } from '@/types/notification'
 
 const router = useRouter()
 const store = useNotificationStore()
+const configStore = useNotificationConfigStore()
 let pollTimer: ReturnType<typeof setInterval>
+const primed = ref(false)
 
 onMounted(() => {
   checkNotifications().finally(() => {
-    store.fetchUnreadCount()
+    store.fetchUnreadCount().finally(() => {
+      primed.value = true
+    })
     store.fetchRecent()
   })
   pollTimer = setInterval(() => store.fetchUnreadCount(), 60_000)
@@ -23,6 +29,16 @@ onMounted(() => {
 onUnmounted(() => {
   clearInterval(pollTimer)
 })
+
+// 未读增加时播提示音（首次加载不播）
+watch(
+  () => store.unreadCount,
+  (next, prev) => {
+    if (!primed.value) return
+    if (typeof prev !== 'number') return
+    if (next > prev) playNotificationSoundIfAllowed(configStore.config)
+  },
+)
 
 function handleClearAll() {
   store.clearAll()
@@ -133,9 +149,9 @@ function getTypeIcon(type: string): string {
 .notif-btn {
   width: 32px; height: 32px;
   display: flex; align-items: center; justify-content: center;
-  border-radius: var(--radius-sm, 6px); border: none;
+  border-radius: var(--radius-sm); border: none;
   background: transparent; color: var(--text-secondary);
-  cursor: pointer; transition: all 0.15s;
+  cursor: pointer; transition: all var(--transition);
 }
 .notif-btn:hover { background: var(--bg-hover, #f5f5f5); color: var(--text-primary); }
 
@@ -150,7 +166,7 @@ function getTypeIcon(type: string): string {
 .notif-header-btn {
   display: flex; align-items: center; gap: 3px;
   font-size: 12px; color: var(--accent); background: none; border: none;
-  cursor: pointer; padding: 2px 8px; border-radius: 4px;
+  cursor: pointer; padding: 2px 8px; border-radius: var(--radius-sm);
   white-space: nowrap;
 }
 .notif-header-btn:hover { background: var(--bg-hover, #f5f5f5); }
@@ -167,8 +183,8 @@ function getTypeIcon(type: string): string {
 .notif-list { overflow-y: auto; max-height: 340px; margin: 0 -12px; }
 .notif-item {
   display: flex; align-items: flex-start; gap: 10px;
-  padding: 10px 12px; cursor: pointer; border-radius: 6px;
-  transition: background 0.15s;
+  padding: 10px 12px; cursor: pointer; border-radius: var(--radius-sm);
+  transition: background var(--transition-duration);
 }
 .notif-item:hover { background: var(--bg-hover, #f5f5f5); }
 .notif-item.unread { background: var(--accent-light, #eef2ff); }
@@ -186,7 +202,7 @@ function getTypeIcon(type: string): string {
   align-items: center; justify-content: center;
   border-radius: 50%; border: 1px solid var(--border-color, #ddd);
   background: transparent; color: var(--text-tertiary, #999);
-  cursor: pointer; transition: all 0.15s; margin-top: 1px;
+  cursor: pointer; transition: all var(--transition); margin-top: 1px;
 }
 .notif-item-check:hover {
   background: var(--accent); color: #fff; border-color: var(--accent);

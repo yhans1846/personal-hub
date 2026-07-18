@@ -37,7 +37,7 @@ export interface LayoutSaveRequest {
 
 /** 外观配置 */
 export interface AppearanceConfig {
-  theme: 'light' | 'dark'
+  theme: 'light' | 'dark' | 'sepia'
   accent: 'blue' | 'purple' | 'pink' | 'red' | 'orange' | 'green' | 'teal' | 'cyan' | 'indigo'
 }
 

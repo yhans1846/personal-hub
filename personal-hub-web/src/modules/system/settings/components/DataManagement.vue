@@ -122,35 +122,35 @@ onMounted(() => {
     <!-- 数据备份 -->
     <section class="setting-section">
       <h3 class="section-title">数据备份</h3>
-      <div class="backup-actions">
-        <div class="action-row">
-          <button class="action-btn" :disabled="backingUp" @click="handleBackupNow">
-            <Loader2 v-if="backingUp" :size="14" class="spin" />
-            <FileArchive v-else :size="14" />
-            {{ backingUp ? '备份中...' : '立即备份' }}
-          </button>
-        </div>
-        <div class="backup-divider">数据恢复</div>
-        <div class="action-row">
-          <div class="file-select">
-            <label class="file-label">
-              <Upload :size="14" />
-              {{ importFile ? importFile.name : '选择备份文件' }}
-              <input type="file" accept=".json,.gz,.zip" class="file-input" @change="handleFileChange" />
-            </label>
-          </div>
-          <button class="action-btn danger" :disabled="!importFile" @click="handleImport">
-            导入恢复
-          </button>
-        </div>
-        <p class="import-warning">警告：恢复操作将覆盖当前数据，不可撤销。</p>
+      <div class="action-row">
+        <button class="action-btn" :disabled="backingUp" @click="handleBackupNow">
+          <Loader2 v-if="backingUp" :size="14" class="spin" />
+          <FileArchive v-else :size="14" />
+          {{ backingUp ? '备份中...' : '立即备份' }}
+        </button>
       </div>
+      <h3 class="backup-divider">数据恢复</h3>
+      <div class="action-row">
+        <div class="file-select">
+          <label class="file-label">
+            <Upload :size="14" />
+            {{ importFile ? importFile.name : '选择备份文件' }}
+            <input type="file" accept=".json,.gz,.zip" class="file-input" @change="handleFileChange" />
+          </label>
+        </div>
+        <button class="action-btn danger" :disabled="!importFile" @click="handleImport">
+          导入恢复
+        </button>
+      </div>
+      <p class="import-warning">警告：恢复操作将覆盖当前数据，不可撤销。</p>
     </section>
   </div>
 </template>
 
 <style scoped>
+/* 间距对齐外观/阅读：区块 20 · 标题下 10 · 行间 12 · 末项清零 */
 .setting-section { margin-bottom: 20px; }
+.setting-section:last-child { margin-bottom: 0; }
 
 .section-title {
   margin: 0 0 10px;
@@ -167,37 +167,41 @@ onMounted(() => {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 8px 16px; font-size: 13px;
   border: 1px solid var(--border-color); background: var(--bg-card);
-  border-radius: 6px; cursor: pointer;
-  color: var(--text-secondary); transition: all 150ms ease;
-  margin-right: 8px; margin-bottom: 8px;
+  border-radius: var(--radius-sm); cursor: pointer;
+  color: var(--text-secondary); transition: all var(--transition);
 }
 .action-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
 .action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .action-btn.danger { color: var(--danger); border-color: var(--danger); }
 .action-btn.danger:hover:not(:disabled) { background: var(--danger-light); }
 
-.backup-actions { margin-top: 4px; }
-.action-row { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
-.backup-divider {
-  font-size: 11px; font-weight: 600; color: var(--text-tertiary);
-  text-transform: uppercase; letter-spacing: 0.5px;
-  margin: 16px 0 12px; padding-top: 12px;
-  border-top: 1px solid var(--border-light);
+.action-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
 }
-.file-select { flex: 1; }
+.action-row:last-child { margin-bottom: 0; }
+.backup-divider {
+  margin: 20px 0 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.file-select { flex: 1; min-width: 0; }
 .file-label {
   display: flex; align-items: center; gap: 6px;
   padding: 8px 14px; font-size: 13px;
   border: 1px dashed var(--border-color); background: var(--bg-hover);
-  border-radius: 6px; color: var(--text-tertiary);
-  cursor: pointer; transition: all 150ms ease;
+  border-radius: var(--radius-sm); color: var(--text-tertiary);
+  cursor: pointer; transition: all var(--transition);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .file-label:hover { border-color: var(--accent); color: var(--accent); }
 .file-input { display: none; }
-.import-warning { font-size: 11px; color: var(--danger); margin: 4px 0 0; }
+.import-warning { font-size: 11px; color: var(--danger); margin: 0; }
 
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 .spin { animation: spin 1s linear infinite; }

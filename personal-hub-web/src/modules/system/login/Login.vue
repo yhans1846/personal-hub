@@ -379,7 +379,7 @@ function onForgotPassword() {
   color: var(--text);
   font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
   overflow: hidden;
-  transition: opacity 0.3s var(--ease);
+  transition: opacity var(--transition-duration) var(--ease);
 }
 .login-page.leaving { opacity: 0; }
 
@@ -403,7 +403,7 @@ function onForgotPassword() {
 .ambient-spotlight {
   position: absolute;
   inset: 0;
-  transition: background 0.15s ease-out;
+  transition: background var(--transition-duration) ease-out;
 }
 .ambient-glow {
   position: absolute;
@@ -524,14 +524,14 @@ function onForgotPassword() {
 .logo-mark {
   width: 36px;
   height: 36px;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.72);
   color: var(--brand);
   display: grid;
   place-items: center;
   backdrop-filter: blur(8px);
-  transition: transform 0.15s var(--ease), box-shadow 0.15s var(--ease), color 0.15s var(--ease);
+  transition: transform var(--transition-duration) var(--ease), box-shadow var(--transition-duration) var(--ease), color var(--transition-duration) var(--ease);
 }
 .logo:hover .logo-mark {
   transform: translateY(-2px);
@@ -589,13 +589,13 @@ function onForgotPassword() {
   color: var(--text);
   padding: 8px 10px;
   margin: -8px -10px;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   cursor: default;
-  transition: background 0.15s var(--ease), transform 0.15s var(--ease);
+  transition: background var(--transition-duration) var(--ease), transform var(--transition-duration) var(--ease);
 }
 .feature :deep(svg) {
   color: var(--brand);
-  transition: transform 0.15s var(--ease);
+  transition: transform var(--transition-duration) var(--ease);
 }
 .feature:hover {
   background: rgba(22, 163, 74, 0.06);
@@ -639,7 +639,7 @@ function onForgotPassword() {
 .card {
   width: min(440px, 100%);
   padding: 36px 32px 24px;
-  border-radius: 20px;
+  border-radius: var(--radius-xl);
   border: 1px solid rgba(255, 255, 255, 0.65);
   background: rgba(255, 255, 255, 0.72);
   backdrop-filter: blur(20px) saturate(1.2);
@@ -671,7 +671,7 @@ function onForgotPassword() {
   font-size: 13px;
   color: var(--muted);
   cursor: pointer;
-  transition: color 0.15s var(--ease);
+  transition: color var(--transition-duration) var(--ease);
 }
 .back-btn:hover { color: var(--brand); }
 
@@ -716,7 +716,7 @@ function onForgotPassword() {
 
 .step-enter-active,
 .step-leave-active {
-  transition: opacity 0.22s var(--ease), transform 0.22s var(--ease);
+  transition: opacity var(--transition-duration) var(--ease), transform var(--transition-duration) var(--ease);
 }
 .step-enter-from {
   opacity: 0;
@@ -766,14 +766,14 @@ function onForgotPassword() {
   left: 14px;
   color: var(--muted);
   pointer-events: none;
-  transition: color 0.15s var(--ease);
+  transition: color var(--transition-duration) var(--ease);
 }
 .field-input {
   width: 100%;
   height: 48px;
   padding: 0 14px 0 40px;
   border: 1px solid color-mix(in srgb, var(--line) 90%, transparent);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   background: rgba(255, 255, 255, 0.78);
   font-size: 14px;
   font-weight: 400;
@@ -801,7 +801,7 @@ function onForgotPassword() {
   margin-top: 4px;
   height: 50px;
   border: none;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   background: var(--brand);
   color: #fff;
   font-size: 14px;
@@ -860,7 +860,7 @@ function onForgotPassword() {
   font-size: 13px;
   color: var(--muted);
   cursor: pointer;
-  transition: color 0.15s var(--ease);
+  transition: color var(--transition-duration) var(--ease);
 }
 .ghost-link:hover { color: var(--brand); }
 

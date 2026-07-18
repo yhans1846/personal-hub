@@ -552,10 +552,10 @@ const moodOptions = [
   flex-direction: column;
   padding: 0;
   border: 1px solid var(--border-light);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   background: var(--bg-card);
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: background var(--transition-duration) ease, border-color var(--transition-duration) ease, box-shadow var(--transition-duration) ease;
   overflow: hidden;
 }
 .diary-card:hover {
@@ -591,7 +591,7 @@ const moodOptions = [
   align-items: center;
   gap: 3px;
   padding: 2px 7px;
-  border-radius: 999px;
+  border-radius: var(--radius-md);
   background: rgba(0, 0, 0, 0.5);
   color: #fff;
   font-size: 11px;
@@ -672,7 +672,7 @@ const moodOptions = [
   background: transparent;
   color: var(--text-tertiary);
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: background var(--transition-duration) ease, color var(--transition-duration) ease;
 }
 .dc-more:hover {
   background: var(--bg-hover);

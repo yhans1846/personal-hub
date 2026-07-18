@@ -317,7 +317,7 @@ const priorityOptions = [
   height: 18px;
   line-height: 18px;
   text-align: center;
-  border-radius: 9px;
+  border-radius: var(--radius-md);
   padding: 0 5px;
   background: var(--border-color);
   color: var(--text-tertiary);
@@ -447,7 +447,7 @@ const priorityOptions = [
   font-weight: 600;
   height: 24px;
   padding: 0 10px;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   letter-spacing: 0.02em;
 }
 .due--overdue {

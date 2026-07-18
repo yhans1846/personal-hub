@@ -360,7 +360,7 @@ function getTypeIcon(type: string) {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
-  transition: all 0.2s ease;
+  transition: all var(--transition);
   cursor: default;
   position: relative;
 }
@@ -378,7 +378,7 @@ function getTypeIcon(type: string) {
   opacity: 0;
   transition: opacity var(--transition);
   padding: 2px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   flex-shrink: 0;
 }
 .category-card:hover .drag-handle { opacity: 0.5; }
@@ -425,7 +425,7 @@ function getTypeIcon(type: string) {
   color: var(--accent);
   background: var(--accent-light);
   padding: 1px 8px;
-  border-radius: 100px;
+  border-radius: var(--radius-md);
   white-space: nowrap;
   flex-shrink: 0;
 }

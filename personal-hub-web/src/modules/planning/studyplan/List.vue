@@ -547,7 +547,7 @@ const headerSubtitle = computed(() => `共 ${stats.value.total} 个计划`)
   font-size: 12px;
   color: var(--text-secondary);
   background: var(--bg-hover);
-  border-radius: 999px;
+  border-radius: var(--radius-md);
 }
 .stat-badge .dot {
   width: 7px;
@@ -567,7 +567,7 @@ const headerSubtitle = computed(() => `共 ${stats.value.total} 个计划`)
 }
 .skeleton-row {
   flex: 1;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--bg-hover);
   animation: pulse 1.5s ease-in-out infinite;
 }
@@ -596,7 +596,7 @@ const headerSubtitle = computed(() => `共 ${stats.value.total} 个计划`)
   display: inline-flex;
   align-items: center;
   padding: 1px 7px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   font-size: 12px;
   border: 1px solid transparent;
   margin-right: 4px;
@@ -630,7 +630,7 @@ const headerSubtitle = computed(() => `共 ${stats.value.total} 个计划`)
   width: 28px;
   height: 28px;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--text-tertiary);
   cursor: pointer;
@@ -654,10 +654,10 @@ const headerSubtitle = computed(() => `共 ${stats.value.total} 个计划`)
   flex-direction: column;
   padding: var(--sp-3) var(--sp-4);
   border: 1px solid var(--border-light);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   background: var(--bg-card);
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  transition: background var(--transition-duration) ease, border-color var(--transition-duration) ease;
   overflow: hidden;
 }
 .plan-card:hover {

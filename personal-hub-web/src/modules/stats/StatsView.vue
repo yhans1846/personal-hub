@@ -101,19 +101,39 @@ function initChart(el: HTMLDivElement, existing: echarts.ECharts | null): echart
   return echarts.init(el)
 }
 
-// ====== 颜色系统 ======
-const COLORS = {
-  study: '#409eff',
-  note: '#67c23a',
-  todo: '#e6a23c',
-  reading: '#9b59b6',
-  active: '#409eff',
-  success: '#67c23a',
-  warning: '#e6a23c',
-  danger: '#f56c6c',
+// ====== 颜色系统（跟随外观 Token；每次读取最新） ======
+function cssVar(name: string, fallback: string): string {
+  const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim()
+  return v || fallback
 }
 
-// ====== 图表渲染函数 ======
+function chartColors() {
+  return {
+    study: cssVar('--accent', '#4F7BFF'),
+    note: cssVar('--success', '#22C55E'),
+    todo: cssVar('--warning', '#F59E0B'),
+    reading: cssVar('--info', '#6366F1'),
+    active: cssVar('--accent', '#4F7BFF'),
+    success: cssVar('--success', '#22C55E'),
+    warning: cssVar('--warning', '#F59E0B'),
+    danger: cssVar('--danger', '#EF4444'),
+  }
+}
+
+const COLORS = new Proxy({} as Record<string, string>, {
+  get(_target, prop: string) {
+    const map = chartColors()
+    return map[prop as keyof typeof map] ?? cssVar('--accent', '#4F7BFF')
+  },
+})
+
+function chartAnimMs(): number {
+  const anim = document.documentElement.getAttribute('data-anim')
+  if (anim === 'off') return 0
+  if (anim === 'slow') return 1200
+  if (anim === 'fast') return 400
+  return 800
+}
 
 /** ① 学习趋势 - 面积图 */
 function renderStudyChart() {
@@ -123,7 +143,7 @@ function renderStudyChart() {
 
   studyChart = initChart(studyChartRef.value, studyChart)
   studyChart.setOption({
-    animationDuration: 800,
+    animationDuration: chartAnimMs(),
     grid: { left: 45, right: 16, top: 20, bottom: 25 },
     tooltip: {
       trigger: 'axis',
@@ -170,7 +190,7 @@ function renderNoteChart() {
 
   noteChart = initChart(noteChartRef.value, noteChart)
   noteChart.setOption({
-    animationDuration: 800,
+    animationDuration: chartAnimMs(),
     grid: { left: 45, right: 30, top: 20, bottom: 25 },
     tooltip: {
       trigger: 'axis',
@@ -227,7 +247,7 @@ function renderTodoChart() {
 
   todoChart = initChart(todoChartRef.value, todoChart)
   todoChart.setOption({
-    animationDuration: 1000,
+    animationDuration: chartAnimMs(),
     tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
     graphic: [
       {
@@ -291,7 +311,7 @@ function updateCatTagChart() {
 
   catTagChart = initChart(catTagChartRef.value, catTagChart)
   catTagChart.setOption({
-    animationDuration: 600,
+    animationDuration: chartAnimMs(),
     grid: { left: 10, right: 40, top: 10, bottom: 10, containLabel: true },
     tooltip: {
       trigger: 'axis',
@@ -665,22 +685,24 @@ const groupedActivities = computed(() => {
 
 .stats-sections {
   border: none;
+  background: transparent;
 }
 .stats-sections :deep(.el-collapse-item__header) {
   font-size: var(--text-base);
   font-weight: 600;
   color: var(--text-primary);
   background: transparent;
-  border-bottom: 1px solid var(--border-color);
   height: auto;
   line-height: 1.4;
   padding: var(--sp-3) 0;
 }
 .stats-sections :deep(.el-collapse-item__wrap) {
-  border-bottom: none;
+  background: transparent;
+  border: none;
 }
 .stats-sections :deep(.el-collapse-item__content) {
   padding: var(--sp-4) 0 var(--sp-2);
+  background: transparent;
 }
 
 /* ====== 状态容器 ====== */
@@ -749,8 +771,8 @@ const groupedActivities = computed(() => {
   padding: var(--sp-4) var(--sp-5);
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: 16px;
-  transition: all 0.2s ease;
+  border-radius: var(--radius-xl);
+  transition: all var(--transition);
   position: relative;
   overflow: hidden;
 }
@@ -762,7 +784,7 @@ const groupedActivities = computed(() => {
 .kpi-icon {
   width: 40px;
   height: 40px;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -815,7 +837,7 @@ const groupedActivities = computed(() => {
 .chart-card {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: 16px;
+  border-radius: var(--radius-xl);
   padding: var(--sp-4) var(--sp-5);
   overflow: hidden;
 }
@@ -845,19 +867,19 @@ const groupedActivities = computed(() => {
   gap: 2px;
   margin-left: auto;
   background: var(--bg-hover);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   padding: 2px;
 }
 .tab-btn {
   padding: 3px 12px;
   border: none;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--text-tertiary);
   font-size: var(--text-xs);
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all var(--transition);
   font-family: inherit;
 }
 .tab-btn.active {
@@ -911,7 +933,7 @@ const groupedActivities = computed(() => {
 .bottom-card {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: 16px;
+  border-radius: var(--radius-xl);
   padding: var(--sp-4) var(--sp-5);
   display: flex;
   flex-direction: column;

@@ -117,7 +117,7 @@ async function handleReset() {
   height: 18px;
   color: var(--text-tertiary);
   cursor: grab;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   flex-shrink: 0;
 }
 .chip-handle:hover { color: var(--text-secondary); background: var(--bg-hover); }

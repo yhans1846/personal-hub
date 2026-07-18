@@ -25,9 +25,9 @@ const NOTIFICATION_TYPES = [
 
 const SOUND_OPTIONS = [
   { value: 'default', label: '默认' },
-  { value: 'bell', label: 'Bell' },
-  { value: 'chime', label: 'Chime' },
-  { value: 'pop', label: 'Pop' },
+  { value: 'bell', label: '铃声' },
+  { value: 'chime', label: '钟琴' },
+  { value: 'pop', label: '轻点' },
 ]
 
 export const useNotificationConfigStore = defineStore('notificationConfig', () => {
@@ -75,10 +75,13 @@ export const useNotificationConfigStore = defineStore('notificationConfig', () =
     await sync.resetConfig()
   }
 
-  /** 请求桌面通知权限 */
+  /** 请求桌面通知权限，并同步 desktopEnabled */
   async function requestDesktopPermission(): Promise<boolean> {
     if (!('Notification' in window)) return false
-    if (Notification.permission === 'granted') return true
+    if (Notification.permission === 'granted') {
+      updateConfig({ desktopEnabled: true })
+      return true
+    }
     if (Notification.permission === 'denied') {
       updateConfig({ desktopEnabled: false })
       return false

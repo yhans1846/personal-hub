@@ -367,7 +367,7 @@ async function onCardMenuAction(actionId: string) {
   font-size: var(--text-base); font-weight: 600; line-height: var(--leading-tight);
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
-.fav-btn { background: none; border: none; cursor: pointer; color: var(--text-tertiary); padding: 4px; border-radius: 4px; flex-shrink: 0; transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1); }
+.fav-btn { background: none; border: none; cursor: pointer; color: var(--text-tertiary); padding: 4px; border-radius: var(--radius-sm); flex-shrink: 0; transition: all var(--transition); }
 .fav-btn:hover { color: var(--warning); background: var(--warning-light); transform: scale(1.15); }
 .fav-btn:active { transform: scale(0.85); }
 .fav-btn.favored { color: var(--warning); animation: fav-pop 350ms ease; }
@@ -378,7 +378,7 @@ async function onCardMenuAction(actionId: string) {
 }
 .note-card-meta { display: flex; gap: var(--sp-2); margin-bottom: var(--sp-3); flex-wrap: wrap; align-items: center; }
 .reading-time { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; color: var(--text-tertiary); margin-left: auto; }
-.meta-tag { display: inline-block; padding: 0 6px; height: 20px; line-height: 20px; border-radius: 4px; font-size: 11px; background: var(--accent-light); color: var(--accent); }
+.meta-tag { display: inline-block; padding: 0 6px; height: 20px; line-height: 20px; border-radius: var(--radius-sm); font-size: 11px; background: var(--accent-light); color: var(--accent); }
 .meta-tag--tag { background: var(--bg-hover); color: var(--text-tertiary); }
 .meta-tag--more { background: transparent; color: var(--text-tertiary); }
 .note-card-body { flex: 1; margin-bottom: var(--sp-3); min-height: 0; overflow: hidden; }
@@ -388,9 +388,9 @@ async function onCardMenuAction(actionId: string) {
 .note-card-footer-right { display: flex; align-items: center; gap: var(--sp-2); flex-shrink: 0; }
 .edited-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); flex-shrink: 0; }
 .edited-time { font-size: 11px; color: var(--text-tertiary); white-space: nowrap; }
-.delete-btn { background: none; border: none; color: var(--text-tertiary); cursor: pointer; padding: 4px; border-radius: 4px; transition: all var(--transition); }
+.delete-btn { background: none; border: none; color: var(--text-tertiary); cursor: pointer; padding: 4px; border-radius: var(--radius-sm); transition: all var(--transition); }
 .delete-btn:hover { color: var(--danger); background: var(--danger-light); }
-.icon-btn { background: none; border: none; color: var(--text-tertiary); cursor: pointer; padding: 4px; border-radius: 4px; transition: all var(--transition); display: inline-flex; align-items: center; }
+.icon-btn { background: none; border: none; color: var(--text-tertiary); cursor: pointer; padding: 4px; border-radius: var(--radius-sm); transition: all var(--transition); display: inline-flex; align-items: center; }
 .icon-btn:hover { color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
 .toolbar-import-btn {
   display: inline-flex;
@@ -422,7 +422,7 @@ async function onCardMenuAction(actionId: string) {
 }
 .table-skeleton .skeleton-row {
   flex: 1;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--bg-hover);
   animation: pulse 1.5s ease-in-out infinite;
 }
@@ -440,7 +440,7 @@ async function onCardMenuAction(actionId: string) {
   display: inline-flex;
   align-items: center;
   padding: 1px 7px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   font-size: 12px;
   background: var(--accent-light);
   color: var(--accent);
@@ -464,11 +464,11 @@ async function onCardMenuAction(actionId: string) {
   width: 28px;
   height: 28px;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--text-tertiary);
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: background var(--transition-duration) ease, color var(--transition-duration) ease;
 }
 .icon-action:hover {
   background: var(--bg-hover);

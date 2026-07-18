@@ -41,7 +41,7 @@ defineEmits<{
 }
 
 .dialog-date-chip :deep(.el-input__wrapper) {
-  border-radius: var(--radius-full) !important;
+  border-radius: var(--radius-sm) !important;
   padding: 2px 12px 2px 10px !important;
   box-shadow: 0 0 0 1px var(--border-color, var(--border)) inset !important;
   background: var(--bg-card) !important;

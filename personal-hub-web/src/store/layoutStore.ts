@@ -240,6 +240,8 @@ export const useLayoutStore = defineStore('layout', () => {
     root.style.setProperty('--radius-md', `${r}px`)
     root.style.setProperty('--radius-lg', `${r}px`)
     root.style.setProperty('--radius-xl', `${Math.round(r * 1.25)}px`)
+    // 全圆仅用于开关等；普通控件用 sm/md/lg/xl 跟随外观
+    root.style.setProperty('--radius-full', '9999px')
 
     // 动画：全局 --transition 被大量组件引用
     const animMs: Record<string, string> = { off: '0ms', slow: '350ms', normal: '200ms', fast: '100ms' }
@@ -260,6 +262,14 @@ export const useLayoutStore = defineStore('layout', () => {
 
     // 内容区宽度：相对主内容区百分比
     root.style.setProperty('--content-max-width', `${ext.contentWidth}%`)
+
+    // 同步 Element Plus 主色（部分组件读 --el-color-primary 实色）
+    requestAnimationFrame(() => {
+      const accent = getComputedStyle(root).getPropertyValue('--accent').trim()
+      if (accent) {
+        root.style.setProperty('--el-color-primary', accent)
+      }
+    })
   }
 
   // 本地缓存就绪后立刻应用（避免刷新后设置丢失）

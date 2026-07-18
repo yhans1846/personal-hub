@@ -387,11 +387,11 @@ async function onCardMenuAction(actionId: string) {
   width: 28px;
   height: 28px;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--text-tertiary);
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: background var(--transition-duration) ease, color var(--transition-duration) ease;
 }
 .icon-action:hover {
   background: var(--bg-hover);
