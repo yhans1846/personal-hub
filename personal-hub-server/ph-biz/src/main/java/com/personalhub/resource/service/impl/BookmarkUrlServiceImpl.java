@@ -13,7 +13,6 @@ import com.personalhub.resource.service.BookmarkUrlService;
 import com.personalhub.resource.vo.BookmarkVO;
 import com.personalhub.knowledge.service.TagService;
 import com.personalhub.knowledge.vo.TagVO;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -33,47 +32,6 @@ public class BookmarkUrlServiceImpl implements BookmarkUrlService {
     private final BookmarkUrlMapper bookmarkUrlMapper;
     private final CategoryService categoryService;
     private final TagService tagService;
-
-    /**
-     * 启动时自动迁移旧版逗号分隔标签到统一标签系统
-     */
-    @PostConstruct
-    public void migrateOldTags() {
-        List<BookmarkUrl> bookmarks = bookmarkUrlMapper.selectList(
-                new LambdaQueryWrapper<BookmarkUrl>()
-                        .isNotNull(BookmarkUrl::getTags)
-                        .ne(BookmarkUrl::getTags, ""));
-
-        int migrated = 0;
-        for (BookmarkUrl bm : bookmarks) {
-            // 检查是否已迁移
-            List<TagVO> existingTags = tagService.getTags("bookmark", bm.getId());
-            if (!existingTags.isEmpty()) continue;
-
-            // 解析逗号分隔标签
-            String[] tagNames = bm.getTags().split("\\s*,\\s*");
-            for (String tagName : tagNames) {
-                if (tagName.isBlank()) continue;
-                try {
-                    // 查找或创建标签
-                    List<com.personalhub.knowledge.vo.TagVO> userTags = tagService.listByUser(bm.getUserId());
-                    com.personalhub.knowledge.vo.TagVO tag = userTags.stream()
-                            .filter(t -> t.getName().equals(tagName.trim()))
-                            .findFirst().orElse(null);
-                    if (tag == null) {
-                        tag = tagService.create(bm.getUserId(), tagName.trim(), null);
-                    }
-                    tagService.bindTag(tag.getId(), "bookmark", bm.getId());
-                } catch (Exception e) {
-                    log.warn("迁移标签失败: bookmarkId={}, tagName={}", bm.getId(), tagName);
-                }
-            }
-            migrated++;
-        }
-        if (migrated > 0) {
-            log.info("收藏夹标签迁移完成: {} 条记录", migrated);
-        }
-    }
 
     @Override
     public IPage<BookmarkVO> list(Long userId, BookmarkQueryDTO query) {
@@ -122,7 +80,6 @@ public class BookmarkUrlServiceImpl implements BookmarkUrlService {
                 .title(dto.getTitle())
                 .url(dto.getUrl())
                 .description(dto.getDescription())
-                .favicon(dto.getFavicon())
                 .categoryId(dto.getCategoryId())
                 .showOnDashboard(dto.getShowOnDashboard() != null && dto.getShowOnDashboard() == 1 ? 1 : 0)
                 .build();
@@ -152,7 +109,6 @@ public class BookmarkUrlServiceImpl implements BookmarkUrlService {
         url.setTitle(dto.getTitle());
         url.setUrl(dto.getUrl());
         url.setDescription(dto.getDescription());
-        url.setFavicon(dto.getFavicon());
         url.setCategoryId(dto.getCategoryId());
         url.setShowOnDashboard(dto.getShowOnDashboard() != null && dto.getShowOnDashboard() == 1 ? 1 : 0);
         bookmarkUrlMapper.updateById(url);

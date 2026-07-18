@@ -48,7 +48,7 @@ CRUD + `PUT /sort`。`type`=note|bookmark|file。新建 `{name,type,sortOrder}`
 
 ## 学习记录 `/api/study-records`
 
-CRUD。POST：`{subject,date,duration,content,reflection,planId?}`
+CRUD。POST：`{subject,date,duration,content,reflection}`
 
 ## 待办 `/api/todos`
 
@@ -58,11 +58,14 @@ POST：`{title,content,priority,dueDate}`
 
 ## 文件 `/api/files`
 
-分页 · 详情 · upload · download/preview · 删除。参数：keyword,type,categoryId
+分页 · 详情 · upload（可带 `categoryId`）· `PATCH /{id}/category` · download/preview · 删除。  
+列表参数：keyword，`type`（扩展名或分组 `image|pdf|doc|archive`），categoryId  
+前端：列表内嵌预览；上传可选分类；卡片可改分类；筛选按类型/分类生效
 
 ## 日记 `/api/diaries`
 
-CRUD + `GET /month?month=YYYY-MM`。列表：keyword,startDate,endDate,mood,month
+CRUD + `GET /month?month=YYYY-MM`。列表：keyword,startDate,endDate,mood,month  
+创建/更新可含 `location`、`latitude`、`longitude`（定位仅存坐标，不反查地名）
 
 ## 收藏 `/api/bookmarks`
 

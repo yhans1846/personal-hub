@@ -41,9 +41,6 @@ public class StudyRecord {
     /** 学习心得 */
     private String reflection;
 
-    /** 关联学习计划ID */
-    private Long planId;
-
     /** 逻辑删除 0-正常 1-删除 */
     @TableLogic
     private Integer isDeleted;

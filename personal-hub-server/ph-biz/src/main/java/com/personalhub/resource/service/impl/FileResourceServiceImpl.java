@@ -3,6 +3,7 @@ package com.personalhub.resource.service.impl;
 import com.personalhub.common.exception.BusinessException;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.personalhub.common.util.EntityGuard;
@@ -49,7 +50,17 @@ public class FileResourceServiceImpl implements FileResourceService {
             wrapper.like(FileResource::getName, query.getKeyword());
         }
         if (StringUtils.hasText(query.getType())) {
-            wrapper.eq(FileResource::getType, query.getType().toLowerCase());
+            String type = query.getType().toLowerCase();
+            switch (type) {
+                case "image" -> wrapper.in(FileResource::getType,
+                        java.util.List.of("jpg", "jpeg", "png", "gif", "svg", "webp", "bmp"));
+                case "pdf" -> wrapper.eq(FileResource::getType, "pdf");
+                case "doc" -> wrapper.in(FileResource::getType,
+                        java.util.List.of("doc", "docx", "xls", "xlsx", "ppt", "pptx", "md", "txt"));
+                case "archive" -> wrapper.in(FileResource::getType,
+                        java.util.List.of("zip", "rar", "7z", "tar", "gz"));
+                default -> wrapper.eq(FileResource::getType, type);
+            }
         }
         if (query.getCategoryId() != null) {
             wrapper.eq(FileResource::getCategoryId, query.getCategoryId());
@@ -129,13 +140,11 @@ public class FileResourceServiceImpl implements FileResourceService {
         var file = FileResource.builder()
                 .userId(userId)
                 .name(originalName)
-                .storedName(storedName)
                 .path(relativePath)
                 .size(multipartFile.getSize())
                 .type(ext)
                 .mimeType(multipartFile.getContentType())
                 .categoryId(categoryId)
-                .source("upload")
                 .build();
         fileResourceMapper.insert(file);
 
@@ -148,6 +157,26 @@ public class FileResourceServiceImpl implements FileResourceService {
         FileResource file = EntityGuard.requireOwned(
                 fileResourceMapper.selectById(id), userId, FileResource::getUserId, "文件不存在");
         return file;
+    }
+
+    @Override
+    @Transactional
+    public FileVO updateCategory(Long id, Long userId, Long categoryId) {
+        FileResource file = EntityGuard.requireOwned(
+                fileResourceMapper.selectById(id), userId, FileResource::getUserId, "文件不存在");
+        if (categoryId != null) {
+            boolean exists = categoryService.listByType(userId, "file").stream()
+                    .anyMatch(c -> categoryId.equals(c.getId()));
+            if (!exists) {
+                throw new BusinessException("分类不存在");
+            }
+        }
+        fileResourceMapper.update(null, new LambdaUpdateWrapper<FileResource>()
+                .eq(FileResource::getId, id)
+                .eq(FileResource::getUserId, userId)
+                .set(FileResource::getCategoryId, categoryId));
+        log.info("更新文件分类: id={}, categoryId={}", id, categoryId);
+        return getById(id, userId);
     }
 
     @Override

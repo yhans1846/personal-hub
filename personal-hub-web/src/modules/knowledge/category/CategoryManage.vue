@@ -5,7 +5,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Pencil, Trash2, FolderOpen, Folder, Bookmark, GripVertical, Search, ArrowUpDown } from 'lucide-vue-next'
 import Sortable from 'sortablejs'
 import { PageHeader, EmptyState, ListToolbar } from '@/components'
-import { UiDialog, UiInput, DialogFooterActions } from '@/components/ui'
+import { UiDialog, UiInput, DialogPropCard, DialogFooterActions } from '@/components/ui'
 import type { CategoryVO } from '@/types/category'
 import CategoryStatsCards from './CategoryStatsCards.vue'
 import { formatDate } from '@/utils/formatTime'
@@ -272,7 +272,9 @@ function getTypeIcon(type: string) {
 
     <!-- ========== 编辑弹窗 ========== -->
     <UiDialog v-model="dialogVisible" size="sm" :title="isEdit ? '编辑分类' : `新建${tabs.find(t => t.type === activeType)?.label || ''}分类`">
-      <UiInput v-model="form.name" placeholder="分类名称" maxlength="50" show-word-limit class="category-dialog-input" @keyup.enter="handleSave" />
+      <DialogPropCard label="名称">
+        <UiInput v-model="form.name" placeholder="分类名称" maxlength="50" show-word-limit @keyup.enter="handleSave" />
+      </DialogPropCard>
       <template #footer>
         <DialogFooterActions @cancel="dialogVisible = false" @confirm="handleSave" />
       </template>
@@ -481,19 +483,6 @@ function getTypeIcon(type: string) {
   border-radius: var(--radius-lg);
   background: var(--bg-hover);
   animation: pulse 1.5s ease-in-out infinite;
-}
-
-/* ---- Dialog ---- */
-.category-dialog-input :deep(input) {
-  font-size: var(--text-lg) !important;
-  font-weight: 600;
-  border: none !important;
-  padding-left: 0 !important;
-  background: transparent !important;
-}
-.category-dialog-input :deep(input)::placeholder {
-  color: var(--text-placeholder);
-  font-weight: 400;
 }
 
 /* ---- Animation ---- */

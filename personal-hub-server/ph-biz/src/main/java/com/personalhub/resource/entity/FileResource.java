@@ -25,9 +25,6 @@ public class FileResource {
     /** 原始文件名 */
     private String name;
 
-    /** 存储文件名（UUID） */
-    private String storedName;
-
     /** 存储路径 */
     private String path;
 
@@ -42,12 +39,6 @@ public class FileResource {
 
     /** 文件分类ID */
     private Long categoryId;
-
-    /** 上传来源: upload/diary/avatar */
-    private String source;
-
-    /** 关联实体ID(diary_id等) */
-    private Long refId;
 
     /** 逻辑删除 0-正常 1-删除 */
     @TableLogic

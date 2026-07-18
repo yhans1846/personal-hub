@@ -6,7 +6,6 @@ export interface BookmarkVO {
   title: string
   url: string
   description: string
-  favicon: string
   categoryId: number | null
   categoryName: string
   showOnDashboard?: number
@@ -20,7 +19,6 @@ export interface BookmarkCreateDTO {
   title: string
   url: string
   description?: string
-  favicon?: string
   categoryId?: number | null
   tagIds?: number[]
   showOnDashboard?: number

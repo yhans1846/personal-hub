@@ -48,6 +48,16 @@ public interface FileResourceService {
     com.personalhub.resource.entity.FileResource getFileResource(Long id, Long userId);
 
     /**
+     * 更新文件分类
+     *
+     * @param id         文件ID
+     * @param userId     用户ID
+     * @param categoryId 分类ID（null 表示清除分类）
+     * @return 更新后的文件VO
+     */
+    FileVO updateCategory(Long id, Long userId, Long categoryId);
+
+    /**
      * 删除文件
      *
      * @param id     文件ID

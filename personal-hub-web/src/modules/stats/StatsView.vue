@@ -363,7 +363,7 @@ function moduleLabel(m: string): string {
   const map: Record<string, string> = {
     NOTE: '笔记', TODO: '待办', FILE: '文件',
     STUDY: '学习', READING: '阅读', BOOKMARK: '收藏',
-    DIARY: '日记', STUDY_PLAN: '学习计划',
+    DIARY: '日记', STUDY_PLAN: '学习计划', AUTH: '认证',
   }
   return map[m] || m
 }

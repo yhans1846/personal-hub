@@ -5,7 +5,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Tags, Pencil, Trash2, Search, ArrowUpDown } from 'lucide-vue-next'
 import type { TagVO } from '@/types/tag'
 import { PageHeader, EmptyState, ListToolbar } from '@/components'
-import { UiDialog, UiInput, DialogSection, DialogFooterActions } from '@/components/ui'
+import { UiDialog, UiInput, DialogPropCard, DialogPropGrid, DialogFooterActions } from '@/components/ui'
 import TagStatsCards from './TagStatsCards.vue'
 import { formatDate } from '@/utils/formatTime'
 
@@ -214,33 +214,37 @@ function toggleSortDir() {
 
     <!-- ========== 编辑弹窗 ========== -->
     <UiDialog v-model="dialogVisible" size="sm" :title="isEdit ? '编辑标签' : '新建标签'">
-      <UiInput v-model="form.name" placeholder="标签名称" maxlength="50" show-word-limit class="tag-dialog-title" />
+      <DialogPropGrid :cols="1">
+        <DialogPropCard label="名称">
+          <UiInput v-model="form.name" placeholder="标签名称" maxlength="50" show-word-limit />
+        </DialogPropCard>
 
-      <DialogSection label="颜色">
-        <div class="color-picker">
-          <button
-            v-for="c in COLORS" :key="c"
-            type="button"
-            class="color-btn"
-            :class="{ active: form.color === c }"
-            :style="{ background: c }"
-            @click="form.color = c"
-          />
-          <label
-            class="color-btn color-btn--custom"
-            :style="{ background: form.color }"
-            title="自定义颜色"
-          >
-            自定义
-            <input
-              type="color"
-              class="color-input-abs"
-              :value="form.color"
-              @input="onColorInput"
+        <DialogPropCard label="颜色">
+          <div class="color-picker">
+            <button
+              v-for="c in COLORS" :key="c"
+              type="button"
+              class="color-btn"
+              :class="{ active: form.color === c }"
+              :style="{ background: c }"
+              @click="form.color = c"
             />
-          </label>
-        </div>
-      </DialogSection>
+            <label
+              class="color-btn color-btn--custom"
+              :style="{ background: form.color }"
+              title="自定义颜色"
+            >
+              自定义
+              <input
+                type="color"
+                class="color-input-abs"
+                :value="form.color"
+                @input="onColorInput"
+              />
+            </label>
+          </div>
+        </DialogPropCard>
+      </DialogPropGrid>
 
       <template #footer>
         <DialogFooterActions @cancel="dialogVisible = false" @confirm="handleSave" />
@@ -381,21 +385,6 @@ function toggleSortDir() {
 .icon-btn--danger:hover { color: var(--danger); background: var(--danger-light); }
 
 /* ---- Dialog ---- */
-.tag-dialog-title {
-  margin-bottom: var(--sp-5);
-}
-.tag-dialog-title :deep(input) {
-  font-size: var(--text-lg) !important;
-  font-weight: 600;
-  border: none !important;
-  padding-left: 0 !important;
-  background: transparent !important;
-}
-.tag-dialog-title :deep(input)::placeholder {
-  color: var(--text-placeholder);
-  font-weight: 400;
-}
-
 .color-picker { display: flex; gap: 8px; flex-wrap: wrap; }
 .color-btn {
   width: 28px; height: 28px; border-radius: 50%; border: 2px solid transparent;

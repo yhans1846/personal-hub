@@ -25,7 +25,7 @@ UK `(user_id,type,name)`；索引 user_id / type
 PK `(note_id, category_id)`
 
 ### `study_record`
-user_id · subject · date · duration · content/reflection · plan_id · is_deleted · 时间  
+user_id · subject · date · duration · content/reflection · is_deleted · 时间  
 索引 `(user_id,date)`
 
 ### `todo_task`
@@ -33,15 +33,15 @@ user_id · title · content · is_done · priority(1高2中3低) · due_date · 
 索引 user_id / due_date
 
 ### `file_resource`
-user_id · name · stored_name · path · size · type · mime_type · category_id · source(upload/diary/avatar) · ref_id · is_deleted · 时间
+user_id · name · path · size · type · mime_type · category_id · is_deleted · 时间
 
 ### `diary_entry`
-user_id · date · title · content · mood(1–5) · weather/location · image_file_id · is_deleted · 时间  
+user_id · date · title · content · mood(1–5) · weather/location · latitude/longitude（浏览器定位，可空）· image_file_ids · is_deleted · 时间  
 索引 `(user_id,date)` / date
 
 ### `bookmark_url`
-user_id · title · url · description · favicon · category_id · show_on_dashboard · tags(遗留) · is_deleted · 时间  
-索引 user_id / category_id
+user_id · title · url · description · category_id · show_on_dashboard · is_deleted · 时间  
+索引 user_id / category_id；标签走 `tag_rel`；图标由前端按域名拉取
 
 ### `study_plan`
 user_id · name · source/author · url · remark · progress · start/end_date · status(0–3) · is_deleted · 时间  
@@ -64,8 +64,9 @@ user_id · layout_type(menu|dashboard|preview) · layout_json · 时间 · is_de
 UK `(user_id,layout_type)`
 
 ### `audit_log`
-module · business_id · action · content · operator_id · created_at（仅追加）  
+module（含 `AUTH` 等）· business_id · action（含 `LOGIN`/`DELETE`/`RESTORE` 等）· content · operator_id · created_at（仅追加）  
 索引 module / (module,business_id) / operator_id / created_at
+当前写入点：登录成功；笔记删除 / 恢复
 
 ---
 

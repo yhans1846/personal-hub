@@ -444,6 +444,146 @@ a:hover { color: var(--accent-hover); }
 .el-date-editor .el-input__wrapper { border-radius: var(--radius-sm) !important; }
 .el-picker-panel { border-radius: var(--radius-lg) !important; }
 
+/* 产品化日期面板（DialogDateChip / ProfileDrawer 等共用） */
+.ph-date-popper.el-popper {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.ph-date-popper .el-picker-panel {
+  border: 1px solid var(--border-color) !important;
+  border-radius: var(--radius-xl) !important;
+  box-shadow: var(--shadow-xl) !important;
+  background: var(--bg-elevated) !important;
+  overflow: visible !important;
+}
+
+.ph-date-popper .el-date-picker {
+  --el-datepicker-active-color: var(--accent);
+  --el-datepicker-hover-text-color: var(--accent);
+  width: 322px !important;
+}
+
+.ph-date-popper .el-picker-panel__body,
+.ph-date-popper .el-picker-panel__content {
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 12px 12px !important;
+  box-sizing: border-box;
+}
+
+.ph-date-popper .el-date-picker__header {
+  padding: 14px 12px 8px !important;
+  margin: 0 !important;
+}
+
+.ph-date-popper .el-date-picker__header-label {
+  font-size: var(--text-sm) !important;
+  font-weight: 600 !important;
+  color: var(--text-primary) !important;
+}
+
+.ph-date-popper .el-picker-panel__icon-btn {
+  color: var(--text-secondary) !important;
+  margin-top: 2px !important;
+  border-radius: var(--radius-sm);
+  width: 28px !important;
+  height: 28px !important;
+}
+
+.ph-date-popper .el-picker-panel__icon-btn:hover {
+  color: var(--accent) !important;
+  background: var(--accent-light);
+}
+
+.ph-date-popper .el-date-table {
+  font-size: var(--text-sm) !important;
+  width: 100% !important;
+  table-layout: fixed !important;
+}
+
+.ph-date-popper .el-date-table th {
+  color: var(--text-tertiary) !important;
+  font-weight: 500 !important;
+  border-bottom: none !important;
+  padding: 6px 0 !important;
+  text-align: center;
+}
+
+.ph-date-popper .el-date-table td {
+  padding: 2px 0 !important;
+  width: auto !important;
+  height: 36px;
+}
+
+.ph-date-popper .el-date-table td .el-date-table-cell {
+  height: 32px !important;
+  padding: 0 !important;
+}
+
+.ph-date-popper .el-date-table td .el-date-table-cell .el-date-table-cell__text {
+  width: 30px !important;
+  height: 30px !important;
+  line-height: 30px !important;
+  border-radius: var(--radius-full) !important;
+  font-weight: 500;
+}
+
+.ph-date-popper .el-date-table td.available:hover .el-date-table-cell__text {
+  background: var(--bg-hover) !important;
+  color: var(--text-primary) !important;
+}
+
+.ph-date-popper .el-date-table td.current:not(.disabled) .el-date-table-cell__text,
+.ph-date-popper .el-date-table td.selected .el-date-table-cell__text {
+  background: var(--accent) !important;
+  color: #fff !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+.ph-date-popper .el-date-table td.today .el-date-table-cell__text {
+  color: var(--accent) !important;
+  font-weight: 700;
+}
+
+.ph-date-popper .el-date-table td.today.current .el-date-table-cell__text,
+.ph-date-popper .el-date-table td.today.selected .el-date-table-cell__text {
+  color: #fff !important;
+}
+
+.ph-date-popper .el-date-table td.next-month .el-date-table-cell__text,
+.ph-date-popper .el-date-table td.prev-month .el-date-table-cell__text {
+  color: var(--text-placeholder) !important;
+}
+
+.ph-date-popper .el-picker-panel__footer {
+  border-top: 1px solid var(--border-light) !important;
+  padding: 8px 12px !important;
+  background: var(--bg-elevated) !important;
+}
+
+.ph-date-popper .el-picker-panel__footer .el-button {
+  border-radius: var(--radius-full) !important;
+  font-weight: 500;
+}
+
+.ph-date-popper .el-picker-panel__footer .el-button--text {
+  color: var(--text-secondary) !important;
+}
+
+.ph-date-popper .el-picker-panel__footer .el-button--primary.is-plain,
+.ph-date-popper .el-picker-panel__footer .el-button.is-plain {
+  --el-button-bg-color: var(--accent-light);
+  --el-button-text-color: var(--accent);
+  --el-button-border-color: transparent;
+  --el-button-hover-bg-color: var(--accent);
+  --el-button-hover-text-color: #fff;
+  --el-button-hover-border-color: transparent;
+}
+
 /* --- Input Number --- */
 .el-input-number .el-input__wrapper { border-radius: var(--radius-sm) !important; }
 

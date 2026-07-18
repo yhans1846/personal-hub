@@ -6,6 +6,7 @@ import { useAuthStore } from '@/store/authStore'
 import type { ProfileUpdateDTO, Gender } from '@/types/user'
 import { regionOptions } from '@/modules/system/settings/components/regionData'
 import { User, Camera, X } from 'lucide-vue-next'
+import { DialogPropCard, UiButton } from '@/components/ui'
 
 const props = defineProps<{ visible: boolean }>()
 const emit = defineEmits<{ 'update:visible': [value: boolean] }>()
@@ -241,71 +242,78 @@ const rules = {
 
         <el-form ref="formRef" class="profile-form" :model="form" :rules="rules" label-position="top">
           <div v-show="activeTab === 'basic'" class="tab-pane">
-            <el-form-item label="用户名">
-              <el-input :model-value="authStore.user?.username" disabled />
-            </el-form-item>
-            <el-form-item label="昵称" prop="nickname">
-              <el-input v-model="form.nickname" placeholder="输入昵称" maxlength="20" show-word-limit />
-            </el-form-item>
-            <el-form-item label="性别">
-              <el-radio-group v-model="form.gender">
-                <el-radio v-for="g in genderOptions" :key="g.value" :value="g.value">{{ g.label }}</el-radio>
-              </el-radio-group>
-            </el-form-item>
-            <el-form-item label="出生日期">
+            <DialogPropCard label="基本信息">
+              <el-form-item label="用户名">
+                <el-input :model-value="authStore.user?.username" disabled />
+              </el-form-item>
+              <el-form-item label="昵称" prop="nickname">
+                <el-input v-model="form.nickname" placeholder="输入昵称" maxlength="20" show-word-limit />
+              </el-form-item>
+              <el-form-item label="性别">
+                <el-radio-group v-model="form.gender">
+                  <el-radio v-for="g in genderOptions" :key="g.value" :value="g.value">{{ g.label }}</el-radio>
+                </el-radio-group>
+              </el-form-item>
+              <el-form-item label="出生日期">
               <el-date-picker
                 v-model="form.birthday"
                 type="date"
                 placeholder="选择日期"
                 value-format="YYYY-MM-DD"
                 style="width: 100%"
+                popper-class="ph-date-popper"
               />
-            </el-form-item>
+              </el-form-item>
+            </DialogPropCard>
           </div>
 
           <div v-show="activeTab === 'contact'" class="tab-pane">
-            <el-form-item label="邮箱" prop="email">
-              <el-input v-model="form.email" placeholder="输入邮箱" />
-            </el-form-item>
-            <el-form-item label="手机号" prop="phone">
-              <el-input v-model="form.phone" placeholder="输入手机号（选填）" maxlength="11" />
-            </el-form-item>
-            <el-form-item label="所在地区">
-              <el-cascader
-                v-model="regionValue"
-                :options="regionOptions"
-                placeholder="选择地区（选填）"
-                clearable
-                style="width: 100%"
-                @change="onRegionChange"
-              />
-            </el-form-item>
+            <DialogPropCard label="联系方式">
+              <el-form-item label="邮箱" prop="email">
+                <el-input v-model="form.email" placeholder="输入邮箱" />
+              </el-form-item>
+              <el-form-item label="手机号" prop="phone">
+                <el-input v-model="form.phone" placeholder="输入手机号（选填）" maxlength="11" />
+              </el-form-item>
+              <el-form-item label="所在地区">
+                <el-cascader
+                  v-model="regionValue"
+                  :options="regionOptions"
+                  placeholder="选择地区（选填）"
+                  clearable
+                  style="width: 100%"
+                  @change="onRegionChange"
+                />
+              </el-form-item>
+            </DialogPropCard>
           </div>
 
           <div v-show="activeTab === 'bio'" class="tab-pane">
-            <el-form-item label="GitHub" prop="github">
-              <el-input v-model="form.github" placeholder="https://github.com/用户名（选填）" />
-            </el-form-item>
-            <el-form-item label="个人网站" prop="website">
-              <el-input v-model="form.website" placeholder="https://（选填）" />
-            </el-form-item>
-            <el-form-item label="个人简介" prop="bio">
-              <el-input
-                v-model="form.bio"
-                type="textarea"
-                :rows="4"
-                maxlength="200"
-                show-word-limit
-                placeholder="介绍自己…"
-              />
-            </el-form-item>
+            <DialogPropCard label="简介与链接">
+              <el-form-item label="GitHub" prop="github">
+                <el-input v-model="form.github" placeholder="https://github.com/用户名（选填）" />
+              </el-form-item>
+              <el-form-item label="个人网站" prop="website">
+                <el-input v-model="form.website" placeholder="https://（选填）" />
+              </el-form-item>
+              <el-form-item label="个人简介" prop="bio">
+                <el-input
+                  v-model="form.bio"
+                  type="textarea"
+                  :rows="4"
+                  maxlength="200"
+                  show-word-limit
+                  placeholder="介绍自己…"
+                />
+              </el-form-item>
+            </DialogPropCard>
           </div>
         </el-form>
       </div>
 
       <div class="drawer-footer">
-        <el-button @click="handleReset">重置</el-button>
-        <el-button type="primary" :loading="saving" @click="handleSave">保存</el-button>
+        <UiButton text @click="handleReset">重置</UiButton>
+        <UiButton type="primary" :loading="saving" @click="handleSave">保存</UiButton>
       </div>
     </div>
   </el-drawer>
@@ -486,6 +494,10 @@ const rules = {
 
 .tab-pane :deep(.el-form-item) {
   margin-bottom: 14px;
+}
+
+.tab-pane :deep(.el-form-item:last-child) {
+  margin-bottom: 0;
 }
 
 .tab-pane :deep(.el-form-item__label) {

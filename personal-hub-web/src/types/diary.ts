@@ -9,6 +9,8 @@ export interface DiaryVO {
   moodLabel: string
   weather: string
   location?: string
+  latitude?: number | null
+  longitude?: number | null
   imageFileIds?: number[]
   createdAt: string
   updatedAt: string
@@ -22,6 +24,8 @@ export interface DiaryCreateDTO {
   mood?: number
   weather?: string
   location?: string
+  latitude?: number | null
+  longitude?: number | null
   imageFileIds?: number[]
 }
 

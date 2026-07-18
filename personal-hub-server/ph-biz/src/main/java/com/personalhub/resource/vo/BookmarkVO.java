@@ -27,9 +27,6 @@ public class BookmarkVO {
     @Schema(description = "描述")
     private String description;
 
-    @Schema(description = "图标URL")
-    private String favicon;
-
     @Schema(description = "分类ID")
     private Long categoryId;
 
@@ -54,7 +51,6 @@ public class BookmarkVO {
         vo.setTitle(url.getTitle());
         vo.setUrl(url.getUrl());
         vo.setDescription(url.getDescription());
-        vo.setFavicon(url.getFavicon());
         vo.setCategoryId(url.getCategoryId());
         vo.setShowOnDashboard(url.getShowOnDashboard() != null ? url.getShowOnDashboard() : 0);
         vo.setCreatedAt(url.getCreatedAt());

@@ -34,6 +34,12 @@ public class DiaryCreateDTO {
     @Schema(description = "地点", example = "图书馆")
     private String location;
 
+    @Schema(description = "纬度（浏览器定位，不反查地名）", example = "31.230416")
+    private java.math.BigDecimal latitude;
+
+    @Schema(description = "经度（浏览器定位，不反查地名）", example = "121.473701")
+    private java.math.BigDecimal longitude;
+
     @Schema(description = "配图文件ID列表")
     private List<Long> imageFileIds;
 }

@@ -1,11 +1,21 @@
 <script setup lang="ts">
-import { ref, watch, computed, toRef, onUnmounted } from 'vue'
+import { ref, watch, computed, toRef, onUnmounted, nextTick } from 'vue'
 import { createDiary, updateDiary, getDiaryById } from '@/modules/knowledge/api'
 import { uploadFile, deleteFile } from '@/modules/resource/api'
 import { getFilePreviewUrl, revokePreviewUrl } from '@/utils/file'
 import { ElMessage } from 'element-plus'
-import { ImagePlus, X, MapPin } from 'lucide-vue-next'
-import { UiDialog, UiInput, DialogSection, DialogDivider, DialogFooterActions } from '@/components/ui'
+import { ImagePlus, X, MapPin, LocateFixed, Loader2 } from 'lucide-vue-next'
+import Sortable from 'sortablejs'
+import {
+  UiDialog,
+  DialogTitleField,
+  DialogPropGrid,
+  DialogPropCard,
+  DialogChoiceRow,
+  DialogDateChip,
+  DialogEditor,
+  DialogFooterActions,
+} from '@/components/ui'
 import ImageLightbox from '@/components/ImageLightbox.vue'
 import { useEntityDialog } from '@/composables/useEntityDialog'
 
@@ -32,21 +42,28 @@ const form = ref({
   mood: 3,
   weather: '',
   location: '',
+  latitude: null as number | null,
+  longitude: null as number | null,
   imageFileIds: [] as number[],
 })
 const saving = ref(false)
+const locating = ref(false)
 const uploading = ref(false)
 const previewImages = ref<ImageItem[]>([])
 const isDragging = ref(false)
 const lightboxOpen = ref(false)
 const lightboxIndex = ref(0)
+const fileInputRef = ref<HTMLInputElement | null>(null)
+const imageGridRef = ref<HTMLElement | null>(null)
+let imageSortable: Sortable | null = null
+let suppressLightboxClick = false
 
 const moodOptions = [
-  { value: 1, emoji: '😊', label: '很好' },
-  { value: 2, emoji: '😄', label: '不错' },
-  { value: 3, emoji: '😐', label: '一般' },
-  { value: 4, emoji: '😔', label: '难过' },
-  { value: 5, emoji: '😭', label: '糟糕' },
+  { value: 1, label: '很好', emoji: '😊', color: 'var(--success)' },
+  { value: 2, label: '不错', emoji: '😄', color: 'var(--success)' },
+  { value: 3, label: '一般', emoji: '😐', color: 'var(--text-tertiary)' },
+  { value: 4, label: '难过', emoji: '😔', color: 'var(--warning)' },
+  { value: 5, label: '糟糕', emoji: '😭', color: 'var(--danger)' },
 ]
 
 const weatherOptions = [
@@ -61,7 +78,10 @@ const weatherOptions = [
 const dialogTitle = computed(() => props.entityId ? '编辑日记' : '今天')
 const dialogSubtitle = computed(() => props.entityId ? '' : '记录今天发生的事情')
 
-const selectedMood = computed(() => moodOptions.find(m => m.value === form.value.mood))
+const dateModel = computed({
+  get: () => form.value.date || null,
+  set: (v: string | null) => { form.value.date = v || '' },
+})
 
 async function loadEntity(id: number) {
   const res = await getDiaryById(id)
@@ -73,11 +93,11 @@ async function loadEntity(id: number) {
     mood: r.mood || 3,
     weather: r.weather || '',
     location: r.location || '',
+    latitude: r.latitude ?? null,
+    longitude: r.longitude ?? null,
     imageFileIds: r.imageFileIds || [],
   }
-  // 清理旧 blob URL
   previewImages.value.forEach(img => revokePreviewUrl(img.url))
-  // 加载已有图片预览
   previewImages.value = []
   for (const fileId of form.value.imageFileIds) {
     const url = await getFilePreviewUrl(fileId)
@@ -91,14 +111,14 @@ watch(() => props.modelValue, (val) => {
   const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
   form.value = {
     date: props.initialDate || today,
-    title: '', content: '', mood: 3, weather: '', location: '', imageFileIds: [],
+    title: '', content: '', mood: 3, weather: '', location: '',
+    latitude: null, longitude: null, imageFileIds: [],
   }
-  // 清理旧 blob URL
   previewImages.value.forEach(img => revokePreviewUrl(img.url))
   previewImages.value = []
 })
 
-const { loading, close, onSaved } = useEntityDialog({
+const { onSaved } = useEntityDialog({
   modelValue: toRef(props, 'modelValue'),
   entityId: toRef(props, 'entityId'),
   emit: (event, value) => emit(event as any, value),
@@ -119,7 +139,49 @@ async function handleSave() {
   } finally { saving.value = false }
 }
 
-// ---- Image Upload ----
+const hasCoords = computed(() =>
+  form.value.latitude != null && form.value.longitude != null
+)
+
+const coordsLabel = computed(() => {
+  if (!hasCoords.value) return ''
+  return `${form.value.latitude!.toFixed(5)}, ${form.value.longitude!.toFixed(5)}`
+})
+
+function clearCoords() {
+  form.value.latitude = null
+  form.value.longitude = null
+}
+
+function locateHere() {
+  if (!navigator.geolocation) {
+    ElMessage.warning('当前浏览器不支持定位')
+    return
+  }
+  locating.value = true
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      form.value.latitude = Number(pos.coords.latitude.toFixed(7))
+      form.value.longitude = Number(pos.coords.longitude.toFixed(7))
+      locating.value = false
+      ElMessage.success('已获取当前位置')
+    },
+    (err) => {
+      locating.value = false
+      if (err.code === err.PERMISSION_DENIED) {
+        ElMessage.warning('定位权限被拒绝，请在浏览器设置中允许')
+      } else if (err.code === err.POSITION_UNAVAILABLE) {
+        ElMessage.warning('暂时无法获取位置')
+      } else if (err.code === err.TIMEOUT) {
+        ElMessage.warning('定位超时，请重试')
+      } else {
+        ElMessage.warning('定位失败')
+      }
+    },
+    { enableHighAccuracy: true, timeout: 12000, maximumAge: 60_000 },
+  )
+}
+
 async function handleImageUpload(files: FileList | File[]) {
   const valid: File[] = []
   for (const f of files) {
@@ -144,17 +206,53 @@ function onFileChange(e: Event) {
   const files = (e.target as HTMLInputElement).files
   if (files?.length) {
     handleImageUpload(files)
-    // 清空 input 以便重复选择同一个文件
     ;(e.target as HTMLInputElement).value = ''
   }
 }
 
 function openLightbox(idx: number) {
+  if (suppressLightboxClick) return
   lightboxIndex.value = idx
   lightboxOpen.value = true
 }
 
-/** 删除单张图片（调用后端删除 + 清理本地状态） */
+function destroyImageSortable() {
+  imageSortable?.destroy()
+  imageSortable = null
+}
+
+async function initImageSortable() {
+  await nextTick()
+  destroyImageSortable()
+  if (!imageGridRef.value || previewImages.value.length < 2) return
+  imageSortable = Sortable.create(imageGridRef.value, {
+    animation: 200,
+    easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+    ghostClass: 'image-sortable-ghost',
+    chosenClass: 'image-sortable-chosen',
+    dragClass: 'image-sortable-drag',
+    filter: '.image-remove-btn',
+    preventOnFilter: true,
+    onStart() {
+      suppressLightboxClick = true
+    },
+    onEnd(evt) {
+      const { oldIndex, newIndex } = evt
+      window.setTimeout(() => { suppressLightboxClick = false }, 0)
+      if (oldIndex == null || newIndex == null || oldIndex === newIndex) return
+      const list = [...previewImages.value]
+      const [item] = list.splice(oldIndex, 1)
+      list.splice(newIndex, 0, item)
+      previewImages.value = list
+      form.value.imageFileIds = list.map(i => i.id)
+    },
+  })
+}
+
+watch(() => previewImages.value.map(i => i.id).join(','), () => {
+  initImageSortable()
+})
+
 async function handleRemoveImage(img: ImageItem) {
   try {
     await deleteFile(img.id)
@@ -182,8 +280,8 @@ function onDrop(e: DragEvent) {
   if (files?.length) handleImageUpload(files)
 }
 
-/** 组件卸载时清理所有 blob URL */
 onUnmounted(() => {
+  destroyImageSortable()
   previewImages.value.forEach(img => revokePreviewUrl(img.url))
 })
 </script>
@@ -195,127 +293,127 @@ onUnmounted(() => {
     :subtitle="dialogSubtitle"
     @update:model-value="emit('update:modelValue', $event)"
   >
-    <!-- 日期 + 元数据行 -->
-    <div class="entry-meta">
-      <span class="entry-date">📅 {{ form.date }}</span>
-      <span v-if="selectedMood" class="entry-mood-chip">
-        {{ selectedMood.emoji }} {{ selectedMood.label }}
-      </span>
-      <span v-if="form.weather" class="entry-weather-chip">
-        {{ form.weather }}
-      </span>
-    </div>
+    <DialogPropGrid>
+      <DialogPropCard label="日期">
+        <DialogDateChip v-model="dateModel" placeholder="选择日期" :clearable="false" />
+      </DialogPropCard>
+      <DialogPropCard label="此刻心情">
+        <DialogChoiceRow v-model="form.mood" :options="moodOptions" />
+      </DialogPropCard>
+    </DialogPropGrid>
 
-    <!-- 标题 -->
-    <UiInput
+    <DialogTitleField
       v-model="form.title"
       placeholder="今天发生了什么？（可选的标题）"
-      class="title-input"
       maxlength="200"
     />
 
-    <DialogDivider />
+    <DialogPropGrid :cols="1">
+      <DialogPropCard label="天气 · 地点">
+        <div class="meta-row">
+          <div class="weather-group">
+            <button
+              v-for="w in weatherOptions"
+              :key="w.label"
+              type="button"
+              class="weather-btn"
+              :class="{ active: form.weather === w.emoji }"
+              :title="w.label"
+              @click="form.weather = form.weather === w.emoji ? '' : w.emoji"
+            >
+              {{ w.emoji }}
+            </button>
+          </div>
+          <div class="location-block">
+            <div class="location-input-wrapper">
+              <MapPin :size="14" class="location-icon" />
+              <input
+                v-model="form.location"
+                class="location-input"
+                placeholder="添加地点（可选）"
+                maxlength="200"
+              />
+            </div>
+            <button
+              type="button"
+              class="locate-btn"
+              :disabled="locating"
+              :title="hasCoords ? '重新定位' : '使用当前位置'"
+              @click="locateHere"
+            >
+              <Loader2 v-if="locating" :size="14" class="spin" />
+              <LocateFixed v-else :size="14" />
+              <span>{{ locating ? '定位中' : '定位' }}</span>
+            </button>
+          </div>
+          <div v-if="hasCoords" class="coords-row">
+            <span class="coords-pill">已定位 · {{ coordsLabel }}</span>
+            <button type="button" class="coords-clear" @click="clearCoords">清除坐标</button>
+          </div>
+        </div>
+      </DialogPropCard>
 
-    <DialogSection label="此刻心情">
-      <div class="mood-row">
-        <button
-          v-for="m in moodOptions"
-          :key="m.value"
-          type="button"
-          class="mood-card"
-          :class="{ active: form.mood === m.value }"
-          @click="form.mood = m.value"
-        >
-          <span class="mood-emoji">{{ m.emoji }}</span>
-          <span class="mood-label">{{ m.label }}</span>
-        </button>
-      </div>
-    </DialogSection>
-
-    <DialogSection label="天气 · 地点">
-      <div class="meta-row">
-        <div class="weather-group">
-          <button
-            v-for="w in weatherOptions"
-            :key="w.label"
-            type="button"
-            class="weather-btn"
-            :class="{ active: form.weather === w.emoji }"
-            :title="w.label"
-            @click="form.weather = form.weather === w.emoji ? '' : w.emoji"
+      <DialogPropCard label="配图">
+        <div v-if="previewImages.length" ref="imageGridRef" class="image-grid">
+          <div
+            v-for="(img, idx) in previewImages"
+            :key="img.id"
+            class="image-item"
+            :title="previewImages.length > 1 ? '拖拽调整顺序' : undefined"
           >
-            {{ w.emoji }}
-          </button>
+            <img
+              :src="img.url"
+              class="preview-img"
+              alt=""
+              draggable="false"
+              @click="openLightbox(idx)"
+            />
+            <button
+              type="button"
+              class="image-remove-btn"
+              :disabled="uploading"
+              @click.stop="handleRemoveImage(img)"
+            >
+              <X :size="16" />
+            </button>
+          </div>
         </div>
-        <div class="location-input-wrapper">
-          <MapPin :size="14" class="location-icon" />
-          <input
-            v-model="form.location"
-            class="location-input"
-            placeholder="添加地点"
-            maxlength="200"
-          />
-        </div>
-      </div>
-    </DialogSection>
+        <p v-if="previewImages.length > 1" class="image-sort-hint">拖拽缩略图可调整顺序，首张将作为封面</p>
 
-    <DialogSection label="配图">
-      <div v-if="previewImages.length" class="image-grid">
-        <div v-for="(img, idx) in previewImages" :key="img.id" class="image-item">
-          <img
-            :src="img.url"
-            class="preview-img"
-            alt=""
-            @click="openLightbox(idx)"
-          />
-          <button
-            type="button"
-            class="image-remove-btn"
-            :disabled="uploading"
-            @click.stop="handleRemoveImage(img)"
-          >
-            <X :size="16" />
-          </button>
-        </div>
-      </div>
-
-      <ImageLightbox
-        v-model="lightboxOpen"
-        v-model:index="lightboxIndex"
-        :urls="previewImages.map(i => i.url)"
-      />
-
-      <div
-        class="dropzone"
-        :class="{ 'dropzone--dragging': isDragging }"
-        @dragover="onDragOver"
-        @dragleave="onDragLeave"
-        @drop="onDrop"
-        @click="$refs.fileInput?.click()"
-      >
-        <ImagePlus :size="28" class="dropzone-icon" />
-        <span class="dropzone-text">拖拽图片到这里，或点击上传</span>
-        <span class="dropzone-hint">支持 JPG、PNG、WEBP，可多选</span>
-        <input
-          ref="fileInput"
-          type="file"
-          accept="image/*"
-          multiple
-          class="dropzone-input"
-          @change="onFileChange"
+        <ImageLightbox
+          v-model="lightboxOpen"
+          v-model:index="lightboxIndex"
+          :urls="previewImages.map(i => i.url)"
         />
-      </div>
-    </DialogSection>
 
-    <DialogDivider />
+        <div
+          class="dropzone"
+          :class="{ 'dropzone--dragging': isDragging }"
+          @dragover="onDragOver"
+          @dragleave="onDragLeave"
+          @drop="onDrop"
+          @click="fileInputRef?.click()"
+        >
+          <ImagePlus :size="28" class="dropzone-icon" />
+          <span class="dropzone-text">拖拽图片到这里，或点击上传</span>
+          <span class="dropzone-hint">支持 JPG、PNG、WEBP，可多选</span>
+          <input
+            ref="fileInputRef"
+            type="file"
+            accept="image/*"
+            multiple
+            class="dropzone-input"
+            @change="onFileChange"
+          />
+        </div>
+      </DialogPropCard>
+    </DialogPropGrid>
 
-    <div class="content-section">
-      <textarea
-        v-model="form.content"
-        class="content-editor"
-        placeholder="开始写吧… 支持 Markdown 格式"
-      />
-    </div>
+    <DialogEditor
+      v-model="form.content"
+      size="lg"
+      placeholder="开始写吧… 支持 Markdown 格式"
+    />
 
     <template #footer>
       <DialogFooterActions :saving="saving" @cancel="emit('update:modelValue', false)" @confirm="handleSave" />
@@ -324,88 +422,6 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-/* ---- 日期元数据行 ---- */
-.entry-meta {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-  margin-bottom: var(--sp-5);
-  flex-wrap: wrap;
-}
-
-.entry-date {
-  font-size: var(--text-sm);
-  color: var(--text-secondary);
-  font-weight: 500;
-}
-
-.entry-mood-chip,
-.entry-weather-chip {
-  font-size: var(--text-xs);
-  padding: 2px 10px;
-  border-radius: var(--radius-full);
-  background: var(--bg-hover);
-  color: var(--text-secondary);
-}
-
-/* ---- 标题 ---- */
-.title-input {
-  margin-bottom: var(--sp-2);
-}
-.title-input :deep(input) {
-  font-size: var(--text-lg) !important;
-  font-weight: 600;
-  border: none !important;
-  padding-left: 0 !important;
-  background: transparent !important;
-}
-.title-input :deep(input)::placeholder {
-  color: var(--text-placeholder);
-  font-weight: 400;
-}
-
-/* ---- 心情卡片 ---- */
-.mood-row {
-  display: flex;
-  gap: var(--sp-2);
-}
-
-.mood-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: var(--sp-3) var(--sp-4);
-  border-radius: var(--radius-md);
-  border: 2px solid transparent;
-  background: var(--bg-hover);
-  cursor: pointer;
-  transition: all var(--transition);
-  min-width: 56px;
-}
-.mood-card:hover {
-  border-color: var(--border-color);
-  background: var(--bg-card);
-}
-.mood-card.active {
-  border-color: var(--success);
-  background: var(--success-light);
-}
-
-.mood-emoji {
-  font-size: 24px;
-  line-height: 1;
-}
-.mood-label {
-  font-size: var(--text-xs);
-  color: var(--text-tertiary);
-  font-weight: 500;
-}
-.mood-card.active .mood-label {
-  color: var(--success);
-}
-
-/* ---- 天气 + 地点 ---- */
 .meta-row {
   display: flex;
   align-items: center;
@@ -441,10 +457,24 @@ onUnmounted(() => {
   background: var(--accent-light);
 }
 
+.location-block {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex: 1;
+  min-width: 180px;
+}
+
 .location-input-wrapper {
   display: flex;
   align-items: center;
   gap: 4px;
+  flex: 1;
+  min-width: 0;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-color, var(--border));
+  background: var(--bg-hover);
 }
 
 .location-icon {
@@ -459,8 +489,8 @@ onUnmounted(() => {
   color: var(--text-secondary);
   outline: none;
   padding: 4px 0;
-  min-width: 100px;
-  width: auto;
+  min-width: 0;
+  width: 100%;
 }
 .location-input::placeholder {
   color: var(--text-placeholder);
@@ -469,17 +499,96 @@ onUnmounted(() => {
   color: var(--text-primary);
 }
 
-/* ---- 图片网格 ---- */
+.locate-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-color, var(--border));
+  background: var(--bg-card);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.locate-btn:hover:not(:disabled) {
+  border-color: var(--accent-border, var(--accent));
+  color: var(--accent);
+  background: var(--accent-light);
+}
+.locate-btn:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.coords-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  width: 100%;
+}
+
+.coords-pill {
+  font-size: var(--text-xs);
+  color: var(--accent);
+  background: var(--accent-light);
+  padding: 2px 10px;
+  border-radius: var(--radius-full);
+}
+
+.coords-clear {
+  border: none;
+  background: transparent;
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: 0;
+}
+.coords-clear:hover {
+  color: var(--danger);
+}
+
+.spin {
+  animation: locate-spin 0.8s linear infinite;
+}
+@keyframes locate-spin {
+  to { transform: rotate(360deg); }
+}
+
 .image-grid {
   display: flex;
   flex-wrap: wrap;
   gap: var(--sp-3);
-  margin-bottom: var(--sp-4);
+  margin-bottom: var(--sp-2);
 }
 
 .image-item {
   position: relative;
   flex: 0 0 auto;
+  cursor: grab;
+  touch-action: none;
+}
+.image-item:active {
+  cursor: grabbing;
+}
+
+.image-sort-hint {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+.image-sortable-ghost {
+  opacity: 0.35;
+}
+.image-sortable-chosen .preview-img {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+.image-sortable-drag {
+  opacity: 1;
+  cursor: grabbing;
 }
 
 .preview-img {
@@ -512,7 +621,6 @@ onUnmounted(() => {
   background: rgba(0, 0, 0, 0.75);
 }
 
-/* ---- DropZone ---- */
 .dropzone {
   display: flex;
   flex-direction: column;
@@ -524,7 +632,6 @@ onUnmounted(() => {
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: all var(--transition);
-  margin-bottom: var(--sp-5);
 }
 .dropzone:hover,
 .dropzone--dragging {
@@ -550,27 +657,5 @@ onUnmounted(() => {
 }
 .dropzone-input {
   display: none;
-}
-
-/* ---- 正文编辑器 ---- */
-.content-section {
-  margin-bottom: var(--sp-2);
-}
-
-.content-editor {
-  width: 100%;
-  min-height: 300px;
-  border: none;
-  outline: none;
-  resize: vertical;
-  font-family: var(--font-sans);
-  font-size: var(--text-base);
-  line-height: var(--leading-relaxed);
-  color: var(--text-primary);
-  background: transparent;
-  padding: 0;
-}
-.content-editor::placeholder {
-  color: var(--text-placeholder);
 }
 </style>

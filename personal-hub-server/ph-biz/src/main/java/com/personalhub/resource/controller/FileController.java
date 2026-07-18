@@ -5,6 +5,7 @@ import com.personalhub.common.result.PageResult;
 import com.personalhub.common.result.Result;
 import com.personalhub.common.util.CurrentUser;
 import com.personalhub.resource.dto.FileQueryDTO;
+import com.personalhub.resource.dto.FileCategoryUpdateDTO;
 import com.personalhub.resource.service.FileResourceService;
 import com.personalhub.resource.vo.FileVO;
 import com.personalhub.storage.StorageService;
@@ -147,6 +148,16 @@ public class FileController {
             case "webp" -> "image/webp";
             default -> "application/octet-stream";
         };
+    }
+
+    @Operation(summary = "更新文件分类")
+    @PatchMapping("/{id}/category")
+    public Result<FileVO> updateCategory(
+            @Parameter(hidden = true) Authentication authentication,
+            @PathVariable Long id,
+            @RequestBody FileCategoryUpdateDTO dto) {
+        Long userId = CurrentUser.id(authentication);
+        return Result.success(fileResourceService.updateCategory(id, userId, dto.getCategoryId()));
     }
 
     @Operation(summary = "删除文件")

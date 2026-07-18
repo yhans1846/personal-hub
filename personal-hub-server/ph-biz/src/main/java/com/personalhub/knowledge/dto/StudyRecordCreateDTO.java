@@ -33,7 +33,4 @@ public class StudyRecordCreateDTO {
 
     @Schema(description = "学习心得")
     private String reflection;
-
-    @Schema(description = "关联学习计划ID")
-    private Long planId;
 }

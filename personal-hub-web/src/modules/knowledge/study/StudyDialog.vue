@@ -2,8 +2,16 @@
 import { ref, watch, computed, toRef } from 'vue'
 import { createStudyRecord, updateStudyRecord, getStudyRecordById } from '@/modules/knowledge/api'
 import { ElMessage } from 'element-plus'
-import { Clock, Calendar } from 'lucide-vue-next'
-import { UiDialog, DialogSection, DialogDivider, DialogFooterActions } from '@/components/ui'
+import { Clock } from 'lucide-vue-next'
+import {
+  UiDialog,
+  DialogTitleField,
+  DialogPropGrid,
+  DialogPropCard,
+  DialogDateChip,
+  DialogEditor,
+  DialogFooterActions,
+} from '@/components/ui'
 import { useEntityDialog } from '@/composables/useEntityDialog'
 
 const props = withDefaults(defineProps<{
@@ -22,6 +30,11 @@ const saving = ref(false)
 const dialogTitle = computed(() => props.entityId ? '编辑学习记录' : '新建学习记录')
 const dialogSubtitle = computed(() => props.entityId ? '' : '记录今天的学习')
 
+const dateModel = computed({
+  get: () => form.value.date || null,
+  set: (v: string | null) => { form.value.date = v || '' },
+})
+
 async function loadEntity(id: number) {
   const r = (await getStudyRecordById(id)).data.data
   form.value = { subject: r.subject, date: r.date, duration: r.duration, content: r.content || '', reflection: r.reflection || '' }
@@ -31,11 +44,11 @@ watch(() => props.modelValue, (val) => {
   if (!val || props.entityId) return
   form.value = {
     subject: '', date: new Date().toISOString().slice(0, 10),
-    duration: 60, content: '', reflection: ''
+    duration: 60, content: '', reflection: '',
   }
 })
 
-const { loading, close, onSaved } = useEntityDialog({
+const { onSaved } = useEntityDialog({
   modelValue: toRef(props, 'modelValue'),
   entityId: toRef(props, 'entityId'),
   emit: (event, value) => emit(event as any, value),
@@ -66,27 +79,13 @@ async function handleSave() {
     :subtitle="dialogSubtitle"
     @update:model-value="emit('update:modelValue', $event)"
   >
-    <!-- 学习主题 -->
-    <input
-      v-model="form.subject"
-      class="study-title-input"
-      placeholder="学习主题"
-    />
+    <DialogTitleField v-model="form.subject" placeholder="学习主题" />
 
-    <DialogDivider />
-
-    <!-- 日期 + 时长 — 并排 -->
-    <div class="meta-duo">
-      <div class="meta-group">
-        <span class="meta-label">日期</span>
-        <button type="button" class="meta-chip" @click="$refs.dateInput?.showPicker ? $refs.dateInput.showPicker() : $refs.dateInput?.click()">
-          <Calendar :size="14" />
-          <span>{{ form.date || '选择日期' }}</span>
-          <input ref="dateInput" type="date" class="date-input-abs" :value="form.date" @change="form.date = ($event.target as HTMLInputElement).value" />
-        </button>
-      </div>
-      <div class="meta-group">
-        <span class="meta-label">时长</span>
+    <DialogPropGrid>
+      <DialogPropCard label="日期">
+        <DialogDateChip v-model="dateModel" placeholder="选择日期" :clearable="false" />
+      </DialogPropCard>
+      <DialogPropCard label="时长">
         <div class="duration-group">
           <Clock :size="14" class="meta-icon" />
           <input
@@ -99,26 +98,16 @@ async function handleSave() {
           />
           <span class="duration-unit">分钟</span>
         </div>
-      </div>
-    </div>
+      </DialogPropCard>
+    </DialogPropGrid>
 
-    <DialogDivider />
+    <DialogPropCard label="学习内容" class="stack-card">
+      <DialogEditor v-model="form.content" size="sm" placeholder="记录今天学了什么…" />
+    </DialogPropCard>
 
-    <DialogSection label="学习内容">
-      <textarea
-        v-model="form.content"
-        class="content-editor"
-        placeholder="记录今天学了什么…"
-      />
-    </DialogSection>
-
-    <DialogSection label="心得">
-      <textarea
-        v-model="form.reflection"
-        class="content-editor"
-        placeholder="有什么收获或思考？"
-      />
-    </DialogSection>
+    <DialogPropCard label="心得" class="stack-card">
+      <DialogEditor v-model="form.reflection" size="sm" placeholder="有什么收获或思考？" />
+    </DialogPropCard>
 
     <template #footer>
       <DialogFooterActions :saving="saving" @cancel="emit('update:modelValue', false)" @confirm="handleSave" />
@@ -127,84 +116,17 @@ async function handleSave() {
 </template>
 
 <style scoped>
-.study-title-input {
-  width: 100%;
-  font-size: var(--text-lg);
-  font-weight: 600;
-  border: none;
-  outline: none;
-  background: transparent;
-  color: var(--text-primary);
-  padding: 0;
-  margin-bottom: var(--sp-2);
-}
-.study-title-input::placeholder {
-  color: var(--text-placeholder);
-  font-weight: 400;
-}
-
-/* ---- 元数据双栏 ---- */
-.meta-duo {
-  display: flex;
-  gap: var(--sp-6);
-  margin-bottom: var(--sp-2);
-}
-
-.meta-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.meta-label {
-  font-size: var(--text-xs);
-  color: var(--text-tertiary);
-  font-weight: 500;
-}
-
-.meta-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: var(--sp-2) var(--sp-4);
-  border-radius: var(--radius-full);
-  border: 1px solid var(--border-color);
-  background: var(--bg-card);
-  font-size: var(--text-sm);
-  color: var(--text-primary);
-  cursor: pointer;
-  transition: all var(--transition);
-  position: relative;
-}
-.meta-chip:hover {
-  border-color: var(--accent-border);
-}
-
-.date-input-abs {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  cursor: pointer;
-  width: 100%;
-  height: 100%;
-  border: none;
-}
-
 .duration-group {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: var(--sp-2) var(--sp-4);
+  padding: var(--sp-2) var(--sp-3);
   border-radius: var(--radius-full);
-  border: 1px solid var(--border-color);
-  background: var(--bg-card);
+  border: 1px solid var(--border-color, var(--border));
+  background: var(--bg-hover);
+  width: fit-content;
 }
-
-.meta-icon {
-  flex-shrink: 0;
-  color: var(--text-tertiary);
-}
-
+.meta-icon { flex-shrink: 0; color: var(--text-tertiary); }
 .duration-input {
   width: 56px;
   border: none;
@@ -214,28 +136,7 @@ async function handleSave() {
   background: transparent;
   text-align: center;
 }
-.duration-input::placeholder { color: var(--text-placeholder); }
-
-.duration-unit {
-  font-size: var(--text-xs);
-  color: var(--text-tertiary);
-}
-
-/* ---- 编辑器 ---- */
-.content-editor {
-  width: 100%;
-  min-height: 160px;
-  border: none;
-  outline: none;
-  resize: vertical;
-  font-family: var(--font-sans);
-  font-size: var(--text-base);
-  line-height: var(--leading-relaxed);
-  color: var(--text-primary);
-  background: transparent;
-  padding: 0;
-}
-.content-editor::placeholder {
-  color: var(--text-placeholder);
-}
+.duration-unit { font-size: var(--text-xs); color: var(--text-tertiary); }
+.stack-card { margin-bottom: var(--sp-3); }
+.stack-card :deep(.dialog-editor) { margin-bottom: 0; min-height: 120px; }
 </style>

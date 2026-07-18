@@ -17,10 +17,8 @@ CREATE TABLE `bookmark_url`  (
                                  `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '标题',
                                  `url` varchar(2048) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '网址',
                                  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '描述',
-                                 `favicon` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '图标URL',
                                  `category_id` bigint NULL DEFAULT NULL COMMENT '分类ID',
                                  `show_on_dashboard` tinyint NOT NULL DEFAULT 0 COMMENT '展示到首页外部快捷',
-                                 `tags` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '标签（逗号分隔）',
                                  `is_deleted` tinyint NOT NULL DEFAULT 0 COMMENT '逻辑删除',
                                  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
                                  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
@@ -49,6 +47,8 @@ CREATE TABLE `diary_entry`  (
                                 `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
                                 `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
                                 `location` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '地点',
+                                `latitude` decimal(10, 7) NULL DEFAULT NULL COMMENT '纬度',
+                                `longitude` decimal(10, 7) NULL DEFAULT NULL COMMENT '经度',
                                 `image_file_ids` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '配图文件ID列表(JSON数组)',
                                 PRIMARY KEY (`id`) USING BTREE,
                                 INDEX `idx_user_id_date`(`user_id` ASC, `date` ASC) USING BTREE,
@@ -99,7 +99,6 @@ CREATE TABLE `file_resource`  (
                                   `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
                                   `user_id` bigint NOT NULL COMMENT '所属用户',
                                   `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '原始文件名',
-                                  `stored_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '存储文件名（UUID）',
                                   `path` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '存储路径',
                                   `size` bigint NOT NULL COMMENT '文件大小（字节）',
                                   `type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '文件扩展名',
@@ -108,8 +107,6 @@ CREATE TABLE `file_resource`  (
                                   `is_deleted` tinyint NOT NULL DEFAULT 0 COMMENT '逻辑删除',
                                   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
                                   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-                                  `source` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '上传来源: upload/diary/avatar',
-                                  `ref_id` bigint NULL DEFAULT NULL COMMENT '关联实体ID(diary_id等)',
                                   PRIMARY KEY (`id`) USING BTREE,
                                   INDEX `idx_user_id`(`user_id` ASC) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '文件表' ROW_FORMAT = Dynamic;
@@ -227,7 +224,6 @@ CREATE TABLE `study_record`  (
                                  `duration` int NOT NULL COMMENT '学习时长（分钟）',
                                  `content` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '学习内容',
                                  `reflection` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '学习心得',
-                                 `plan_id` bigint NULL DEFAULT NULL COMMENT '关联学习计划ID',
                                  `is_deleted` tinyint NOT NULL DEFAULT 0 COMMENT '逻辑删除',
                                  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
                                  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
@@ -398,7 +394,7 @@ INSERT INTO `user_layout` VALUES (2, 1, 'menu', '{\"items\":[{\"code\":\"dashboa
 DROP TABLE IF EXISTS `audit_log`;
 CREATE TABLE `audit_log`  (
                               `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
-                              `module` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '业务模块（NOTE/TODO/FILE/STUDY/READING/DIARY/BOOKMARK/TAG/USER）',
+                              `module` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '业务模块（NOTE/TODO/FILE/STUDY/READING/DIARY/BOOKMARK/TAG/USER/AUTH）',
                               `business_id` bigint NULL DEFAULT NULL COMMENT '业务ID',
                               `action` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '操作类型（DELETE/RESTORE/CREATE/UPDATE/LOGIN/EXPORT...）',
                               `content` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '操作描述',

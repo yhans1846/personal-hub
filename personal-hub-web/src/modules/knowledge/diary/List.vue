@@ -227,7 +227,7 @@ const moodOptions = [
           <el-select v-model="query.mood" placeholder="心情" style="width:120px" clearable @change="onFilterChange">
             <el-option v-for="item in moodOptions" :key="item.label" :value="item.value" :label="item.label" />
           </el-select>
-          <el-date-picker v-model="query.month" type="month" value-format="YYYY-MM" placeholder="按月筛选" style="width:140px" clearable @change="onFilterChange" />
+          <el-date-picker v-model="query.month" type="month" value-format="YYYY-MM" placeholder="按月筛选" style="width:140px" clearable popper-class="ph-date-popper" @change="onFilterChange" />
           <el-button :type="showCalendar ? 'default' : 'primary'" @click="toggleCalendar">
             <CalendarDays :size="14" /> {{ showCalendar ? '列表' : '月历' }}
           </el-button>

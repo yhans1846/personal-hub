@@ -43,6 +43,12 @@ public class DiaryVO {
     @Schema(description = "地点")
     private String location;
 
+    @Schema(description = "纬度")
+    private java.math.BigDecimal latitude;
+
+    @Schema(description = "经度")
+    private java.math.BigDecimal longitude;
+
     @Schema(description = "配图文件ID列表")
     private List<Long> imageFileIds;
 
@@ -61,6 +67,8 @@ public class DiaryVO {
         vo.setMood(entry.getMood());
         vo.setWeather(entry.getWeather());
         vo.setLocation(entry.getLocation());
+        vo.setLatitude(entry.getLatitude());
+        vo.setLongitude(entry.getLongitude());
         vo.setImageFileIds(entry.parseImageFileIds());
         vo.setCreatedAt(entry.getCreatedAt());
         vo.setUpdatedAt(entry.getUpdatedAt());

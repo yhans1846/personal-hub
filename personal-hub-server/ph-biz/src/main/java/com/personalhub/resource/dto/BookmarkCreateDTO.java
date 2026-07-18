@@ -27,9 +27,6 @@ public class BookmarkCreateDTO {
     @Schema(description = "描述")
     private String description;
 
-    @Schema(description = "图标URL")
-    private String favicon;
-
     @Schema(description = "分类ID")
     private Long categoryId;
 

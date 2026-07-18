@@ -27,14 +27,17 @@ export function getDashboardBookmarks(limit = 8) {
 export function getFileList(params: FileQuery) {
   return request.get<Result<PageResult<FileVO>>>('/files', { params })
 }
-export function uploadFile(file: File, categoryId?: number) {
+export function uploadFile(file: File, categoryId?: number | null) {
   const form = new FormData()
   form.append('file', file)
-  if (categoryId) form.append('categoryId', String(categoryId))
+  if (categoryId != null) form.append('categoryId', String(categoryId))
   return request.post<Result<FileVO>>('/files/upload', form)
 }
 export function getFileDownloadUrl(id: number) {
   return `/api/files/${id}/download`
+}
+export function updateFileCategory(id: number, categoryId: number | null) {
+  return request.patch<Result<FileVO>>(`/files/${id}/category`, { categoryId })
 }
 export function deleteFile(id: number) {
   return request.delete<Result<void>>(`/files/${id}`)

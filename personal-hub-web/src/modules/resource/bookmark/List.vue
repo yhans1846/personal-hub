@@ -93,7 +93,6 @@ async function toggleDashboard(item: BookmarkVO) {
     title: item.title,
     url: item.url,
     description: item.description || '',
-    favicon: item.favicon || undefined,
     categoryId: item.categoryId,
     tagIds: (item.tags || []).map(t => t.id),
     showOnDashboard: next,
@@ -166,7 +165,7 @@ function getFaviconUrl(url: string) {
         <div v-for="item in list" :key="item.id" class="bookmark-card" @click="goEdit(item.id)">
           <div class="card-top">
             <img
-              :src="item.favicon || getFaviconUrl(item.url)"
+              :src="getFaviconUrl(item.url)"
               class="card-favicon"
               alt=""
               @error="($event.target as HTMLImageElement).style.display='none'"

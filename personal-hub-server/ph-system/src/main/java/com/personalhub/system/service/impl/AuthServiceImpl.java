@@ -3,6 +3,7 @@ package com.personalhub.system.service.impl;
 import com.personalhub.common.exception.BusinessException;
 import com.personalhub.common.util.JwtUtil;
 import com.personalhub.system.service.AuthService;
+import com.personalhub.system.service.AuditLogService;
 import com.personalhub.system.service.CaptchaService;
 import com.personalhub.system.vo.LoginVO;
 import com.personalhub.system.entity.User;
@@ -24,6 +25,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final CaptchaService captchaService;
+    private final AuditLogService auditLogService;
 
     @Override
     public LoginVO login(String username, String password, String captchaId, Integer sliderX) {
@@ -39,6 +41,8 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException("用户名或密码错误");
         }
         String token = jwtUtil.generateToken(user.getId(), user.getUsername());
+        auditLogService.log("AUTH", user.getId(), "LOGIN",
+                "用户登录: " + username, user.getId());
         log.info("用户登录成功: userId={}, username={}", user.getId(), username);
         return LoginVO.of(token, user);
     }

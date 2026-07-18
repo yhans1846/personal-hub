@@ -69,7 +69,6 @@ public class StudyRecordServiceImpl implements StudyRecordService {
                 .duration(dto.getDuration())
                 .content(dto.getContent())
                 .reflection(dto.getReflection())
-                .planId(dto.getPlanId())
                 .build();
         mapper.insert(record);
         log.info("新建学习记录: id={}, userId={}, subject={}", record.getId(), userId, dto.getSubject());
@@ -85,7 +84,6 @@ public class StudyRecordServiceImpl implements StudyRecordService {
         record.setDuration(dto.getDuration());
         record.setContent(dto.getContent());
         record.setReflection(dto.getReflection());
-        record.setPlanId(dto.getPlanId());
         mapper.updateById(record);
         log.info("编辑学习记录: id={}, userId={}", id, userId);
         return StudyRecordVO.from(record);

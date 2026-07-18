@@ -14,7 +14,7 @@ public class FileQueryDTO extends PageParam {
     @Schema(description = "搜索关键词（文件名）")
     private String keyword;
 
-    @Schema(description = "文件扩展名筛选")
+    @Schema(description = "类型筛选：扩展名，或分组 image/pdf/doc/archive")
     private String type;
 
     @Schema(description = "文件分类ID")

@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -48,6 +49,14 @@ public class DiaryEntry {
 
     /** 地点 */
     private String location;
+
+    /** 纬度（浏览器定位，无反查） */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
+    private BigDecimal latitude;
+
+    /** 经度（浏览器定位，无反查） */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
+    private BigDecimal longitude;
 
     /** 配图文件ID列表(JSON数组) */
     private String imageFileIds;

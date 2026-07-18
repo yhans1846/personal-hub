@@ -1,15 +1,17 @@
 ﻿<script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { getFileList, uploadFile, deleteFile, getFileDownloadUrl } from '@/modules/resource/api'
+import { getFileList, uploadFile, deleteFile, updateFileCategory } from '@/modules/resource/api'
 import { getCategories } from '@/modules/knowledge/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Upload, FileIcon, ImageIcon, FileText, Archive, Download, Trash2 } from 'lucide-vue-next'
+import { Upload, FileIcon, ImageIcon, FileText, Archive, Download, Trash2, Eye } from 'lucide-vue-next'
 import type { FileVO, FileQuery } from '@/types/file'
 import type { CategoryVO } from '@/types/category'
 import { PageHeader, EmptyState, ListToolbar, ListPagination } from '@/components'
+import FilePreviewDialog from '@/components/FilePreviewDialog.vue'
 import { useMainContentFill } from '@/composables/useMainContentFill'
 import { useFillPageSize } from '@/composables/useFillPageSize'
+import { downloadFileBlob, getFilePreviewUrl, revokePreviewUrl, getFilePreviewKind } from '@/utils/file'
 
 const router = useRouter()
 const list = ref<FileVO[]>([])
@@ -19,8 +21,11 @@ const uploadLoading = ref(false)
 const query = ref<FileQuery>({ page: 1, size: 10, keyword: '' })
 const categories = ref<CategoryVO[]>([])
 const showUpload = ref(false)
+const uploadCategoryId = ref<number | null>(null)
+const previewOpen = ref(false)
+const previewFile = ref<FileVO | null>(null)
+const thumbMap = ref<Record<number, string>>({})
 const typeOptions = [
-  { value: '', label: '全部' },
   { value: 'image', label: '图片' },
   { value: 'pdf', label: 'PDF' },
   { value: 'doc', label: '文档' },
@@ -38,15 +43,39 @@ onMounted(() => {
   fetchCategories()
 })
 
+onUnmounted(() => {
+  Object.values(thumbMap.value).forEach(revokePreviewUrl)
+})
+
 async function fetchList() {
   loading.value = true
   try {
-    const res = await getFileList(query.value)
+    const params: FileQuery = {
+      page: query.value.page,
+      size: query.value.size,
+      keyword: query.value.keyword || undefined,
+      type: query.value.type || undefined,
+      categoryId: query.value.categoryId || undefined,
+    }
+    const res = await getFileList(params)
     list.value = res.data.data.records
     total.value = res.data.data.total
+    await loadThumbs(list.value)
   } finally {
     loading.value = false
   }
+}
+
+async function loadThumbs(files: FileVO[]) {
+  Object.values(thumbMap.value).forEach(revokePreviewUrl)
+  thumbMap.value = {}
+  const images = files.filter(f => getFilePreviewKind(f.type) === 'image')
+  await Promise.all(images.map(async (f) => {
+    try {
+      const url = await getFilePreviewUrl(f.id)
+      thumbMap.value = { ...thumbMap.value, [f.id]: url }
+    } catch { /* ignore thumb errors */ }
+  }))
 }
 
 async function fetchCategories() {
@@ -63,7 +92,7 @@ async function handleUpload(files: FileList | null) {
   uploadLoading.value = true
   try {
     for (let i = 0; i < files.length; i++) {
-      await uploadFile(files[i])
+      await uploadFile(files[i], uploadCategoryId.value)
     }
     ElMessage.success(`上传成功 ${files.length} 个文件`)
     showUpload.value = false
@@ -75,15 +104,39 @@ async function handleUpload(files: FileList | null) {
   }
 }
 
-function handleDownload(id: number) {
-  window.open(getFileDownloadUrl(id), '_blank')
+async function handleCategoryChange(file: FileVO, categoryId: number | null, e?: Event) {
+  e?.stopPropagation()
+  try {
+    const res = await updateFileCategory(file.id, categoryId)
+    const updated = res.data.data
+    const idx = list.value.findIndex(f => f.id === file.id)
+    if (idx >= 0) list.value[idx] = { ...list.value[idx], ...updated }
+    ElMessage.success(categoryId ? '已更新分类' : '已清除分类')
+  } catch (err: any) {
+    ElMessage.error(err?.response?.data?.message || '更新分类失败')
+  }
 }
 
-async function handleDelete(id: number) {
+async function handleDownload(file: FileVO, e?: Event) {
+  e?.stopPropagation()
+  try {
+    await downloadFileBlob(file.id, file.name)
+  } catch {
+    ElMessage.error('下载失败')
+  }
+}
+
+async function handleDelete(id: number, e?: Event) {
+  e?.stopPropagation()
   await ElMessageBox.confirm('确定删除该文件？', '提示', { type: 'warning' })
   await deleteFile(id)
   ElMessage.success('已删除')
   fetchList()
+}
+
+function openPreview(file: FileVO) {
+  previewFile.value = file
+  previewOpen.value = true
 }
 
 function getFileIcon(icon: string) {
@@ -96,6 +149,10 @@ function getFileIcon(icon: string) {
 }
 
 function goCategories() { router.push('/categories') }
+
+watch(previewOpen, (open) => {
+  if (!open) previewFile.value = null
+})
 </script>
 
 <template>
@@ -116,7 +173,7 @@ function goCategories() { router.push('/categories') }
           <el-select v-model="query.type" placeholder="类型" style="width:110px" clearable @change="onSearch">
             <el-option v-for="t in typeOptions" :key="t.value" :value="t.value" :label="t.label" />
           </el-select>
-          <el-select v-model="query.categoryId" placeholder="分类" style="width:130px" clearable @change="onSearch">
+          <el-select v-model="query.categoryId" placeholder="分类" style="width:140px" clearable @change="onSearch">
             <el-option v-for="c in categories" :key="c.id" :label="c.name" :value="c.id" />
           </el-select>
         </template>
@@ -139,6 +196,12 @@ function goCategories() { router.push('/categories') }
             点击选择
           </el-button>
         </p>
+        <div class="upload-category" @click.stop>
+          <span class="upload-category-label">上传到分类</span>
+          <el-select v-model="uploadCategoryId" placeholder="不选分类" clearable style="width:160px">
+            <el-option v-for="c in categories" :key="c.id" :label="c.name" :value="c.id" />
+          </el-select>
+        </div>
         <p class="upload-hint">支持 PDF、Office、MD、图片、ZIP 等，单文件最大 50MB</p>
         <el-button size="small" @click="showUpload = false">取消</el-button>
       </div>
@@ -160,23 +223,46 @@ function goCategories() { router.push('/categories') }
       />
 
       <div v-else class="file-grid">
-        <div v-for="file in list" :key="file.id" class="file-card">
-          <div class="file-card-icon">
-            <component :is="getFileIcon(file.typeIcon)" :size="24" />
+        <div
+          v-for="file in list"
+          :key="file.id"
+          class="file-card"
+          role="button"
+          tabindex="0"
+          @click="openPreview(file)"
+          @keydown.enter="openPreview(file)"
+        >
+          <div class="file-card-icon" :class="{ 'file-card-icon--thumb': !!thumbMap[file.id] }">
+            <img v-if="thumbMap[file.id]" :src="thumbMap[file.id]" class="file-thumb" alt="" />
+            <component v-else :is="getFileIcon(file.typeIcon)" :size="24" />
           </div>
           <div class="file-card-info">
             <span class="file-card-name" :title="file.name">{{ file.name }}</span>
             <div class="file-card-meta">
               <span class="meta-type">{{ file.typeLabel }}</span>
               <span class="meta-size">{{ file.sizeFormatted }}</span>
-              <span v-if="file.categoryName" class="meta-cat">{{ file.categoryName }}</span>
+            </div>
+            <div class="file-card-cat" @click.stop>
+              <el-select
+                :model-value="file.categoryId"
+                placeholder="未分类"
+                clearable
+                size="small"
+                style="width:120px"
+                @change="(v: number | null) => handleCategoryChange(file, v ?? null)"
+              >
+                <el-option v-for="c in categories" :key="c.id" :label="c.name" :value="c.id" />
+              </el-select>
             </div>
           </div>
           <div class="file-card-actions">
-            <button class="icon-btn" title="下载" @click="handleDownload(file.id)">
+            <button class="icon-btn" title="预览" @click="openPreview(file)">
+              <Eye :size="14" />
+            </button>
+            <button class="icon-btn" title="下载" @click="handleDownload(file, $event)">
               <Download :size="14" />
             </button>
-            <button class="icon-btn icon-btn--danger" title="删除" @click="handleDelete(file.id)">
+            <button class="icon-btn icon-btn--danger" title="删除" @click="handleDelete(file.id, $event)">
               <Trash2 :size="14" />
             </button>
           </div>
@@ -193,6 +279,8 @@ function goCategories() { router.push('/categories') }
     <div class="plan-foot">
       <ListPagination v-if="total > 0" :total="total" :page="query.page ?? 1" :size="pageSize" @update:page="onPageChange" />
     </div>
+
+    <FilePreviewDialog v-model="previewOpen" :file="previewFile" />
   </div>
 </template>
 
@@ -228,6 +316,16 @@ function goCategories() { router.push('/categories') }
 }
 .upload-zone:hover { border-color: var(--accent); background: var(--accent-light); }
 .upload-hint { font-size: var(--text-xs); color: var(--text-tertiary); margin-top: var(--sp-1); }
+.upload-category {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin: var(--sp-2) 0;
+}
+.upload-category-label {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
 
 .file-grid {
   flex: 1;
@@ -261,20 +359,22 @@ function goCategories() { router.push('/categories') }
   min-height: 0;
   min-width: 0;
   overflow: hidden;
+  cursor: pointer;
 }
 .file-card--pad {
   visibility: hidden;
   pointer-events: none;
   background: transparent;
   border-color: transparent;
+  cursor: default;
 }
 .file-card:hover:not(.file-card--pad) {
   box-shadow: var(--shadow-sm);
   border-color: var(--accent-border);
 }
 .file-card-icon {
-  width: 36px;
-  height: 36px;
+  width: 56px;
+  height: 56px;
   border-radius: var(--radius-sm);
   background: var(--accent-light);
   color: var(--accent);
@@ -282,6 +382,16 @@ function goCategories() { router.push('/categories') }
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  overflow: hidden;
+}
+.file-card-icon--thumb {
+  background: var(--bg-hover);
+  padding: 0;
+}
+.file-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .file-card-info { flex: 1; min-width: 0; }
 .file-card-name {
@@ -299,10 +409,8 @@ function goCategories() { router.push('/categories') }
   font-size: var(--text-xs);
   color: var(--text-tertiary);
 }
-.meta-cat {
-  padding: 0 4px;
-  border-radius: 3px;
-  background: var(--bg-hover);
+.file-card-cat {
+  margin-top: 4px;
 }
 
 .file-card-actions {
