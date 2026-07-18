@@ -2,7 +2,7 @@
 
 > 职责：表结构与索引。DDL 源：`sql/init.sql`（与库 `personal_hub` 对齐）。接口 → `API.md`。
 
-**约定：** InnoDB · utf8mb4 · BIGINT 自增 PK · DATETIME · 逻辑删除 `is_deleted` · snake_case。Captcha 仅 Redis，无表。
+**约定：** InnoDB · utf8mb4 / `utf8mb4_general_ci`（仅库/表级声明，列继承）· BIGINT 自增 PK · DATETIME · 逻辑删除 `is_deleted` · snake_case。Captcha 仅 Redis，无表。
 
 共 **16** 表。
 
@@ -65,8 +65,8 @@ user_id · layout_type(menu|dashboard|preview) · layout_json · 时间 · is_de
 UK `(user_id,layout_type)`
 
 ### `audit_log`
-module（含 `AUTH` 等）· business_id · action（含 `LOGIN`/`DELETE`/`RESTORE` 等）· content · operator_id · created_at（仅追加）  
-索引 module / (module,business_id) / operator_id / created_at
+module（含 NOTE/…/USER；业务侧写 AUTH）· business_id · action（含 LOGIN/DELETE/RESTORE 等）· content · operator_id · created_at（仅追加）  
+索引 module / (module,business_id) / operator_id / created_at  
 当前写入点：登录成功；笔记删除 / 恢复
 
 ---
