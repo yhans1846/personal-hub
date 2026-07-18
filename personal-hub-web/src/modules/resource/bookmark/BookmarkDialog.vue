@@ -5,7 +5,7 @@ import { getCategories } from '@/modules/knowledge/api'
 import { getTags } from '@/modules/knowledge/api'
 import { ElMessage } from 'element-plus'
 import { FolderOpen, Link } from 'lucide-vue-next'
-import { UiDialog, UiInput, UiButton } from '@/components/ui'
+import { UiDialog, UiInput, DialogSection, DialogDivider, DialogFooterActions } from '@/components/ui'
 import type { CategoryVO } from '@/types/category'
 import type { TagVO } from '@/types/tag'
 import { useEntityDialog } from '@/composables/useEntityDialog'
@@ -119,44 +119,44 @@ async function handleSave() {
       />
     </div>
 
-    <div class="section-divider" />
+    <DialogDivider />
 
-    <!-- 分类 -->
-    <div class="section-label">分类</div>
-    <div class="chip-row">
-      <button
-        v-for="c in categories"
-        :key="c.id"
-        type="button"
-        class="chip"
-        :class="{ active: form.categoryId === c.id }"
-        @click="form.categoryId = form.categoryId === c.id ? null : c.id"
-      >
-        <FolderOpen :size="13" />
-        {{ c.name }}
-      </button>
-      <span v-if="categories.length === 0" class="chip-empty">暂无分类</span>
-    </div>
+    <DialogSection label="分类">
+      <div class="chip-row">
+        <button
+          v-for="c in categories"
+          :key="c.id"
+          type="button"
+          class="chip"
+          :class="{ active: form.categoryId === c.id }"
+          @click="form.categoryId = form.categoryId === c.id ? null : c.id"
+        >
+          <FolderOpen :size="13" />
+          {{ c.name }}
+        </button>
+        <span v-if="categories.length === 0" class="chip-empty">暂无分类</span>
+      </div>
+    </DialogSection>
 
-    <!-- 标签 -->
-    <div class="section-label">标签</div>
-    <div class="chip-row">
-      <button
-        v-for="t in tags"
-        :key="t.id"
-        type="button"
-        class="chip tag-chip"
-        :class="{ active: form.tagIds.includes(t.id) }"
-        :style="form.tagIds.includes(t.id) ? { '--chip-color': t.color } : {}"
-        @click="form.tagIds = form.tagIds.includes(t.id) ? form.tagIds.filter(id => id !== t.id) : [...form.tagIds, t.id]"
-      >
-        <span class="tag-dot" :style="{ background: t.color }" />
-        {{ t.name }}
-      </button>
-      <span v-if="tags.length === 0" class="chip-empty">暂无标签</span>
-    </div>
+    <DialogSection label="标签">
+      <div class="chip-row">
+        <button
+          v-for="t in tags"
+          :key="t.id"
+          type="button"
+          class="chip tag-chip"
+          :class="{ active: form.tagIds.includes(t.id) }"
+          :style="form.tagIds.includes(t.id) ? { '--chip-color': t.color } : {}"
+          @click="form.tagIds = form.tagIds.includes(t.id) ? form.tagIds.filter(id => id !== t.id) : [...form.tagIds, t.id]"
+        >
+          <span class="tag-dot" :style="{ background: t.color }" />
+          {{ t.name }}
+        </button>
+        <span v-if="tags.length === 0" class="chip-empty">暂无标签</span>
+      </div>
+    </DialogSection>
 
-    <div class="section-divider" />
+    <DialogDivider />
 
     <div class="dashboard-row">
       <span class="dashboard-label">展示到首页</span>
@@ -164,9 +164,8 @@ async function handleSave() {
     </div>
     <p class="dashboard-hint">开启后会出现在首页「外部快捷」卡片</p>
 
-    <div class="section-divider" />
+    <DialogDivider />
 
-    <!-- 描述 -->
     <div class="content-section">
       <textarea
         v-model="form.description"
@@ -176,8 +175,7 @@ async function handleSave() {
     </div>
 
     <template #footer>
-      <el-button text @click="emit('update:modelValue', false)">取消</el-button>
-      <UiButton type="primary" :loading="saving" @click="handleSave">保存</UiButton>
+      <DialogFooterActions :saving="saving" @cancel="emit('update:modelValue', false)" @confirm="handleSave" />
     </template>
   </UiDialog>
 </template>
@@ -227,27 +225,11 @@ async function handleSave() {
   color: var(--text-primary);
 }
 
-.section-divider {
-  height: 1px;
-  background: var(--border-light);
-  margin: var(--sp-4) 0;
-}
-
-.section-label {
-  font-size: var(--text-xs);
-  color: var(--text-tertiary);
-  font-weight: 500;
-  margin-bottom: var(--sp-3);
-  letter-spacing: 0.3px;
-  text-transform: uppercase;
-}
-
 /* ---- Chip 行 ---- */
 .chip-row {
   display: flex;
   flex-wrap: wrap;
   gap: var(--sp-2);
-  margin-bottom: var(--sp-5);
 }
 
 .chip {

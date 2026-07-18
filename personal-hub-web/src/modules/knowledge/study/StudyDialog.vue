@@ -3,7 +3,7 @@ import { ref, watch, computed, toRef } from 'vue'
 import { createStudyRecord, updateStudyRecord, getStudyRecordById } from '@/modules/knowledge/api'
 import { ElMessage } from 'element-plus'
 import { Clock, Calendar } from 'lucide-vue-next'
-import { UiDialog, UiButton } from '@/components/ui'
+import { UiDialog, DialogSection, DialogDivider, DialogFooterActions } from '@/components/ui'
 import { useEntityDialog } from '@/composables/useEntityDialog'
 
 const props = withDefaults(defineProps<{
@@ -73,7 +73,7 @@ async function handleSave() {
       placeholder="学习主题"
     />
 
-    <div class="section-divider" />
+    <DialogDivider />
 
     <!-- 日期 + 时长 — 并排 -->
     <div class="meta-duo">
@@ -102,29 +102,26 @@ async function handleSave() {
       </div>
     </div>
 
-    <div class="section-divider" />
+    <DialogDivider />
 
-    <!-- 学习内容 -->
-    <div class="section-label">学习内容</div>
-    <textarea
-      v-model="form.content"
-      class="content-editor"
-      placeholder="记录今天学了什么…"
-    />
+    <DialogSection label="学习内容">
+      <textarea
+        v-model="form.content"
+        class="content-editor"
+        placeholder="记录今天学了什么…"
+      />
+    </DialogSection>
 
-    <div class="section-spacer" />
-
-    <!-- 心得 -->
-    <div class="section-label">心得</div>
-    <textarea
-      v-model="form.reflection"
-      class="content-editor"
-      placeholder="有什么收获或思考？"
-    />
+    <DialogSection label="心得">
+      <textarea
+        v-model="form.reflection"
+        class="content-editor"
+        placeholder="有什么收获或思考？"
+      />
+    </DialogSection>
 
     <template #footer>
-      <el-button text @click="emit('update:modelValue', false)">取消</el-button>
-      <UiButton type="primary" :loading="saving" @click="handleSave">保存</UiButton>
+      <DialogFooterActions :saving="saving" @cancel="emit('update:modelValue', false)" @confirm="handleSave" />
     </template>
   </UiDialog>
 </template>
@@ -144,25 +141,6 @@ async function handleSave() {
 .study-title-input::placeholder {
   color: var(--text-placeholder);
   font-weight: 400;
-}
-
-.section-divider {
-  height: 1px;
-  background: var(--border-light);
-  margin: var(--sp-4) 0;
-}
-
-.section-label {
-  font-size: var(--text-xs);
-  color: var(--text-tertiary);
-  font-weight: 500;
-  margin-bottom: var(--sp-3);
-  letter-spacing: 0.3px;
-  text-transform: uppercase;
-}
-
-.section-spacer {
-  height: var(--sp-5);
 }
 
 /* ---- 元数据双栏 ---- */

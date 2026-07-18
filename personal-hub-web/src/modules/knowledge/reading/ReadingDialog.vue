@@ -2,8 +2,8 @@
 import { ref, watch, computed, toRef } from 'vue'
 import { createReading, updateReading, getReadingById } from '@/modules/knowledge/api'
 import { ElMessage } from 'element-plus'
-import { Star, Calendar, BookOpen } from 'lucide-vue-next'
-import { UiDialog, UiInput, UiButton } from '@/components/ui'
+import { Star, Calendar } from 'lucide-vue-next'
+import { UiDialog, UiInput, DialogSection, DialogDivider, DialogFooterActions } from '@/components/ui'
 import { useEntityDialog } from '@/composables/useEntityDialog'
 
 const props = withDefaults(defineProps<{
@@ -118,118 +118,116 @@ function toggleRating(r: number) {
       </div>
     </div>
 
-    <div class="section-divider" />
+    <DialogDivider />
 
-    <!-- 阅读状态 -->
-    <div class="section-label">阅读状态</div>
-    <div class="status-row">
-      <button
-        v-for="s in statusOptions"
-        :key="s.value"
-        type="button"
-        class="status-card"
-        :class="{ active: form.status === s.value }"
-        @click="form.status = s.value"
-      >
-        <span class="status-emoji">{{ s.emoji }}</span>
-        <span class="status-label">{{ s.label }}</span>
-      </button>
-    </div>
-
-    <!-- 进度 -->
-    <div class="section-label">阅读进度</div>
-    <div class="progress-row">
-      <input
-        type="range"
-        :min="0"
-        :max="100"
-        :value="form.progress"
-        class="progress-slider"
-        :style="{ '--progress-color': progressColor }"
-        @input="onProgressChange"
-      />
-      <span class="progress-value" :style="{ color: progressColor }">{{ form.progress }}%</span>
-    </div>
-
-    <!-- 章节 -->
-    <div class="chapter-row">
-      <div class="chapter-field">
-        <span class="inline-label">总章节</span>
-        <input
-          type="number"
-          :min="0"
-          :value="form.totalChapters"
-          class="number-input"
-          @input="form.totalChapters = Number(($event.target as HTMLInputElement).value)"
-        />
-      </div>
-      <div class="chapter-divider">/</div>
-      <div class="chapter-field">
-        <span class="inline-label">当前</span>
-        <input
-          type="number"
-          :min="0"
-          :max="form.totalChapters || 9999"
-          :value="form.currentChapter"
-          class="number-input"
-          @input="form.currentChapter = Number(($event.target as HTMLInputElement).value)"
-        />
-      </div>
-    </div>
-
-    <!-- 评分 + 时长 -->
-    <div class="section-label">评分 · 时长</div>
-    <div class="rating-duration-row">
-      <div class="rating-group">
+    <DialogSection label="阅读状态">
+      <div class="status-row">
         <button
-          v-for="i in 5"
-          :key="i"
+          v-for="s in statusOptions"
+          :key="s.value"
           type="button"
-          class="star-btn"
-          :class="{ active: i <= (form.rating || 0) }"
-          @click="toggleRating(i)"
+          class="status-card"
+          :class="{ active: form.status === s.value }"
+          @click="form.status = s.value"
         >
-          <Star
-            :size="20"
-            :fill="i <= (form.rating || 0) ? 'var(--warning)' : 'none'"
-            :color="i <= (form.rating || 0) ? 'var(--warning)' : 'var(--text-tertiary)'"
-          />
+          <span class="status-emoji">{{ s.emoji }}</span>
+          <span class="status-label">{{ s.label }}</span>
         </button>
-        <span v-if="!form.rating" class="rating-hint">点击评分</span>
       </div>
-      <div class="duration-field">
-        <span class="inline-label">时长（分钟）</span>
+    </DialogSection>
+
+    <DialogSection label="阅读进度">
+      <div class="progress-row">
         <input
-          type="number"
+          type="range"
           :min="0"
-          :step="10"
-          :value="form.totalDuration"
-          class="number-input"
-          placeholder="0"
-          @input="form.totalDuration = Number(($event.target as HTMLInputElement).value) || undefined"
+          :max="100"
+          :value="form.progress"
+          class="progress-slider"
+          :style="{ '--progress-color': progressColor }"
+          @input="onProgressChange"
         />
+        <span class="progress-value" :style="{ color: progressColor }">{{ form.progress }}%</span>
       </div>
-    </div>
 
-    <!-- 时间 -->
-    <div class="section-label">阅读时间</div>
-    <div class="date-range-row">
-      <button type="button" class="date-chip" :class="{ 'has-date': !!form.startDate }" @click="$refs.startInput?.showPicker ? $refs.startInput.showPicker() : $refs.startInput?.click()">
-        <Calendar :size="14" />
-        <span>{{ form.startDate || '开始日期' }}</span>
-        <input ref="startInput" type="date" class="date-input-abs" :value="form.startDate || ''" @change="form.startDate = ($event.target as HTMLInputElement).value || null" />
-      </button>
-      <span class="date-range-arrow">→</span>
-      <button type="button" class="date-chip" :class="{ 'has-date': !!form.endDate }" @click="$refs.endInput?.showPicker ? $refs.endInput.showPicker() : $refs.endInput?.click()">
-        <Calendar :size="14" />
-        <span>{{ form.endDate || '读完日期' }}</span>
-        <input ref="endInput" type="date" class="date-input-abs" :value="form.endDate || ''" @change="form.endDate = ($event.target as HTMLInputElement).value || null" />
-      </button>
-    </div>
+      <div class="chapter-row">
+        <div class="chapter-field">
+          <span class="inline-label">总章节</span>
+          <input
+            type="number"
+            :min="0"
+            :value="form.totalChapters"
+            class="number-input"
+            @input="form.totalChapters = Number(($event.target as HTMLInputElement).value)"
+          />
+        </div>
+        <div class="chapter-divider">/</div>
+        <div class="chapter-field">
+          <span class="inline-label">当前</span>
+          <input
+            type="number"
+            :min="0"
+            :max="form.totalChapters || 9999"
+            :value="form.currentChapter"
+            class="number-input"
+            @input="form.currentChapter = Number(($event.target as HTMLInputElement).value)"
+          />
+        </div>
+      </div>
+    </DialogSection>
 
-    <div class="section-divider" />
+    <DialogSection label="评分 · 时长">
+      <div class="rating-duration-row">
+        <div class="rating-group">
+          <button
+            v-for="i in 5"
+            :key="i"
+            type="button"
+            class="star-btn"
+            :class="{ active: i <= (form.rating || 0) }"
+            @click="toggleRating(i)"
+          >
+            <Star
+              :size="20"
+              :fill="i <= (form.rating || 0) ? 'var(--warning)' : 'none'"
+              :color="i <= (form.rating || 0) ? 'var(--warning)' : 'var(--text-tertiary)'"
+            />
+          </button>
+          <span v-if="!form.rating" class="rating-hint">点击评分</span>
+        </div>
+        <div class="duration-field">
+          <span class="inline-label">时长（分钟）</span>
+          <input
+            type="number"
+            :min="0"
+            :step="10"
+            :value="form.totalDuration"
+            class="number-input"
+            placeholder="0"
+            @input="form.totalDuration = Number(($event.target as HTMLInputElement).value) || undefined"
+          />
+        </div>
+      </div>
+    </DialogSection>
 
-    <!-- 阅读笔记 -->
+    <DialogSection label="阅读时间">
+      <div class="date-range-row">
+        <button type="button" class="date-chip" :class="{ 'has-date': !!form.startDate }" @click="$refs.startInput?.showPicker ? $refs.startInput.showPicker() : $refs.startInput?.click()">
+          <Calendar :size="14" />
+          <span>{{ form.startDate || '开始日期' }}</span>
+          <input ref="startInput" type="date" class="date-input-abs" :value="form.startDate || ''" @change="form.startDate = ($event.target as HTMLInputElement).value || null" />
+        </button>
+        <span class="date-range-arrow">→</span>
+        <button type="button" class="date-chip" :class="{ 'has-date': !!form.endDate }" @click="$refs.endInput?.showPicker ? $refs.endInput.showPicker() : $refs.endInput?.click()">
+          <Calendar :size="14" />
+          <span>{{ form.endDate || '读完日期' }}</span>
+          <input ref="endInput" type="date" class="date-input-abs" :value="form.endDate || ''" @change="form.endDate = ($event.target as HTMLInputElement).value || null" />
+        </button>
+      </div>
+    </DialogSection>
+
+    <DialogDivider />
+
     <div class="content-section">
       <textarea
         v-model="form.notes"
@@ -239,8 +237,7 @@ function toggleRating(r: number) {
     </div>
 
     <template #footer>
-      <el-button text @click="emit('update:modelValue', false)">取消</el-button>
-      <UiButton type="primary" :loading="saving" @click="handleSave">保存</UiButton>
+      <DialogFooterActions :saving="saving" @cancel="emit('update:modelValue', false)" @confirm="handleSave" />
     </template>
   </UiDialog>
 </template>
@@ -289,26 +286,10 @@ function toggleRating(r: number) {
   font-weight: 500;
 }
 
-.section-divider {
-  height: 1px;
-  background: var(--border-light);
-  margin: var(--sp-4) 0;
-}
-
-.section-label {
-  font-size: var(--text-xs);
-  color: var(--text-tertiary);
-  font-weight: 500;
-  margin-bottom: var(--sp-3);
-  letter-spacing: 0.3px;
-  text-transform: uppercase;
-}
-
 /* ---- 状态卡片 ---- */
 .status-row {
   display: flex;
   gap: var(--sp-2);
-  margin-bottom: var(--sp-5);
 }
 
 .status-card {

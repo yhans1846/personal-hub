@@ -5,7 +5,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Pencil, Trash2, FolderOpen, Folder, Bookmark, GripVertical, Search, ArrowUpDown } from 'lucide-vue-next'
 import Sortable from 'sortablejs'
 import { PageHeader, EmptyState, ListToolbar } from '@/components'
-import { UiDialog, UiInput, UiButton } from '@/components/ui'
+import { UiDialog, UiInput, DialogFooterActions } from '@/components/ui'
 import type { CategoryVO } from '@/types/category'
 import CategoryStatsCards from './CategoryStatsCards.vue'
 import { formatDate } from '@/utils/formatTime'
@@ -271,11 +271,10 @@ function getTypeIcon(type: string) {
     </div>
 
     <!-- ========== 编辑弹窗 ========== -->
-    <UiDialog v-model="dialogVisible" :title="isEdit ? '编辑分类' : `新建${tabs.find(t => t.type === activeType)?.label || ''}分类`">
+    <UiDialog v-model="dialogVisible" size="sm" :title="isEdit ? '编辑分类' : `新建${tabs.find(t => t.type === activeType)?.label || ''}分类`">
       <UiInput v-model="form.name" placeholder="分类名称" maxlength="50" show-word-limit class="category-dialog-input" @keyup.enter="handleSave" />
       <template #footer>
-        <el-button text @click="dialogVisible = false">取消</el-button>
-        <UiButton type="primary" @click="handleSave">保存</UiButton>
+        <DialogFooterActions @cancel="dialogVisible = false" @confirm="handleSave" />
       </template>
     </UiDialog>
   </div>

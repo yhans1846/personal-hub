@@ -221,6 +221,19 @@ a:hover { color: var(--accent-hover); }
 ::-webkit-scrollbar-thumb { background: var(--text-tertiary); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
 
+/* 对话框内隐藏滚动条（仍可滚轮/触控滚动） */
+.el-dialog,
+.el-dialog * {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.el-dialog::-webkit-scrollbar,
+.el-dialog *::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
 /* ---------- 工具类 ---------- */
 .text-secondary { color: var(--text-secondary); }
 .text-tertiary { color: var(--text-tertiary); }

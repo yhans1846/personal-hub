@@ -5,7 +5,8 @@ import { uploadFile, deleteFile } from '@/modules/resource/api'
 import { getFilePreviewUrl, revokePreviewUrl } from '@/utils/file'
 import { ElMessage } from 'element-plus'
 import { ImagePlus, X, MapPin } from 'lucide-vue-next'
-import { UiDialog, UiInput, UiButton } from '@/components/ui'
+import { UiDialog, UiInput, DialogSection, DialogDivider, DialogFooterActions } from '@/components/ui'
+import ImageLightbox from '@/components/ImageLightbox.vue'
 import { useEntityDialog } from '@/composables/useEntityDialog'
 
 const props = withDefaults(defineProps<{
@@ -37,6 +38,8 @@ const saving = ref(false)
 const uploading = ref(false)
 const previewImages = ref<ImageItem[]>([])
 const isDragging = ref(false)
+const lightboxOpen = ref(false)
+const lightboxIndex = ref(0)
 
 const moodOptions = [
   { value: 1, emoji: '😊', label: '很好' },
@@ -146,6 +149,11 @@ function onFileChange(e: Event) {
   }
 }
 
+function openLightbox(idx: number) {
+  lightboxIndex.value = idx
+  lightboxOpen.value = true
+}
+
 /** 删除单张图片（调用后端删除 + 清理本地状态） */
 async function handleRemoveImage(img: ImageItem) {
   try {
@@ -206,89 +214,101 @@ onUnmounted(() => {
       maxlength="200"
     />
 
-    <div class="section-divider" />
+    <DialogDivider />
 
-    <!-- 心情卡片 -->
-    <div class="section-label">此刻心情</div>
-    <div class="mood-row">
-      <button
-        v-for="m in moodOptions"
-        :key="m.value"
-        type="button"
-        class="mood-card"
-        :class="{ active: form.mood === m.value }"
-        @click="form.mood = m.value"
-      >
-        <span class="mood-emoji">{{ m.emoji }}</span>
-        <span class="mood-label">{{ m.label }}</span>
-      </button>
-    </div>
-
-    <!-- 天气 + 地点 行 -->
-    <div class="section-label">天气 · 地点</div>
-    <div class="meta-row">
-      <div class="weather-group">
+    <DialogSection label="此刻心情">
+      <div class="mood-row">
         <button
-          v-for="w in weatherOptions"
-          :key="w.label"
+          v-for="m in moodOptions"
+          :key="m.value"
           type="button"
-          class="weather-btn"
-          :class="{ active: form.weather === w.emoji }"
-          :title="w.label"
-          @click="form.weather = form.weather === w.emoji ? '' : w.emoji"
+          class="mood-card"
+          :class="{ active: form.mood === m.value }"
+          @click="form.mood = m.value"
         >
-          {{ w.emoji }}
+          <span class="mood-emoji">{{ m.emoji }}</span>
+          <span class="mood-label">{{ m.label }}</span>
         </button>
       </div>
-      <div class="location-input-wrapper">
-        <MapPin :size="14" class="location-icon" />
+    </DialogSection>
+
+    <DialogSection label="天气 · 地点">
+      <div class="meta-row">
+        <div class="weather-group">
+          <button
+            v-for="w in weatherOptions"
+            :key="w.label"
+            type="button"
+            class="weather-btn"
+            :class="{ active: form.weather === w.emoji }"
+            :title="w.label"
+            @click="form.weather = form.weather === w.emoji ? '' : w.emoji"
+          >
+            {{ w.emoji }}
+          </button>
+        </div>
+        <div class="location-input-wrapper">
+          <MapPin :size="14" class="location-icon" />
+          <input
+            v-model="form.location"
+            class="location-input"
+            placeholder="添加地点"
+            maxlength="200"
+          />
+        </div>
+      </div>
+    </DialogSection>
+
+    <DialogSection label="配图">
+      <div v-if="previewImages.length" class="image-grid">
+        <div v-for="(img, idx) in previewImages" :key="img.id" class="image-item">
+          <img
+            :src="img.url"
+            class="preview-img"
+            alt=""
+            @click="openLightbox(idx)"
+          />
+          <button
+            type="button"
+            class="image-remove-btn"
+            :disabled="uploading"
+            @click.stop="handleRemoveImage(img)"
+          >
+            <X :size="16" />
+          </button>
+        </div>
+      </div>
+
+      <ImageLightbox
+        v-model="lightboxOpen"
+        v-model:index="lightboxIndex"
+        :urls="previewImages.map(i => i.url)"
+      />
+
+      <div
+        class="dropzone"
+        :class="{ 'dropzone--dragging': isDragging }"
+        @dragover="onDragOver"
+        @dragleave="onDragLeave"
+        @drop="onDrop"
+        @click="$refs.fileInput?.click()"
+      >
+        <ImagePlus :size="28" class="dropzone-icon" />
+        <span class="dropzone-text">拖拽图片到这里，或点击上传</span>
+        <span class="dropzone-hint">支持 JPG、PNG、WEBP，可多选</span>
         <input
-          v-model="form.location"
-          class="location-input"
-          placeholder="添加地点"
-          maxlength="200"
+          ref="fileInput"
+          type="file"
+          accept="image/*"
+          multiple
+          class="dropzone-input"
+          @change="onFileChange"
         />
       </div>
-    </div>
+    </DialogSection>
 
-    <!-- 配图 -->
-    <div class="section-label">配图</div>
+    <DialogDivider />
 
-    <!-- 图片预览列表 -->
-    <div v-if="previewImages.length" class="image-grid">
-      <div v-for="img in previewImages" :key="img.id" class="image-item">
-        <img :src="img.url" class="preview-img" />
-        <button class="image-remove-btn" @click="handleRemoveImage(img)" :disabled="uploading">
-          <X :size="16" />
-        </button>
-      </div>
-    </div>
-
-    <!-- 上传 DropZone -->
-    <div
-      class="dropzone"
-      :class="{ 'dropzone--dragging': isDragging }"
-      @dragover="onDragOver"
-      @dragleave="onDragLeave"
-      @drop="onDrop"
-      @click="$refs.fileInput?.click()"
-    >
-      <ImagePlus :size="28" class="dropzone-icon" />
-      <span class="dropzone-text">拖拽图片到这里，或点击上传</span>
-      <span class="dropzone-hint">支持 JPG、PNG、WEBP，可多选</span>
-      <input
-        ref="fileInput"
-        type="file"
-        accept="image/*"
-        multiple
-        class="dropzone-input"
-        @change="onFileChange"
-      />
-    </div>
-
-    <div class="section-divider" />
-
-    <!-- 正文编辑器 -->
     <div class="content-section">
       <textarea
         v-model="form.content"
@@ -298,8 +318,7 @@ onUnmounted(() => {
     </div>
 
     <template #footer>
-      <el-button text @click="emit('update:modelValue', false)">取消</el-button>
-      <UiButton type="primary" :loading="saving" @click="handleSave">保存</UiButton>
+      <DialogFooterActions :saving="saving" @cancel="emit('update:modelValue', false)" @confirm="handleSave" />
     </template>
   </UiDialog>
 </template>
@@ -345,28 +364,10 @@ onUnmounted(() => {
   font-weight: 400;
 }
 
-/* ---- 分割线 ---- */
-.section-divider {
-  height: 1px;
-  background: var(--border-light);
-  margin: var(--sp-4) 0;
-}
-
-/* ---- 区域标头 ---- */
-.section-label {
-  font-size: var(--text-xs);
-  color: var(--text-tertiary);
-  font-weight: 500;
-  margin-bottom: var(--sp-3);
-  letter-spacing: 0.3px;
-  text-transform: uppercase;
-}
-
 /* ---- 心情卡片 ---- */
 .mood-row {
   display: flex;
   gap: var(--sp-2);
-  margin-bottom: var(--sp-5);
 }
 
 .mood-card {
@@ -409,7 +410,6 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: var(--sp-4);
-  margin-bottom: var(--sp-5);
   flex-wrap: wrap;
 }
 
@@ -483,11 +483,13 @@ onUnmounted(() => {
 }
 
 .preview-img {
-  width: 120px;
-  height: 90px;
+  width: 96px;
+  height: 96px;
   border-radius: var(--radius-md);
   object-fit: cover;
   border: 1px solid var(--border-color);
+  cursor: zoom-in;
+  display: block;
 }
 
 .image-remove-btn {

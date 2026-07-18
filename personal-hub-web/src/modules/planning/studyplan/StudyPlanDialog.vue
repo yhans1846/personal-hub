@@ -4,7 +4,7 @@ import { createStudyPlan, updateStudyPlan, getStudyPlanById } from '@/modules/pl
 import { getTags } from '@/modules/knowledge/api'
 import { ElMessage } from 'element-plus'
 import { Calendar, Link } from 'lucide-vue-next'
-import { UiDialog, UiInput, UiButton } from '@/components/ui'
+import { UiDialog, UiInput, DialogSection, DialogDivider, DialogFooterActions } from '@/components/ui'
 import { useEntityDialog } from '@/composables/useEntityDialog'
 import type { TagVO } from '@/types/tag'
 
@@ -151,92 +151,96 @@ async function handleSave() {
       />
     </div>
 
-    <div class="section-divider" />
+    <DialogDivider />
 
-    <div class="section-label">分类标签</div>
-    <div class="chip-row">
-      <button
-        v-for="t in tags"
-        :key="t.id"
-        type="button"
-        class="chip tag-chip"
-        :class="{ active: form.tagIds.includes(t.id) }"
-        :style="form.tagIds.includes(t.id) ? { '--chip-color': t.color } : {}"
-        @click="form.tagIds = form.tagIds.includes(t.id) ? form.tagIds.filter(id => id !== t.id) : [...form.tagIds, t.id]"
-      >
-        <span class="tag-dot" :style="{ background: t.color }" />
-        {{ t.name }}
-      </button>
-      <span v-if="tags.length === 0" class="chip-empty">暂无标签，可先在标签管理中创建</span>
-    </div>
+    <DialogSection label="分类标签">
+      <div class="chip-row">
+        <button
+          v-for="t in tags"
+          :key="t.id"
+          type="button"
+          class="chip tag-chip"
+          :class="{ active: form.tagIds.includes(t.id) }"
+          :style="form.tagIds.includes(t.id) ? { '--chip-color': t.color } : {}"
+          @click="form.tagIds = form.tagIds.includes(t.id) ? form.tagIds.filter(id => id !== t.id) : [...form.tagIds, t.id]"
+        >
+          <span class="tag-dot" :style="{ background: t.color }" />
+          {{ t.name }}
+        </button>
+        <span v-if="tags.length === 0" class="chip-empty">暂无标签，可先在标签管理中创建</span>
+      </div>
+    </DialogSection>
 
-    <div class="section-label">状态</div>
-    <div class="status-row">
-      <button
-        v-for="s in statusOptions"
-        :key="s.value"
-        type="button"
-        class="status-card"
-        :class="{ active: form.status === s.value }"
-        @click="form.status = s.value"
-      >
-        <span class="status-emoji">{{ s.emoji }}</span>
-        <span class="status-label">{{ s.label }}</span>
-      </button>
-    </div>
+    <DialogSection label="状态">
+      <div class="status-row">
+        <button
+          v-for="s in statusOptions"
+          :key="s.value"
+          type="button"
+          class="status-card"
+          :class="{ active: form.status === s.value }"
+          @click="form.status = s.value"
+        >
+          <span class="status-emoji">{{ s.emoji }}</span>
+          <span class="status-label">{{ s.label }}</span>
+        </button>
+      </div>
+    </DialogSection>
 
-    <div class="section-label">进度</div>
-    <div class="progress-row">
-      <input
-        type="range"
-        :min="0"
-        :max="100"
-        :value="form.progress"
-        class="progress-slider"
-        :style="{ '--progress-color': progressColor }"
-        @input="form.progress = Number(($event.target as HTMLInputElement).value)"
-      />
-      <span class="progress-value" :style="{ color: progressColor }">{{ form.progress }}%</span>
-    </div>
-
-    <div class="section-label">时间范围</div>
-    <div class="date-range-row">
-      <button
-        type="button"
-        class="date-chip"
-        :class="{ 'has-date': !!form.startDate }"
-        @click="($refs.startInput as HTMLInputElement)?.showPicker?.() ?? ($refs.startInput as HTMLInputElement)?.click()"
-      >
-        <Calendar :size="14" />
-        <span>{{ form.startDate || '开始日期' }}</span>
+    <DialogSection label="进度">
+      <div class="progress-row">
         <input
-          ref="startInput"
-          type="date"
-          class="date-input-abs"
-          :value="form.startDate || ''"
-          @change="form.startDate = ($event.target as HTMLInputElement).value || null"
+          type="range"
+          :min="0"
+          :max="100"
+          :value="form.progress"
+          class="progress-slider"
+          :style="{ '--progress-color': progressColor }"
+          @input="form.progress = Number(($event.target as HTMLInputElement).value)"
         />
-      </button>
-      <span class="date-range-arrow">→</span>
-      <button
-        type="button"
-        class="date-chip"
-        :class="{ 'has-date': !!form.endDate }"
-        @click="($refs.endInput as HTMLInputElement)?.showPicker?.() ?? ($refs.endInput as HTMLInputElement)?.click()"
-      >
-        <Calendar :size="14" />
-        <span>{{ form.endDate || '结束日期' }}</span>
-        <input
-          ref="endInput"
-          type="date"
-          class="date-input-abs"
-          :value="form.endDate || ''"
-          @change="form.endDate = ($event.target as HTMLInputElement).value || null"
-        />
-      </button>
-    </div>
+        <span class="progress-value" :style="{ color: progressColor }">{{ form.progress }}%</span>
+      </div>
+    </DialogSection>
 
-    <div class="section-divider" />
+    <DialogSection label="时间范围">
+      <div class="date-range-row">
+        <button
+          type="button"
+          class="date-chip"
+          :class="{ 'has-date': !!form.startDate }"
+          @click="($refs.startInput as HTMLInputElement)?.showPicker?.() ?? ($refs.startInput as HTMLInputElement)?.click()"
+        >
+          <Calendar :size="14" />
+          <span>{{ form.startDate || '开始日期' }}</span>
+          <input
+            ref="startInput"
+            type="date"
+            class="date-input-abs"
+            :value="form.startDate || ''"
+            @change="form.startDate = ($event.target as HTMLInputElement).value || null"
+          />
+        </button>
+        <span class="date-range-arrow">→</span>
+        <button
+          type="button"
+          class="date-chip"
+          :class="{ 'has-date': !!form.endDate }"
+          @click="($refs.endInput as HTMLInputElement)?.showPicker?.() ?? ($refs.endInput as HTMLInputElement)?.click()"
+        >
+          <Calendar :size="14" />
+          <span>{{ form.endDate || '结束日期' }}</span>
+          <input
+            ref="endInput"
+            type="date"
+            class="date-input-abs"
+            :value="form.endDate || ''"
+            @change="form.endDate = ($event.target as HTMLInputElement).value || null"
+          />
+        </button>
+      </div>
+    </DialogSection>
+
+    <DialogDivider />
 
     <div class="content-section">
       <textarea
@@ -247,8 +251,7 @@ async function handleSave() {
     </div>
 
     <template #footer>
-      <el-button text @click="emit('update:modelValue', false)">取消</el-button>
-      <UiButton type="primary" :loading="saving" @click="handleSave">保存</UiButton>
+      <DialogFooterActions :saving="saving" @cancel="emit('update:modelValue', false)" @confirm="handleSave" />
     </template>
   </UiDialog>
 </template>
@@ -302,26 +305,10 @@ async function handleSave() {
   color: var(--text-primary);
 }
 
-.section-divider {
-  height: 1px;
-  background: var(--border-light);
-  margin: var(--sp-4) 0;
-}
-
-.section-label {
-  font-size: var(--text-xs);
-  color: var(--text-tertiary);
-  font-weight: 500;
-  margin-bottom: var(--sp-3);
-  letter-spacing: 0.3px;
-  text-transform: uppercase;
-}
-
 .chip-row {
   display: flex;
   flex-wrap: wrap;
   gap: var(--sp-2);
-  margin-bottom: var(--sp-5);
 }
 .chip {
   display: inline-flex;
@@ -365,7 +352,6 @@ async function handleSave() {
   display: flex;
   flex-wrap: wrap;
   gap: var(--sp-2);
-  margin-bottom: var(--sp-5);
 }
 .status-card {
   display: flex;

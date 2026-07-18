@@ -3,7 +3,7 @@ import { ref, watch, computed, toRef } from 'vue'
 import { createTodo, updateTodo, getTodoById } from '@/modules/planning/api'
 import { ElMessage } from 'element-plus'
 import { Calendar } from 'lucide-vue-next'
-import { UiDialog, UiInput, UiButton } from '@/components/ui'
+import { UiDialog, UiInput, DialogSection, DialogDivider, DialogFooterActions } from '@/components/ui'
 import { useEntityDialog } from '@/composables/useEntityDialog'
 
 const props = withDefaults(defineProps<{
@@ -79,60 +79,59 @@ async function handleSave() {
       maxlength="200"
     />
 
-    <div class="section-divider" />
+    <DialogDivider />
 
-    <!-- 优先级卡片 -->
-    <div class="section-label">优先级</div>
-    <div class="priority-row">
-      <button
-        v-for="p in priorityOptions"
-        :key="p.value"
-        type="button"
-        class="priority-card"
-        :class="{ active: form.priority === p.value }"
-        :style="{
-          '--card-color': p.color,
-          '--card-bg': form.priority === p.value ? `${p.color}15` : 'transparent'
-        }"
-        @click="form.priority = p.value"
-      >
-        <span class="priority-emoji">{{ p.emoji }}</span>
-        <span class="priority-label">{{ p.label }}</span>
-      </button>
-    </div>
+    <DialogSection label="优先级">
+      <div class="priority-row">
+        <button
+          v-for="p in priorityOptions"
+          :key="p.value"
+          type="button"
+          class="priority-card"
+          :class="{ active: form.priority === p.value }"
+          :style="{
+            '--card-color': p.color,
+            '--card-bg': form.priority === p.value ? `${p.color}15` : 'transparent'
+          }"
+          @click="form.priority = p.value"
+        >
+          <span class="priority-emoji">{{ p.emoji }}</span>
+          <span class="priority-label">{{ p.label }}</span>
+        </button>
+      </div>
+    </DialogSection>
 
-    <!-- 截止日期 -->
-    <div class="section-label">截止日期</div>
-    <div class="due-date-row">
-      <button
-        type="button"
-        class="due-date-btn"
-        :class="{ 'has-date': !!form.dueDate }"
-        @click="$refs.dateInput?.showPicker ? $refs.dateInput.showPicker() : $refs.dateInput?.click()"
-      >
-        <Calendar :size="14" />
-        <span>{{ form.dueDate || '设置截止日期' }}</span>
-        <input
-          ref="dateInput"
-          type="date"
-          class="date-input-abs"
-          :value="form.dueDate || ''"
-          @change="form.dueDate = ($event.target as HTMLInputElement).value || null"
-        />
-      </button>
-      <button
-        v-if="form.dueDate"
-        type="button"
-        class="due-date-clear"
-        @click="form.dueDate = null"
-      >
-        ✕
-      </button>
-    </div>
+    <DialogSection label="截止日期">
+      <div class="due-date-row">
+        <button
+          type="button"
+          class="due-date-btn"
+          :class="{ 'has-date': !!form.dueDate }"
+          @click="$refs.dateInput?.showPicker ? $refs.dateInput.showPicker() : $refs.dateInput?.click()"
+        >
+          <Calendar :size="14" />
+          <span>{{ form.dueDate || '设置截止日期' }}</span>
+          <input
+            ref="dateInput"
+            type="date"
+            class="date-input-abs"
+            :value="form.dueDate || ''"
+            @change="form.dueDate = ($event.target as HTMLInputElement).value || null"
+          />
+        </button>
+        <button
+          v-if="form.dueDate"
+          type="button"
+          class="due-date-clear"
+          @click="form.dueDate = null"
+        >
+          ✕
+        </button>
+      </div>
+    </DialogSection>
 
-    <div class="section-divider" />
+    <DialogDivider />
 
-    <!-- 任务内容 -->
     <div class="content-section">
       <textarea
         v-model="form.content"
@@ -142,8 +141,7 @@ async function handleSave() {
     </div>
 
     <template #footer>
-      <el-button text @click="emit('update:modelValue', false)">取消</el-button>
-      <UiButton type="primary" :loading="saving" @click="handleSave">保存</UiButton>
+      <DialogFooterActions :saving="saving" @cancel="emit('update:modelValue', false)" @confirm="handleSave" />
     </template>
   </UiDialog>
 </template>
@@ -165,26 +163,10 @@ async function handleSave() {
   font-weight: 400;
 }
 
-.section-divider {
-  height: 1px;
-  background: var(--border-light);
-  margin: var(--sp-4) 0;
-}
-
-.section-label {
-  font-size: var(--text-xs);
-  color: var(--text-tertiary);
-  font-weight: 500;
-  margin-bottom: var(--sp-3);
-  letter-spacing: 0.3px;
-  text-transform: uppercase;
-}
-
 /* ---- 优先级 ---- */
 .priority-row {
   display: flex;
   gap: var(--sp-2);
-  margin-bottom: var(--sp-5);
 }
 
 .priority-card {
@@ -225,7 +207,6 @@ async function handleSave() {
   display: flex;
   align-items: center;
   gap: var(--sp-2);
-  margin-bottom: var(--sp-5);
 }
 
 .due-date-btn {
