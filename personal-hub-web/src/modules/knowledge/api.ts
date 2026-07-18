@@ -5,7 +5,7 @@ import type { DiaryVO, DiaryCreateDTO, DiaryQuery } from '@/types/diary'
 import type { StudyRecordVO, StudyRecordCreateDTO, StudyRecordQuery } from '@/types/study'
 import type { ReadingVO, ReadingCreateDTO, ReadingQuery } from '@/types/reading'
 import type { TagVO, TagCreateDTO, TagUpdateDTO } from '@/types/tag'
-import type { CategoryVO, CategoryCreateDTO } from '@/types/category'
+import type { CategoryVO, CategoryCreateDTO, CategoryUpdateDTO } from '@/types/category'
 
 // ====== 笔记 ======
 export function getNoteList(params: NoteQuery) {
@@ -180,7 +180,7 @@ export function getCategories(type: string) {
 export function createCategory(data: CategoryCreateDTO) {
   return request.post<Result<CategoryVO>>('/categories', data)
 }
-export function updateCategory(id: number, data: { name: string; sortOrder?: number }) {
+export function updateCategory(id: number, data: CategoryUpdateDTO) {
   return request.put<Result<CategoryVO>>(`/categories/${id}`, data)
 }
 export function deleteCategory(id: number) {

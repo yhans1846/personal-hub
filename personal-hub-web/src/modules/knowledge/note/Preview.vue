@@ -13,6 +13,7 @@ import DocLayout from '@/components/DocLayout.vue'
 import type { TocItem } from './preview/PreviewToc.vue'
 import { storeToRefs } from 'pinia'
 import { estimateReadingTime } from '@/utils/readingTime'
+import { formatUpdated } from '@/utils/formatTime'
 import { buildPreviewOptions } from './editor/vditorSetup'
 import { parseTocFromMarkdown } from './editor/parseToc'
 
@@ -39,13 +40,6 @@ const previewTheme = computed<'light' | 'dark'>(() => {
   const t = resolvedTheme.value as string
   return t === 'dark' ? 'dark' : 'light'
 })
-
-function formatTime(dateStr?: string) {
-  if (!dateStr) return ''
-  return dateStr.slice(0, 16).replace('T', ' ')
-}
-
-const parseToc = parseTocFromMarkdown
 
 function scrollToHeading(id: string) {
   activeHeading.value = id
@@ -177,7 +171,7 @@ onMounted(async () => {
   try {
     const res = await getNotePreview(id)
     note.value = res.data.data
-    if (note.value?.content) toc.value = parseToc(note.value.content)
+    if (note.value?.content) toc.value = parseTocFromMarkdown(note.value.content)
     if (note.value?.title) document.title = `${note.value.title} — 预览`
   } catch {
     error.value = '笔记不存在或无权访问'
@@ -188,7 +182,7 @@ onMounted(async () => {
 
 watch(() => note.value?.content, () => {
   if (note.value?.content) {
-    toc.value = parseToc(note.value.content)
+    toc.value = parseTocFromMarkdown(note.value.content)
     renderMarkdown()
   }
 }, { flush: 'post' })
@@ -250,7 +244,7 @@ onUnmounted(() => {
     :active-heading="activeHeading"
     :is-trash="isTrash"
     :meta="{
-      updatedAt: formatTime(loadedNote.updatedAt),
+      updatedAt: formatUpdated(loadedNote.updatedAt, ''),
       readingTime: estimateReadingTime(loadedNote.content),
     }"
     @back="handleClose"

@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import type Vditor from 'vditor'
 import ContextMenu from './ContextMenu.vue'
 import ContextMenuItem from './ContextMenuItem.vue'
 import ContextMenuSeparator from './ContextMenuSeparator.vue'
 import ContextMenuSubmenu from './ContextMenuSubmenu.vue'
 import TableGridPicker from './TableGridPicker.vue'
+import { useFeatureFlagStore } from '@/store/featureFlagStore'
 import {
   convertSelectionToHeading,
   convertSelectionToParagraph,
@@ -37,6 +38,10 @@ import {
 const props = defineProps<{
   vditor: Vditor | null
 }>()
+
+const featureFlags = useFeatureFlagStore()
+const showMermaid = computed(() => featureFlags.isEnabled('mermaid'))
+const showKatex = computed(() => featureFlags.isEnabled('katex'))
 
 const emit = defineEmits<{ close: []; 'upload-image': [files: File[]] }>()
 
@@ -162,8 +167,8 @@ defineExpose({ openAt })
         <TableGridPicker @select="onTableSelect" />
       </ContextMenuSubmenu>
       <ContextMenuItem @click="run(() => insertCodeBlock(vditor!))">代码块</ContextMenuItem>
-      <ContextMenuItem @click="run(() => insertMermaid(vditor!))">Mermaid 图</ContextMenuItem>
-      <ContextMenuSubmenu label="公式">
+      <ContextMenuItem v-if="showMermaid" @click="run(() => insertMermaid(vditor!))">Mermaid 图</ContextMenuItem>
+      <ContextMenuSubmenu v-if="showKatex" label="公式">
         <ContextMenuItem @click="run(() => insertMathBlock(vditor!))">块级公式</ContextMenuItem>
         <ContextMenuItem @click="run(() => insertInlineMath(vditor!))">行内公式</ContextMenuItem>
       </ContextMenuSubmenu>

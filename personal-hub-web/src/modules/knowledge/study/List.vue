@@ -10,6 +10,7 @@ import StudyDialog from './StudyDialog.vue'
 import { useDeepLinkDialog } from '@/composables/useDeepLinkDialog'
 import { useMainContentFill } from '@/composables/useMainContentFill'
 import { useFillPageSize } from '@/composables/useFillPageSize'
+import { formatDuration } from '@/utils/formatTime'
 
 const list = ref<StudyRecordVO[]>([])
 const total = ref(0)
@@ -71,13 +72,6 @@ async function handleDelete(id: number) {
   fetchList()
 }
 
-function formatHours(min: number) {
-  if (min < 60) return `${min} 分钟`
-  const h = Math.floor(min / 60)
-  const m = min % 60
-  return m > 0 ? `${h} 小时 ${m} 分钟` : `${h} 小时`
-}
-
 function groupByDate(items: StudyRecordVO[]) {
   const groups: Record<string, StudyRecordVO[]> = {}
   items.forEach(item => {
@@ -127,7 +121,7 @@ watch(list, (val) => { groupedList.value = groupByDate(val) }, { immediate: true
               <div class="tl-item-content">
                 <div class="tl-item-header">
                   <span class="tl-item-subject">{{ r.subject }}</span>
-                  <span class="tl-item-duration">{{ formatHours(r.duration) }}</span>
+                  <span class="tl-item-duration">{{ formatDuration(r.duration) }}</span>
                 </div>
                 <p v-if="r.content" class="tl-item-desc">{{ r.content.slice(0, 100) }}</p>
                 <p v-if="r.reflection" class="tl-item-reflection">💡 {{ r.reflection.slice(0, 80) }}</p>

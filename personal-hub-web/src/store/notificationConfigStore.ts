@@ -2,26 +2,24 @@ import { defineStore } from 'pinia'
 import { getLayoutAll, saveLayout, resetLayout } from '@/api/layoutApi'
 import { useStorageSync } from '@/composables/useStorageSync'
 import type { NotificationConfig } from '@/types/layout'
+import {
+  NOTIFICATION_TYPE_OPTIONS,
+  NOTIFICATION_TYPE_VALUES,
+  normalizeEnabledTypes,
+} from '@/utils/notificationFilter'
 
 const STORAGE_KEY = 'notification-config'
 const LAYOUT_TYPE = 'notification'
 
 const DEFAULTS: NotificationConfig = {
   desktopEnabled: false,
-  enabledTypes: ['note_reminder', 'todo_due', 'study_progress', 'system'],
+  enabledTypes: [...NOTIFICATION_TYPE_VALUES],
   soundEnabled: true,
   soundName: 'default',
   doNotDisturb: false,
   dndStart: '22:00',
   dndEnd: '08:00',
 }
-
-const NOTIFICATION_TYPES = [
-  { value: 'note_reminder', label: '新笔记提醒' },
-  { value: 'todo_due', label: '待办到期提醒' },
-  { value: 'study_progress', label: '学习计划进度' },
-  { value: 'system', label: '系统更新通知' },
-]
 
 const SOUND_OPTIONS = [
   { value: 'default', label: '默认' },
@@ -30,21 +28,43 @@ const SOUND_OPTIONS = [
   { value: 'pop', label: '轻点' },
 ]
 
+function sanitizeConfig(raw: NotificationConfig | null): NotificationConfig | null {
+  if (!raw) return null
+  return {
+    ...DEFAULTS,
+    ...raw,
+    enabledTypes: normalizeEnabledTypes(raw.enabledTypes),
+  }
+}
+
 export const useNotificationConfigStore = defineStore('notificationConfig', () => {
   const sync = useStorageSync<NotificationConfig>({
     storageKey: STORAGE_KEY,
     defaults: DEFAULTS,
+    afterLoad: (data) => {
+      if (data.enabledTypes) {
+        data.enabledTypes = normalizeEnabledTypes(data.enabledTypes)
+      }
+    },
     fetchApi: async () => {
       const res = await getLayoutAll()
-      const notifLayout = (res.data.data as any[]).find(
-        (l: any) => l.layoutType === LAYOUT_TYPE,
+      const notifLayout = (res.data.data as { layoutType: string; layoutJson?: string }[]).find(
+        (l) => l.layoutType === LAYOUT_TYPE,
       )
-      return notifLayout?.layoutJson ? JSON.parse(notifLayout.layoutJson) : null
+      if (!notifLayout?.layoutJson) return null
+      try {
+        return sanitizeConfig(JSON.parse(notifLayout.layoutJson) as NotificationConfig)
+      } catch {
+        return null
+      }
     },
     saveApi: async (data) => {
       await saveLayout({
         layoutType: LAYOUT_TYPE,
-        layoutJson: JSON.stringify(data),
+        layoutJson: JSON.stringify({
+          ...data,
+          enabledTypes: normalizeEnabledTypes(data.enabledTypes),
+        }),
       })
     },
     resetApi: async () => resetLayout(LAYOUT_TYPE),
@@ -52,10 +72,14 @@ export const useNotificationConfigStore = defineStore('notificationConfig', () =
   })
 
   const config = sync.data
-  const { fetchFromBackend } = sync
+  // 启动时迁移本地旧类型
+  config.enabledTypes = normalizeEnabledTypes(config.enabledTypes)
 
   function updateConfig(partial: Partial<NotificationConfig>) {
     Object.assign(config, partial)
+    if (partial.enabledTypes) {
+      config.enabledTypes = normalizeEnabledTypes(partial.enabledTypes)
+    }
     sync.saveToLocal(config)
     sync.saveToBackend(config)
   }
@@ -67,12 +91,14 @@ export const useNotificationConfigStore = defineStore('notificationConfig', () =
     } else {
       config.enabledTypes.push(type)
     }
+    config.enabledTypes = normalizeEnabledTypes(config.enabledTypes)
     sync.saveToLocal(config)
     sync.saveToBackend(config)
   }
 
   async function resetConfig() {
     await sync.resetConfig()
+    config.enabledTypes = normalizeEnabledTypes(config.enabledTypes)
   }
 
   /** 请求桌面通知权限，并同步 desktopEnabled */
@@ -92,17 +118,15 @@ export const useNotificationConfigStore = defineStore('notificationConfig', () =
     return granted
   }
 
-  // 初始化加载
   sync.fetchFromBackend()
 
   return {
     config,
-    NOTIFICATION_TYPES,
+    NOTIFICATION_TYPES: NOTIFICATION_TYPE_OPTIONS,
     SOUND_OPTIONS,
     updateConfig,
     toggleNotificationType,
     resetConfig,
     requestDesktopPermission,
-    fetchFromBackend,
   }
 })

@@ -11,6 +11,7 @@ import ListPagination from '@/components/ListPagination.vue'
 import NoteCardContextMenu, { type CardMenuEntry } from './NoteCardContextMenu.vue'
 import { useMainContentFill } from '@/composables/useMainContentFill'
 import { useFillPageSize } from '@/composables/useFillPageSize'
+import { formatUpdated } from '@/utils/formatTime'
 
 const loading = ref(false)
 const total = ref(0)
@@ -32,11 +33,6 @@ const cardMenuEntries: CardMenuEntry[] = [
   { type: 'separator' },
   { type: 'item', id: 'delete', label: '永久删除', danger: true },
 ]
-
-function formatTime(dateStr?: string): string {
-  if (!dateStr) return '-'
-  return dateStr.slice(0, 16).replace('T', ' ')
-}
 
 async function fetchList(size = pageSize.value) {
   loading.value = true
@@ -165,11 +161,11 @@ async function onCardMenuAction(actionId: string) {
               </span>
             </div>
             <div class="recycle-card__times">
-              <span class="time-item">创建 {{ formatTime(note.createdAt) }}</span>
+              <span class="time-item">创建 {{ formatUpdated(note.createdAt, '-') }}</span>
               <span class="time-divider">|</span>
-              <span class="time-item">更新 {{ formatTime(note.updatedAt) }}</span>
+              <span class="time-item">更新 {{ formatUpdated(note.updatedAt, '-') }}</span>
               <span class="time-divider">|</span>
-              <span class="time-item time-item--danger">删除 {{ formatTime(note.deletedAt) }}</span>
+              <span class="time-item time-item--danger">删除 {{ formatUpdated(note.deletedAt, '-') }}</span>
             </div>
           </div>
           <div class="recycle-card__actions">

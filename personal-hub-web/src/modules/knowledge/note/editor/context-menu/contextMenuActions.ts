@@ -70,16 +70,6 @@ export function wrapSelection(vditor: Vditor, before: string, after: string) {
   focusVditor(vditor)
 }
 
-export function replaceSelection(vditor: Vditor, insert: string) {
-  const text = vditor.getSelection()
-  if (text) {
-    vditor.updateValue(insert.replace('$selection', text))
-  } else {
-    vditor.insertMD(insert)
-  }
-  focusVditor(vditor)
-}
-
 export function insertHeading(vditor: Vditor, level: HeadingLevel) {
   insertAtCursor(vditor, `\n${headingPrefix(level)}标题\n`)
 }
@@ -162,10 +152,6 @@ export function insertTable(vditor: Vditor, rows: number, cols: number) {
 
 export function insertCodeBlock(vditor: Vditor, lang = '') {
   insertAtCursor(vditor, `\n\`\`\`${lang}\n\n\`\`\`\n`)
-}
-
-export function wrapCodeBlock(vditor: Vditor) {
-  wrapSelection(vditor, '\n```\n', '\n```\n')
 }
 
 export function insertMermaid(vditor: Vditor) {

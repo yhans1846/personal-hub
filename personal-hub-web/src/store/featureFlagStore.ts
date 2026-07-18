@@ -4,18 +4,27 @@ import type { FeatureFlags } from '@/types/layout'
 
 const STORAGE_KEY = 'feature-flags'
 
+/** mermaid/katex 默认开启，与当前编辑器能力一致；未实现功能保持关闭 */
 const DEFAULTS: FeatureFlags = {
-  mermaid: false,
-  katex: false,
+  mermaid: true,
+  katex: true,
   aiAssistant: false,
   backlink: false,
 }
 
-const FLAG_META: { key: keyof FeatureFlags; label: string; description: string }[] = [
-  { key: 'mermaid', label: 'Mermaid 图表渲染', description: '在编辑器和预览中支持 Mermaid 流程图、时序图等' },
-  { key: 'katex', label: '数学公式 (KaTeX)', description: '支持行内/块级数学公式渲染' },
-  { key: 'aiAssistant', label: 'AI 笔记助手', description: '选中文本后触发 AI 总结/润色/翻译' },
-  { key: 'backlink', label: '双向链接 (Backlink)', description: '笔记间 [[引用]] 关系图谱和反向链接面板' },
+export type FlagMeta = {
+  key: keyof FeatureFlags
+  label: string
+  description: string
+  /** false = 尚未接入运行时，设置页禁用开关 */
+  available: boolean
+}
+
+const FLAG_META: FlagMeta[] = [
+  { key: 'mermaid', label: 'Mermaid 图表渲染', description: '右键菜单可插入 Mermaid 流程图等', available: true },
+  { key: 'katex', label: '数学公式 (KaTeX)', description: '右键菜单可插入行内/块级公式', available: true },
+  { key: 'aiAssistant', label: 'AI 笔记助手', description: '选中文本后触发 AI 总结/润色/翻译（即将推出）', available: false },
+  { key: 'backlink', label: '双向链接 (Backlink)', description: '笔记间 [[引用]] 关系图谱（即将推出）', available: false },
 ]
 
 function loadFlags(): FeatureFlags {
@@ -34,10 +43,12 @@ export const useFeatureFlagStore = defineStore('featureFlags', () => {
   const flags = reactive<FeatureFlags>(loadFlags())
 
   function isEnabled(key: keyof FeatureFlags): boolean {
-    return flags[key]
+    return !!flags[key]
   }
 
   function toggle(key: keyof FeatureFlags) {
+    const meta = FLAG_META.find((m) => m.key === key)
+    if (meta && !meta.available) return
     flags[key] = !flags[key]
     saveFlags({ ...flags })
   }

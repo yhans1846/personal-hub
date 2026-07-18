@@ -7,6 +7,7 @@ import { Plus, FileText, Star, Trash2, Clock, Eye, Upload, LayoutList, LayoutGri
 import { EmptyState, PageHeader, ListToolbar, ListPagination } from '@/components'
 import type { NoteVO, NoteQuery } from '@/types/note'
 import { estimateReadingTime, formatRelativeTime, isRecentlyEdited } from '@/utils/readingTime'
+import { formatRelativeUpdated } from '@/utils/formatTime'
 import ImportMarkdownDialog from './ImportMarkdownDialog.vue'
 import NoteCardContextMenu, { type CardMenuEntry } from './NoteCardContextMenu.vue'
 import { useMainContentFill } from '@/composables/useMainContentFill'
@@ -71,14 +72,6 @@ function noteCardPreview(note: NoteVO): string {
     || note.content?.replace(/#{1,6}\s/g, '').replace(/[*`~>]/g, '').slice(0, 120)
     || ''
   return text || '暂无内容'
-}
-
-function formatRelativeUpdated(d?: string | null) {
-  if (!d) return '更新于 —'
-  const rel = formatRelativeTime(d)
-  if (rel === '刚刚') return '更新于 刚刚'
-  if (rel.endsWith('前')) return `更新于 ${rel}`
-  return `更新于 ${rel}`
 }
 
 function visibleTags(tags: NoteVO['tags']) {

@@ -1,21 +1,27 @@
 <script setup lang="ts">
 import { ElMessage } from 'element-plus'
 import { RotateCcw, FlaskConical, AlertTriangle } from 'lucide-vue-next'
-import { useFeatureFlagStore } from '@/store/featureFlagStore'
+import { useFeatureFlagStore, type FlagMeta } from '@/store/featureFlagStore'
 import { storeToRefs } from 'pinia'
+import type { FeatureFlags } from '@/types/layout'
 
 const store = useFeatureFlagStore()
-const { flags, FLAG_META } = storeToRefs(store)
+const { flags } = storeToRefs(store)
+const FLAG_META = store.FLAG_META
 
-function handleToggle(key: any) {
+function handleToggle(meta: FlagMeta) {
+  if (!meta.available) {
+    ElMessage.info('该功能即将推出')
+    return
+  }
+  const key = meta.key as keyof FeatureFlags
   store.toggle(key)
-  const meta = FLAG_META.value.find(m => m.key === key)
-  ElMessage.success(flags[key] ? `已开启：${meta?.label}` : `已关闭：${meta?.label}`)
+  ElMessage.success(flags.value[key] ? `已开启：${meta.label}` : `已关闭：${meta.label}`)
 }
 
 function handleReset() {
   store.resetAll()
-  ElMessage.success('已关闭所有实验功能')
+  ElMessage.success('已恢复实验功能默认开关')
 }
 </script>
 
@@ -39,6 +45,7 @@ function handleReset() {
           v-for="meta in FLAG_META"
           :key="meta.key"
           class="flag-item"
+          :class="{ 'flag-item--disabled': !meta.available }"
         >
           <div class="flag-info">
             <FlaskConical :size="16" class="flag-icon" />
@@ -48,10 +55,11 @@ function handleReset() {
             </div>
           </div>
           <button
-            :class="['toggle-btn', { active: flags[meta.key] }]"
-            @click="handleToggle(meta.key)"
+            :class="['toggle-btn', { active: flags[meta.key], disabled: !meta.available }]"
+            :disabled="!meta.available"
+            @click="handleToggle(meta)"
           >
-            {{ flags[meta.key] ? '已开启' : '已关闭' }}
+            {{ !meta.available ? '即将推出' : (flags[meta.key] ? '已开启' : '已关闭') }}
           </button>
         </div>
       </div>
@@ -131,6 +139,7 @@ function handleReset() {
   transition: background var(--transition-duration) ease;
 }
 .flag-item:hover { background: var(--bg-hover); }
+.flag-item--disabled { opacity: 0.72; }
 .flag-info { display: flex; align-items: center; gap: 10px; flex: 1; }
 .flag-icon { flex-shrink: 0; color: var(--text-tertiary); }
 .flag-text { display: flex; flex-direction: column; gap: 1px; }
@@ -150,11 +159,16 @@ function handleReset() {
   white-space: nowrap;
   flex-shrink: 0;
 }
-.toggle-btn:hover { border-color: var(--accent); color: var(--accent); }
+.toggle-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
 .toggle-btn.active {
   border-color: var(--accent);
   color: var(--accent);
   background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+.toggle-btn:disabled,
+.toggle-btn.disabled {
+  cursor: not-allowed;
+  opacity: 0.85;
 }
 
 /* 反馈 */

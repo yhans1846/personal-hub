@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import {
-  getUnreadCount,
   getNotificationList,
   markAsRead as apiMarkAsRead,
   markAllAsRead as apiMarkAllAsRead,
@@ -9,24 +8,35 @@ import {
 } from '@/api/notificationApi'
 import type { NotificationVO } from '@/types/notification'
 import { getNotificationRelatedPath } from '@/utils/deepLink'
+import {
+  countUnreadByTypes,
+  filterNotificationsByTypes,
+} from '@/utils/notificationFilter'
+import { useNotificationConfigStore } from '@/store/notificationConfigStore'
 
 export const useNotificationStore = defineStore('notification', () => {
   const unreadCount = ref(0)
   const notifications = ref<NotificationVO[]>([])
   const loading = ref(false)
 
+  function enabledTypes(): string[] {
+    return useNotificationConfigStore().config.enabledTypes
+  }
+
   async function fetchUnreadCount() {
     try {
-      const res = await getUnreadCount()
-      unreadCount.value = res.data.data
+      // 拉取近期列表后按启用类型计数，与设置页过滤一致
+      const res = await getNotificationList({ page: 1, size: 50 })
+      unreadCount.value = countUnreadByTypes(res.data.data.records, enabledTypes())
     } catch { /* ignore */ }
   }
 
   async function fetchRecent() {
     loading.value = true
     try {
-      const res = await getNotificationList({ page: 1, size: 10 })
-      notifications.value = res.data.data.records
+      const res = await getNotificationList({ page: 1, size: 20 })
+      notifications.value = filterNotificationsByTypes(res.data.data.records, enabledTypes())
+      unreadCount.value = countUnreadByTypes(res.data.data.records, enabledTypes())
     } catch { /* ignore */ }
     finally { loading.value = false }
   }

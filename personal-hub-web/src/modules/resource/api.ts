@@ -33,9 +33,6 @@ export function uploadFile(file: File, categoryId?: number | null) {
   if (categoryId != null) form.append('categoryId', String(categoryId))
   return request.post<Result<FileVO>>('/files/upload', form)
 }
-export function getFileDownloadUrl(id: number) {
-  return `/api/files/${id}/download`
-}
 export function updateFileCategory(id: number, categoryId: number | null) {
   return request.patch<Result<FileVO>>(`/files/${id}/category`, { categoryId })
 }

@@ -1,6 +1,6 @@
 import request from '@/api/request'
 import type { Result } from '@/types/common'
-import type { ProfileVO, ProfileUpdateDTO } from '@/types/user'
+import type { ProfileVO, ProfileUpdateDTO, AuthUser } from '@/types/user'
 
 /** 登录 */
 export function loginApi(
@@ -9,7 +9,7 @@ export function loginApi(
   captchaId: string,
   sliderX: number,
 ) {
-  return request.post<Result<{ token: string; user: any }>>('/auth/login', {
+  return request.post<Result<{ token: string; user: AuthUser }>>('/auth/login', {
     username,
     password,
     captchaId,

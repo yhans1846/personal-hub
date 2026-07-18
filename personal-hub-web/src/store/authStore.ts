@@ -3,22 +3,27 @@ import { ref } from 'vue'
 import { loginApi } from '@/modules/system/api'
 import { useLayoutStore } from '@/store/layoutStore'
 import router from '@/router'
+import type { AuthUser } from '@/types/user'
 
 /**
  * 用户认证状态管理
  */
 export const useAuthStore = defineStore('auth', () => {
   const token = ref<string>(localStorage.getItem('token') || '')
-  const user = ref<any>(JSON.parse(localStorage.getItem('user') || 'null'))
+  const user = ref<AuthUser | null>(JSON.parse(localStorage.getItem('user') || 'null'))
 
   function setToken(newToken: string) {
     token.value = newToken
     localStorage.setItem('token', newToken)
   }
 
-  function setUser(newUser: any) {
+  function setUser(newUser: AuthUser | null) {
     user.value = newUser
-    localStorage.setItem('user', JSON.stringify(newUser))
+    if (newUser) {
+      localStorage.setItem('user', JSON.stringify(newUser))
+    } else {
+      localStorage.removeItem('user')
+    }
   }
 
   /** 登录；redirect=false 时由调用方自行跳转（用于成功动画） */

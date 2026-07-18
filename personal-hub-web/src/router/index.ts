@@ -48,16 +48,16 @@ const router = createRouter({
   ]
 })
 
-/** 路由守卫：未登录跳转登录页 + 动态标题 */
+/** 路由守卫：未登录跳转登录页 + 动态标题
+ *  鉴权读 localStorage token（与 authStore 同源），避免 router ↔ authStore 循环依赖 */
 router.beforeEach((to, _from, next) => {
-  // 设置页面标题
   const pageTitle = (to.meta?.title as string) || ''
   document.title = pageTitle ? `${pageTitle} | Personal Hub` : 'Personal Hub'
 
-  const token = localStorage.getItem('token')
-  if (to.path !== '/login' && !token) {
+  const loggedIn = !!localStorage.getItem('token')
+  if (to.path !== '/login' && !loggedIn) {
     next('/login')
-  } else if (to.path === '/login' && token) {
+  } else if (to.path === '/login' && loggedIn) {
     next('/')
   } else {
     next()

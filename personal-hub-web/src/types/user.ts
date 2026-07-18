@@ -1,6 +1,14 @@
 /** 性别 */
 export type Gender = 0 | 1 | 2
 
+/** 登录后简要用户信息（对齐后端 LoginVO.UserInfo） */
+export interface AuthUser {
+  id: number
+  username: string
+  nickname: string
+  avatar: string | null
+}
+
 /** 个人资料 */
 export interface ProfileVO {
   id: number
