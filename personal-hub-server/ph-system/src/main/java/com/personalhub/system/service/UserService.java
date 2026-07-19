@@ -30,6 +30,15 @@ public interface UserService {
     void updateAvatar(Long userId, String avatarUrl);
 
     /**
+     * 上传头像文件并更新资料
+     *
+     * @param userId 用户 ID
+     * @param file   图片文件
+     * @return 可访问的头像 URL
+     */
+    String uploadAvatar(Long userId, org.springframework.web.multipart.MultipartFile file);
+
+    /**
      * 修改密码
      */
     void updatePassword(Long userId, String oldPassword, String newPassword);

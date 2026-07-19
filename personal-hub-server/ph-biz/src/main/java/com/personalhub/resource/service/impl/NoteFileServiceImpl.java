@@ -6,15 +6,17 @@ import com.personalhub.common.util.FilenameGuard;
 import com.personalhub.knowledge.entity.Note;
 import com.personalhub.knowledge.mapper.NoteMapper;
 import com.personalhub.resource.service.NoteFileService;
+import com.personalhub.storage.FileAssetService;
+import com.personalhub.storage.FileUploadValidator;
+import com.personalhub.storage.MultipartPayloads;
+import com.personalhub.storage.StoragePaths;
 import com.personalhub.storage.StorageProperties;
-import com.personalhub.storage.StorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.util.Map;
 import java.util.UUID;
 
@@ -26,13 +28,9 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class NoteFileServiceImpl implements NoteFileService {
 
-    private final StorageService storageService;
+    private final FileAssetService fileAssetService;
     private final NoteMapper noteMapper;
     private final StorageProperties storageProperties;
-
-    private String getNoteDir(Long noteId) {
-        return "notes/" + noteId;
-    }
 
     private void validateNote(Long noteId, Long userId) {
         EntityGuard.requireOwned(
@@ -40,12 +38,8 @@ public class NoteFileServiceImpl implements NoteFileService {
     }
 
     private void validateFile(MultipartFile file) {
-        if (file.isEmpty()) {
-            throw new BusinessException("上传文件不能为空");
-        }
-        if (file.getSize() > storageProperties.getMaxSize()) {
-            throw new BusinessException("文件大小超过限制（最大 50MB）");
-        }
+        FileUploadValidator.requireNonEmpty(file.getSize());
+        FileUploadValidator.requireWithinMax(file.getSize(), storageProperties.getMaxSize());
     }
 
     @Override
@@ -54,7 +48,7 @@ public class NoteFileServiceImpl implements NoteFileService {
         validateFile(file);
         String ext = getExtension(file.getOriginalFilename());
         String filename = UUID.randomUUID().toString().replace("-", "") + "." + ext;
-        storageService.store(readBytes(file), getNoteDir(noteId) + "/images/" + filename);
+        fileAssetService.storeBytes(MultipartPayloads.readBytes(file), StoragePaths.noteImage(noteId, filename));
         log.info("笔记配图上传成功: noteId={}, filename={}", noteId, filename);
         return Map.of("url", "images/" + filename, "name", filename);
     }
@@ -64,7 +58,8 @@ public class NoteFileServiceImpl implements NoteFileService {
         validateNote(noteId, userId);
         validateFile(file);
         String originalName = sanitizeOriginalFilename(file.getOriginalFilename());
-        storageService.store(readBytes(file), getNoteDir(noteId) + "/attachments/" + originalName);
+        fileAssetService.storeBytes(
+                MultipartPayloads.readBytes(file), StoragePaths.noteAttachment(noteId, originalName));
         log.info("笔记附件上传成功: noteId={}, filename={}", noteId, originalName);
         return Map.of("url", "attachments/" + originalName, "name", originalName);
     }
@@ -76,7 +71,10 @@ public class NoteFileServiceImpl implements NoteFileService {
             throw new BusinessException("非法资源类型");
         }
         FilenameGuard.requireSafe(filename);
-        return storageService.load(getNoteDir(noteId) + "/" + resourceType + "/" + filename);
+        String path = "images".equals(resourceType)
+                ? StoragePaths.noteImage(noteId, filename)
+                : StoragePaths.noteAttachment(noteId, filename);
+        return fileAssetService.load(path);
     }
 
     private String sanitizeOriginalFilename(String originalName) {
@@ -91,16 +89,10 @@ public class NoteFileServiceImpl implements NoteFileService {
     }
 
     private String getExtension(String filename) {
-        if (filename == null) return "png";
+        if (filename == null) {
+            return "png";
+        }
         int dot = filename.lastIndexOf('.');
         return (dot > 0) ? filename.substring(dot + 1).toLowerCase() : "png";
-    }
-
-    private byte[] readBytes(MultipartFile file) {
-        try {
-            return file.getBytes();
-        } catch (IOException e) {
-            throw new BusinessException("读取上传文件失败", e);
-        }
     }
 }

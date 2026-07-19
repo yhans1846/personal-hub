@@ -9,7 +9,8 @@ import com.personalhub.resource.dto.FileQueryDTO;
 import com.personalhub.resource.dto.FileCategoryUpdateDTO;
 import com.personalhub.resource.service.FileResourceService;
 import com.personalhub.resource.vo.FileVO;
-import com.personalhub.storage.StorageService;
+import com.personalhub.storage.FileAssetService;
+import com.personalhub.storage.StoragePaths;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -44,7 +45,7 @@ import java.util.concurrent.TimeUnit;
 public class FileController {
 
     private final FileResourceService fileResourceService;
-    private final StorageService storageService;
+    private final FileAssetService fileAssetService;
 
     @Operation(summary = "文件列表", description = "分页查询文件，支持关键词搜索、类型筛选、分类筛选")
     @GetMapping
@@ -82,7 +83,7 @@ public class FileController {
             @PathVariable Long id) {
         Long userId = CurrentUser.id(authentication);
         var fileEntity = fileResourceService.getFileResource(id, userId);
-        Resource resource = storageService.load(fileEntity.getPath());
+        Resource resource = fileAssetService.load(fileEntity.getPath());
 
         String encodedName = URLEncoder.encode(fileEntity.getName(), StandardCharsets.UTF_8)
                 .replace("+", "%20");
@@ -101,7 +102,7 @@ public class FileController {
             @PathVariable Long id) {
         Long userId = CurrentUser.id(authentication);
         var fileEntity = fileResourceService.getFileResource(id, userId);
-        Resource resource = storageService.load(fileEntity.getPath());
+        Resource resource = fileAssetService.load(fileEntity.getPath());
 
         MediaType mediaType = MediaType.APPLICATION_OCTET_STREAM;
         if (fileEntity.getMimeType() != null) {
@@ -127,8 +128,7 @@ public class FileController {
     public ResponseEntity<Resource> getAvatar(@PathVariable String filename) {
         try {
             FilenameGuard.requireSafe(filename);
-            String path = "avatars/" + filename;
-            Resource resource = storageService.load(path);
+            Resource resource = fileAssetService.load(StoragePaths.avatar(filename));
             if (!resource.exists()) {
                 return ResponseEntity.notFound().build();
             }

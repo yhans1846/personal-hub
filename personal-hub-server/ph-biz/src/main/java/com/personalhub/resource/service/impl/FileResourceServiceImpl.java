@@ -13,7 +13,10 @@ import com.personalhub.resource.entity.FileResource;
 import com.personalhub.resource.mapper.FileResourceMapper;
 import com.personalhub.resource.service.FileResourceService;
 import com.personalhub.resource.vo.FileVO;
-import com.personalhub.storage.StorageService;
+import com.personalhub.storage.FileAssetService;
+import com.personalhub.storage.FileUploadValidator;
+import com.personalhub.storage.MultipartPayloads;
+import com.personalhub.storage.StoragePaths;
 import com.personalhub.storage.StorageProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +25,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
@@ -39,7 +41,7 @@ public class FileResourceServiceImpl implements FileResourceService {
 
     private final FileResourceMapper fileResourceMapper;
     private final CategoryService categoryService;
-    private final StorageService storageService;
+    private final FileAssetService fileAssetService;
     private final StorageProperties storageProperties;
 
     @Override
@@ -105,12 +107,8 @@ public class FileResourceServiceImpl implements FileResourceService {
     @Override
     @Transactional
     public FileVO upload(Long userId, MultipartFile multipartFile, Long categoryId) {
-        if (multipartFile.isEmpty()) {
-            throw new BusinessException("上传文件不能为空");
-        }
-        if (multipartFile.getSize() > storageProperties.getMaxSize()) {
-            throw new BusinessException("文件大小超过限制（最大 50MB）");
-        }
+        FileUploadValidator.requireNonEmpty(multipartFile.getSize());
+        FileUploadValidator.requireWithinMax(multipartFile.getSize(), storageProperties.getMaxSize());
 
         String originalName = multipartFile.getOriginalFilename();
         if (originalName == null || originalName.isBlank()) {
@@ -123,23 +121,14 @@ public class FileResourceServiceImpl implements FileResourceService {
             ext = originalName.substring(dot + 1).toLowerCase();
         }
 
-        // 确定目录前缀（按扩展名自动归类）
         String dirPrefix = getDirectoryPrefix(ext);
-
-        // 按年月分目录
         LocalDate now = LocalDate.now();
         String yearMonth = now.format(DateTimeFormatter.ofPattern("yyyy/MM"));
-
         String storedName = UUID.randomUUID().toString().replace("-", "")
                 + (ext.isEmpty() ? "" : "." + ext);
-        String relativePath = "uploads/" + dirPrefix + "/" + yearMonth + "/" + storedName;
+        String relativePath = StoragePaths.upload(dirPrefix, yearMonth, storedName);
 
-        // 存储文件
-        try {
-            storageService.store(multipartFile.getBytes(), relativePath);
-        } catch (IOException e) {
-            throw new BusinessException("读取上传文件失败", e);
-        }
+        fileAssetService.storeBytes(MultipartPayloads.readBytes(multipartFile), relativePath);
 
         // 保存DB记录
         var file = FileResource.builder()
@@ -191,7 +180,7 @@ public class FileResourceServiceImpl implements FileResourceService {
                 fileResourceMapper.selectById(id), userId, FileResource::getUserId, "文件不存在");
         // 删除物理文件
         if (file.getPath() != null) {
-            storageService.delete(file.getPath());
+            fileAssetService.delete(file.getPath());
         }
         // 逻辑删除DB记录
         fileResourceMapper.deleteById(id);

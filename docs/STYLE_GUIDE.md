@@ -24,6 +24,7 @@
 | 状态文案 | 模块 `enums` + `labelOf`，禁 VO/Service 内嵌业务 switch |
 | 归属 | `EntityGuard.requireOwned(...)` |
 | 文件名 | `FilenameGuard.requireSafe(...)`，禁 `..` `/` `\` |
+| 存储路径 | `StoragePaths`；上传校验 `FileUploadValidator`；门面 `FileAssetService` |
 | Entity | `@Data`+`@Builder`+无参/全参；初值 `@Builder.Default`；create 用 builder，update 用 setter |
 | 分层 | Controller 校验返回 · Service 业务 · Mapper · DTO/VO/Entity 不外露 |
 | SQL | 简单 MP；联表/聚合进 `mapper.xml`，禁 Service 拼 SQL / `JdbcTemplate` 硬编码 |

@@ -2,6 +2,10 @@ package com.personalhub.system.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.personalhub.common.exception.BusinessException;
+import com.personalhub.storage.FileAssetService;
+import com.personalhub.storage.FileUploadValidator;
+import com.personalhub.storage.MultipartPayloads;
+import com.personalhub.storage.StoragePaths;
 import com.personalhub.system.dto.UserProfileUpdateDTO;
 import com.personalhub.system.entity.User;
 import com.personalhub.system.mapper.UserMapper;
@@ -11,6 +15,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.Set;
+import java.util.UUID;
 
 /**
  * 用户服务实现
@@ -20,8 +28,12 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
+    private static final Set<String> ALLOWED_EXT = Set.of("jpg", "jpeg", "png", "gif", "webp");
+    private static final long MAX_AVATAR_SIZE = 5 * 1024 * 1024;
+
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final FileAssetService fileAssetService;
 
     @Override
     public User getByUsername(String username) {
@@ -72,6 +84,31 @@ public class UserServiceImpl implements UserService {
         user.setAvatar(avatarUrl);
         userMapper.updateById(user);
         log.info("用户更新头像: userId={}", userId);
+    }
+
+    @Override
+    public String uploadAvatar(Long userId, MultipartFile file) {
+        FileUploadValidator.requireNonEmpty(file.getSize());
+        if (file.getSize() > MAX_AVATAR_SIZE) {
+            throw new BusinessException("头像文件不能超过 5MB");
+        }
+        String originalName = file.getOriginalFilename();
+        String ext = "";
+        if (originalName != null) {
+            int dot = originalName.lastIndexOf('.');
+            if (dot > 0) {
+                ext = originalName.substring(dot + 1).toLowerCase();
+            }
+        }
+        if (!ALLOWED_EXT.contains(ext)) {
+            throw new BusinessException("仅支持 JPG/PNG/GIF/WebP 格式");
+        }
+        String storedName = UUID.randomUUID().toString().replace("-", "") + "." + ext;
+        String relativePath = StoragePaths.avatar(storedName);
+        fileAssetService.storeBytes(MultipartPayloads.readBytes(file), relativePath);
+        String avatarUrl = "/api/files/avatar/" + storedName;
+        updateAvatar(userId, avatarUrl);
+        return avatarUrl;
     }
 
     @Override

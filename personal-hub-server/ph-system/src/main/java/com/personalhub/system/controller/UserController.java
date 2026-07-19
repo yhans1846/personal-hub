@@ -1,9 +1,7 @@
 package com.personalhub.system.controller;
 
-import com.personalhub.common.exception.BusinessException;
 import com.personalhub.common.result.Result;
 import com.personalhub.common.util.CurrentUser;
-import com.personalhub.storage.StorageService;
 import com.personalhub.system.dto.PasswordUpdateDTO;
 import com.personalhub.system.dto.UserProfileUpdateDTO;
 import com.personalhub.system.service.UserService;
@@ -19,10 +17,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
 
 /**
  * 用户资料管理
@@ -35,10 +30,6 @@ import java.util.UUID;
 public class UserController {
 
     private final UserService userService;
-    private final StorageService storageService;
-
-    private static final Set<String> ALLOWED_EXT = Set.of("jpg", "jpeg", "png", "gif", "webp");
-    private static final long MAX_AVATAR_SIZE = 5 * 1024 * 1024;
 
     @GetMapping("/profile")
     @Operation(summary = "获取当前用户资料")
@@ -71,38 +62,8 @@ public class UserController {
     @Operation(summary = "上传头像")
     public Result<Map<String, String>> uploadAvatar(Authentication auth, @RequestParam("file") MultipartFile file) {
         Long userId = CurrentUser.id(auth);
-
-        if (file.isEmpty()) {
-            throw new BusinessException("上传文件不能为空");
-        }
-
-        String originalName = file.getOriginalFilename();
-        String ext = "";
-        if (originalName != null) {
-            int dot = originalName.lastIndexOf('.');
-            if (dot > 0) ext = originalName.substring(dot + 1).toLowerCase();
-        }
-        if (!ALLOWED_EXT.contains(ext)) {
-            throw new BusinessException("仅支持 JPG/PNG/GIF/WebP 格式");
-        }
-        if (file.getSize() > MAX_AVATAR_SIZE) {
-            throw new BusinessException("头像文件不能超过 5MB");
-        }
-
-        String storedName = UUID.randomUUID().toString().replace("-", "") + "." + ext;
-        String relativePath = "avatars/" + storedName;
-
-        try {
-            storageService.store(file.getBytes(), relativePath);
-        } catch (IOException e) {
-            throw new BusinessException("读取上传文件失败", e);
-        }
-
-        String avatarUrl = "/api/files/avatar/" + storedName;
-
-        userService.updateAvatar(userId, avatarUrl);
-        log.info("用户上传头像: userId={}, path={}", userId, relativePath);
-
+        String avatarUrl = userService.uploadAvatar(userId, file);
+        log.info("用户上传头像: userId={}", userId);
         return Result.success(Map.of("url", avatarUrl));
     }
 }
