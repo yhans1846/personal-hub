@@ -9,6 +9,7 @@
 - **安全（后端）**：抽取 `FilenameGuard`；头像/笔记附件/日记配图统一消毒文件名
 - **安全（后端）**：标签 bind/unbind/批量设置校验标签与实体归属（防 IDOR）
 - **安全（后端）**：分类批量排序校验 userId 归属
+- **安全（后端）**：Markdown 导入禁 file://与绝对路径、HTTP 禁内网/本机/重定向、相对路径须落在 baseDir 内
 - **修复（前端）**：回收站卡片行高被 `minmax(0,1fr)` 压扁导致时间戳错乱；保证最小行高、时间行 nowrap；展示时去掉冗余 `[已删]` 前缀
 - **代码质量（前端）**：StatsView 拆 KPI/图表/活动子组件；DiaryDialog 迁 `useEntityFormSave`（创建不关窗）并抽 `DiaryImagePanel`；学习计划表 / 日记月历拆分子组件；搜索分组超量结果与通知列表走 `VirtualList`
 - **代码质量（前端）**：接入 knip（`pnpm knip`）；收紧未对外使用的 export；katex/mermaid 按 vditor CDN 忽略

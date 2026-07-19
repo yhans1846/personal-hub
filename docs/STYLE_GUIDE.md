@@ -38,6 +38,7 @@
 | `entity.getUserId().equals(userId)` | 用 `EntityGuard.requireOwned` / `Objects.equals` |
 | `getInputStream().readAllBytes()` 不关流 | `try (InputStream in = …)`；远端下载加体积上限 |
 | 存储路径仅 `normalize()` | `LocalStorageServiceImpl.resolve` 须 `target.startsWith(root)`；文件名禁 `..` `/` `\` |
+| 导入任意 URL / `file://` | `ResourceResolver` 禁 LFI；HTTP 禁内网地址且不跟随重定向 |
 | `catch (Exception ignored) {}` | 收窄类型并打日志；禁止空 catch |
 | `@Transactional` 内 broad catch | 失败应回滚或按用户隔离；勿吞掉后部分提交 |
 | 分页只有 `@Min` | `PageParam` 必须 `@Max(100)`（`MAX_PAGE_SIZE`） |

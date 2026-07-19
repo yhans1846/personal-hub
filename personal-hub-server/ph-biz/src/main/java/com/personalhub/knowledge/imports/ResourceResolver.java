@@ -8,9 +8,11 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URLConnection;
+import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -19,11 +21,14 @@ import java.util.Base64;
 /**
  * Markdown 资源解析器 — 将 Markdown 中各种格式的资源引用解析为真实数据
  * <p>
- * 支持：HTTP(S)、Base64、file://、本地绝对路径、相对路径（配合 baseDir）
+ * 支持：HTTP(S)（禁内网/本机）、Base64、相对路径（须落在 baseDir 内）。
+ * 不支持：file://、本地绝对路径（防 LFI）。
  */
 @Slf4j
 @Component
 public class ResourceResolver {
+
+    private static final int MAX_BYTES = 20 * 1024 * 1024;
 
     /**
      * 解析资源引用为实际可读数据
@@ -42,10 +47,10 @@ public class ResourceResolver {
             return resolveBase64(ref);
         }
         if (ref.startsWith("file://")) {
-            return resolveFileProtocol(ref);
+            return ResolveResult.fail(ref, "不支持 file:// 协议");
         }
         if (isAbsolutePath(ref)) {
-            return resolveAbsolutePath(ref);
+            return ResolveResult.fail(ref, "不支持本地绝对路径资源");
         }
         if (ref.startsWith("/")) {
             return ResolveResult.fail(ref, "站点根路径资源需要 baseUrl 支持，暂未实现");
@@ -57,36 +62,106 @@ public class ResourceResolver {
         return ResolveResult.fail(ref, "相对路径资源无法定位，请使用「从 Markdown 文件导入」并提供 baseDir");
     }
 
-    /** HTTP(S) 网络资源 */
+    /** HTTP(S) 网络资源（禁 SSRF） */
     private ResolveResult resolveHttp(String ref) {
         try {
             URI uri = new URI(ref);
-            URLConnection conn = uri.toURL().openConnection();
+            String scheme = uri.getScheme();
+            if (!"http".equalsIgnoreCase(scheme) && !"https".equalsIgnoreCase(scheme)) {
+                return ResolveResult.fail(ref, "仅支持 http/https 远程资源");
+            }
+            String host = uri.getHost();
+            if (host == null || host.isBlank() || isBlockedHostName(host)) {
+                return ResolveResult.fail(ref, "不允许访问该主机");
+            }
+            if (isBlockedHost(host)) {
+                return ResolveResult.fail(ref, "不允许访问内网或本地地址");
+            }
+
+            HttpURLConnection conn = (HttpURLConnection) uri.toURL().openConnection();
             conn.setConnectTimeout(10000);
             conn.setReadTimeout(15000);
+            conn.setInstanceFollowRedirects(false);
             conn.setRequestProperty("User-Agent", "PersonalHub/1.0");
-            String contentType;
+
+            int status = conn.getResponseCode();
+            if (status >= 300 && status < 400) {
+                return ResolveResult.fail(ref, "不支持 HTTP 重定向");
+            }
+            if (status < 200 || status >= 300) {
+                return ResolveResult.fail(ref, "远程资源不可用");
+            }
+
+            String contentType = conn.getContentType();
             byte[] data;
             try (InputStream in = conn.getInputStream()) {
                 data = in.readAllBytes();
-                contentType = conn.getContentType();
             }
-            // 限制单文件 20MB，避免 OOM
-            if (data.length > 20 * 1024 * 1024) {
+            if (data.length > MAX_BYTES) {
                 return ResolveResult.fail(ref, "远程资源过大（超过 20MB）");
             }
             String ext = detectExtension(ref, contentType);
             return ResolveResult.success(ref, data, ext);
+        } catch (UnknownHostException e) {
+            log.warn("网络资源主机无法解析: {}", ref);
+            return ResolveResult.fail(ref, "主机无法解析");
         } catch (IOException | URISyntaxException e) {
             log.warn("网络资源下载失败: {}", ref, e);
-            return ResolveResult.fail(ref, "下载失败: " + e.getMessage());
+            return ResolveResult.fail(ref, "下载失败");
         }
+    }
+
+    private boolean isBlockedHostName(String host) {
+        String h = host.toLowerCase();
+        return "localhost".equals(h)
+                || h.endsWith(".localhost")
+                || h.endsWith(".local")
+                || h.endsWith(".internal")
+                || "metadata.google.internal".equals(h);
+    }
+
+    private boolean isBlockedHost(String host) {
+        try {
+            for (InetAddress addr : InetAddress.getAllByName(host)) {
+                if (isBlockedAddress(addr)) {
+                    return true;
+                }
+            }
+            return false;
+        } catch (UnknownHostException e) {
+            return true;
+        }
+    }
+
+    private boolean isBlockedAddress(InetAddress addr) {
+        return addr.isAnyLocalAddress()
+                || addr.isLoopbackAddress()
+                || addr.isLinkLocalAddress()
+                || addr.isSiteLocalAddress()
+                || addr.isMulticastAddress()
+                || isCarrierGradeNat(addr)
+                || isUniqueLocalIpv6(addr);
+    }
+
+    /** 100.64.0.0/10 */
+    private boolean isCarrierGradeNat(InetAddress addr) {
+        byte[] b = addr.getAddress();
+        if (b.length != 4) {
+            return false;
+        }
+        int first = b[0] & 0xFF;
+        int second = b[1] & 0xFF;
+        return first == 100 && second >= 64 && second <= 127;
+    }
+
+    private boolean isUniqueLocalIpv6(InetAddress addr) {
+        byte[] b = addr.getAddress();
+        return b.length == 16 && (b[0] & 0xFE) == 0xFC;
     }
 
     /** Base64 内嵌资源 */
     private ResolveResult resolveBase64(String ref) {
         try {
-            // data:image/png;base64,iVBORw0KGgo...
             String encoded = ref.substring(ref.indexOf(',') + 1);
             byte[] data = Base64.getDecoder().decode(encoded);
             String ext = detectExtension(ref, null);
@@ -97,79 +172,58 @@ public class ResourceResolver {
         }
     }
 
-    /** file:// 协议资源 */
-    private ResolveResult resolveFileProtocol(String ref) {
-        try {
-            Path path = Paths.get(URI.create(ref));
-            if (Files.exists(path)) {
-                byte[] data = Files.readAllBytes(path);
-                String ext = detectExtension(ref, null);
-                return ResolveResult.success(ref, data, ext);
-            }
-            return ResolveResult.fail(ref, "文件不存在: " + path);
-        } catch (Exception e) {
-            log.warn("file:// 资源读取失败: {}", ref, e);
-            return ResolveResult.fail(ref, "读取失败: " + e.getMessage());
-        }
-    }
-
-    /** 本地绝对路径（Windows / Unix / macOS） */
-    private ResolveResult resolveAbsolutePath(String ref) {
-        try {
-            Path path = Paths.get(ref);
-            if (Files.exists(path)) {
-                byte[] data = Files.readAllBytes(path);
-                String ext = detectExtension(ref, null);
-                return ResolveResult.success(ref, data, ext);
-            }
-            return ResolveResult.fail(ref, "文件不存在: " + path);
-        } catch (Exception e) {
-            log.warn("本地绝对路径资源读取失败: {}", ref, e);
-            return ResolveResult.fail(ref, "读取失败: " + e.getMessage());
-        }
-    }
-
-    /** 相对路径（相对于 Markdown 所在目录） */
+    /** 相对路径（相对于 Markdown 所在目录，禁止越界） */
     private ResolveResult resolveRelativePath(String ref, String baseDir) {
         try {
-            Path base = Paths.get(baseDir).normalize();
+            Path base = Paths.get(baseDir).toAbsolutePath().normalize();
             Path resolved = base.resolve(ref).normalize();
-            if (Files.exists(resolved)) {
+            if (!resolved.startsWith(base)) {
+                return ResolveResult.fail(ref, "相对路径越界");
+            }
+            if (Files.exists(resolved) && Files.isRegularFile(resolved)) {
                 byte[] data = Files.readAllBytes(resolved);
+                if (data.length > MAX_BYTES) {
+                    return ResolveResult.fail(ref, "本地资源过大（超过 20MB）");
+                }
                 String ext = detectExtension(ref, null);
                 return ResolveResult.success(ref, data, ext);
             }
-            return ResolveResult.fail(ref, "相对路径文件不存在: " + resolved);
+            return ResolveResult.fail(ref, "相对路径文件不存在");
         } catch (Exception e) {
-            log.warn("相对路径资源读取失败: ref={}, baseDir={}", ref, baseDir, e);
-            return ResolveResult.fail(ref, "读取失败: " + e.getMessage());
+            log.warn("相对路径资源读取失败: ref={}", ref, e);
+            return ResolveResult.fail(ref, "读取失败");
         }
     }
 
-    /** 判断是否为本地绝对路径 */
     private boolean isAbsolutePath(String ref) {
-        if (ref.matches("^[A-Za-z]:\\\\.*")) return true;  // Windows
-        if (ref.matches("^[A-Za-z]:/.*")) return true;     // Windows (mixed)
-        if (ref.startsWith("/")) return true;                // Unix / macOS
-        return false;
+        if (ref.matches("^[A-Za-z]:\\\\.*")) {
+            return true;
+        }
+        if (ref.matches("^[A-Za-z]:/.*")) {
+            return true;
+        }
+        return ref.startsWith("/");
     }
 
-    /** 根据 URL/Content-Type 检测文件扩展名 */
     private String detectExtension(String ref, String contentType) {
-        // 从 URL 路径中提取
         String path = ref;
         int qIdx = ref.indexOf('?');
-        if (qIdx > 0) path = ref.substring(0, qIdx);
+        if (qIdx > 0) {
+            path = ref.substring(0, qIdx);
+        }
         int hashIdx = path.indexOf('#');
-        if (hashIdx > 0) path = path.substring(0, hashIdx);
+        if (hashIdx > 0) {
+            path = path.substring(0, hashIdx);
+        }
 
         int dot = path.lastIndexOf('.');
         if (dot > 0 && dot < path.length() - 1) {
             String ext = path.substring(dot + 1).toLowerCase();
-            if (ext.matches("[a-z0-9]+") && ext.length() <= 5) return ext;
+            if (ext.matches("[a-z0-9]+") && ext.length() <= 5) {
+                return ext;
+            }
         }
 
-        // 从 data URI 中提取
         if (ref.startsWith("data:")) {
             int slash = ref.indexOf('/');
             int semi = ref.indexOf(';');
@@ -178,16 +232,17 @@ public class ResourceResolver {
             }
         }
 
-        // 从 Content-Type 中提取
         if (contentType != null) {
             int slash = contentType.indexOf('/');
             if (slash > 0 && slash < contentType.length() - 1) {
                 String type = contentType.substring(slash + 1).split(";")[0].trim();
-                if (type.matches("[a-z0-9]+")) return type;
+                if (type.matches("[a-z0-9]+")) {
+                    return type;
+                }
             }
         }
 
-        return "png"; // 默认
+        return "png";
     }
 
     /** 解析结果 */
