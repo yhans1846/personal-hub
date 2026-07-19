@@ -18,6 +18,7 @@ ENV HTTP_PROXY=${HTTP_PROXY} \
     no_proxy=${no_proxy}
 
 COPY personal-hub-server /src/personal-hub-server
+COPY deploy/backend/maven-settings.xml /root/.m2/settings.xml
 WORKDIR /src/personal-hub-server
 RUN mvn -B -DskipTests package -pl ph-boot -am \
     && cp ph-boot/target/ph-boot-*.jar /src/app.jar

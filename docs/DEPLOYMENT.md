@@ -12,26 +12,30 @@
 
 ### 0.1 机器与网络
 
-| 项 | 要求 |
-|----|------|
-| OS | Ubuntu 22.04 |
-| 规格 | 2+ CPU · 4GB+ RAM · 40GB+ 磁盘 |
-| 网络 | 能访问 Docker Hub、GitHub（拉镜像 / Runner 取任务） |
-| 访问 | 内网浏览器打开 `http://<VM内网IP>/`（默认 80） |
+
+| 项   | 要求                                      |
+| --- | --------------------------------------- |
+| OS  | Ubuntu 22.04                            |
+| 规格  | 2+ CPU · 4GB+ RAM · 40GB+ 磁盘            |
+| 网络  | 能访问 Docker Hub、GitHub（拉镜像 / Runner 取任务） |
+| 访问  | 内网浏览器打开 `http://<VM内网IP>/`（默认 80）       |
+
 
 ### 0.2 宿主机要装的环境（必读）
 
 走 **Docker Compose 部署** 时，Linux **只需**装下面几样；**不要**在宿主机装 JDK / Maven / Node / MySQL / Redis（它们都在容器里）。
 
-| 软件 | 是否必须 | 用途 |
-|------|----------|------|
-| **Git** | 必须 | `clone` / `pull` 代码 |
-| **Docker Engine（docker-ce）** | 必须 | 跑容器 |
-| **Docker Compose 插件**（`docker compose`） | 必须 | 编排前后端 + MySQL + Redis |
-| **curl** | 建议 | 健康检查、排障 |
-| **openssl** | 建议 | 生成 `JWT_SECRET`（一般系统自带） |
-| **GitHub Actions Runner** | 可选 | 仅在要做「push 自动部署」时装（§0.7） |
-| **mysql-client / redis-tools** | 可选 | 仅当要在 SSH 里用命令行连库时 |
+
+| 软件                                      | 是否必须 | 用途                      |
+| --------------------------------------- | ---- | ----------------------- |
+| **Git**                                 | 必须   | `clone` / `pull` 代码     |
+| **Docker Engine（docker-ce）**            | 必须   | 跑容器                     |
+| **Docker Compose 插件**（`docker compose`） | 必须   | 编排前后端 + MySQL + Redis   |
+| **curl**                                | 建议   | 健康检查、排障                 |
+| **openssl**                             | 建议   | 生成 `JWT_SECRET`（一般系统自带） |
+| **GitHub Actions Runner**               | 可选   | 仅在要做「push 自动部署」时装（§0.7） |
+| **mysql-client / redis-tools**          | 可选   | 仅当要在 SSH 里用命令行连库时       |
+
 
 **宿主机不必装：** JDK 21 · Maven · Node.js · pnpm · 本机 MySQL · 本机 Redis。
 
@@ -116,12 +120,14 @@ sudo vim /opt/personal-hub/.env
 
 **必须改掉示例值**（弱密钥时 `ProdSecretsValidator` 会拒启后端）：
 
-| 变量 | 说明 |
-|------|------|
-| `MYSQL_ROOT_PASSWORD` | MySQL root |
-| `MYSQL_PASSWORD` | 应用库用户密码（与 `MYSQL_USER` 对应） |
-| `REDIS_PASSWORD` | Redis |
-| `JWT_SECRET` | 建议：`openssl rand -base64 48` |
+
+| 变量                    | 说明                           |
+| --------------------- | ---------------------------- |
+| `MYSQL_ROOT_PASSWORD` | MySQL root                   |
+| `MYSQL_PASSWORD`      | 应用库用户密码（与 `MYSQL_USER` 对应）   |
+| `REDIS_PASSWORD`      | Redis                        |
+| `JWT_SECRET`          | 建议：`openssl rand -base64 48` |
+
 
 可选：`HTTP_PORT`（默认 `80`；冲突可改 `8088`）· `MYSQL_PUBLISH`（默认 `3306`）· `REDIS_PUBLISH`（默认 `6379`）。  
 `.env` 只放 `/opt/personal-hub/.env`，**勿提交 Git**。
@@ -130,10 +136,12 @@ sudo vim /opt/personal-hub/.env
 
 Compose 已映射宿主机端口（`.env` 中 `MYSQL_PUBLISH` / `REDIS_PUBLISH`）。改端口后需 `$COMPOSE up -d`。
 
-| 服务 | 连接地址 | 账号 |
-|------|----------|------|
+
+| 服务    | 连接地址                          | 账号                                                          |
+| ----- | ----------------------------- | ----------------------------------------------------------- |
 | MySQL | `主机:MYSQL_PUBLISH`（默认 `3306`） | 库 `personal_hub`；用户 `MYSQL_USER` / `MYSQL_PASSWORD`（或 root） |
-| Redis | `主机:REDIS_PUBLISH`（默认 `6379`） | 需密码 `REDIS_PASSWORD` |
+| Redis | `主机:REDIS_PUBLISH`（默认 `6379`） | 需密码 `REDIS_PASSWORD`                                        |
+
 
 **Docker 跑在本机时：**
 
@@ -156,21 +164,23 @@ IDE（DataGrip / Cursor MySQL MCP 等）：Host=`127.0.0.1`，Port=`3306` / `637
 
 注意：容器内应用仍用 `MYSQL_HOST=mysql`、`REDIS_HOST=redis`，**不要**改成 `127.0.0.1`。
 
-### 0.4.2 构建时走 Clash（国内网络）
+### 0.4.2 构建时网络（国内）
 
-`docker pull` 用守护进程代理（`127.0.0.1:7897`）即可；但 **Dockerfile 里的 `RUN`（pnpm/maven/apt）在容器内执行**，`127.0.0.1` 不是宿主机。
+前端 Dockerfile 默认用 **npmmirror** 装 pnpm/依赖，一般不必为 npm 开代理。
 
-在 `/opt/personal-hub/.env` 增加（Clash 端口按实际改）：
+若 Maven/apt 仍超时，在 `/opt/personal-hub/.env` 增加（Clash 须 **Allow LAN**）：
 
 ```bash
 BUILD_HTTP_PROXY=http://host.docker.internal:7897
 ```
 
-Clash 勾选 **Allow LAN / 允许局域网**。然后：
+然后再：
 
 ```bash
 $COMPOSE up -d --build
 ```
+
+说明：`docker pull` 仍可用守护进程代理 `127.0.0.1:7897`；Dockerfile 内 `RUN` 若要走 Clash，须用 `host.docker.internal`，不能用容器内的 `127.0.0.1`。
 
 ### 0.5 首次启动
 
@@ -199,10 +209,10 @@ curl -fsS -o /dev/null "http://127.0.0.1:${HTTP_PORT:-80}/" && echo Frontend OK
 
 ### 0.6 验收清单
 
-- [ ] 首页可打开，登录 + 书架验证码通过
-- [ ] 笔记创建/预览正常（上传目录可写）
-- [ ] 设置 → 高级 → 立即备份可下载 ZIP
-- [ ] `$COMPOSE logs -f backend` 无持续 ERROR
+- 首页可打开，登录 + 书架验证码通过
+- 笔记创建/预览正常（上传目录可写）
+- 设置 → 高级 → 立即备份可下载 ZIP
+- `$COMPOSE logs -f backend` 无持续 ERROR
 
 ### 0.7（可选）接入 CI/CD
 
@@ -275,23 +285,27 @@ $COMPOSE exec -T mysql mysql -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABAS
 
 ## 8. 运维
 
-| 操作 | 命令/路径 |
-|------|-----------|
-| 日志 | `/data/personal-hub/logs/` · `$COMPOSE logs -f backend` |
-| 重启 | `$COMPOSE restart backend` / `up -d --build backend` |
-| 备份 | 运维：`mysqldump` + tar uploads；应用内：设置→高级→数据管理（`/api/backup`，按用户 ZIP） |
-| 回滚 | `git checkout` 旧 commit 后 rebuild，或 Actions Re-run |
+
+| 操作  | 命令/路径                                                              |
+| --- | ------------------------------------------------------------------ |
+| 日志  | `/data/personal-hub/logs/` · `$COMPOSE logs -f backend`            |
+| 重启  | `$COMPOSE restart backend` / `up -d --build backend`               |
+| 备份  | 运维：`mysqldump` + tar uploads；应用内：设置→高级→数据管理（`/api/backup`，按用户 ZIP） |
+| 回滚  | `git checkout` 旧 commit 后 rebuild，或 Actions Re-run                 |
+
 
 ## 9. 排障 / 安全
 
-| 现象 | 处理 |
-|------|------|
-| Runner Offline | `svc.sh status`；出网；restart |
-| 缺 .env / docker denied | 路径与 docker 组 |
-| 后端不健康 / 502 | logs；等 MySQL；反代；检查 JWT/密码是否仍为 change-me |
-| 改 .env 无效 | `up -d`；**MySQL 密码仅建卷时生效** |
-| 80 占用 | `HTTP_PORT=8088` |
-| 3306/6379 占用 | `.env` 改 `MYSQL_PUBLISH` / `REDIS_PUBLISH` 后 `up -d` |
-| 外网连不上库 | 查防火墙；或只用 SSH 隧道；勿对公网裸奔 MySQL/Redis |
+
+| 现象                     | 处理                                                   |
+| ---------------------- | ---------------------------------------------------- |
+| Runner Offline         | `svc.sh status`；出网；restart                           |
+| 缺 .env / docker denied | 路径与 docker 组                                         |
+| 后端不健康 / 502            | logs；等 MySQL；反代；检查 JWT/密码是否仍为 change-me              |
+| 改 .env 无效              | `up -d`；**MySQL 密码仅建卷时生效**                           |
+| 80 占用                  | `HTTP_PORT=8088`                                     |
+| 3306/6379 占用           | `.env` 改 `MYSQL_PUBLISH` / `REDIS_PUBLISH` 后 `up -d` |
+| 外网连不上库                 | 查防火墙；或只用 SSH 隧道；勿对公网裸奔 MySQL/Redis                   |
+
 
 勿提交 `.env`；生产强口令；内网 HTTP，公网需 HTTPS；Runner 勿对 fork PR 开放；数据库端口优先内网或 SSH 隧道。
