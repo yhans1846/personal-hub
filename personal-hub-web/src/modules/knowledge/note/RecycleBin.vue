@@ -107,6 +107,12 @@ async function onCardMenuAction(actionId: string) {
       break
   }
 }
+
+/** 回收站内再标「已删」冗余，展示时去掉前缀 */
+function displayTitle(title?: string | null): string {
+  if (!title) return '未命名笔记'
+  return title.replace(/^\[已删\]\s*/, '')
+}
 </script>
 
 <template>
@@ -122,7 +128,7 @@ async function onCardMenuAction(actionId: string) {
     </div>
 
     <div class="plan-middle">
-      <div v-if="loading" class="list-skeleton" :style="{ gridTemplateRows: `repeat(${pageSize}, minmax(0, 1fr))` }">
+      <div v-if="loading" class="list-skeleton" :style="{ gridTemplateRows: `repeat(${pageSize}, minmax(4.75rem, 1fr))` }">
         <div v-for="i in pageSize" :key="i" class="skeleton-row" />
       </div>
 
@@ -133,7 +139,7 @@ async function onCardMenuAction(actionId: string) {
         :text="keyword ? '未找到匹配的笔记' : '回收站为空'"
       />
 
-      <div v-else class="recycle-list" :style="{ gridTemplateRows: `repeat(${pageSize}, minmax(0, 1fr))` }">
+      <div v-else class="recycle-list" :style="{ gridTemplateRows: `repeat(${pageSize}, minmax(4.75rem, 1fr))` }">
         <div
           v-for="note in list"
           :key="note.id"
@@ -141,7 +147,7 @@ async function onCardMenuAction(actionId: string) {
           @contextmenu="onCardContextMenu($event, note)"
         >
           <div class="recycle-card__main">
-            <div class="recycle-card__title">{{ note.title }}</div>
+            <div class="recycle-card__title">{{ displayTitle(note.title) }}</div>
             <div class="recycle-card__meta">
               <span v-if="note.categories?.length" class="meta-item">
                 <span class="meta-label">分类</span>
@@ -155,16 +161,16 @@ async function onCardMenuAction(actionId: string) {
                   <span v-for="t in note.tags" :key="t.id" class="tag-chip" :style="t.color ? { '--tag-color': t.color } : undefined">{{ t.name }}</span>
                 </span>
               </span>
-              <span class="meta-item" v-if="note.deleteReason">
+              <span v-if="note.deleteReason" class="meta-item">
                 <span class="meta-label">原因</span>
                 <span class="delete-reason">{{ note.deleteReason === 'USER_DELETE' ? '用户删除' : note.deleteReason }}</span>
               </span>
             </div>
             <div class="recycle-card__times">
               <span class="time-item">创建 {{ formatUpdated(note.createdAt, '-') }}</span>
-              <span class="time-divider">|</span>
+              <span class="time-divider" aria-hidden="true">·</span>
               <span class="time-item">更新 {{ formatUpdated(note.updatedAt, '-') }}</span>
-              <span class="time-divider">|</span>
+              <span class="time-divider" aria-hidden="true">·</span>
               <span class="time-item time-item--danger">删除 {{ formatUpdated(note.deletedAt, '-') }}</span>
             </div>
           </div>
@@ -257,7 +263,8 @@ async function onCardMenuAction(actionId: string) {
 .recycle-card {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
+  gap: var(--sp-4);
   padding: var(--sp-3) var(--sp-4);
   background: var(--bg-card);
   border: 1px solid var(--border-color);
@@ -279,37 +286,44 @@ async function onCardMenuAction(actionId: string) {
 }
 
 .recycle-card__main {
-  flex: 1;
+  flex: 1 1 auto;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--sp-1);
+  justify-content: center;
+  gap: 4px;
 }
 
 .recycle-card__title {
+  flex-shrink: 0;
   font-size: var(--text-sm);
   font-weight: 600;
   color: var(--text-primary);
-  line-height: 1.5;
+  line-height: 1.35;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .recycle-card__meta {
+  flex-shrink: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: var(--sp-3);
+  align-items: center;
+  gap: var(--sp-2) var(--sp-3);
   font-size: var(--text-xs);
+  line-height: 1.4;
 }
 
 .meta-item {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
+  min-width: 0;
 }
 
 .meta-label {
+  flex-shrink: 0;
   color: var(--text-tertiary);
 }
 
@@ -317,12 +331,13 @@ async function onCardMenuAction(actionId: string) {
   display: inline-flex;
   gap: 4px;
   flex-wrap: wrap;
+  min-width: 0;
 }
 
 .tag-chip {
   display: inline-block;
   padding: 0 6px;
-  line-height: 1.6;
+  line-height: 1.5;
   font-size: var(--text-xs);
   background: color-mix(in srgb, var(--accent-color, var(--accent)) 10%, transparent);
   color: var(--accent-color, var(--accent));
@@ -337,7 +352,7 @@ async function onCardMenuAction(actionId: string) {
 .delete-reason {
   display: inline-block;
   padding: 0 6px;
-  line-height: 1.6;
+  line-height: 1.5;
   font-size: var(--text-xs);
   background: color-mix(in srgb, var(--text-tertiary) 10%, transparent);
   color: var(--text-tertiary);
@@ -345,12 +360,23 @@ async function onCardMenuAction(actionId: string) {
 }
 
 .recycle-card__times {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: var(--sp-2);
+  min-width: 0;
+  max-width: 100%;
   font-size: var(--text-xs);
+  line-height: 1.4;
   color: var(--text-tertiary);
-  flex-wrap: wrap;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.time-item {
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .time-item--danger {
@@ -359,6 +385,7 @@ async function onCardMenuAction(actionId: string) {
 }
 
 .time-divider {
+  flex-shrink: 0;
   color: var(--border-color);
 }
 
