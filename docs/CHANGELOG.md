@@ -21,6 +21,7 @@
 - **功能**：数据备份/恢复落地——`POST /api/backup/now` 下载 ZIP，`POST /api/backup/import` 全量覆盖；设置页高级→数据管理接线
 - **增强**：备份包含用户资料字段与头像文件（仍不迁移 username/password）
 - **文档**：同步 PROJECT/DATABASE/API/PAGE_SPEC/DEPLOYMENT/README 与备份、归档、资料范围
+- **部署**：Compose 暴露 MySQL/Redis 宿主机端口（`MYSQL_PUBLISH`/`REDIS_PUBLISH`），便于本机 IDE 直连
 - **修复（前端）**：回收站卡片行高被 `minmax(0,1fr)` 压扁导致时间戳错乱；保证最小行高、时间行 nowrap；展示时去掉冗余 `[已删]` 前缀
 - **代码质量（前端）**：StatsView 拆 KPI/图表/活动子组件；DiaryDialog 迁 `useEntityFormSave`（创建不关窗）并抽 `DiaryImagePanel`；学习计划表 / 日记月历拆分子组件；搜索分组超量结果与通知列表走 `VirtualList`
 - **代码质量（前端）**：接入 knip（`pnpm knip`）；收紧未对外使用的 export；katex/mermaid 按 vditor CDN 忽略

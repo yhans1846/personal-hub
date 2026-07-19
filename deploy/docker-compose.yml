@@ -28,6 +28,9 @@ services:
       timeout: 5s
       retries: 20
       start_period: 40s
+    ports:
+      # 宿主机/开发机直连；仅本机可改为 127.0.0.1:3306:3306
+      - "${MYSQL_PUBLISH:-3306}:3306"
 
   redis:
     image: redis:7-alpine
@@ -40,11 +43,21 @@ services:
       interval: 10s
       timeout: 3s
       retries: 10
-
+    ports:
+      - "${REDIS_PUBLISH:-6379}:6379"
   backend:
     build:
       context: ..
       dockerfile: deploy/backend/Dockerfile
+      extra_hosts:
+        - "host.docker.internal:host-gateway"
+      args:
+        HTTP_PROXY: ${BUILD_HTTP_PROXY:-}
+        HTTPS_PROXY: ${BUILD_HTTP_PROXY:-}
+        http_proxy: ${BUILD_HTTP_PROXY:-}
+        https_proxy: ${BUILD_HTTP_PROXY:-}
+        NO_PROXY: localhost,127.0.0.1,host.docker.internal
+        no_proxy: localhost,127.0.0.1,host.docker.internal
     image: personal-hub-backend:latest
     restart: unless-stopped
     depends_on:
@@ -78,6 +91,15 @@ services:
     build:
       context: ..
       dockerfile: deploy/frontend/Dockerfile
+      extra_hosts:
+        - "host.docker.internal:host-gateway"
+      args:
+        HTTP_PROXY: ${BUILD_HTTP_PROXY:-}
+        HTTPS_PROXY: ${BUILD_HTTP_PROXY:-}
+        http_proxy: ${BUILD_HTTP_PROXY:-}
+        https_proxy: ${BUILD_HTTP_PROXY:-}
+        NO_PROXY: localhost,127.0.0.1,host.docker.internal
+        no_proxy: localhost,127.0.0.1,host.docker.internal
     image: personal-hub-frontend:latest
     restart: unless-stopped
     depends_on:
