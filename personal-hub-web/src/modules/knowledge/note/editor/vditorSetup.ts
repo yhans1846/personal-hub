@@ -1,7 +1,7 @@
 import Vditor from 'vditor'
 
-export const VDITOR_CDN = '/vditor'
-export const EDITOR_ID_PREFIX = 'ph-note-editor'
+const VDITOR_CDN = '/vditor'
+const EDITOR_ID_PREFIX = 'ph-note-editor'
 
 export function buildEditorId(noteId?: number | null) {
   return noteId ? `${EDITOR_ID_PREFIX}-${noteId}` : `${EDITOR_ID_PREFIX}-new`

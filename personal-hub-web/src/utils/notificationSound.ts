@@ -16,7 +16,7 @@ const SOUND_FILES: Record<string, string> = {
 
 let currentAudio: HTMLAudioElement | null = null
 
-export function resolveSoundUrl(soundName?: string): string {
+function resolveSoundUrl(soundName?: string): string {
   const key = soundName && SOUND_FILES[soundName] ? soundName : 'default'
   return SOUND_FILES[key]
 }
@@ -38,7 +38,7 @@ export function playNotificationSound(soundName?: string): void {
 }
 
 /** 当前是否处于免打扰时段（支持跨午夜） */
-export function isInDoNotDisturb(config: Pick<NotificationConfig, 'doNotDisturb' | 'dndStart' | 'dndEnd'>): boolean {
+function isInDoNotDisturb(config: Pick<NotificationConfig, 'doNotDisturb' | 'dndStart' | 'dndEnd'>): boolean {
   if (!config.doNotDisturb) return false
   const now = new Date()
   const cur = now.getHours() * 60 + now.getMinutes()

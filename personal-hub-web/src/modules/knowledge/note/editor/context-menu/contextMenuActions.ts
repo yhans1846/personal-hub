@@ -35,7 +35,7 @@ export function nextReferenceId(markdown: string): string {
   return `ref${max + 1}`
 }
 
-export function headingPrefix(level: HeadingLevel): string {
+function headingPrefix(level: HeadingLevel): string {
   return '#'.repeat(level) + ' '
 }
 
@@ -44,7 +44,7 @@ export function wrapHeading(level: HeadingLevel, text: string): string {
   return lines.map((line) => `${headingPrefix(level)}${line}`).join('\n')
 }
 
-export function stripHeading(text: string): string {
+function stripHeading(text: string): string {
   return text
     .split('\n')
     .map((line) => line.replace(/^#{1,6}\s+/, ''))
@@ -55,12 +55,12 @@ function focusVditor(vditor: Vditor) {
   vditor.focus()
 }
 
-export function insertAtCursor(vditor: Vditor, md: string) {
+function insertAtCursor(vditor: Vditor, md: string) {
   vditor.insertMD(md)
   focusVditor(vditor)
 }
 
-export function wrapSelection(vditor: Vditor, before: string, after: string) {
+function wrapSelection(vditor: Vditor, before: string, after: string) {
   const text = vditor.getSelection()
   if (text) {
     vditor.updateValue(`${before}${text}${after}`)
@@ -70,7 +70,7 @@ export function wrapSelection(vditor: Vditor, before: string, after: string) {
   focusVditor(vditor)
 }
 
-export function insertHeading(vditor: Vditor, level: HeadingLevel) {
+function insertHeading(vditor: Vditor, level: HeadingLevel) {
   insertAtCursor(vditor, `\n${headingPrefix(level)}标题\n`)
 }
 

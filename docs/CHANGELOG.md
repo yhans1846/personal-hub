@@ -5,6 +5,7 @@
 ## [Unreleased]
 
 ### 2026-07-19
+- **代码质量（前端）**：接入 knip（`pnpm knip`）；收紧未对外使用的 export；katex/mermaid 按 vditor CDN 忽略
 - **代码质量（前端）**：`useVirtualList` + `VirtualList` 接入通知下拉；标签/分类卡片 `content-visibility`
 - **代码质量（前端）**：清零 `vue-tsc`（layoutApi Result、日记 viewMode 对齐 table/card、ListToolbar keyword 等）
 - **代码质量（前端）**：清零 ESLint warn（分类/标签/笔记编辑/登录等 `any` → 具体类型或 `handleApiError`）
