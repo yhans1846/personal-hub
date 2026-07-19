@@ -2,6 +2,7 @@ import { computed } from 'vue'
 import { defineStore } from 'pinia'
 import { getLayoutAll, saveLayout, resetLayout } from '@/api/layoutApi'
 import { useStorageSync } from '@/composables/useStorageSync'
+import type { LayoutResponse } from '@/types/layout'
 
 // ========== 类型 ==========
 
@@ -45,16 +46,16 @@ function migrateOldKeys() {
   // 新 key 已有数据时不覆盖
   if (localStorage.getItem(STORAGE_KEY)) return
 
-  const merged: any = {}
+  const merged: Partial<ReadingConfig> = {}
   if (oldSettings) {
     try {
-      const parsed = JSON.parse(oldSettings)
+      const parsed = JSON.parse(oldSettings) as Partial<ReadingConfig>
       if (parsed.readingWidth === 960) parsed.readingWidth = 1100
       Object.assign(merged, parsed)
     } catch { /* ignore */ }
   }
   if (oldTheme) {
-    merged.theme = oldTheme
+    merged.theme = oldTheme as PreviewTheme
   }
   localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...DEFAULTS, ...merged }))
 
@@ -64,9 +65,9 @@ function migrateOldKeys() {
 }
 
 /** 简易防抖（无外部依赖） */
-function debounce<T extends (...args: any[]) => any>(fn: T, ms: number) {
+function debounce<Args extends unknown[]>(fn: (...args: Args) => void, ms: number) {
   let timer: ReturnType<typeof setTimeout> | null = null
-  return (...args: Parameters<T>) => {
+  return (...args: Args) => {
     if (timer) clearTimeout(timer)
     timer = setTimeout(() => {
       timer = null
@@ -86,11 +87,10 @@ export const useReadingConfigStore = defineStore('readingConfig', () => {
     defaults: DEFAULTS,
     fetchApi: async () => {
       const res = await getLayoutAll()
-      const previewLayout = (res.data.data as any[]).find(
-        (l: any) => l.layoutType === LAYOUT_TYPE,
-      )
+      const layouts = (res.data.data ?? []) as LayoutResponse[]
+      const previewLayout = layouts.find((l) => l.layoutType === LAYOUT_TYPE)
       if (previewLayout?.layoutJson) {
-        const parsed = JSON.parse(previewLayout.layoutJson)
+        const parsed = JSON.parse(previewLayout.layoutJson) as Partial<ReadingConfig>
         // 旧值迁移：readingWidth=960 → 1100
         if (parsed.readingWidth === 960) parsed.readingWidth = 1100
         return parsed
@@ -104,7 +104,7 @@ export const useReadingConfigStore = defineStore('readingConfig', () => {
       })
     },
     resetApi: async () => resetLayout(LAYOUT_TYPE),
-    afterLoad: (data: any) => {
+    afterLoad: (data) => {
       // 旧值迁移：readingWidth=960 → 1100（本地缓存中的遗留数据）
       if (data.readingWidth === 960) data.readingWidth = 1100
     },

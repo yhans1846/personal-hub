@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Trash2, Upload, FileArchive, Loader2 } from 'lucide-vue-next'
-import { backupNow, getBackupList, importBackup } from '@/modules/system/api'
+import { backupNow, importBackup } from '@/modules/system/api'
 
 // ===== 缓存 =====
 const cacheSize = ref('计算中...')
@@ -41,8 +41,6 @@ async function handleClearCache() {
 
 // ===== 备份 =====
 const backingUp = ref(false)
-const backupList = ref<any[]>([])
-const loadingBackups = ref(false)
 const importFile = ref<File | null>(null)
 
 async function handleBackupNow() {
@@ -52,23 +50,10 @@ async function handleBackupNow() {
     const url = res.data.data?.downloadUrl
     ElMessage.success('备份完成')
     if (url) window.open(url, '_blank')
-    await loadBackups()
   } catch {
     ElMessage.error('备份失败')
   } finally {
     backingUp.value = false
-  }
-}
-
-async function loadBackups() {
-  loadingBackups.value = true
-  try {
-    const res = await getBackupList()
-    backupList.value = res.data.data || []
-  } catch {
-    backupList.value = []
-  } finally {
-    loadingBackups.value = false
   }
 }
 
@@ -98,7 +83,6 @@ async function handleImport() {
 
 onMounted(() => {
   cacheSize.value = estimateCacheSize()
-  loadBackups()
 })
 </script>
 
@@ -148,24 +132,23 @@ onMounted(() => {
 </template>
 
 <style scoped>
-/* 间距对齐外观/阅读：区块 20 · 标题下 10 · 行间 12 · 末项清零 */
-.setting-section { margin-bottom: 20px; }
+.setting-section { margin-bottom: var(--sp-5); }
 .setting-section:last-child { margin-bottom: 0; }
 
 .section-title {
-  margin: 0 0 10px;
-  font-size: 13px;
+  margin: 0 0 var(--sp-3);
+  font-size: var(--text-sm);
   font-weight: 600;
   color: var(--text-secondary);
 }
 
-.cache-info { margin-bottom: 12px; }
-.cache-detail { margin: 0 0 4px; font-size: var(--text-sm); color: var(--text-primary); }
+.cache-info { margin-bottom: var(--sp-3); }
+.cache-detail { margin: 0 0 var(--sp-1); font-size: var(--text-sm); color: var(--text-primary); }
 .cache-hint { margin: 0; font-size: var(--text-xs); color: var(--text-tertiary); line-height: 1.5; }
 
 .action-btn {
   display: inline-flex; align-items: center; gap: 6px;
-  padding: 8px 16px; font-size: 13px;
+  padding: var(--sp-2) var(--sp-4); font-size: var(--text-sm);
   border: 1px solid var(--border-color); background: var(--bg-card);
   border-radius: var(--radius-sm); cursor: pointer;
   color: var(--text-secondary); transition: all var(--transition);
@@ -178,20 +161,20 @@ onMounted(() => {
 .action-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-3);
 }
 .action-row:last-child { margin-bottom: 0; }
 .backup-divider {
-  margin: 20px 0 10px;
-  font-size: 13px;
+  margin: var(--sp-5) 0 var(--sp-3);
+  font-size: var(--text-sm);
   font-weight: 600;
   color: var(--text-secondary);
 }
 .file-select { flex: 1; min-width: 0; }
 .file-label {
   display: flex; align-items: center; gap: 6px;
-  padding: 8px 14px; font-size: 13px;
+  padding: var(--sp-2) var(--sp-3); font-size: var(--text-sm);
   border: 1px dashed var(--border-color); background: var(--bg-hover);
   border-radius: var(--radius-sm); color: var(--text-tertiary);
   cursor: pointer; transition: all var(--transition);
@@ -201,7 +184,7 @@ onMounted(() => {
 }
 .file-label:hover { border-color: var(--accent); color: var(--accent); }
 .file-input { display: none; }
-.import-warning { font-size: 11px; color: var(--danger); margin: 0; }
+.import-warning { font-size: var(--text-xs); color: var(--danger); margin: 0; }
 
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 .spin { animation: spin 1s linear infinite; }

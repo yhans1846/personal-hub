@@ -6,7 +6,7 @@
 export function estimateReadingTime(content?: string): string {
   if (!content) return '< 1 分钟'
 
-  const text = content.replace(/[#*`~>\[\]()!|-]/g, '').replace(/\s+/g, '')
+  const text = content.replace(/[#*`~>[\]()!|-]/g, '').replace(/\s+/g, '')
   const charCount = text.length
   if (charCount === 0) return '< 1 分钟'
 

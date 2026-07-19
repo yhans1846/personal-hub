@@ -48,9 +48,7 @@ export const useNotificationConfigStore = defineStore('notificationConfig', () =
     },
     fetchApi: async () => {
       const res = await getLayoutAll()
-      const notifLayout = (res.data.data as { layoutType: string; layoutJson?: string }[]).find(
-        (l) => l.layoutType === LAYOUT_TYPE,
-      )
+      const notifLayout = (res.data.data ?? []).find((l) => l.layoutType === LAYOUT_TYPE)
       if (!notifLayout?.layoutJson) return null
       try {
         return sanitizeConfig(JSON.parse(notifLayout.layoutJson) as NotificationConfig)

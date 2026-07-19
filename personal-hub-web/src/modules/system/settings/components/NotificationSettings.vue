@@ -183,20 +183,19 @@ async function handleReset() {
 </template>
 
 <style scoped>
-/* 间距对齐外观/阅读：区块 20 · 标题下 10 · 行间 12 · 末项清零 */
-.setting-section { margin-bottom: 20px; }
+.setting-section { margin-bottom: var(--sp-5); }
 .setting-section:last-child { margin-bottom: 0; }
 
 .section-title-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 10px;
+  margin-bottom: var(--sp-3);
 }
 
 .section-title {
-  margin: 0 0 10px;
-  font-size: 13px;
+  margin: 0 0 var(--sp-3);
+  font-size: var(--text-sm);
   font-weight: 600;
   color: var(--text-secondary);
 }
@@ -205,8 +204,8 @@ async function handleReset() {
 .reset-link {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font-size: 11px;
+  gap: var(--sp-1);
+  font-size: var(--text-xs);
   color: var(--text-tertiary);
   background: none;
   border: none;
@@ -220,30 +219,29 @@ async function handleReset() {
   background: var(--accent-light);
 }
 
-/* ─── 开关行 ─── */
 .setting-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
-  gap: 16px;
+  margin-bottom: var(--sp-3);
+  gap: var(--sp-4);
 }
 .setting-row:last-child { margin-bottom: 0; }
 .setting-row-info { display: flex; flex-direction: column; gap: 2px; }
-.setting-row-label { font-size: 13px; color: var(--text-primary); }
-.setting-row-label-sm { font-size: 13px; color: var(--text-secondary); min-width: 60px; }
-.setting-row-desc { font-size: 11px; color: var(--text-tertiary); }
+.setting-row-label { font-size: var(--text-sm); color: var(--text-primary); }
+.setting-row-label-sm { font-size: var(--text-sm); color: var(--text-secondary); min-width: 60px; }
+.setting-row-desc { font-size: var(--text-xs); color: var(--text-tertiary); }
 
 .sound-picker {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--sp-2);
 }
 
 .inline-options { display: flex; gap: 6px; flex-wrap: wrap; }
 .inline-btn {
-  padding: 6px 14px;
-  font-size: 13px;
+  padding: 6px var(--sp-3);
+  font-size: var(--text-sm);
   border: 1px solid var(--border-color);
   background: var(--bg-card);
   border-radius: var(--radius-sm);
@@ -258,11 +256,10 @@ async function handleReset() {
   background: color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
-/* ─── 开关按钮 ─── */
 .toggle-btn {
   display: flex; align-items: center; gap: 6px;
-  padding: 6px 14px;
-  font-size: 12px;
+  padding: 6px var(--sp-3);
+  font-size: var(--text-xs);
   border: 1px solid var(--border-color);
   background: var(--bg-card);
   border-radius: var(--radius-sm);
@@ -280,11 +277,10 @@ async function handleReset() {
 }
 .toggle-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* ─── Chip 组 ─── */
 .chip-group { display: flex; gap: 6px; flex-wrap: wrap; }
 .chip {
-  padding: 6px 14px;
-  font-size: 12px;
+  padding: 6px var(--sp-3);
+  font-size: var(--text-xs);
   border: 1px solid var(--border-color);
   background: var(--bg-card);
   border-radius: var(--radius-sm);
@@ -299,13 +295,12 @@ async function handleReset() {
   background: color-mix(in srgb, var(--accent) 10%, transparent);
 }
 
-/* ─── 免打扰时间 ─── */
-.dnd-times { display: flex; align-items: center; gap: 8px; }
+.dnd-times { display: flex; align-items: center; gap: var(--sp-2); }
 .time-field { display: flex; align-items: center; gap: 6px; }
-.time-label { font-size: 12px; color: var(--text-tertiary); }
+.time-label { font-size: var(--text-xs); color: var(--text-tertiary); }
 .time-input {
-  padding: 6px 10px;
-  font-size: 13px;
+  padding: 6px var(--sp-3);
+  font-size: var(--text-sm);
   border: 1px solid var(--border-color);
   background: var(--bg-card);
   border-radius: var(--radius-sm);
@@ -313,6 +308,6 @@ async function handleReset() {
   outline: none;
 }
 .time-input:focus { border-color: var(--accent); }
-.time-sep { font-size: 12px; color: var(--text-tertiary); }
+.time-sep { font-size: var(--text-xs); color: var(--text-tertiary); }
 
 </style>
