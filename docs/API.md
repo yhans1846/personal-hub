@@ -113,7 +113,7 @@ GET 全部或 `/{type}` · PUT 保存 · POST import · DELETE 恢复默认
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| POST | `/now` | 导出当前用户业务数据+文件为 ZIP（附件流下载） |
-| POST | `/import` | 上传 `.zip`，全量覆盖当前用户业务数据 |
+| POST | `/now` | 导出当前用户业务数据+文件+资料/头像为 ZIP（附件流下载） |
+| POST | `/import` | 上传 `.zip`，全量覆盖当前用户业务数据与资料（username/password 不变） |
 
-不含：密码、用户名、通知、审计；含回收站笔记、`user_layout`、用户资料与头像文件。包格式见规格 `2026-07-19-data-backup-restore-design`。
+不含：密码、用户名、通知、审计。含：回收站笔记、`user_layout`、`profile.json`、头像文件。包格式见规格 `2026-07-19-data-backup-restore-design`。

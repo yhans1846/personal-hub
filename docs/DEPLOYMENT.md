@@ -65,7 +65,7 @@ VM：`~/actions-runner` 按页面 download → `config.sh` → `sudo ./svc.sh in
 |------|-----------|
 | 日志 | `/data/personal-hub/logs/` · `$COMPOSE logs -f backend` |
 | 重启 | `$COMPOSE restart backend` / `up -d --build backend` |
-| 备份 | `mysqldump` + tar uploads |
+| 备份 | 运维：`mysqldump` + tar uploads；应用内：设置→高级→数据管理（`/api/backup`，按用户 ZIP） |
 | 回滚 | `git checkout` 旧 commit 后 rebuild，或 Actions Re-run |
 
 ## 9. 排障 / 安全

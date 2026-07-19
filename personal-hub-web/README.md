@@ -26,9 +26,8 @@ src/
 │   └── index.ts      # 共享组件导出（PageHeader / ListToolbar / EmptyState …）
 ├── composables/      # useMainContentFill / useFillPageSize / useProductViewMode / useDeepLinkDialog
 ├── modules/          # 领域模块
-│   ├── category/     # 统一分类管理
-│   ├── system/       # 登录 / 系统设置（工作台标签云）
-│   ├── knowledge/    # 笔记 / 回收站 / 预览 / 日记 / 学习 / 阅读 / 标签
+│   ├── system/       # 登录 / 设置（工作台 · 外观 · 高级含备份恢复）
+│   ├── knowledge/    # 笔记 / 回收站 / 预览 / 日记 / 学习 / 阅读 / 标签 / 分类
 │   ├── planning/     # Todo / 学习计划
 │   ├── resource/     # 收藏夹 / 文件
 │   ├── dashboard/    # Dashboard（fill + Bento）

@@ -18,4 +18,7 @@
 | `specs/2026-07-17-login-split-slider-captcha-design.md` | 滑动拼图方案已被书架归位验证码 + 产品化登录 UI 取代 |
 | `specs/2026-07-17-login-product-ui-redesign.md` | 已落地（现行登录页） |
 | `plans/2026-07-17-backend-module-merge-ph-biz.md` | 已落地（Maven 4 模块 + `ph-biz`） |
+| `specs/2026-07-19-note-auto-archive-design.md` | 已落地（笔记手动归档 AUTO_ARCHIVE） |
+| `specs/2026-07-19-data-backup-restore-design.md` | 已落地（手动 ZIP；含资料与头像） |
+| `plans/2026-07-19-data-backup-restore.md` | 已落地 |
 | 多数 `*LIST_PAGE_SPEC*` / `PROJECT_AUDIT*` 引用 | 文档已合并/删除，以 `PAGE_SPEC.md` 为准 |

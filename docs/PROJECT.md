@@ -24,7 +24,8 @@ ph-biz（knowledge/planning/  knowledge/（含 category）· planning/ · resour
 
 **划分：** Maven 粗粒度（common / system / biz / boot）· 细领域用 Java package · 跨包走 Service · Dashboard 只聚合不落业务库。  
 **通知：** system 定义 `PlanningNotificationSource`，biz 实现扫描；system 只写 `sys_notification`。  
-**存储：** `StorageService` 无 Web 类型；业务经 `FileAssetService` + `StoragePaths`。
+**存储：** `StorageService` 无 Web 类型；业务经 `FileAssetService` + `StoragePaths`。  
+**备份：** `ph-biz` 的 `DataBackupService` 导出/导入用户 ZIP（业务表 + 文件 + 资料/头像）；不含密码与通知。
 
 ```
 ph-common ← ph-system ← ph-biz ← ph-boot
@@ -56,6 +57,7 @@ ph-common ← ph-system ← ph-biz ← ph-boot
 | 十八 | ph-biz 合并；列表一屏铺满；设置标签云；PAGE_SPEC 收口 |
 | 十九 | V2 项目治理（死代码清理 · DRY · 目录对齐 · 文档归档） |
 | 二十 | Dialog 编辑器气质；文件预览/分类；日记配图资源包；未用字段清理；登录审计 |
+| 二十一 | 后端质量加固；笔记手动归档；用户数据 ZIP 备份/恢复（含资料与头像） |
 
 ## 后续可扩展
 
@@ -63,8 +65,9 @@ ph-common ← ph-system ← ph-biz ← ph-boot
 |------|--------|
 | AI 总结/问答 · OCR · 双向链接 · Mermaid/KaTeX | 低 |
 | 日记历史配图迁移 · 笔记附件进统一资源索引 | 低 |
-| MD 导出 · 数据备份 | ✅ 备份/恢复（手动 ZIP） |
-| Docker 部署 · 文件 PDF/文本预览 | ✅ |
+| 自动备份 / 备份历史列表 | 低 |
+| MD 批量导出 | 中 |
+| 数据备份（手动 ZIP）· Docker 部署 · 文件 PDF/文本预览 | ✅ |
 
 ## 开发历史（摘要）
 
@@ -75,3 +78,4 @@ ph-common ← ph-system ← ph-biz ← ph-boot
 | 28–37 | 回收站/预览/JWT query/Dialog/统计/Profile/Focus |
 | 38–40 | ph-biz；fill 列表；规范收口 |
 | 41 | V2 治理；Dialog 积木；文件预览；日记独立配图目录 |
+| 42 | 存储/通知解耦；笔记归档；备份/恢复 ZIP |

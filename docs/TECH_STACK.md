@@ -17,6 +17,8 @@
 
 可执行包仅 `ph-boot`；内部模块版本由父 POM `dependencyManagement` 管理。
 
+存储配置前缀 `personal-hub.storage`：`location`（默认 `data/uploads`）· `max-size`（单文件，默认 50MB）· `max-backup-size`（用户备份 ZIP，默认 512MB）。
+
 ## 前端
 
 | 技术 | 版本 |

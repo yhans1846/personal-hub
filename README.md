@@ -42,8 +42,8 @@ personal-hub-server/
                      · planning    Todo / 学习计划
                      · resource    收藏夹 / 文件 / 笔记附件
                      · dashboard   统计 / 搜索 / 趋势聚合
+                     · backup      用户数据 ZIP 备份 / 恢复
 ```
-
 ### 前端 · 领域模块（Composition API）
 
 ```
@@ -63,7 +63,7 @@ personal-hub-web/src/modules/
 
 | 模块 | 核心能力 |
 |------|----------|
-| **📝 笔记** | Markdown · Table/Card · 分类/标签 · 回收站 fill · 单条导出 · 沉浸编辑 / 预览阅读体验 |
+| **📝 笔记** | Markdown · Table/Card · 分类/标签 · 归档/回收站 · 单条导出 · 沉浸编辑 / 预览 |
 | **📖 学习记录** | 时间线 · 主题/时长 · 关联计划 · fill |
 | **✅ 待办** | 优先级 · 截止 · 拖拽 · **dueScope 服务端 Tab 分页** · ListToolbar · lucide Tab · 两列卡片 · fill |
 | **📅 日记** | 月历 · 心情/天气/定位 · 独立配图目录 · Markdown · fill |
@@ -76,8 +76,9 @@ personal-hub-web/src/modules/
 | **🔍 全局搜索** | 跨模块检索 · Ctrl+K 直达 |
 | **🔔 通知中心** | 超期/截止提醒 · Bell |
 | **👤 个人资料** | 头像 · 资料抽屉 |
+| **💾 数据备份** | 设置→高级：立即备份 ZIP · 导入全量覆盖（含资料与头像） |
 | **🎨 主题系统** | 浅/深色 · 强调色 · 密度/圆角 · CSS Token |
-| **⚙️ 系统设置** | 工作台标签云 · 外观 · 高级折叠 |
+| **⚙️ 系统设置** | 工作台标签云 · 外观 · 高级（缓存/备份） |
 | **⌨️ 效率工具** | Command Palette · 骨架屏 · 一屏铺满列表规范 · Dialog 积木表单 |
 
 ---
@@ -85,7 +86,8 @@ personal-hub-web/src/modules/
 ## 🎯 设计系统亮点
 
 - **一屏铺满列表** — `useMainContentFill` + 矮屏 10/8/6 · Product Table/Card · 统一 ListToolbar
-- **回收站增强** — 删除时间/原因追踪 · 分类标签保留 · 审计日志可追溯 · fill 布局
+- **回收站增强** — 删除/归档原因追踪 · 分类标签保留 · 审计可追溯 · fill 布局
+- **数据备份** — 用户级 ZIP（业务库 + 文件 + 资料/头像）；设置页导入覆盖恢复
 - **沉浸式阅读器** — 4 套阅读主题 · 字号/行高/宽度/图片比例可调 · 设置持久化到服务器 · 目录大纲可折叠拖拽 · 代码复制/图片放大/标题锚点
 - **统一排版系统** — `.markdown-prose` 全局 CSS 类，笔记预览/帮助文档/README 复用同一套排版规范
 - **统一 UI 组件库** — Ui-* 基础组件 + Dialog 编辑器积木（标题/属性/写作区）+ DocLayout

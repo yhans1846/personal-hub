@@ -108,4 +108,4 @@ git commit -m "feat(backup): ZIP 条目路径安全校验"
 规格：`docs/superpowers/specs/2026-07-19-data-backup-restore-design.md`  
 计划：本文件。
 
-用户已指示开始实现 → 本会话采用 **内联执行**。
+**状态：已落地**（含后续增强：用户资料 + 头像）。用户曾指示内联执行。

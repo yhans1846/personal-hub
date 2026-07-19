@@ -11,7 +11,7 @@
 ## 表结构
 
 ### `sys_user`
-username UK · password · nickname · avatar · email · gender(0/1/2) · birthday · phone · country/province/city/district · website/github · bio · created_at/updated_at · is_deleted
+username UK · password · nickname · avatar（URL，文件在 `avatars/`）· email · gender(0/1/2) · birthday · phone · country/province/city/district · website/github · bio · created_at/updated_at · is_deleted
 
 ### `note_note`
 user_id · title · md_path · excerpt · is_favorite · is_deleted · deleted_at · delete_reason（`USER_DELETE`|`AUTO_ARCHIVE`）· 时间  
@@ -65,9 +65,22 @@ user_id · layout_type(menu|dashboard|preview) · layout_json · 时间 · is_de
 UK `(user_id,layout_type)`
 
 ### `audit_log`
-module（含 NOTE/…/USER；业务侧写 AUTH）· business_id · action（含 LOGIN/DELETE/RESTORE 等）· content · operator_id · created_at（仅追加）  
+module（含 NOTE/…/USER/BACKUP；业务侧写 AUTH）· business_id · action（含 LOGIN/DELETE/RESTORE/ARCHIVE/EXPORT 等）· content · operator_id · created_at（仅追加）  
 索引 module / (module,business_id) / operator_id / created_at  
-当前写入点：登录成功；笔记删除 / 恢复
+当前写入点：登录成功；笔记删除/归档/恢复；数据备份导出/导入恢复
+
+---
+
+## 存储目录（相对 uploads 根）
+
+| 前缀 | 用途 |
+|------|------|
+| `notes/{id}/` | 笔记 md / images / attachments |
+| `diaries/{id}/images/` | 日记配图 |
+| `uploads/` | 文件管理页上传 |
+| `avatars/` | 用户头像 |
+
+应用内备份 ZIP 覆盖上表业务数据与对应文件（含资料字段与头像）；契约见 `API.md` `/api/backup`。
 
 ---
 
