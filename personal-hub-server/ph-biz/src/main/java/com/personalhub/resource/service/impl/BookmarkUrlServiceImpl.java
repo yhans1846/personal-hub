@@ -3,6 +3,7 @@ package com.personalhub.resource.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.personalhub.common.constant.EntityType;
 import com.personalhub.common.util.EntityGuard;
 import com.personalhub.resource.dto.BookmarkCreateDTO;
 import com.personalhub.resource.dto.BookmarkQueryDTO;
@@ -41,7 +42,7 @@ public class BookmarkUrlServiceImpl implements BookmarkUrlService {
         // 批量加载分类名称和标签
         Map<Long, String> categoryMap = loadCategoryNames(userId);
         List<Long> bookmarkIds = urlPage.getRecords().stream().map(BookmarkUrl::getId).collect(Collectors.toList());
-        Map<Long, List<TagVO>> tagsMap = tagService.getTagsMap(userId, "bookmark", bookmarkIds);
+        Map<Long, List<TagVO>> tagsMap = tagService.getTagsMap(userId, EntityType.BOOKMARK, bookmarkIds);
 
         return urlPage.convert(url -> {
             BookmarkVO vo = BookmarkVO.from(url);
@@ -54,7 +55,7 @@ public class BookmarkUrlServiceImpl implements BookmarkUrlService {
     }
 
     private Map<Long, String> loadCategoryNames(Long userId) {
-        return categoryService.listByType(userId, "bookmark").stream()
+        return categoryService.listByType(userId, EntityType.BOOKMARK).stream()
                 .collect(Collectors.toMap(com.personalhub.knowledge.vo.CategoryVO::getId, com.personalhub.knowledge.vo.CategoryVO::getName));
     }
 
@@ -64,11 +65,11 @@ public class BookmarkUrlServiceImpl implements BookmarkUrlService {
                 bookmarkUrlMapper.selectById(id), userId, BookmarkUrl::getUserId, "收藏不存在");
         BookmarkVO vo = BookmarkVO.from(url);
         if (url.getCategoryId() != null) {
-            com.personalhub.knowledge.vo.CategoryVO cat = categoryService.listByType(url.getUserId(), "bookmark").stream()
+            com.personalhub.knowledge.vo.CategoryVO cat = categoryService.listByType(url.getUserId(), EntityType.BOOKMARK).stream()
                     .filter(c -> c.getId().equals(url.getCategoryId())).findFirst().orElse(null);
             if (cat != null) vo.setCategoryName(cat.getName());
         }
-        vo.setTags(tagService.getTags(userId, "bookmark", id));
+        vo.setTags(tagService.getTags(userId, EntityType.BOOKMARK, id));
         return vo;
     }
 
@@ -88,16 +89,16 @@ public class BookmarkUrlServiceImpl implements BookmarkUrlService {
 
         // 保存标签关联
         if (dto.getTagIds() != null && !dto.getTagIds().isEmpty()) {
-            tagService.bindTags(userId, url.getId(), "bookmark", dto.getTagIds());
+            tagService.bindTags(userId, url.getId(), EntityType.BOOKMARK, dto.getTagIds());
         }
 
         BookmarkVO vo = BookmarkVO.from(url);
         if (url.getCategoryId() != null) {
-            com.personalhub.knowledge.vo.CategoryVO cat = categoryService.listByType(url.getUserId(), "bookmark").stream()
+            com.personalhub.knowledge.vo.CategoryVO cat = categoryService.listByType(url.getUserId(), EntityType.BOOKMARK).stream()
                     .filter(c -> c.getId().equals(url.getCategoryId())).findFirst().orElse(null);
             if (cat != null) vo.setCategoryName(cat.getName());
         }
-        vo.setTags(tagService.getTags(userId, "bookmark", url.getId()));
+        vo.setTags(tagService.getTags(userId, EntityType.BOOKMARK, url.getId()));
         return vo;
     }
 
@@ -115,15 +116,15 @@ public class BookmarkUrlServiceImpl implements BookmarkUrlService {
         log.info("编辑收藏: id={}, userId={}", id, userId);
 
         // 更新标签关联
-        tagService.bindTags(userId, id, "bookmark", dto.getTagIds());
+        tagService.bindTags(userId, id, EntityType.BOOKMARK, dto.getTagIds());
 
         BookmarkVO vo = BookmarkVO.from(url);
         if (url.getCategoryId() != null) {
-            com.personalhub.knowledge.vo.CategoryVO cat = categoryService.listByType(url.getUserId(), "bookmark").stream()
+            com.personalhub.knowledge.vo.CategoryVO cat = categoryService.listByType(url.getUserId(), EntityType.BOOKMARK).stream()
                     .filter(c -> c.getId().equals(url.getCategoryId())).findFirst().orElse(null);
             if (cat != null) vo.setCategoryName(cat.getName());
         }
-        vo.setTags(tagService.getTags(userId, "bookmark", id));
+        vo.setTags(tagService.getTags(userId, EntityType.BOOKMARK, id));
         return vo;
     }
 
@@ -133,7 +134,7 @@ public class BookmarkUrlServiceImpl implements BookmarkUrlService {
         EntityGuard.requireOwned(
                 bookmarkUrlMapper.selectById(id), userId, BookmarkUrl::getUserId, "收藏不存在");
         // 清除标签关联
-        tagService.unbindAll(userId, "bookmark", id);
+        tagService.unbindAll(userId, EntityType.BOOKMARK, id);
         bookmarkUrlMapper.deleteById(id);
         log.info("删除收藏: id={}, userId={}", id, userId);
     }
@@ -149,7 +150,7 @@ public class BookmarkUrlServiceImpl implements BookmarkUrlService {
                         .last("LIMIT " + size));
         Map<Long, String> categoryMap = loadCategoryNames(userId);
         List<Long> ids = urls.stream().map(BookmarkUrl::getId).collect(Collectors.toList());
-        Map<Long, List<TagVO>> tagsMap = tagService.getTagsMap(userId, "bookmark", ids);
+        Map<Long, List<TagVO>> tagsMap = tagService.getTagsMap(userId, EntityType.BOOKMARK, ids);
         return urls.stream().map(url -> {
             BookmarkVO vo = BookmarkVO.from(url);
             if (url.getCategoryId() != null) {

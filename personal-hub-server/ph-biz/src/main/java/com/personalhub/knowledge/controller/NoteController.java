@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.validation.annotation.Validated;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -33,6 +34,7 @@ import java.util.List;
  * 笔记控制器
  */
 @Tag(name = "Markdown 笔记", description = "笔记的增删改查、收藏、回收站、导入导出")
+@Validated
 @RestController
 @RequestMapping("/api/notes")
 @RequiredArgsConstructor
@@ -46,7 +48,7 @@ public class NoteController {
     @GetMapping
     public Result<PageResult<NoteVO>> list(
             @Parameter(hidden = true) Authentication authentication,
-            NoteQueryDTO query) {
+            @Valid NoteQueryDTO query) {
         Long userId = CurrentUser.id(authentication);
         IPage<NoteVO> page = noteService.listNotes(userId, query);
         return Result.success(PageResult.of(page));
@@ -104,7 +106,7 @@ public class NoteController {
     @GetMapping("/recent")
     public Result<PageResult<NoteVO>> recent(
             @Parameter(hidden = true) Authentication authentication,
-            PageParam pageParam) {
+            @Valid PageParam pageParam) {
         Long userId = CurrentUser.id(authentication);
         IPage<NoteVO> result = noteService.getRecent(userId, pageParam.getPage(), pageParam.getSize());
         return Result.success(PageResult.of(result));
@@ -160,7 +162,7 @@ public class NoteController {
     @GetMapping("/recycle")
     public Result<PageResult<NoteVO>> recycle(
             @Parameter(hidden = true) Authentication authentication,
-            NoteQueryDTO query) {
+            @Valid NoteQueryDTO query) {
         Long userId = CurrentUser.id(authentication);
         IPage<NoteVO> page = noteService.getRecycleList(userId, query);
         return Result.success(PageResult.of(page));

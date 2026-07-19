@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.validation.annotation.Validated;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
  * 收藏夹控制器
  */
 @Tag(name = "收藏夹", description = "收藏夹的增删改查、分类筛选、标签筛选、关键词搜索")
+@Validated
 @RestController
 @RequestMapping("/api/bookmarks")
 @RequiredArgsConstructor
@@ -40,7 +42,7 @@ public class BookmarkUrlController {
     @GetMapping
     public Result<PageResult<BookmarkVO>> list(
             @Parameter(hidden = true) Authentication authentication,
-            BookmarkQueryDTO query) {
+            @Valid BookmarkQueryDTO query) {
         Long userId = CurrentUser.id(authentication);
         IPage<BookmarkVO> page = bookmarkUrlService.list(userId, query);
         return Result.success(PageResult.of(page));

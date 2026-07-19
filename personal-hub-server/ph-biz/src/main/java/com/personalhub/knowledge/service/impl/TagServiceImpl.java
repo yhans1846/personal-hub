@@ -1,6 +1,7 @@
 package com.personalhub.knowledge.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.personalhub.common.constant.EntityType;
 import com.personalhub.common.exception.BusinessException;
 import com.personalhub.common.exception.NotFoundException;
 import com.personalhub.common.util.EntityGuard;
@@ -227,11 +228,11 @@ public class TagServiceImpl implements TagService {
             throw new BusinessException("实体参数无效");
         }
         switch (entityType) {
-            case "note" -> EntityGuard.requireOwned(
+            case EntityType.NOTE -> EntityGuard.requireOwned(
                     noteMapper.selectById(entityId), userId, Note::getUserId, "笔记不存在");
-            case "bookmark" -> EntityGuard.requireOwned(
+            case EntityType.BOOKMARK -> EntityGuard.requireOwned(
                     bookmarkUrlMapper.selectById(entityId), userId, BookmarkUrl::getUserId, "收藏不存在");
-            case "study_plan" -> EntityGuard.requireOwned(
+            case EntityType.STUDY_PLAN -> EntityGuard.requireOwned(
                     studyPlanMapper.selectById(entityId), userId, StudyPlan::getUserId, "学习计划不存在");
             default -> throw new NotFoundException("不支持的实体类型");
         }

@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.validation.annotation.Validated;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -27,6 +28,7 @@ import java.nio.charset.StandardCharsets;
  * 学习计划控制器
  */
 @Tag(name = "学习计划", description = "学习计划的增删改查、进度跟踪")
+@Validated
 @RestController
 @RequestMapping("/api/study-plans")
 @RequiredArgsConstructor
@@ -38,7 +40,7 @@ public class StudyPlanController {
     @GetMapping
     public Result<PageResult<StudyPlanVO>> list(
             @Parameter(hidden = true) Authentication authentication,
-            StudyPlanQueryDTO query) {
+            @Valid StudyPlanQueryDTO query) {
         Long userId = CurrentUser.id(authentication);
         IPage<StudyPlanVO> page = studyPlanService.list(userId, query);
         return Result.success(PageResult.of(page));
@@ -57,7 +59,7 @@ public class StudyPlanController {
     public ResponseEntity<byte[]> export(
             @Parameter(hidden = true) Authentication authentication,
             @RequestParam(defaultValue = "filtered") String scope,
-            StudyPlanQueryDTO query) {
+            @Valid StudyPlanQueryDTO query) {
         Long userId = CurrentUser.id(authentication);
         byte[] xlsx = studyPlanService.exportXlsx(userId, query, scope);
         String filename = URLEncoder.encode("学习计划.xlsx", StandardCharsets.UTF_8).replace("+", "%20");

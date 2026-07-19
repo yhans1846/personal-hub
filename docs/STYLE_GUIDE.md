@@ -19,6 +19,7 @@
 | 分页 | 查询 DTO 继承 `PageParam` |
 | 返回码 | 用 `ResultCode` 枚举，禁硬编码数字 |
 | 标志位 | 0/1 用 `Flags.YES` / `Flags.NO`，禁魔法数字 |
+| 实体类型 | `EntityType.NOTE` 等，禁散落 `"note"`/`"bookmark"` 字符串 |
 | 日志 | 增删改 info；权限/业务 warn；未知 error+堆栈；过滤器 debug |
 | 状态文案 | 模块 `enums` + `labelOf`，禁 VO/Service 内嵌业务 switch |
 | 归属 | `EntityGuard.requireOwned(...)` |

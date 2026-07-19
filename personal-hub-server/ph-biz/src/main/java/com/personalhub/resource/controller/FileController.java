@@ -13,6 +13,7 @@ import com.personalhub.storage.StorageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +24,7 @@ import org.springframework.http.InvalidMediaTypeException;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -34,6 +36,7 @@ import java.util.concurrent.TimeUnit;
  * 文件资源控制器
  */
 @Tag(name = "文件管理", description = "文件的上传、下载、列表、删除、预览")
+@Validated
 @RestController
 @RequestMapping("/api/files")
 @RequiredArgsConstructor
@@ -47,7 +50,7 @@ public class FileController {
     @GetMapping
     public Result<PageResult<FileVO>> list(
             @Parameter(hidden = true) Authentication authentication,
-            FileQueryDTO query) {
+            @Valid FileQueryDTO query) {
         Long userId = CurrentUser.id(authentication);
         IPage<FileVO> page = fileResourceService.list(userId, query);
         return Result.success(PageResult.of(page));

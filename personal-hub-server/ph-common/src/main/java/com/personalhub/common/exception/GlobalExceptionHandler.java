@@ -1,6 +1,8 @@
 package com.personalhub.common.exception;
 
 import com.personalhub.common.result.Result;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.FieldError;
@@ -21,13 +23,27 @@ import org.springframework.web.multipart.support.MissingServletRequestPartExcept
 public class GlobalExceptionHandler {
 
     /**
-     * 参数校验失败
+     * 参数校验失败（@RequestBody）
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result<Void> handleValidation(MethodArgumentNotValidException e) {
         String message = e.getBindingResult().getFieldErrors().stream()
                 .map(FieldError::getDefaultMessage)
+                .findFirst()
+                .orElse("参数校验失败");
+        log.warn("参数校验失败: {}", message);
+        return Result.badRequest(message);
+    }
+
+    /**
+     * 参数校验失败（@Validated 查询参数 / 路径参数）
+     */
+    @ExceptionHandler(ConstraintViolationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Result<Void> handleConstraintViolation(ConstraintViolationException e) {
+        String message = e.getConstraintViolations().stream()
+                .map(ConstraintViolation::getMessage)
                 .findFirst()
                 .orElse("参数校验失败");
         log.warn("参数校验失败: {}", message);

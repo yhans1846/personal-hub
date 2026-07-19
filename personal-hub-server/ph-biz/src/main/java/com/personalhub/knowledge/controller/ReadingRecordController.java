@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.validation.annotation.Validated;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -22,6 +23,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
 @Tag(name = "阅读记录", description = "阅读记录的增删改查、章节进度跟踪")
+@Validated
 @RestController
 @RequestMapping("/api/readings")
 @RequiredArgsConstructor
@@ -30,7 +32,7 @@ public class ReadingRecordController {
 
     @Operation(summary = "阅读列表")
     @GetMapping
-    public Result<PageResult<ReadingVO>> list(@Parameter(hidden = true) Authentication auth, ReadingQueryDTO q) {
+    public Result<PageResult<ReadingVO>> list(@Parameter(hidden = true) Authentication auth, @Valid ReadingQueryDTO q) {
         return Result.success(PageResult.of(readingService.list(CurrentUser.id(auth), q)));
     }
 
@@ -39,7 +41,7 @@ public class ReadingRecordController {
     public ResponseEntity<byte[]> export(
             @Parameter(hidden = true) Authentication auth,
             @RequestParam(defaultValue = "filtered") String scope,
-            ReadingQueryDTO query) {
+            @Valid ReadingQueryDTO query) {
         byte[] xlsx = readingService.exportXlsx(CurrentUser.id(auth), query, scope);
         String filename = URLEncoder.encode("阅读记录.xlsx", StandardCharsets.UTF_8).replace("+", "%20");
         return ResponseEntity.ok()

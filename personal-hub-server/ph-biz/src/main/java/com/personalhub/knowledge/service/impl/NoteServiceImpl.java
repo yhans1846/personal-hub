@@ -3,12 +3,16 @@ package com.personalhub.knowledge.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.personalhub.common.constant.EntityType;
 import com.personalhub.common.constant.Flags;
+import com.personalhub.common.exception.BusinessException;
 import com.personalhub.common.exception.NotFoundException;
 import com.personalhub.common.util.EntityGuard;
 import com.personalhub.knowledge.dto.NoteCreateDTO;
 import com.personalhub.knowledge.dto.NoteQueryDTO;
+import com.personalhub.knowledge.entity.Category;
 import com.personalhub.knowledge.entity.Note;
+import com.personalhub.knowledge.mapper.CategoryMapper;
 import com.personalhub.knowledge.mapper.NoteMapper;
 import com.personalhub.knowledge.service.NoteService;
 import com.personalhub.knowledge.service.TagService;
@@ -41,6 +45,7 @@ public class NoteServiceImpl implements NoteService {
     private static final int EXCERPT_MAX_LEN = 200;
 
     private final NoteMapper noteMapper;
+    private final CategoryMapper categoryMapper;
     private final TagService tagService;
     private final StorageService storageService;
     private final AuditLogService auditLogService;
@@ -86,7 +91,7 @@ public class NoteServiceImpl implements NoteService {
         note.setMdPath(mdPath);
         noteMapper.updateById(note);
 
-        saveCategoryRels(note.getId(), dto.getCategoryIds());
+        saveCategoryRels(userId, note.getId(), dto.getCategoryIds());
         saveTagRels(userId, note.getId(), dto.getTagIds());
 
         return getById(note.getId(), userId);
@@ -115,8 +120,8 @@ public class NoteServiceImpl implements NoteService {
         log.info("编辑笔记: id={}, userId={}", id, userId);
 
         noteMapper.deleteCategoryRelsByNoteId(id);
-        saveCategoryRels(id, dto.getCategoryIds());
-        tagService.bindTags(userId, id, "note", dto.getTagIds());
+        saveCategoryRels(userId, id, dto.getCategoryIds());
+        tagService.bindTags(userId, id, EntityType.NOTE, dto.getTagIds());
 
         return getById(id, userId);
     }
@@ -158,7 +163,7 @@ public class NoteServiceImpl implements NoteService {
         Note note = EntityGuard.requireOwned(
                 noteMapper.selectById(id), userId, Note::getUserId, "笔记不存在");
         noteMapper.deleteCategoryRelsByNoteId(id);
-        tagService.unbindAll(userId, "note", id);
+        tagService.unbindAll(userId, EntityType.NOTE, id);
         if (note.getMdPath() != null) {
             String noteDir = note.getMdPath().substring(0, note.getMdPath().indexOf("/note.md"));
             storageService.delete(noteDir);
@@ -220,7 +225,7 @@ public class NoteServiceImpl implements NoteService {
         List<Long> noteIds = notes.stream().map(Note::getId).collect(Collectors.toList());
         Map<Long, List<NoteVO.CategoryItem>> categoriesMap = batchCategories(noteIds);
         Long userId = notes.get(0).getUserId();
-        Map<Long, List<TagVO>> tagsMap = tagService.getTagsMap(userId, "note", noteIds);
+        Map<Long, List<TagVO>> tagsMap = tagService.getTagsMap(userId, EntityType.NOTE, noteIds);
 
         return notePage.convert(note -> {
             NoteVO vo = NoteVO.from(note);
@@ -291,14 +296,22 @@ public class NoteServiceImpl implements NoteService {
         return plain.substring(0, EXCERPT_MAX_LEN);
     }
 
-    private void saveCategoryRels(Long noteId, List<Long> categoryIds) {
-        if (categoryIds != null && !categoryIds.isEmpty()) {
-            noteMapper.insertCategoryRels(noteId, categoryIds);
+    private void saveCategoryRels(Long userId, Long noteId, List<Long> categoryIds) {
+        if (categoryIds == null || categoryIds.isEmpty()) {
+            return;
         }
+        for (Long categoryId : categoryIds) {
+            Category category = EntityGuard.requireOwned(
+                    categoryMapper.selectById(categoryId), userId, Category::getUserId, "分类不存在");
+            if (!EntityType.NOTE.equals(category.getType())) {
+                throw new BusinessException("分类类型不匹配");
+            }
+        }
+        noteMapper.insertCategoryRels(noteId, categoryIds);
     }
 
     private void saveTagRels(Long userId, Long noteId, List<Long> tagIds) {
-        tagService.bindTags(userId, noteId, "note", tagIds);
+        tagService.bindTags(userId, noteId, EntityType.NOTE, tagIds);
     }
 
     private List<NoteVO.CategoryItem> getCategories(Long noteId) {
@@ -314,7 +327,7 @@ public class NoteServiceImpl implements NoteService {
     }
 
     private List<NoteVO.TagItem> getTags(Long noteId, Long userId) {
-        return toTagItems(tagService.getTags(userId, "note", noteId));
+        return toTagItems(tagService.getTags(userId, EntityType.NOTE, noteId));
     }
 
     private List<NoteVO.TagItem> toTagItems(List<TagVO> tagVOs) {

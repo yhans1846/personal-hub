@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.validation.annotation.Validated;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
  * 待办任务控制器
  */
 @Tag(name = "待办任务", description = "待办任务的增删改查、完成状态切换")
+@Validated
 @RestController
 @RequestMapping("/api/todos")
 @RequiredArgsConstructor
@@ -32,7 +34,7 @@ public class TodoTaskController {
     @GetMapping
     public Result<PageResult<TodoVO>> list(
             @Parameter(hidden = true) Authentication authentication,
-            TodoQueryDTO query) {
+            @Valid TodoQueryDTO query) {
         Long userId = CurrentUser.id(authentication);
         IPage<TodoVO> page = todoTaskService.list(userId, query);
         return Result.success(PageResult.of(page));

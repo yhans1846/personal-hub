@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.validation.annotation.Validated;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
@@ -28,6 +29,7 @@ import java.util.Map;
  * 日记控制器
  */
 @Tag(name = "日记", description = "日记的增删改查、月视图聚合、配图资源")
+@Validated
 @RestController
 @RequestMapping("/api/diaries")
 @RequiredArgsConstructor
@@ -40,7 +42,7 @@ public class DiaryEntryController {
     @GetMapping
     public Result<PageResult<DiaryVO>> list(
             @Parameter(hidden = true) Authentication authentication,
-            DiaryQueryDTO query) {
+            @Valid DiaryQueryDTO query) {
         Long userId = CurrentUser.id(authentication);
         IPage<DiaryVO> page = diaryEntryService.list(userId, query);
         return Result.success(PageResult.of(page));

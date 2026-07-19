@@ -3,6 +3,7 @@ package com.personalhub.planning.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.personalhub.common.constant.EntityType;
 import com.personalhub.common.util.EntityGuard;
 import com.personalhub.knowledge.entity.TagRel;
 import com.personalhub.knowledge.mapper.TagRelMapper;
@@ -42,7 +43,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class StudyPlanServiceImpl implements StudyPlanService {
 
-    private static final String ENTITY_TYPE = "study_plan";
+    private static final String ENTITY_TYPE = EntityType.STUDY_PLAN;
 
     private final StudyPlanMapper studyPlanMapper;
     private final TagService tagService;

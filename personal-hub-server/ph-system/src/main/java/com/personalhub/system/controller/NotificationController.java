@@ -8,13 +8,16 @@ import com.personalhub.system.service.NotificationService;
 import com.personalhub.system.vo.NotificationVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @Tag(name = "系统通知")
+@Validated
 @RestController
 @RequestMapping("/api/notifications")
 @RequiredArgsConstructor
@@ -24,7 +27,7 @@ public class NotificationController {
 
     @Operation(summary = "通知列表（分页，未读优先）")
     @GetMapping
-    public Result<PageResult<NotificationVO>> list(Authentication auth, NotificationQueryDTO query) {
+    public Result<PageResult<NotificationVO>> list(Authentication auth, @Valid NotificationQueryDTO query) {
         Long userId = CurrentUser.id(auth);
         return Result.success(PageResult.of(notificationService.list(userId, query)));
     }

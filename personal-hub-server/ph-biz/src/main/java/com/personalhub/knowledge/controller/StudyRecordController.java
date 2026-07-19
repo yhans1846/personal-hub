@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.validation.annotation.Validated;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
  * 学习记录控制器
  */
 @Tag(name = "学习记录", description = "学习记录的增删改查")
+@Validated
 @RestController
 @RequestMapping("/api/study-records")
 @RequiredArgsConstructor
@@ -32,7 +34,7 @@ public class StudyRecordController {
     @GetMapping
     public Result<PageResult<StudyRecordVO>> list(
             @Parameter(hidden = true) Authentication authentication,
-            StudyRecordQueryDTO query) {
+            @Valid StudyRecordQueryDTO query) {
         Long userId = CurrentUser.id(authentication);
         IPage<StudyRecordVO> page = service.list(userId, query);
         return Result.success(PageResult.of(page));
