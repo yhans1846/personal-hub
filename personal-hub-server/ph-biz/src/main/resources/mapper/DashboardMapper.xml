@@ -21,7 +21,7 @@
     <select id="selectTodoTrend" resultType="map">
         SELECT DATE(created_at) AS date_str, COUNT(*) AS value
         FROM todo_task
-        WHERE user_id = #{userId} AND created_at >= #{since}
+        WHERE user_id = #{userId} AND created_at >= #{since} AND is_deleted = 0
         GROUP BY DATE(created_at) ORDER BY DATE(created_at)
     </select>
 
@@ -35,9 +35,10 @@
     <!-- ====== 全文搜索 ====== -->
 
     <select id="searchNotes" resultType="map">
-        SELECT id, title AS title, LEFT(content, 200) AS snippet, updated_at AS date_str
+        SELECT id, title AS title, LEFT(COALESCE(excerpt, ''), 200) AS snippet, updated_at AS date_str
         FROM note_note
-        WHERE user_id = #{userId} AND is_deleted = 0 AND (title LIKE CONCAT('%', #{keyword}, '%') OR content LIKE CONCAT('%', #{keyword}, '%'))
+        WHERE user_id = #{userId} AND is_deleted = 0
+          AND (title LIKE CONCAT('%', #{keyword}, '%') OR IFNULL(excerpt, '') LIKE CONCAT('%', #{keyword}, '%'))
         LIMIT 10
     </select>
 
@@ -51,7 +52,8 @@
     <select id="searchTodos" resultType="map">
         SELECT id, title, LEFT(content, 200) AS snippet, created_at AS date_str
         FROM todo_task
-        WHERE user_id = #{userId} AND (title LIKE CONCAT('%', #{keyword}, '%') OR content LIKE CONCAT('%', #{keyword}, '%'))
+        WHERE user_id = #{userId} AND is_deleted = 0
+          AND (title LIKE CONCAT('%', #{keyword}, '%') OR content LIKE CONCAT('%', #{keyword}, '%'))
         LIMIT 10
     </select>
 
@@ -145,7 +147,7 @@
             WHERE user_id = #{userId} AND is_deleted = 0 AND created_at >= #{since}
         UNION
         SELECT DISTINCT DATE(created_at) FROM todo_task
-            WHERE user_id = #{userId} AND created_at >= #{since}
+            WHERE user_id = #{userId} AND is_deleted = 0 AND created_at >= #{since}
         UNION
         SELECT DISTINCT DATE(created_at) FROM reading_record
             WHERE user_id = #{userId} AND is_deleted = 0 AND created_at >= #{since}
@@ -189,6 +191,7 @@
     <select id="countTodosDoneInRange" resultType="long">
         SELECT COUNT(*) FROM todo_task
         WHERE user_id = #{userId}
+            AND is_deleted = 0
             AND is_done = 1
             AND updated_at >= #{start} AND updated_at &lt; #{end}
     </select>
@@ -196,6 +199,7 @@
     <select id="countTodosTotalInRange" resultType="long">
         SELECT COUNT(*) FROM todo_task
         WHERE user_id = #{userId}
+            AND is_deleted = 0
             AND (created_at >= #{start} AND created_at &lt; #{end})
     </select>
 

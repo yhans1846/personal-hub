@@ -6,13 +6,15 @@
     <select id="countByType" resultType="java.lang.Integer">
         <choose>
             <when test="type == 'note'">
-                SELECT COUNT(*) FROM note_category_rel WHERE category_id = #{categoryId}
+                SELECT COUNT(*) FROM note_category_rel ncr
+                JOIN note_note n ON n.id = ncr.note_id
+                WHERE ncr.category_id = #{categoryId} AND n.is_deleted = 0
             </when>
             <when test="type == 'bookmark'">
-                SELECT COUNT(*) FROM bookmark_url WHERE category_id = #{categoryId}
+                SELECT COUNT(*) FROM bookmark_url WHERE category_id = #{categoryId} AND is_deleted = 0
             </when>
             <when test="type == 'file'">
-                SELECT COUNT(*) FROM file_resource WHERE category_id = #{categoryId}
+                SELECT COUNT(*) FROM file_resource WHERE category_id = #{categoryId} AND is_deleted = 0
             </when>
             <otherwise>
                 SELECT 0

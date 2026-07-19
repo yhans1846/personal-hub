@@ -6,6 +6,7 @@
         SELECT b.* FROM bookmark_url b
         <where>
             b.user_id = #{userId}
+            AND b.is_deleted = 0
             <if test="query.keyword != null and query.keyword != ''">
                 AND (b.title LIKE CONCAT('%', #{query.keyword}, '%')
                      OR b.url LIKE CONCAT('%', #{query.keyword}, '%')

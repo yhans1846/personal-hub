@@ -24,6 +24,7 @@
         SELECT id, title
         FROM todo_task
         WHERE user_id = #{userId}
+          AND is_deleted = 0
           AND is_done = 0
           AND due_date &lt; #{today}
     </select>
