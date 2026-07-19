@@ -32,6 +32,7 @@ const modeLabel = computed(() => {
     case 'edit': return '编辑模式'
     case 'preview': return '预览模式'
     case 'focus': return '专注模式'
+    default: return ''
   }
 })
 

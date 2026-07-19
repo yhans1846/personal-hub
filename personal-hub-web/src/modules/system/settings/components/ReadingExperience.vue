@@ -30,13 +30,6 @@ function changeFontSize(delta: number) {
   if (next !== undefined) store.updateConfig({ fontSize: next })
 }
 
-// ─── 行高百分比（滑块显示用）───
-function lhPercent(lh: number): number {
-  const min = LINE_HEIGHTS[0]
-  const max = LINE_HEIGHTS[LINE_HEIGHTS.length - 1]
-  return ((lh - min) / (max - min)) * 100
-}
-
 // ─── 恢复默认 ───
 async function handleReset() {
   await store.resetConfig()
@@ -183,11 +176,9 @@ async function handleReset() {
 </template>
 
 <style scoped>
-.reading-experience { }
-
 /* ─── 分区（节奏见 settings-layout.css，此处仅补组件私有） ─── */
 .setting-section {
-  margin-bottom: 20px;
+  margin-bottom: var(--sp-5);
 }
 .setting-section:last-child {
   margin-bottom: 0;
@@ -197,12 +188,12 @@ async function handleReset() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 10px;
+  margin-bottom: var(--sp-3);
 }
 
 .section-title {
-  margin: 0 0 10px;
-  font-size: 13px;
+  margin: 0 0 var(--sp-3);
+  font-size: var(--text-sm);
   font-weight: 600;
   color: var(--text-secondary);
 }
@@ -213,8 +204,8 @@ async function handleReset() {
 .reset-link {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font-size: 11px;
+  gap: var(--sp-1);
+  font-size: var(--text-xs);
   color: var(--text-tertiary);
   background: none;
   border: none;
@@ -231,17 +222,17 @@ async function handleReset() {
 .setting-row {
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin-bottom: 12px;
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-3);
 }
 .setting-row:last-child {
   margin-bottom: 0;
 }
 
 .setting-label {
-  font-size: 13px;
+  font-size: var(--text-sm);
   color: var(--text-tertiary);
-  width: 40px;
+  width: var(--sp-10);
   flex-shrink: 0;
 }
 
@@ -249,16 +240,16 @@ async function handleReset() {
 .font-size-control {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--sp-2);
 }
 
 .size-btn {
-  width: 36px;
-  height: 32px;
+  width: var(--sp-8);
+  height: var(--sp-6);
   border: 1px solid var(--border-color);
   background: var(--bg-card);
   border-radius: var(--radius-sm);
-  font-size: 14px;
+  font-size: var(--text-sm);
   color: var(--text-secondary);
   cursor: pointer;
   display: flex;
@@ -279,9 +270,9 @@ async function handleReset() {
 }
 
 .size-value {
-  min-width: 28px;
+  min-width: var(--sp-6);
   text-align: center;
-  font-size: 15px;
+  font-size: var(--text-base);
   font-weight: 600;
   color: var(--text-primary);
 }
@@ -289,12 +280,12 @@ async function handleReset() {
 /* ─── 宽度 ─── */
 .width-options {
   display: flex;
-  gap: 4px;
+  gap: var(--sp-1);
 }
 
 .width-btn {
-  padding: 6px 14px;
-  font-size: 13px;
+  padding: 6px var(--sp-3);
+  font-size: var(--text-sm);
   border: 1px solid var(--border-color);
   background: var(--bg-card);
   border-radius: var(--radius-sm);
@@ -319,7 +310,7 @@ async function handleReset() {
   flex: 1;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--sp-3);
 }
 
 .lh-slider {
@@ -327,7 +318,7 @@ async function handleReset() {
   appearance: none;
   flex: 1;
   max-width: 200px;
-  height: 4px;
+  height: var(--sp-1);
   border-radius: var(--radius-sm);
   background: var(--border-color);
   outline: none;
@@ -336,8 +327,8 @@ async function handleReset() {
 
 .lh-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 14px;
-  height: 14px;
+  width: var(--sp-3);
+  height: var(--sp-3);
   border-radius: 50%;
   background: var(--accent);
   border: 2px solid var(--bg-body);
@@ -351,8 +342,8 @@ async function handleReset() {
 }
 
 .lh-slider::-moz-range-thumb {
-  width: 14px;
-  height: 14px;
+  width: var(--sp-3);
+  height: var(--sp-3);
   border-radius: 50%;
   background: var(--accent);
   border: 2px solid var(--bg-body);
@@ -361,8 +352,8 @@ async function handleReset() {
 }
 
 .lh-value {
-  min-width: 28px;
-  font-size: 13px;
+  min-width: var(--sp-6);
+  font-size: var(--text-sm);
   font-weight: 500;
   color: var(--text-primary);
 }
@@ -371,14 +362,14 @@ async function handleReset() {
 .theme-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  gap: var(--sp-2);
 }
 
 .theme-card {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 14px;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
   border: 1px solid var(--border-color);
   background: var(--bg-card);
   border-radius: var(--radius-md);
@@ -399,9 +390,9 @@ async function handleReset() {
 }
 
 .theme-icon {
-  font-size: 20px;
+  font-size: var(--text-xl);
   flex-shrink: 0;
-  width: 32px;
+  width: var(--sp-8);
   text-align: center;
 }
 
@@ -412,26 +403,26 @@ async function handleReset() {
 }
 
 .theme-name {
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 500;
   color: var(--text-primary);
 }
 
 .theme-desc {
-  font-size: 11px;
+  font-size: var(--text-xs);
   color: var(--text-tertiary);
 }
 
 /* ─── 图片比例 ─── */
 .image-width-options {
   display: flex;
-  gap: 4px;
+  gap: var(--sp-1);
 }
 
 .pct-btn {
   flex: 1;
-  padding: 8px 4px;
-  font-size: 13px;
+  padding: var(--sp-2) var(--sp-1);
+  font-size: var(--text-sm);
   font-weight: 500;
   border: 1px solid var(--border-color);
   background: var(--bg-card);
@@ -455,12 +446,12 @@ async function handleReset() {
 /* ─── 内联选项组 ─── */
 .inline-options {
   display: flex;
-  gap: 4px;
+  gap: var(--sp-1);
 }
 
 .inline-btn {
-  padding: 6px 14px;
-  font-size: 13px;
+  padding: 6px var(--sp-3);
+  font-size: var(--text-sm);
   border: 1px solid var(--border-color);
   background: var(--bg-card);
   border-radius: var(--radius-sm);

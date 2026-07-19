@@ -25,6 +25,7 @@
 | Element Plus · lucide / `@lucide/vue` | 唯一图标源 |
 | vditor | Markdown WYSIWYG（IR） |
 | sortablejs · ECharts 6 | 拖拽 / 图表 |
+| ESLint 9+ · typescript-eslint · eslint-plugin-vue · unused-imports | `pnpm lint`（扫 `src`） |
 
 Node **22 LTS** · **pnpm**。编码与 UI 见 `STYLE_GUIDE.md`；页面形态见 `PAGE_SPEC.md`。
 

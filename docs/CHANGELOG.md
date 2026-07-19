@@ -5,6 +5,7 @@
 ## [Unreleased]
 
 ### 2026-07-19
+- **代码质量（前端）**：接入 ESLint（`pnpm lint`，unused-imports）；外观/阅读设置页间距字号收敛 `--sp-*` / `--text-*`
 - **代码质量（前端）**：外观拆至 `themeStore`（layout 仅菜单/工作台/统计）；阅读/文件封面 `loading=lazy`；待办 Sortable 按 id 序列刷新；日记保存补错误提示
 - **代码质量（前端）**：剩余列表（日记/阅读/学习计划/文件）接入 `usePaginatedList`；Bookmark/StudyPlan Dialog 接入 `useEntityFormSave`；导出统一 `triggerBlobDownload`；`StatsView` 图表逻辑拆至 `useStatsCharts`
 - **代码质量（前端）**：抽取 `usePaginatedList` / `useEntityDialogHost` / `useEntityFormSave` 与 `apiResult`（unwrap/错误提示）；笔记/待办/收藏/学习记录列表与 Todo/Study/Reading Dialog 接入
