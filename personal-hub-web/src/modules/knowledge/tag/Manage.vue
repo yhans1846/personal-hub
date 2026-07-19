@@ -296,6 +296,8 @@ function toggleSortDir() {
   transition: all var(--transition);
   cursor: default;
   overflow: hidden;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 72px;
 }
 .tag-card:hover {
   box-shadow: var(--shadow-md);

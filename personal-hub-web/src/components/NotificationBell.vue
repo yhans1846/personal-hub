@@ -8,7 +8,11 @@ import { useNotificationConfigStore } from '@/store/notificationConfigStore'
 import { checkNotifications } from '@/api/notificationApi'
 import { formatRelativeTime } from '@/utils/readingTime'
 import { playNotificationSoundIfAllowed } from '@/utils/notificationSound'
+import VirtualList from '@/components/VirtualList.vue'
 import type { NotificationVO } from '@/types/notification'
+
+/** 通知行近似等高（标题+摘要截断+时间），供窗口化滚动 */
+const NOTIF_ITEM_HEIGHT = 72
 
 const router = useRouter()
 const store = useNotificationStore()
@@ -114,30 +118,37 @@ function getTypeIcon(type: string): string {
         <span>暂无通知</span>
       </div>
 
-      <div v-else class="notif-list">
-        <div
-          v-for="n in store.notifications"
-          :key="n.id"
-          class="notif-item"
-          :class="{ unread: !n.isRead }"
-          @click="handleItemClick(n)"
-        >
-          <span class="notif-item-icon">{{ getTypeIcon(n.type) }}</span>
-          <div class="notif-item-content">
-            <div class="notif-item-title">{{ n.title }}</div>
-            <div v-if="n.content" class="notif-item-desc">{{ n.content }}</div>
-            <div class="notif-item-time">{{ formatRelativeTime(n.createdAt) }}</div>
-          </div>
-          <button
-            v-if="!n.isRead"
-            class="notif-item-check"
-            title="标记已读"
-            @click="handleMarkRead($event, n)"
+      <VirtualList
+        v-else
+        class="notif-list"
+        :items="store.notifications"
+        :item-height="NOTIF_ITEM_HEIGHT"
+        :max-height="340"
+        :get-key="(n) => n.id"
+      >
+        <template #default="{ item: n }">
+          <div
+            class="notif-item"
+            :class="{ unread: !n.isRead }"
+            @click="handleItemClick(n)"
           >
-            <Check :size="14" />
-          </button>
-        </div>
-      </div>
+            <span class="notif-item-icon">{{ getTypeIcon(n.type) }}</span>
+            <div class="notif-item-content">
+              <div class="notif-item-title">{{ n.title }}</div>
+              <div v-if="n.content" class="notif-item-desc">{{ n.content }}</div>
+              <div class="notif-item-time">{{ formatRelativeTime(n.createdAt) }}</div>
+            </div>
+            <button
+              v-if="!n.isRead"
+              class="notif-item-check"
+              title="标记已读"
+              @click="handleMarkRead($event, n)"
+            >
+              <Check :size="14" />
+            </button>
+          </div>
+        </template>
+      </VirtualList>
     </div>
   </el-popover>
 </template>
@@ -180,11 +191,14 @@ function getTypeIcon(type: string): string {
 }
 .notif-empty-icon { opacity: 0.4; }
 
-.notif-list { overflow-y: auto; max-height: 340px; margin: 0 -12px; }
+.notif-list { margin: 0 -12px; }
 .notif-item {
   display: flex; align-items: flex-start; gap: 10px;
+  height: 100%;
   padding: 10px 12px; cursor: pointer; border-radius: var(--radius-sm);
   transition: background var(--transition-duration);
+  box-sizing: border-box;
+  overflow: hidden;
 }
 .notif-item:hover { background: var(--bg-hover, #f5f5f5); }
 .notif-item.unread { background: var(--accent-light, #eef2ff); }
@@ -194,7 +208,10 @@ function getTypeIcon(type: string): string {
 
 .notif-item-content { flex: 1; min-width: 0; }
 .notif-item-title { font-size: 13px; font-weight: 500; line-height: 1.4; }
-.notif-item-desc { font-size: 12px; color: var(--text-tertiary, #999); margin-top: 2px; }
+.notif-item-desc {
+  font-size: 12px; color: var(--text-tertiary, #999); margin-top: 2px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 .notif-item-time { font-size: 11px; color: var(--text-placeholder, #bbb); margin-top: 4px; }
 
 .notif-item-check {

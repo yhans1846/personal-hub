@@ -364,6 +364,8 @@ function getTypeIcon(type: string) {
   transition: all var(--transition);
   cursor: default;
   position: relative;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 88px;
 }
 .category-card:hover {
   box-shadow: var(--shadow-md);
