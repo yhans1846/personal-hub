@@ -61,11 +61,6 @@ export function backupNow() {
   return request.post<Result<{ id: number; downloadUrl: string }>>('/backup/now')
 }
 
-/** 获取备份列表 */
-export function getBackupList() {
-  return request.get<Result<any[]>>('/backup/list')
-}
-
 /** 导入备份 */
 export function importBackup(file: File) {
   const formData = new FormData()

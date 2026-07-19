@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, type Component } from 'vue'
 import { useLayoutStore } from '@/store/layoutStore'
 import { useThemeStore } from '@/store/themeStore'
 import { ElMessageBox, ElMessage } from 'element-plus'
@@ -19,7 +19,7 @@ const themeStore = useThemeStore()
 
 interface TabItem {
   key: string
-  icon: any
+  icon: Component
   label: string
 }
 
@@ -31,7 +31,6 @@ const tabs: TabItem[] = [
 ]
 
 const activeTab = ref('workspace')
-const showSaveHint = ref(false)
 
 async function handleResetAll() {
   try {
@@ -44,11 +43,6 @@ async function handleResetAll() {
     await themeStore.resetAppearanceConfig()
     ElMessage.success('已恢复所有默认设置')
   } catch { /* cancelled */ }
-}
-
-function onAutoSaved() {
-  showSaveHint.value = true
-  setTimeout(() => { showSaveHint.value = false }, 2000)
 }
 </script>
 
@@ -112,12 +106,6 @@ function onAutoSaved() {
       </Transition>
     </div>
 
-    <Transition name="save-fade">
-      <div v-if="showSaveHint" class="auto-save-bar">
-        <span class="auto-save-dot" />
-        已自动保存
-      </div>
-    </Transition>
   </div>
 </template>
 
@@ -174,33 +162,10 @@ function onAutoSaved() {
   min-height: 300px;
 }
 
-.auto-save-bar {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  justify-content: center;
-  padding: 10px 0;
-  margin-top: 24px;
-  font-size: 12px;
-  color: var(--text-tertiary);
-  border-top: 1px solid var(--border-light);
-}
-.auto-save-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--success);
-}
-
 .tab-fade-enter-active,
 .tab-fade-leave-active {
   transition: opacity var(--transition-duration) ease, transform var(--transition-duration) ease;
 }
 .tab-fade-enter-from { opacity: 0; transform: translateY(6px); }
 .tab-fade-leave-to { opacity: 0; transform: translateY(-6px); }
-
-.save-fade-enter-active,
-.save-fade-leave-active { transition: opacity var(--transition-duration) ease; }
-.save-fade-enter-from,
-.save-fade-leave-to { opacity: 0; }
 </style>

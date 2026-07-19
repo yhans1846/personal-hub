@@ -27,7 +27,7 @@ function normalizeContentWidth(raw: unknown): number {
 }
 
 /** 将外观配置落到 document CSS 变量 / data-* */
-export function applyAppearanceToDOM(config: AppearanceConfig | ExtendedAppearanceConfig) {
+function applyAppearanceToDOM(config: AppearanceConfig | ExtendedAppearanceConfig) {
   const ext = { ...DEFAULT_APPEARANCE, ...config } as ExtendedAppearanceConfig
   ext.contentWidth = normalizeContentWidth(ext.contentWidth)
   const root = document.documentElement

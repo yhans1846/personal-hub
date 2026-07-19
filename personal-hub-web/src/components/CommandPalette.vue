@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, type Component } from 'vue'
 import { useRouter } from 'vue-router'
 import { globalSearch } from '@/modules/dashboard/api'
 import { Search, LayoutDashboard, FileText, CheckSquare, PenLine, BookOpen, Bookmark, Target, BookMarked, FolderOpen, BarChart3, Clock } from 'lucide-vue-next'
-import type { SearchGroup } from '@/modules/dashboard/api'
+import type { SearchGroup, SearchItem } from '@/modules/dashboard/api'
 
 const router = useRouter()
 const visible = ref(false)
@@ -50,7 +50,7 @@ const filteredPages = computed(() => {
 })
 
 const allResults = computed(() => {
-  const items: { type: string; label: string; path?: string; item?: any; icon?: any }[] = []
+  const items: { type: string; label: string; path?: string; item?: SearchItem; icon?: Component }[] = []
   const kw = keyword.value.trim()
   if (kw) {
     items.push({

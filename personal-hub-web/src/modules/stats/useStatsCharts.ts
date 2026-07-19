@@ -1,5 +1,6 @@
 import type { Ref } from 'vue'
 import * as echarts from 'echarts'
+import type { CallbackDataParams } from 'echarts/types/dist/shared'
 import type { StatsVO } from '@/modules/dashboard/api'
 
 export type UseStatsChartsOptions = {
@@ -68,9 +69,11 @@ export function useStatsCharts(options: UseStatsChartsOptions) {
       grid: { left: 45, right: 16, top: 20, bottom: 25 },
       tooltip: {
         trigger: 'axis',
-        formatter: (params: any) => {
-          const p = params[0]
-          return `${p.axisValue}<br/>${p.marker} 学习时长: ${p.value} 分钟`
+        formatter: (params: CallbackDataParams | CallbackDataParams[]) => {
+          const list = Array.isArray(params) ? params : [params]
+          const p = list[0]
+          if (!p) return ''
+          return `${p.axisValueLabel ?? p.name}<br/>${p.marker} 学习时长: ${p.value} 分钟`
         },
       },
       xAxis: {
@@ -114,13 +117,16 @@ export function useStatsCharts(options: UseStatsChartsOptions) {
       grid: { left: 45, right: 30, top: 20, bottom: 25 },
       tooltip: {
         trigger: 'axis',
-        formatter: (params: any) => {
-          const p = params[0]
+        formatter: (params: CallbackDataParams | CallbackDataParams[]) => {
+          const list = Array.isArray(params) ? params : [params]
+          const p = list[0]
+          if (!p) return ''
           let extra = ''
-          if (params.length > 1 && params[1]?.seriesName === '平均线') {
-            extra = `<br/>${params[1].marker} 日均: ${avg}`
+          const avgLine = list[1]
+          if (avgLine?.seriesName === '平均线') {
+            extra = `<br/>${avgLine.marker} 日均: ${avg}`
           }
-          return `${p.axisValue}<br/>${p.marker} 新增笔记: ${p.value}${extra}`
+          return `${p.axisValueLabel ?? p.name}<br/>${p.marker} 新增笔记: ${p.value}${extra}`
         },
       },
       xAxis: {
@@ -229,9 +235,11 @@ export function useStatsCharts(options: UseStatsChartsOptions) {
       tooltip: {
         trigger: 'axis',
         axisPointer: { type: 'shadow' },
-        formatter: (params: any) => {
-          const p = params[0]
-          return `${p.axisValue}<br/>${p.marker} ${p.value}`
+        formatter: (params: CallbackDataParams | CallbackDataParams[]) => {
+          const list = Array.isArray(params) ? params : [params]
+          const p = list[0]
+          if (!p) return ''
+          return `${p.axisValueLabel ?? p.name}<br/>${p.marker} ${p.value}`
         },
       },
       xAxis: {
@@ -263,7 +271,7 @@ export function useStatsCharts(options: UseStatsChartsOptions) {
           fontSize: 12,
           fontWeight: 600,
           color: '#6b7280',
-          formatter: (p: any) => p.value,
+          formatter: (p: CallbackDataParams) => String(p.value ?? ''),
         },
       }],
     })

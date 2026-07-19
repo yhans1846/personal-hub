@@ -20,11 +20,11 @@ app.mount('#app')
 const storedTheme = localStorage.getItem('theme-preference')
 if (storedTheme) {
   document.documentElement.setAttribute('data-theme', storedTheme)
-  ;(window as any).__themeUserOverride = true
+  window.__themeUserOverride = true
 } else {
   const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)')
   function updateTheme(e: MediaQueryListEvent | MediaQueryList) {
-    if ((window as any).__themeUserOverride) return
+    if (window.__themeUserOverride) return
     document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light')
   }
   darkModeQuery.addEventListener('change', updateTheme)

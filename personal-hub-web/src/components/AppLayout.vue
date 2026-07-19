@@ -3,23 +3,18 @@ import type { Component } from 'vue'
 import { useAuthStore } from '@/store/authStore'
 import { useLayoutStore } from '@/store/layoutStore'
 import { useThemeStore } from '@/store/themeStore'
-import { useRouter, useRoute } from 'vue-router'
+import { useRoute } from 'vue-router'
 import type { AppearanceConfig } from '@/types/layout'
 import { LayoutDashboard, FileText, BookOpen, CheckSquare, PenLine, Bookmark, Target, BookMarked, FolderOpen, Grid3X3, Tags, Settings, Trash2, Search, BarChart3, Sun, Moon, Menu, X, ChevronDown, LogOut } from 'lucide-vue-next'
 import { ref, computed, onMounted } from 'vue'
 import CommandPalette from './CommandPalette.vue'
 import NotificationBell from './NotificationBell.vue'
 import ProfileDrawer from './ProfileDrawer.vue'
-import TodoDialog from '@/modules/planning/todo/TodoDialog.vue'
-import DiaryDialog from '@/modules/knowledge/diary/DiaryDialog.vue'
-import BookmarkDialog from '@/modules/resource/bookmark/BookmarkDialog.vue'
-import StudyDialog from '@/modules/knowledge/study/StudyDialog.vue'
 import type { MenuItem } from '@/types/layout'
 
 const authStore = useAuthStore()
 const layoutStore = useLayoutStore()
 const themeStore = useThemeStore()
-const router = useRouter()
 const route = useRoute()
 
 const iconMap: Record<string, Component> = {
@@ -118,7 +113,7 @@ function toggleTheme() {
   const theme = isDark.value ? 'dark' : 'light'
   document.documentElement.setAttribute('data-theme', theme)
   localStorage.setItem('theme-preference', theme)
-  ;(window as any).__themeUserOverride = true
+  window.__themeUserOverride = true
   const appConfig = themeStore.appearanceConfig
   if (appConfig) {
     themeStore.saveAppearanceConfig({
@@ -128,17 +123,7 @@ function toggleTheme() {
   }
 }
 
-// 强调色
-const accentColors = [
-  { key: 'blue', color: '#4F7BFF' },
-  { key: 'purple', color: '#8B5CF6' },
-  { key: 'cyan', color: '#06B6D4' },
-  { key: 'orange', color: '#F97316' },
-  { key: 'green', color: '#10B981' },
-]
-const currentAccent = ref(document.documentElement.getAttribute('data-accent') || 'blue')
 function setAccent(key: string) {
-  currentAccent.value = key
   document.documentElement.setAttribute('data-accent', key)
   localStorage.setItem('accent-preference', key)
   const appConfig = themeStore.appearanceConfig
@@ -150,30 +135,11 @@ function setAccent(key: string) {
   }
 }
 
-// 暴露全局钩子供 layoutStore 使用
-;(window as any).__setTheme = (theme: string) => { isDark.value = theme === 'dark' }
-;(window as any).__setAccent = (key: string) => { currentAccent.value = key }
-
 onMounted(() => {
   const saved = localStorage.getItem('accent-preference')
   if (saved) setAccent(saved)
   if (!layoutStore.loaded) layoutStore.fetchLayout()
 })
-
-// 快捷创建 — 弹窗/跳转统一入口
-const todoVisible = ref(false)
-const diaryVisible = ref(false)
-const bookmarkVisible = ref(false)
-const studyVisible = ref(false)
-
-function handleQuickCreate(cmd: string) {
-  if (cmd === 'note') { router.push('/notes/new'); return }
-  if (cmd === 'todo') { todoVisible.value = true; return }
-  if (cmd === 'diary') { diaryVisible.value = true; return }
-  if (cmd === 'bookmark') { bookmarkVisible.value = true; return }
-  if (cmd === 'study-record') { studyVisible.value = true; return }
-  router.push('/notes/new')
-}
 </script>
 
 <template>
@@ -278,12 +244,6 @@ function handleQuickCreate(cmd: string) {
       </main>
     </div>
     <CommandPalette ref="commandPaletteRef" />
-
-    <!-- 快捷创建弹窗 -->
-    <TodoDialog v-model="todoVisible" @saved="todoVisible = false" />
-    <DiaryDialog v-model="diaryVisible" @saved="diaryVisible = false" />
-    <BookmarkDialog v-model="bookmarkVisible" @saved="bookmarkVisible = false" />
-    <StudyDialog v-model="studyVisible" @saved="studyVisible = false" />
 
     <!-- 个人资料抽屉 -->
     <ProfileDrawer v-model:visible="profileDrawerOpen" />

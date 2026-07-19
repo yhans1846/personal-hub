@@ -8,10 +8,6 @@ export function getNotificationList(params?: { page?: number; size?: number }) {
   return request.get<Result<PageResult<NotificationVO>>>('/notifications', { params })
 }
 
-export function getUnreadCount() {
-  return request.get<Result<number>>('/notifications/unread-count')
-}
-
 export function markAsRead(ids: number[]) {
   return request.put<Result<void>>('/notifications/read', ids)
 }

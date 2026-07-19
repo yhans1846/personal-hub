@@ -18,10 +18,13 @@ onMounted(async () => {
       handle: '.chip-handle',
       ghostClass: 'card-chip--ghost',
       onEnd: (evt) => {
-        const items = layoutStore.dashboardCards as any[]
-        const item = items.splice(evt.oldIndex!, 1)[0]
-        items.splice(evt.newIndex!, 0, item)
-        items.forEach((it: any, idx: number) => { it.order = idx + 1 })
+        const items = layoutStore.dashboardCards as CardItem[]
+        const from = evt.oldIndex ?? 0
+        const to = evt.newIndex ?? 0
+        const [item] = items.splice(from, 1)
+        if (!item) return
+        items.splice(to, 0, item)
+        items.forEach((it, idx) => { it.order = idx + 1 })
         persist()
       },
     })

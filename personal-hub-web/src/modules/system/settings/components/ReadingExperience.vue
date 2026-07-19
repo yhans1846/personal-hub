@@ -23,7 +23,7 @@ const THEMES: { value: PreviewTheme; icon: string; label: string; desc: string }
 const IMAGE_WIDTHS = [60, 70, 80, 90, 100] as const
 
 // ─── 字号 ───
-const fontSizeIdx = () => FONT_SIZES.indexOf(config.value.fontSize as any)
+const fontSizeIdx = () => (FONT_SIZES as readonly number[]).indexOf(config.value.fontSize)
 function changeFontSize(delta: number) {
   const idx = fontSizeIdx()
   const next = FONT_SIZES[idx + delta]
