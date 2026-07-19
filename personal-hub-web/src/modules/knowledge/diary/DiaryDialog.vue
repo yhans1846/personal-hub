@@ -5,6 +5,7 @@ import {
   uploadDiaryImage, deleteDiaryImage,
 } from '@/modules/knowledge/api'
 import { getDiaryImagePreviewUrl, revokePreviewUrl } from '@/utils/file'
+import { handleApiError } from '@/utils/apiResult'
 import { ElMessage } from 'element-plus'
 import { ImagePlus, X, MapPin, LocateFixed, Loader2 } from 'lucide-vue-next'
 import Sortable from 'sortablejs'
@@ -160,6 +161,8 @@ async function handleSave() {
       emit('created', id)
       ElMessage.success('已创建，可以添加配图')
     }
+  } catch (e) {
+    handleApiError(e, '保存失败')
   } finally { saving.value = false }
 }
 

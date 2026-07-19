@@ -2,7 +2,9 @@
 import type { Component } from 'vue'
 import { useAuthStore } from '@/store/authStore'
 import { useLayoutStore } from '@/store/layoutStore'
+import { useThemeStore } from '@/store/themeStore'
 import { useRouter, useRoute } from 'vue-router'
+import type { AppearanceConfig } from '@/types/layout'
 import { LayoutDashboard, FileText, BookOpen, CheckSquare, PenLine, Bookmark, Target, BookMarked, FolderOpen, Grid3X3, Tags, Settings, Trash2, Search, BarChart3, Sun, Moon, Menu, X, ChevronDown, LogOut } from 'lucide-vue-next'
 import { ref, computed, onMounted } from 'vue'
 import CommandPalette from './CommandPalette.vue'
@@ -16,6 +18,7 @@ import type { MenuItem } from '@/types/layout'
 
 const authStore = useAuthStore()
 const layoutStore = useLayoutStore()
+const themeStore = useThemeStore()
 const router = useRouter()
 const route = useRoute()
 
@@ -116,9 +119,13 @@ function toggleTheme() {
   document.documentElement.setAttribute('data-theme', theme)
   localStorage.setItem('theme-preference', theme)
   ;(window as any).__themeUserOverride = true
-  // 同步外观配置
-  const appConfig = layoutStore.appearanceConfig
-  if (appConfig) layoutStore.saveAppearanceConfig({ ...appConfig, theme: theme as any })
+  const appConfig = themeStore.appearanceConfig
+  if (appConfig) {
+    themeStore.saveAppearanceConfig({
+      ...appConfig,
+      theme: theme as AppearanceConfig['theme'],
+    })
+  }
 }
 
 // 强调色
@@ -134,9 +141,13 @@ function setAccent(key: string) {
   currentAccent.value = key
   document.documentElement.setAttribute('data-accent', key)
   localStorage.setItem('accent-preference', key)
-  // 同步外观配置
-  const appConfig = layoutStore.appearanceConfig
-  if (appConfig) layoutStore.saveAppearanceConfig({ ...appConfig, accent: key as any })
+  const appConfig = themeStore.appearanceConfig
+  if (appConfig) {
+    themeStore.saveAppearanceConfig({
+      ...appConfig,
+      accent: key as AppearanceConfig['accent'],
+    })
+  }
 }
 
 // 暴露全局钩子供 layoutStore 使用

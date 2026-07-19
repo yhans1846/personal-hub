@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { useLayoutStore } from '@/store/layoutStore'
+import { useThemeStore } from '@/store/themeStore'
 import { ElMessage } from 'element-plus'
 import { storeToRefs } from 'pinia'
 import { Sun, Moon, Leaf, RotateCcw, Maximize2, Minimize2, Wind, Minus, Plus } from 'lucide-vue-next'
 import type { ExtendedAppearanceConfig } from '@/types/layout'
 
-const layoutStore = useLayoutStore()
-const { appearanceConfig } = storeToRefs(layoutStore)
+const themeStore = useThemeStore()
+const { appearanceConfig } = storeToRefs(themeStore)
 
 const ACCENT_OPTIONS = [
   { key: 'blue', label: '蓝色', color: '#4F7BFF' },
@@ -41,11 +41,11 @@ const DENSITY_OPTIONS = [
 ] as const
 
 function setTheme(theme: ExtendedAppearanceConfig['theme']) {
-  layoutStore.saveAppearanceConfig({ ...appearanceConfig.value, theme })
+  themeStore.saveAppearanceConfig({ ...appearanceConfig.value, theme })
 }
 
 function setAccent(key: string) {
-  layoutStore.saveAppearanceConfig({
+  themeStore.saveAppearanceConfig({
     ...appearanceConfig.value,
     accent: key as ExtendedAppearanceConfig['accent'],
   })
@@ -55,7 +55,7 @@ function setAppearance<K extends keyof ExtendedAppearanceConfig>(
   key: K,
   value: ExtendedAppearanceConfig[K],
 ) {
-  layoutStore.saveAppearanceConfig({ ...appearanceConfig.value, [key]: value })
+  themeStore.saveAppearanceConfig({ ...appearanceConfig.value, [key]: value })
 }
 
 /** 拖动时即时预览宽度，松手再持久化 */
@@ -84,7 +84,7 @@ function nudgeContentWidth(delta: number) {
 }
 
 async function handleReset() {
-  await layoutStore.resetAppearanceConfig()
+  await themeStore.resetAppearanceConfig()
   ElMessage.success('外观已恢复默认')
 }
 </script>

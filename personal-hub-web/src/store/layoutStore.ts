@@ -1,9 +1,9 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { getLayoutAll, saveLayout, resetLayout } from '@/api/layoutApi'
-import { useStorageSync } from '@/composables/useStorageSync'
 import { DEFAULT_MENU_ITEMS, DEFAULT_DASHBOARD_ITEMS, DEFAULT_STATS_CARDS, ensureDashboardCards, REMOVED_DASHBOARD_CODES } from '@/modules/dashboard/defaultLayouts'
-import type { MenuItem, CardItem, LayoutItem, AppearanceConfig, ExtendedAppearanceConfig } from '@/types/layout'
+import type { MenuItem, CardItem, LayoutItem, LayoutResponse } from '@/types/layout'
+import { useThemeStore } from '@/store/themeStore'
 
 const STORAGE_KEY_MENU = 'layout-menu'
 const STORAGE_KEY_DASHBOARD = 'layout-dashboard-v5'
@@ -17,7 +17,7 @@ function loadFromStorage<T>(key: string, defaults: T[]): T[] {
   return defaults.map(item => ({ ...item }))
 }
 
-function saveToStorage(key: string, data: any[]) {
+function saveToStorage(key: string, data: unknown[]) {
   localStorage.setItem(key, JSON.stringify(data))
 }
 
@@ -26,21 +26,18 @@ function toLayoutItem(item: MenuItem | CardItem): LayoutItem {
 }
 
 /**
- * 布局配置 Store
+ * 布局配置 Store（菜单 / 工作台 / 统计卡片）
+ * 外观主题见 useThemeStore
  */
 export const useLayoutStore = defineStore('layout', () => {
-  // --- State ---
   const menuItems = ref<MenuItem[]>(migrateMenuItems(loadFromStorage<MenuItem>(STORAGE_KEY_MENU, DEFAULT_MENU_ITEMS)))
   const dashboardCards = ref<CardItem[]>(
     ensureDashboardCards(loadFromStorage<CardItem>(STORAGE_KEY_DASHBOARD, DEFAULT_DASHBOARD_ITEMS)),
   )
-  // 补齐新增卡片后写回本地，避免刷新丢失
   saveToStorage(STORAGE_KEY_DASHBOARD, dashboardCards.value)
   const statsCards = ref<CardItem[]>(loadFromStorage<CardItem>(STORAGE_KEY_STATS, DEFAULT_STATS_CARDS))
   const loaded = ref(false)
 
-  // --- Getters ---
-  /** 按 section 分组的可见菜单，已排序 */
   const visibleMenuSections = computed(() => {
     const sections: { title: string; key: string; items: MenuItem[] }[] = [
       { title: '工作区', key: 'workspace', items: [] },
@@ -60,26 +57,22 @@ export const useLayoutStore = defineStore('layout', () => {
     return sections.filter(s => s.items.length > 0)
   })
 
-  /** 可见且已排序的 dashboard 卡片 */
   const visibleDashboardCards = computed(() => {
     return [...dashboardCards.value]
       .filter(card => card.visible)
       .sort((a, b) => a.order - b.order)
   })
 
-  /** 可见且已排序的统计卡片 */
   const visibleStatsCards = computed(() => {
     return [...statsCards.value]
       .filter(card => card.visible)
       .sort((a, b) => a.order - b.order)
   })
 
-  // --- Actions ---
-  /** 从后端加载配置（合并到本地，保留展示字段） */
   async function fetchLayout() {
     try {
       const res = await getLayoutAll()
-      const layouts = res.data.data
+      const layouts = (res.data.data ?? []) as LayoutResponse[]
       for (const layout of layouts) {
         if (layout.layoutType === 'menu' && layout.layoutJson) {
           const parsed = JSON.parse(layout.layoutJson)
@@ -107,11 +100,10 @@ export const useLayoutStore = defineStore('layout', () => {
     } catch {
       console.warn('获取布局配置失败，使用本地缓存')
     }
-    await fetchAppearanceFromBackend()
+    await useThemeStore().fetchAppearanceFromBackend()
     loaded.value = true
   }
 
-  /** 保存菜单配置 */
   async function saveMenuConfig(items: MenuItem[]) {
     menuItems.value = items
     saveToStorage(STORAGE_KEY_MENU, items)
@@ -121,7 +113,6 @@ export const useLayoutStore = defineStore('layout', () => {
     })
   }
 
-  /** 保存 Dashboard 卡片配置 */
   async function saveDashboardConfig(items: CardItem[]) {
     dashboardCards.value = items
     saveToStorage(STORAGE_KEY_DASHBOARD, items)
@@ -131,21 +122,18 @@ export const useLayoutStore = defineStore('layout', () => {
     })
   }
 
-  /** 恢复默认菜单 */
   async function resetMenuConfig() {
     menuItems.value = DEFAULT_MENU_ITEMS.map(item => ({ ...item }))
     saveToStorage(STORAGE_KEY_MENU, menuItems.value)
     await resetLayout('menu')
   }
 
-  /** 恢复默认 Dashboard */
   async function resetDashboardConfig() {
     dashboardCards.value = DEFAULT_DASHBOARD_ITEMS.map(item => ({ ...item }))
     saveToStorage(STORAGE_KEY_DASHBOARD, dashboardCards.value)
     await resetLayout('dashboard')
   }
 
-  /** 保存统计卡片配置 */
   async function saveStatsConfig(items: CardItem[]) {
     statsCards.value = items
     saveToStorage(STORAGE_KEY_STATS, items)
@@ -155,146 +143,19 @@ export const useLayoutStore = defineStore('layout', () => {
     })
   }
 
-  /** 恢复默认统计卡片 */
   async function resetStatsConfig() {
     statsCards.value = DEFAULT_STATS_CARDS.map(item => ({ ...item }))
     saveToStorage(STORAGE_KEY_STATS, statsCards.value)
     await resetLayout('stats')
   }
 
-  /** 恢复所有默认配置 */
   async function resetAll() {
     await resetMenuConfig()
     await resetDashboardConfig()
     await resetStatsConfig()
   }
 
-  // ---- 外观配置（通过 useStorageSync 管理 localStorage + 后端同步） ----
-
-  const STORAGE_KEY_APPEARANCE = 'appearance-config'
-
-  const DEFAULT_APPEARANCE: ExtendedAppearanceConfig = {
-    theme: 'light',
-    accent: 'blue',
-    borderRadius: 'lg',
-    animationSpeed: 'normal',
-    density: 'standard',
-    contentWidth: 80,
-  }
-
-  /** 兼容旧枚举 narrow/standard/wide/full → 百分比 */
-  function normalizeContentWidth(raw: unknown): number {
-    if (typeof raw === 'number' && Number.isFinite(raw)) {
-      return Math.min(100, Math.max(50, Math.round(raw)))
-    }
-    const legacy: Record<string, number> = {
-      narrow: 60, standard: 75, wide: 90, full: 100,
-    }
-    if (typeof raw === 'string' && legacy[raw] != null) return legacy[raw]
-    return 80
-  }
-
-  const appearanceSync = useStorageSync<ExtendedAppearanceConfig>({
-    storageKey: STORAGE_KEY_APPEARANCE,
-    defaults: DEFAULT_APPEARANCE,
-    fetchApi: async () => {
-      const res = await getLayoutAll()
-      const appLayout = (res.data.data as any[]).find((l: any) => l.layoutType === 'appearance')
-      if (!appLayout?.layoutJson) return null
-      const parsed = JSON.parse(appLayout.layoutJson)
-      return { ...parsed, contentWidth: normalizeContentWidth(parsed.contentWidth) }
-    },
-    saveApi: async (data) => {
-      await saveLayout({
-        layoutType: 'appearance',
-        layoutJson: JSON.stringify(data),
-      })
-    },
-    silent: true,  // 原 fetchAppearanceFromBackend 为静默 catch
-    debugLabel: 'Appearance',
-  })
-
-  const appearanceConfig = appearanceSync.data
-  // 本地旧配置迁移
-  appearanceConfig.contentWidth = normalizeContentWidth(appearanceConfig.contentWidth)
-
-  /** 将外观配置落到 document CSS 变量 / data-*（主题、圆角、动画、密度、内容宽） */
-  function applyAppearanceToDOM(config: AppearanceConfig | ExtendedAppearanceConfig) {
-    const ext = { ...DEFAULT_APPEARANCE, ...config } as ExtendedAppearanceConfig
-    ext.contentWidth = normalizeContentWidth(ext.contentWidth)
-    const root = document.documentElement
-
-    root.setAttribute('data-theme', ext.theme)
-    root.setAttribute('data-accent', ext.accent)
-    root.setAttribute('data-density', ext.density)
-    root.setAttribute('data-radius', ext.borderRadius)
-    root.setAttribute('data-anim', ext.animationSpeed)
-    root.setAttribute('data-content-width', String(ext.contentWidth))
-    localStorage.setItem('theme-preference', ext.theme)
-    localStorage.setItem('accent-preference', ext.accent)
-
-    // 圆角：选项值即基准（与设置页 4/8/12/16px 文案一致）
-    const radiusBase: Record<string, number> = { sm: 4, md: 8, lg: 12, xl: 16 }
-    const r = radiusBase[ext.borderRadius] ?? 12
-    root.style.setProperty('--radius-sm', `${Math.max(2, Math.round(r * 0.5))}px`)
-    root.style.setProperty('--radius-md', `${r}px`)
-    root.style.setProperty('--radius-lg', `${r}px`)
-    root.style.setProperty('--radius-xl', `${Math.round(r * 1.25)}px`)
-    // 全圆仅用于开关等；普通控件用 sm/md/lg/xl 跟随外观
-    root.style.setProperty('--radius-full', '9999px')
-
-    // 动画：全局 --transition 被大量组件引用
-    const animMs: Record<string, string> = { off: '0ms', slow: '350ms', normal: '200ms', fast: '100ms' }
-    const dur = animMs[ext.animationSpeed] ?? '200ms'
-    root.style.setProperty('--transition-duration', dur)
-    root.style.setProperty('--transition', `${dur} ease`)
-
-    // 密度：缩放间距 token（main-content padding 等依赖 --sp-*）
-    const densityScale: Record<string, number> = { comfortable: 1.25, standard: 1, compact: 0.75 }
-    const s = densityScale[ext.density] ?? 1
-    const spBase: Record<string, number> = {
-      '1': 4, '2': 8, '3': 12, '4': 16, '5': 20, '6': 24, '8': 32, '10': 40, '12': 48,
-    }
-    for (const [k, v] of Object.entries(spBase)) {
-      root.style.setProperty(`--sp-${k}`, `${Math.round(v * s)}px`)
-    }
-    root.style.setProperty('--sp-density', String(s))
-
-    // 内容区宽度：相对主内容区百分比
-    root.style.setProperty('--content-max-width', `${ext.contentWidth}%`)
-
-    // 同步 Element Plus 主色（部分组件读 --el-color-primary 实色）
-    requestAnimationFrame(() => {
-      const accent = getComputedStyle(root).getPropertyValue('--accent').trim()
-      if (accent) {
-        root.style.setProperty('--el-color-primary', accent)
-      }
-    })
-  }
-
-  // 本地缓存就绪后立刻应用（避免刷新后设置丢失）
-  applyAppearanceToDOM(appearanceConfig)
-
-  async function fetchAppearanceFromBackend() {
-    await appearanceSync.fetchFromBackend()
-    applyAppearanceToDOM(appearanceConfig)
-  }
-
-  async function saveAppearanceConfig(config: ExtendedAppearanceConfig) {
-    Object.assign(appearanceConfig, { ...DEFAULT_APPEARANCE, ...config })
-    appearanceSync.saveToLocal(appearanceConfig)
-    applyAppearanceToDOM(appearanceConfig)
-    await appearanceSync.saveToBackend(appearanceConfig)
-  }
-
-  async function resetAppearanceConfig() {
-    await saveAppearanceConfig({ ...DEFAULT_APPEARANCE })
-  }
-
-  // --- Helpers ---
-  /** 迁移旧菜单：检测旧 section 分配 → 静默重置默认；移除已废弃项 */
   function migrateMenuItems(items: MenuItem[]): MenuItem[] {
-    // 1) 检测旧 section 缓存（与默认分配不匹配即判定为旧数据）
     const defaultSectionMap = new Map(DEFAULT_MENU_ITEMS.map(m => [m.code, m.section]))
     const needsSectionReset = items.some(item => {
       const expected = defaultSectionMap.get(item.code)
@@ -305,7 +166,6 @@ export const useLayoutStore = defineStore('layout', () => {
       saveToStorage(STORAGE_KEY_MENU, defaults)
       return defaults
     }
-    // 2) 移除已废弃的 code，补充默认中缺失的项
     const validCodes = new Set(DEFAULT_MENU_ITEMS.map(m => m.code))
     const migrated = items.filter(item => validCodes.has(item.code))
     if (migrated.length !== items.length) {
@@ -336,7 +196,6 @@ export const useLayoutStore = defineStore('layout', () => {
     const incomplete = DEFAULT_DASHBOARD_ITEMS.some(d => !backendCodes.has(d.code))
 
     if (incomplete) {
-      // 后端仍是旧卡片集：只同步 visible，order 用 Bento 默认
       const visibleMap = new Map(kept.map(i => [i.code, i.visible]))
       dashboardCards.value = DEFAULT_DASHBOARD_ITEMS.map(def => ({
         ...def,
@@ -371,7 +230,5 @@ export const useLayoutStore = defineStore('layout', () => {
     visibleMenuSections, visibleDashboardCards, visibleStatsCards,
     fetchLayout, saveMenuConfig, saveDashboardConfig, saveStatsConfig,
     resetMenuConfig, resetDashboardConfig, resetStatsConfig, resetAll,
-    appearanceConfig, DEFAULT_APPEARANCE,
-    saveAppearanceConfig, resetAppearanceConfig,
   }
 })

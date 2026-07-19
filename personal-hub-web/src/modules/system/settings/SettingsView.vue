@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useLayoutStore } from '@/store/layoutStore'
+import { useThemeStore } from '@/store/themeStore'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import { LayoutDashboard, BookOpen, Palette, Settings2, RotateCcw } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue'
@@ -14,6 +15,7 @@ import AdvancedSettings from './components/AdvancedSettings.vue'
 import './settings-layout.css'
 
 const layoutStore = useLayoutStore()
+const themeStore = useThemeStore()
 
 interface TabItem {
   key: string
@@ -39,7 +41,7 @@ async function handleResetAll() {
       type: 'warning',
     })
     await layoutStore.resetAll()
-    await layoutStore.resetAppearanceConfig()
+    await themeStore.resetAppearanceConfig()
     ElMessage.success('已恢复所有默认设置')
   } catch { /* cancelled */ }
 }

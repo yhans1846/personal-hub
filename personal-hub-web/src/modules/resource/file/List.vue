@@ -229,7 +229,7 @@ watch(previewOpen, (open) => {
           @keydown.enter="openPreview(file)"
         >
           <div class="file-card-icon" :class="{ 'file-card-icon--thumb': !!thumbMap[file.id] }">
-            <img v-if="thumbMap[file.id]" :src="thumbMap[file.id]" class="file-thumb" alt="" />
+            <img v-if="thumbMap[file.id]" :src="thumbMap[file.id]" class="file-thumb" alt="" loading="lazy" decoding="async" />
             <component v-else :is="getFileIcon(file.typeIcon)" :size="24" />
           </div>
           <div class="file-card-info">

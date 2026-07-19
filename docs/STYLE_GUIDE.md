@@ -61,7 +61,8 @@
 
 - 一律 `<script setup lang="ts">`
 - API：`src/api/` + `modules/*/api.ts`；禁一表一文件
-- Pinia 仅全局（auth/layout/readingConfig/notification/notificationConfig/featureFlags）；列表页内拉 API
+- Pinia 仅全局（auth/theme/layout/readingConfig/notification/notificationConfig/featureFlags）；列表页内拉 API
+- `themeStore`：外观（主题/强调色/圆角/密度/内容宽）；`layoutStore`：菜单/工作台/统计卡片
 - 实验开关：`featureFlagStore.isEnabled`；未实现项 `available: false`（设置页禁用）
 - 通知类型：`enabledTypes` 对齐后端 `TODO_OVERDUE` / `PLAN_DEADLINE` / `PLAN_COMPLETED`，列表与未读计数按配置过滤
 - 图标仅 lucide；编辑器 vditor

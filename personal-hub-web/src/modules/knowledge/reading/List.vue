@@ -261,7 +261,7 @@ const headerSubtitle = computed(() => `共 ${total.value} 本`)
             <div class="col-title">
               <div class="title-cell">
                 <div v-if="showCoverImg(book)" class="thumb">
-                  <img :src="book.coverUrl" alt="" @error="onCoverError(book.id)" />
+                  <img :src="book.coverUrl" alt="" loading="lazy" decoding="async" @error="onCoverError(book.id)" />
                 </div>
                 <div
                   v-else-if="book.coverUrl"
@@ -335,7 +335,7 @@ const headerSubtitle = computed(() => `共 ${total.value} 本`)
           <div class="card-body">
             <div class="card-hero">
               <div v-if="showCoverImg(book)" class="cover">
-                <img :src="book.coverUrl" alt="" @error="onCoverError(book.id)" />
+                <img :src="book.coverUrl" alt="" loading="lazy" decoding="async" @error="onCoverError(book.id)" />
               </div>
               <div
                 v-else-if="book.coverUrl"

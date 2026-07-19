@@ -301,6 +301,8 @@ const moodOptions = [
                   :src="url"
                   class="diary-thumb"
                   alt=""
+                  loading="lazy"
+                  decoding="async"
                   @click="openLightbox(cardImages.get(entry.id)!, i)"
                 />
                 <span v-if="entry.imageFiles.length > 3" class="diary-thumb-more">
@@ -340,6 +342,8 @@ const moodOptions = [
                 :src="cardImages.get(entry.id)![0]"
                 class="dc-cover-img"
                 alt=""
+                loading="lazy"
+                decoding="async"
                 @click="openLightbox(cardImages.get(entry.id)!, 0)"
               />
               <span v-if="entry.imageFiles.length > 1" class="dc-cover-count">

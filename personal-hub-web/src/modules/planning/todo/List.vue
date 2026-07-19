@@ -37,10 +37,15 @@ const { pageSize } = useFillPageSize((size) => {
 
 useDeepLinkDialog({ openCreate, openEdit })
 
-watch(list, async () => {
-  await nextTick()
-  initSortable()
-})
+/** 按 id 序列刷新 Sortable，避免对整个 list 深 watch */
+watch(
+  () => list.value.map((t) => t.id).join(','),
+  async () => {
+    await nextTick()
+    initSortable()
+  },
+  { flush: 'post' },
+)
 
 function initSortable() {
   sortable?.destroy()
