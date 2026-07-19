@@ -19,35 +19,6 @@
           AND is_dismissed = 0
     </update>
 
-    <!-- 查询过期未完成的待办 -->
-    <select id="selectOverdueTodos" resultType="map">
-        SELECT id, title
-        FROM todo_task
-        WHERE user_id = #{userId}
-          AND is_deleted = 0
-          AND is_done = 0
-          AND due_date &lt; #{today}
-    </select>
-
-    <!-- 查询即将截止的学习计划 -->
-    <select id="selectDeadlinePlans" resultType="map">
-        SELECT id, name
-        FROM study_plan
-        WHERE user_id = #{userId}
-          AND is_deleted = 0
-          AND status NOT IN (2, 3)
-          AND end_date BETWEEN #{today} AND #{deadline}
-    </select>
-
-    <!-- 查询已完成的学习计划 -->
-    <select id="selectCompletedPlans" resultType="map">
-        SELECT id, name
-        FROM study_plan
-        WHERE user_id = #{userId}
-          AND status = 2
-          AND is_deleted = 0
-    </select>
-
     <!-- 查询所有用户ID -->
     <select id="selectAllUserIds" resultType="long">
         SELECT DISTINCT id

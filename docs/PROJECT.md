@@ -22,7 +22,9 @@ ph-biz（knowledge/planning/  knowledge/（含 category）· planning/ · resour
   resource/dashboard 包）     dashboard/ · search/ · stats/ · system/
 ```
 
-**划分：** Maven 粗粒度（common / system / biz / boot）· 细领域用 Java package · 跨包走 Service · Dashboard 只聚合不落业务库。
+**划分：** Maven 粗粒度（common / system / biz / boot）· 细领域用 Java package · 跨包走 Service · Dashboard 只聚合不落业务库。  
+**通知：** system 定义 `PlanningNotificationSource`，biz 实现扫描；system 只写 `sys_notification`。  
+**存储：** `StorageService` 无 Web 类型；业务经 `FileAssetService` + `StoragePaths`。
 
 ```
 ph-common ← ph-system ← ph-biz ← ph-boot

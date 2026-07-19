@@ -4,11 +4,14 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.personalhub.common.constant.EntityType;
 import com.personalhub.common.constant.Flags;
 import com.personalhub.system.constant.NotificationType;
 import com.personalhub.system.dto.NotificationQueryDTO;
 import com.personalhub.system.entity.Notification;
 import com.personalhub.system.mapper.NotificationMapper;
+import com.personalhub.system.notification.PlanningNotificationCandidate;
+import com.personalhub.system.notification.PlanningNotificationSource;
 import com.personalhub.system.service.NotificationService;
 import com.personalhub.system.vo.NotificationVO;
 import lombok.RequiredArgsConstructor;
@@ -18,8 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
-
 
 /**
  * 用户通知 Service 实现
@@ -30,6 +31,7 @@ import java.util.Map;
 public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationMapper notificationMapper;
+    private final PlanningNotificationSource planningNotificationSource;
 
     @Override
     public IPage<NotificationVO> list(Long userId, NotificationQueryDTO query) {
@@ -102,44 +104,33 @@ public class NotificationServiceImpl implements NotificationService {
         LocalDate today = LocalDate.now();
         int created = 0;
 
-        // TODO_OVERDUE — 已过期未完成的待办
-        List<Map<String, Object>> overdueTodos = notificationMapper.selectOverdueTodos(userId, today);
-        for (Map<String, Object> row : overdueTodos) {
-            Long todoId = ((Number) row.get("id")).longValue();
-            String title = (String) row.get("title");
-            if (hasNoExistingNotification(userId, NotificationType.TODO_OVERDUE.name(), todoId)) {
+        for (PlanningNotificationCandidate c : planningNotificationSource.findOverdueTodos(userId, today)) {
+            if (hasNoExistingNotification(userId, NotificationType.TODO_OVERDUE.name(), c.getRelatedId())) {
                 create(userId, NotificationType.TODO_OVERDUE.name(),
-                        "待办超期: " + title,
+                        "待办超期: " + c.getTitle(),
                         "待办任务已超过截止日期",
-                        todoId, "todo");
+                        c.getRelatedId(), EntityType.TODO);
                 created++;
             }
         }
 
-        // PLAN_DEADLINE — 未来3天内截止且未完成的计划
-        List<Map<String, Object>> deadlinePlans = notificationMapper.selectDeadlinePlans(userId, today, today.plusDays(3));
-        for (Map<String, Object> row : deadlinePlans) {
-            Long planId = ((Number) row.get("id")).longValue();
-            String name = (String) row.get("name");
-            if (hasNoExistingNotification(userId, NotificationType.PLAN_DEADLINE.name(), planId)) {
+        LocalDate deadline = today.plusDays(3);
+        for (PlanningNotificationCandidate c : planningNotificationSource.findDeadlinePlans(userId, today, deadline)) {
+            if (hasNoExistingNotification(userId, NotificationType.PLAN_DEADLINE.name(), c.getRelatedId())) {
                 create(userId, NotificationType.PLAN_DEADLINE.name(),
-                        "计划即将截止: " + name,
+                        "计划即将截止: " + c.getTitle(),
                         "学习计划截止日期临近",
-                        planId, "study_plan");
+                        c.getRelatedId(), EntityType.STUDY_PLAN);
                 created++;
             }
         }
 
-        // PLAN_COMPLETED — 已完成且进度100%
-        List<Map<String, Object>> completedPlans = notificationMapper.selectCompletedPlans(userId);
-        for (Map<String, Object> row : completedPlans) {
-            Long planId = ((Number) row.get("id")).longValue();
-            String name = (String) row.get("name");
-            if (hasNoExistingNotification(userId, NotificationType.PLAN_COMPLETED.name(), planId)) {
+        for (PlanningNotificationCandidate c : planningNotificationSource.findCompletedPlans(userId)) {
+            if (hasNoExistingNotification(userId, NotificationType.PLAN_COMPLETED.name(), c.getRelatedId())) {
                 create(userId, NotificationType.PLAN_COMPLETED.name(),
-                        "计划已完成: " + name,
+                        "计划已完成: " + c.getTitle(),
                         "恭喜！学习计划已全部完成",
-                        planId, "study_plan");
+                        c.getRelatedId(), EntityType.STUDY_PLAN);
                 created++;
             }
         }
@@ -148,7 +139,6 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     private boolean hasNoExistingNotification(Long userId, String type, Long relatedId) {
-        // 含已读/已清空：清空或已读后不再为同一关联实体重复生成
         Long count = notificationMapper.selectCount(
                 new LambdaQueryWrapper<Notification>()
                         .eq(Notification::getUserId, userId)

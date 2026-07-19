@@ -5,9 +5,7 @@ import com.personalhub.system.entity.Notification;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 用户通知 Mapper
@@ -24,21 +22,6 @@ public interface NotificationMapper extends BaseMapper<Notification> {
      * 清空用户通知
      */
     void clearAllXml(@Param("userId") Long userId);
-
-    /**
-     * 查询过期未完成的待办
-     */
-    List<Map<String, Object>> selectOverdueTodos(@Param("userId") Long userId, @Param("today") LocalDate today);
-
-    /**
-     * 查询即将截止的学习计划
-     */
-    List<Map<String, Object>> selectDeadlinePlans(@Param("userId") Long userId, @Param("today") LocalDate today, @Param("deadline") LocalDate deadline);
-
-    /**
-     * 查询已完成的学习计划
-     */
-    List<Map<String, Object>> selectCompletedPlans(@Param("userId") Long userId);
 
     /**
      * 查询所有用户ID
