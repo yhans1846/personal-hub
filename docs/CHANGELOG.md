@@ -5,6 +5,9 @@
 ## [Unreleased]
 
 ### 2026-07-19
+- **文档**：DEPLOYMENT 增补常用命令速查（状态 / 启停 / 日志 / 进容器）
+- **文档**：DEPLOYMENT 重构为方案一首次 / 方案二日常更新 / 方案三 CI/CD / 方案四运维 + 附录（Docker、环境变量、排障）
+- **文档**：DEPLOYMENT 同步 PORT/PUBLISH、时区、进容器/宿主机/SSH 连库，修正 `.env.example` 复制与后端健康检查写法
 - **部署**：后端/Redis 固定 `Asia/Shanghai`（TZ + JVM `user.timezone` + Logback 显式时区），修复日志比系统时间慢 8 小时
 - **安全（后端）**：本地存储 `resolve` 强制路径落在上传根目录内，拒绝 `../` 穿越
 - **安全（后端）**：抽取 `FilenameGuard`；头像/笔记附件/日记配图统一消毒文件名

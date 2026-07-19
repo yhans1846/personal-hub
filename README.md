@@ -135,7 +135,7 @@ mvn spring-boot:run -pl ph-boot -am -Dspring-boot.run.profiles=prod
 
 ### 生产部署（Docker + CI/CD）
 
-Ubuntu 内网虚拟机可用 Docker Compose 一键运行，并配合 GitHub Actions Self-hosted Runner 自动发布。详见 [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)。
+Ubuntu 内网 VM：Docker Compose（frontend / backend / MySQL / Redis）。按场景选方案——首次上线、日常更新、可选 CI/CD、运维连库——见 [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)。
 
 ---
 
