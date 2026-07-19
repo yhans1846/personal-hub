@@ -29,14 +29,16 @@ public final class BackupZipSupport {
         }
         if (n.startsWith("files/notes/")
                 || n.startsWith("files/diaries/")
-                || n.startsWith("files/uploads/")) {
+                || n.startsWith("files/uploads/")
+                || n.startsWith("files/avatars/")) {
             return;
         }
         // 允许目录条目本身
         if ("data/".equals(n) || "files/".equals(n)
                 || "files/notes/".equals(n)
                 || "files/diaries/".equals(n)
-                || "files/uploads/".equals(n)) {
+                || "files/uploads/".equals(n)
+                || "files/avatars/".equals(n)) {
             return;
         }
         throw new BusinessException("非法备份路径: " + name);

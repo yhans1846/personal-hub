@@ -112,7 +112,7 @@ onMounted(() => {
     <section class="setting-section">
       <h3 class="section-title">数据备份</h3>
       <p class="cache-hint" style="margin-bottom: var(--sp-3)">
-        导出业务数据与相关文件为 ZIP；不含密码、通知与审计日志。
+        导出业务数据、用户资料、头像与相关文件为 ZIP；不含密码、用户名、通知与审计日志。
       </p>
       <div class="action-row">
         <button class="action-btn" :disabled="backingUp" @click="handleBackupNow">

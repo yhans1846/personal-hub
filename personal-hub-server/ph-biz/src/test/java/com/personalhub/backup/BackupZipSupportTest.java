@@ -31,9 +31,14 @@ class BackupZipSupportTest {
     @Test
     void rejectUnknownPrefix() {
         assertThrows(BusinessException.class,
-                () -> BackupZipSupport.assertSafeEntryName("files/avatars/a.png"));
+                () -> BackupZipSupport.assertSafeEntryName("files/secret/a.png"));
         assertThrows(BusinessException.class,
                 () -> BackupZipSupport.assertSafeEntryName("secret.bin"));
+    }
+
+    @Test
+    void acceptAvatar() {
+        assertDoesNotThrow(() -> BackupZipSupport.assertSafeEntryName("files/avatars/a.png"));
     }
 
     @Test

@@ -27,8 +27,10 @@ import com.personalhub.resource.mapper.BookmarkUrlMapper;
 import com.personalhub.resource.mapper.FileResourceMapper;
 import com.personalhub.storage.StorageProperties;
 import com.personalhub.storage.StorageService;
+import com.personalhub.system.entity.User;
 import com.personalhub.system.entity.UserLayout;
 import com.personalhub.system.mapper.UserLayoutMapper;
+import com.personalhub.system.mapper.UserMapper;
 import com.personalhub.system.service.AuditLogService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -82,6 +84,7 @@ public class DataBackupServiceImpl implements DataBackupService {
     private final ReadingRecordMapper readingRecordMapper;
     private final FileResourceMapper fileResourceMapper;
     private final UserLayoutMapper userLayoutMapper;
+    private final UserMapper userMapper;
     private final AuditLogService auditLogService;
 
     @Override
@@ -152,6 +155,11 @@ public class DataBackupServiceImpl implements DataBackupService {
         dataFiles.put("layouts.json", layouts);
         modules.add("layouts");
 
+        User user = userMapper.selectById(userId);
+        UserProfileBackup profile = UserProfileBackup.from(user);
+        dataFiles.put("profile.json", profile);
+        modules.add("profile");
+
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
              ZipOutputStream zos = new ZipOutputStream(baos, StandardCharsets.UTF_8)) {
 
@@ -173,6 +181,16 @@ public class DataBackupServiceImpl implements DataBackupService {
                     addFileToZip(zos, f.getPath(), warnings);
                 } else {
                     warnings.add("missing file: " + f.getPath());
+                }
+            }
+            if (profile != null) {
+                String avatarPath = BackupAvatarPaths.toStoragePath(profile.getAvatar());
+                if (avatarPath != null) {
+                    if (storageService.exists(avatarPath)) {
+                        addFileToZip(zos, avatarPath, warnings);
+                    } else {
+                        warnings.add("missing file: " + avatarPath);
+                    }
                 }
             }
 
@@ -238,6 +256,10 @@ public class DataBackupServiceImpl implements DataBackupService {
                                     .select(FileResource::getPath))
                     .stream().map(FileResource::getPath).filter(p -> p != null && !p.isBlank()).toList();
 
+            User current = userMapper.selectById(userId);
+            String oldAvatarPath = current != null
+                    ? BackupAvatarPaths.toStoragePath(current.getAvatar()) : null;
+
             backupDatabaseWriter.replaceUserData(userId, dataJson);
 
             for (String dir : oldNoteDirs) {
@@ -248,6 +270,9 @@ public class DataBackupServiceImpl implements DataBackupService {
             }
             for (String path : oldFilePaths) {
                 storageService.delete(path);
+            }
+            if (oldAvatarPath != null) {
+                storageService.delete(oldAvatarPath);
             }
 
             Path filesRoot = staging.resolve("files");

@@ -1,5 +1,6 @@
 package com.personalhub.backup;
 
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.personalhub.knowledge.entity.Category;
@@ -24,8 +25,10 @@ import com.personalhub.resource.entity.BookmarkUrl;
 import com.personalhub.resource.entity.FileResource;
 import com.personalhub.resource.mapper.BookmarkUrlMapper;
 import com.personalhub.resource.mapper.FileResourceMapper;
+import com.personalhub.system.entity.User;
 import com.personalhub.system.entity.UserLayout;
 import com.personalhub.system.mapper.UserLayoutMapper;
+import com.personalhub.system.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -55,6 +58,7 @@ public class BackupDatabaseWriter {
     private final ReadingRecordMapper readingRecordMapper;
     private final FileResourceMapper fileResourceMapper;
     private final UserLayoutMapper userLayoutMapper;
+    private final UserMapper userMapper;
 
     @Transactional
     public void replaceUserData(Long userId, Map<String, byte[]> dataJson) throws IOException {
@@ -162,6 +166,31 @@ public class BackupDatabaseWriter {
                 userLayoutMapper.insert(layout);
             }
         });
+
+        byte[] profileRaw = dataJson.get("data/profile.json");
+        if (profileRaw == null) {
+            profileRaw = dataJson.get("profile.json");
+        }
+        if (profileRaw != null) {
+            UserProfileBackup profile = objectMapper.readValue(profileRaw, UserProfileBackup.class);
+            if (profile != null) {
+                userMapper.update(null, new LambdaUpdateWrapper<User>()
+                        .eq(User::getId, userId)
+                        .set(User::getNickname, profile.getNickname())
+                        .set(User::getAvatar, profile.getAvatar())
+                        .set(User::getEmail, profile.getEmail())
+                        .set(User::getGender, profile.getGender())
+                        .set(User::getBirthday, profile.getBirthday())
+                        .set(User::getPhone, profile.getPhone())
+                        .set(User::getCountry, profile.getCountry())
+                        .set(User::getProvince, profile.getProvince())
+                        .set(User::getCity, profile.getCity())
+                        .set(User::getDistrict, profile.getDistrict())
+                        .set(User::getWebsite, profile.getWebsite())
+                        .set(User::getGithub, profile.getGithub())
+                        .set(User::getBio, profile.getBio()));
+            }
+        }
     }
 
     private <T> void insertAll(Map<String, byte[]> dataJson, String key,

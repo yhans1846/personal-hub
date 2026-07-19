@@ -17,8 +17,8 @@
 
 ### 2.1 备份（含）
 
-| 表 | 说明 |
-|----|------|
+| 表 / 项 | 说明 |
+|---------|------|
 | `note_note` | 含回收站 |
 | `note_category_rel` | |
 | `category` | 全部 type |
@@ -30,12 +30,14 @@
 | `reading_record` | |
 | `file_resource` | |
 | `user_layout` | menu / dashboard / preview |
+| `sys_user` 资料字段 | nickname、avatar、email、gender、birthday、phone、地区、website、github、bio（**不含** id/username/password） |
 
 磁盘（相对 storage 根，打入 ZIP `files/`）：
 
 - `notes/{id}/**`
 - `diaries/{id}/**`
 - `uploads/**` 中属于该用户 `file_resource.path` 的文件
+- `avatars/{filename}`（由 avatar URL `/api/files/avatar/{filename}` 解析）
 
 缺文件：写入 `manifest.warnings`，仍生成包（不中断）。
 
@@ -45,7 +47,7 @@
 |----|------|
 | `sys_notification` | 整表 |
 | `audit_log` | 整表 |
-| `sys_user` | 不迁移账号；不碰 password；资料字段本版不覆盖 |
+| `sys_user.username` / `password` | 登录身份与密码不迁移；恢复后仍是当前登录账号 |
 | Redis / 仅前端 localStorage | |
 
 ### 2.3 恢复语义
@@ -66,11 +68,12 @@ data/
   notes.json, categories.json, tags.json, tag_rels.json,
   note_category_rels.json, diaries.json, todos.json,
   bookmarks.json, study_records.json, study_plans.json,
-  readings.json, files.json, layouts.json
+  readings.json, files.json, layouts.json, profile.json
 files/
   notes/...
   diaries/...
   uploads/...
+  avatars/...
 ```
 
 `manifest.json` 字段：`schemaVersion`（1）、`app`（personal-hub）、`createdAt`、`sourceUserId`（仅提示）、`modules[]`、`warnings[]`。
@@ -123,7 +126,7 @@ files/
 
 ## 8. 非本版
 
-自动备份、频率配置、备份列表、`.json.gz`、分模块导出、资料页字段迁移、跨用户合并。
+自动备份、频率配置、备份列表、`.json.gz`、分模块导出、跨用户合并。
 
 ## 9. 测试要点
 
