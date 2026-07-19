@@ -8,6 +8,7 @@ import com.personalhub.common.util.EntityGuard;
 import com.personalhub.planning.dto.TodoCreateDTO;
 import com.personalhub.planning.dto.TodoQueryDTO;
 import com.personalhub.planning.entity.TodoTask;
+import com.personalhub.planning.enums.TodoPriority;
 import com.personalhub.planning.mapper.TodoTaskMapper;
 import com.personalhub.planning.service.TodoTaskService;
 import com.personalhub.planning.vo.TodoVO;
@@ -93,7 +94,7 @@ public class TodoTaskServiceImpl implements TodoTaskService {
                 .userId(userId)
                 .title(dto.getTitle())
                 .content(dto.getContent())
-                .priority(dto.getPriority() != null ? dto.getPriority() : 2)
+                .priority(dto.getPriority() != null ? dto.getPriority() : TodoPriority.MEDIUM.getCode())
                 .dueDate(dto.getDueDate())
                 .build();
         todoTaskMapper.insert(task);
@@ -108,7 +109,7 @@ public class TodoTaskServiceImpl implements TodoTaskService {
                 todoTaskMapper.selectById(id), userId, TodoTask::getUserId, "任务不存在");
         task.setTitle(dto.getTitle());
         task.setContent(dto.getContent());
-        task.setPriority(dto.getPriority() != null ? dto.getPriority() : 2);
+        task.setPriority(dto.getPriority() != null ? dto.getPriority() : TodoPriority.MEDIUM.getCode());
         task.setDueDate(dto.getDueDate());
         todoTaskMapper.updateById(task);
         log.info("编辑待办任务: id={}, userId={}", id, userId);

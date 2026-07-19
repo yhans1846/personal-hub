@@ -12,6 +12,7 @@ import com.personalhub.knowledge.vo.TagVO;
 import com.personalhub.planning.dto.StudyPlanCreateDTO;
 import com.personalhub.planning.dto.StudyPlanQueryDTO;
 import com.personalhub.planning.entity.StudyPlan;
+import com.personalhub.planning.enums.StudyPlanStatus;
 import com.personalhub.planning.mapper.StudyPlanMapper;
 import com.personalhub.planning.service.StudyPlanService;
 import com.personalhub.planning.vo.StudyPlanStatsVO;
@@ -33,6 +34,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -142,10 +144,10 @@ public class StudyPlanServiceImpl implements StudyPlanService {
                 new LambdaQueryWrapper<StudyPlan>().eq(StudyPlan::getUserId, userId));
         StudyPlanStatsVO vo = new StudyPlanStatsVO();
         vo.setTotal(plans.size());
-        vo.setPending(plans.stream().filter(p -> p.getStatus() != null && p.getStatus() == 0).count());
-        vo.setLearning(plans.stream().filter(p -> p.getStatus() != null && p.getStatus() == 1).count());
-        vo.setDone(plans.stream().filter(p -> p.getStatus() != null && p.getStatus() == 2).count());
-        vo.setPaused(plans.stream().filter(p -> p.getStatus() != null && p.getStatus() == 3).count());
+        vo.setPending(plans.stream().filter(p -> Objects.equals(p.getStatus(), StudyPlanStatus.NOT_STARTED.getCode())).count());
+        vo.setLearning(plans.stream().filter(p -> Objects.equals(p.getStatus(), StudyPlanStatus.LEARNING.getCode())).count());
+        vo.setDone(plans.stream().filter(p -> Objects.equals(p.getStatus(), StudyPlanStatus.COMPLETED.getCode())).count());
+        vo.setPaused(plans.stream().filter(p -> Objects.equals(p.getStatus(), StudyPlanStatus.PAUSED.getCode())).count());
         return vo;
     }
 
