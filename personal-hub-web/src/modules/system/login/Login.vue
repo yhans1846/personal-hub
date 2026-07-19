@@ -8,6 +8,7 @@ import {
   BookOpen, Code2, Database, Hash, Braces, Coffee,
 } from 'lucide-vue-next'
 import BookShelfCaptcha from './BookShelfCaptcha.vue'
+import { handleApiError } from '@/utils/apiResult'
 
 const REMEMBER_KEY = 'ph-login-remember'
 
@@ -191,9 +192,8 @@ async function finishLogin() {
     window.setTimeout(() => {
       router.push('/')
     }, 480)
-  } catch (e: any) {
-    const msg = e?.response?.data?.message || '登录失败'
-    ElMessage.error(msg)
+  } catch (e: unknown) {
+    handleApiError(e, '登录失败')
     captchaRef.value?.refresh()
     captchaReady.value = false
     step.value = 'verify'

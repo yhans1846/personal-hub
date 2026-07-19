@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted, computed, watch, nextTick } from 'vue'
 import { getCategories, createCategory, updateCategory, deleteCategory, batchUpdateCategorySort } from '@/modules/knowledge/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Pencil, Trash2, FolderOpen, Folder, Bookmark, GripVertical, Search, ArrowUpDown } from 'lucide-vue-next'
+import { handleApiError } from '@/utils/apiResult'
 import Sortable from 'sortablejs'
 import { PageHeader, EmptyState, ListToolbar } from '@/components'
 import { UiDialog, UiInput, DialogPropCard, DialogFooterActions } from '@/components/ui'
@@ -144,8 +145,8 @@ async function handleSave() {
     }
     dialogVisible.value = false
     fetchList()
-  } catch (e: any) {
-    ElMessage.error(e.response?.data?.message || '操作失败')
+  } catch (e: unknown) {
+    handleApiError(e, '操作失败')
   }
 }
 
@@ -155,8 +156,8 @@ async function handleDelete(id: number) {
     await deleteCategory(id)
     ElMessage.success('已删除')
     fetchList()
-  } catch (e: any) {
-    ElMessage.error(e.response?.data?.message || '删除失败')
+  } catch (e: unknown) {
+    handleApiError(e, '删除失败')
   }
 }
 

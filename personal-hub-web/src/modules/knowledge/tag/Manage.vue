@@ -4,6 +4,7 @@ import { getTags, createTag, updateTag, deleteTag } from '@/modules/knowledge/ap
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Tags, Pencil, Trash2, Search, ArrowUpDown } from 'lucide-vue-next'
 import type { TagVO } from '@/types/tag'
+import { handleApiError } from '@/utils/apiResult'
 import { PageHeader, EmptyState, ListToolbar } from '@/components'
 import { UiDialog, UiInput, DialogPropCard, DialogPropGrid, DialogFooterActions } from '@/components/ui'
 import TagStatsCards from './TagStatsCards.vue'
@@ -109,8 +110,8 @@ async function handleSave() {
     }
     dialogVisible.value = false
     fetchList()
-  } catch (e: any) {
-    ElMessage.error(e.response?.data?.message || '操作失败')
+  } catch (e: unknown) {
+    handleApiError(e, '操作失败')
   }
 }
 
@@ -120,8 +121,8 @@ async function handleDelete(id: number) {
     await deleteTag(id)
     ElMessage.success('已删除')
     fetchList()
-  } catch (e: any) {
-    ElMessage.error(e.response?.data?.message || '删除失败')
+  } catch (e: unknown) {
+    handleApiError(e, '删除失败')
   }
 }
 

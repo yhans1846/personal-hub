@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { globalSearch } from '@/modules/dashboard/api'
 import { ElMessage } from 'element-plus'
-import { Search, FileText, PenLine, CheckSquare, BookOpen, Bookmark, BookMarked, FolderOpen, Target } from 'lucide-vue-next'
+import { Search, FileText, PenLine, CheckSquare, BookOpen, Bookmark, BookMarked, FolderOpen, Target, type LucideIcon } from 'lucide-vue-next'
 import { EmptyState } from '@/components'
 import type { SearchGroup, SearchItem } from '@/modules/dashboard/api'
 
@@ -16,7 +16,7 @@ const searched = ref(false)
 const groups = ref<SearchGroup[]>([])
 const total = ref(0)
 
-const iconMap: Record<string, any> = {
+const iconMap: Record<string, LucideIcon> = {
   FileText, PenLine, CheckSquare, BookOpen,
   Bookmark, BookMarked, FolderOpen, Target
 }

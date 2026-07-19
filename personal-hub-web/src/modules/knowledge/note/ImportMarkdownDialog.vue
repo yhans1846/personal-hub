@@ -6,6 +6,9 @@ import { getTags } from '@/modules/knowledge/api'
 import { ElMessage } from 'element-plus'
 import { Upload, FileText, CheckCircle, XCircle, AlertTriangle } from 'lucide-vue-next'
 import type { ImportReport } from '@/types/note'
+import type { CategoryVO } from '@/types/category'
+import type { TagVO } from '@/types/tag'
+import { handleApiError } from '@/utils/apiResult'
 
 const emit = defineEmits<{ done: [] }>()
 
@@ -13,8 +16,8 @@ const emit = defineEmits<{ done: [] }>()
 const activeTab = ref<'file' | 'content'>('file')
 
 // ─── 分类 & 标签 ───
-const categories = ref<any[]>([])
-const tags = ref<any[]>([])
+const categories = ref<CategoryVO[]>([])
+const tags = ref<TagVO[]>([])
 const selectedCategoryIds = ref<number[]>([])
 const selectedTagIds = ref<number[]>([])
 onMounted(async () => {
@@ -79,8 +82,8 @@ async function handleImport() {
     } else {
       ElMessage.info(`导入完成：${report.value.success} 成功，${report.value.failed} 失败，${report.value.skipped} 跳过`)
     }
-  } catch (e: any) {
-    ElMessage.error(e?.response?.data?.message || '导入失败')
+  } catch (e: unknown) {
+    handleApiError(e, '导入失败')
   } finally {
     importing.value = false
   }

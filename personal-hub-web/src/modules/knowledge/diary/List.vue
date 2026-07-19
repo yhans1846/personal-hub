@@ -2,7 +2,7 @@
 import { ref, computed, watch, onUnmounted } from 'vue'
 import { getDiaryList, getDiaryByMonth, deleteDiary } from '@/modules/knowledge/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Pencil, Trash2, PenLine, Sun, Cloud, CloudRain, Smile, Frown, Meh, MapPin, Images, CalendarDays, LayoutList, LayoutGrid, Camera, Calendar, MoreHorizontal, Type } from 'lucide-vue-next'
+import { Plus, Pencil, Trash2, PenLine, Sun, Cloud, CloudRain, Smile, Frown, Meh, MapPin, Images, CalendarDays, LayoutList, LayoutGrid, Camera, Calendar, MoreHorizontal, Type, type LucideIcon } from 'lucide-vue-next'
 import { EmptyState, PageHeader, ListToolbar, ListPagination } from '@/components'
 import ImageLightbox from '@/components/ImageLightbox.vue'
 import { getDiaryImagePreviewUrl, revokePreviewUrl } from '@/utils/file'
@@ -173,7 +173,7 @@ function getMoodColor(mood: number) {
 
 function getWeatherIcon(weather: string | null) {
   if (!weather) return null
-  const icons: Record<string, any> = {
+  const icons: Record<string, LucideIcon> = {
     晴: Sun, '☀️': Sun,
     多云: Cloud, '🌤️': Cloud,
     阴: Cloud, '☁️': Cloud,

@@ -14,14 +14,17 @@ import NoteVditor from './editor/NoteVditor.vue'
 import NoteMarkdownPreview from './editor/NoteMarkdownPreview.vue'
 import { buildEditorId } from './editor/vditorSetup'
 import { estimateReadingTime, formatRelativeTime } from '@/utils/readingTime'
+import type { CategoryVO } from '@/types/category'
+import type { TagVO } from '@/types/tag'
+import type { CategoryItem, TagItem } from '@/types/note'
 
 const route = useRoute()
 const router = useRouter()
 const isEdit = !!route.params.id
 
 const form = ref({ title: isEdit ? '' : '未命名笔记', content: '', categoryIds: [] as number[], tagIds: [] as number[] })
-const categories = ref<any[]>([])
-const tags = ref<any[]>([])
+const categories = ref<CategoryVO[]>([])
+const tags = ref<TagVO[]>([])
 const isFavorite = ref(false)
 const createdAt = ref('')
 const initialLoading = ref(true)
@@ -83,8 +86,8 @@ onMounted(async () => {
       const note = res.data.data
       form.value.title = note.title
       form.value.content = note.content
-      form.value.categoryIds = note.categories.map((c: any) => c.id)
-      form.value.tagIds = note.tags.map((t: any) => t.id)
+      form.value.categoryIds = note.categories.map((c: CategoryItem) => c.id)
+      form.value.tagIds = note.tags.map((t: TagItem) => t.id)
       isFavorite.value = note.isFavorite === 1
       createdAt.value = note.createdAt
 
@@ -176,14 +179,14 @@ function onUploadImg(files: File[], callback: (urls: string[]) => void) {
 
 function getCategoryNames(): string {
   return form.value.categoryIds
-    .map(id => categories.value.find((c: any) => c.id === id)?.name)
+    .map(id => categories.value.find((c) => c.id === id)?.name)
     .filter(Boolean)
     .join('、')
 }
 
 function getTagNames(): string {
   return form.value.tagIds
-    .map(id => tags.value.find((t: any) => t.id === id)?.name)
+    .map(id => tags.value.find((t) => t.id === id)?.name)
     .filter(Boolean)
     .join('、')
 }

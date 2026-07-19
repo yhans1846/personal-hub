@@ -6,7 +6,7 @@ export interface DocMeta {
   readingTime?: string
 }
 
-const props = withDefaults(defineProps<{
+withDefaults(defineProps<{
   title: string
   isTrash: boolean
   meta?: DocMeta

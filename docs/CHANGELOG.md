@@ -5,7 +5,8 @@
 ## [Unreleased]
 
 ### 2026-07-19
-- **代码质量（前端）**：清理壳层死代码（AppLayout 快捷创建弹窗、未接线的自动保存提示、`getBackupList`/`getUnreadCount`）；图表/命令面板等去掉一批 `any`（lint warn 57→18）
+- **代码质量（前端）**：清零 ESLint warn（分类/标签/笔记编辑/登录等 `any` → 具体类型或 `handleApiError`）
+- **代码质量（前端）**：清理壳层死代码（AppLayout 快捷创建弹窗、未接线的自动保存提示、`getBackupList`/`getUnreadCount`）；图表/命令面板等去掉一批 `any`
 - **代码质量（前端）**：`useStorageSync` / `readingConfigStore` 去掉 `any`；通知/实验/数据管理设置页收敛 design token；移除未展示的备份列表拉取
 - **代码质量（前端）**：接入 ESLint（`pnpm lint`，unused-imports）；外观/阅读设置页间距字号收敛 `--sp-*` / `--text-*`
 - **代码质量（前端）**：外观拆至 `themeStore`（layout 仅菜单/工作台/统计）；阅读/文件封面 `loading=lazy`；待办 Sortable 按 id 序列刷新；日记保存补错误提示
