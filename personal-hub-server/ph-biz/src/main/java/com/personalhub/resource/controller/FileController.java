@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.personalhub.common.result.PageResult;
 import com.personalhub.common.result.Result;
 import com.personalhub.common.util.CurrentUser;
+import com.personalhub.common.util.FilenameGuard;
 import com.personalhub.resource.dto.FileQueryDTO;
 import com.personalhub.resource.dto.FileCategoryUpdateDTO;
 import com.personalhub.resource.service.FileResourceService;
@@ -122,6 +123,7 @@ public class FileController {
     @GetMapping("/avatar/{filename}")
     public ResponseEntity<Resource> getAvatar(@PathVariable String filename) {
         try {
+            FilenameGuard.requireSafe(filename);
             String path = "avatars/" + filename;
             Resource resource = storageService.load(path);
             if (!resource.exists()) {

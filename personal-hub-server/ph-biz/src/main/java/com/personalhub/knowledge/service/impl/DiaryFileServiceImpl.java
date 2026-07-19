@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.personalhub.common.exception.BusinessException;
 import com.personalhub.common.util.EntityGuard;
+import com.personalhub.common.util.FilenameGuard;
 import com.personalhub.knowledge.entity.DiaryEntry;
 import com.personalhub.knowledge.mapper.DiaryEntryMapper;
 import com.personalhub.knowledge.service.DiaryFileService;
@@ -42,13 +43,6 @@ public class DiaryFileServiceImpl implements DiaryFileService {
     private DiaryEntry requireDiary(Long diaryId, Long userId) {
         return EntityGuard.requireOwned(
                 diaryEntryMapper.selectById(diaryId), userId, DiaryEntry::getUserId, "日记不存在");
-    }
-
-    private void validateFilename(String filename) {
-        if (filename == null || filename.isBlank()
-                || filename.contains("..") || filename.contains("/") || filename.contains("\\")) {
-            throw new BusinessException("非法文件名");
-        }
     }
 
     private void validateFile(MultipartFile file) {
@@ -101,7 +95,7 @@ public class DiaryFileServiceImpl implements DiaryFileService {
     @Override
     public Resource loadImage(Long diaryId, Long userId, String filename) {
         requireDiary(diaryId, userId);
-        validateFilename(filename);
+        FilenameGuard.requireSafe(filename);
         return storageService.load(imagePath(diaryId, filename));
     }
 
@@ -109,7 +103,7 @@ public class DiaryFileServiceImpl implements DiaryFileService {
     @Transactional
     public void deleteImage(Long diaryId, Long userId, String filename) {
         DiaryEntry entry = requireDiary(diaryId, userId);
-        validateFilename(filename);
+        FilenameGuard.requireSafe(filename);
         List<String> names = new ArrayList<>(entry.parseImageFiles());
         if (!names.remove(filename)) {
             throw new BusinessException("配图不存在");

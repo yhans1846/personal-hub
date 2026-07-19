@@ -1,8 +1,8 @@
 package com.personalhub.resource.service.impl;
 
 import com.personalhub.common.exception.BusinessException;
-
 import com.personalhub.common.util.EntityGuard;
+import com.personalhub.common.util.FilenameGuard;
 import com.personalhub.knowledge.entity.Note;
 import com.personalhub.knowledge.mapper.NoteMapper;
 import com.personalhub.resource.service.NoteFileService;
@@ -62,10 +62,7 @@ public class NoteFileServiceImpl implements NoteFileService {
     public Map<String, String> uploadAttachment(Long noteId, Long userId, MultipartFile file) {
         validateNote(noteId, userId);
         validateFile(file);
-        String originalName = file.getOriginalFilename();
-        if (originalName == null || originalName.isBlank()) {
-            originalName = "未命名文件";
-        }
+        String originalName = sanitizeOriginalFilename(file.getOriginalFilename());
         storageService.store(file, getNoteDir(noteId) + "/attachments/" + originalName);
         log.info("笔记附件上传成功: noteId={}, filename={}", noteId, originalName);
         return Map.of("url", "attachments/" + originalName, "name", originalName);
@@ -74,7 +71,22 @@ public class NoteFileServiceImpl implements NoteFileService {
     @Override
     public Resource load(Long noteId, Long userId, String resourceType, String filename) {
         validateNote(noteId, userId);
+        if (!"images".equals(resourceType) && !"attachments".equals(resourceType)) {
+            throw new BusinessException("非法资源类型");
+        }
+        FilenameGuard.requireSafe(filename);
         return storageService.load(getNoteDir(noteId) + "/" + resourceType + "/" + filename);
+    }
+
+    private String sanitizeOriginalFilename(String originalName) {
+        if (originalName == null || originalName.isBlank()) {
+            return "未命名文件";
+        }
+        int slash = Math.max(originalName.lastIndexOf('/'), originalName.lastIndexOf('\\'));
+        if (slash >= 0) {
+            originalName = originalName.substring(slash + 1);
+        }
+        return FilenameGuard.requireSafe(originalName);
     }
 
     private String getExtension(String filename) {
