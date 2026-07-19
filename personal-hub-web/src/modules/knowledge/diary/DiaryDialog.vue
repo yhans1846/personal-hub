@@ -1,14 +1,11 @@
 <script setup lang="ts">
-import { ref, watch, computed, toRef, onUnmounted, nextTick } from 'vue'
+import { ref, watch, computed, toRef } from 'vue'
 import {
   createDiary, updateDiary, getDiaryById,
-  uploadDiaryImage, deleteDiaryImage,
 } from '@/modules/knowledge/api'
-import { getDiaryImagePreviewUrl, revokePreviewUrl } from '@/utils/file'
-import { handleApiError } from '@/utils/apiResult'
+import { unwrapResult } from '@/utils/apiResult'
 import { ElMessage } from 'element-plus'
-import { ImagePlus, X, MapPin, LocateFixed, Loader2 } from 'lucide-vue-next'
-import Sortable from 'sortablejs'
+import { MapPin, LocateFixed, Loader2 } from 'lucide-vue-next'
 import {
   UiDialog,
   DialogTitleField,
@@ -19,8 +16,8 @@ import {
   DialogEditor,
   DialogFooterActions,
 } from '@/components/ui'
-import ImageLightbox from '@/components/ImageLightbox.vue'
-import { useEntityDialog, type EntityDialogEmit } from '@/composables/useEntityDialog'
+import { useEntityDialog, useEntityFormSave, type EntityDialogEmit } from '@/composables/useEntityDialog'
+import DiaryImagePanel from './DiaryImagePanel.vue'
 
 const props = withDefaults(defineProps<{
   modelValue: boolean
@@ -34,11 +31,6 @@ const emit = defineEmits<{
   'created': [id: number]
 }>()
 
-interface ImageItem {
-  name: string
-  url: string
-}
-
 const form = ref({
   date: '',
   title: '',
@@ -50,18 +42,8 @@ const form = ref({
   longitude: null as number | null,
   imageFiles: [] as string[],
 })
-const saving = ref(false)
 const locating = ref(false)
-const uploading = ref(false)
-const previewImages = ref<ImageItem[]>([])
-const isDragging = ref(false)
-const lightboxOpen = ref(false)
-const lightboxIndex = ref(0)
-const fileInputRef = ref<HTMLInputElement | null>(null)
-const imageGridRef = ref<HTMLElement | null>(null)
 const workingId = ref<number | undefined>()
-let imageSortable: Sortable | null = null
-let suppressLightboxClick = false
 
 const moodOptions = [
   { value: 1, label: '很好', emoji: '😊', color: 'var(--success)' },
@@ -80,7 +62,6 @@ const weatherOptions = [
   { emoji: '❄️', label: '雪' },
 ]
 
-const canUploadImages = computed(() => !!workingId.value)
 const dialogTitle = computed(() => workingId.value ? '编辑日记' : '今天')
 const dialogSubtitle = computed(() => workingId.value ? '' : '记录今天发生的事情')
 
@@ -104,12 +85,6 @@ async function loadEntity(id: number) {
     longitude: r.longitude ?? null,
     imageFiles: r.imageFiles || [],
   }
-  previewImages.value.forEach(img => revokePreviewUrl(img.url))
-  previewImages.value = []
-  for (const name of form.value.imageFiles) {
-    const url = await getDiaryImagePreviewUrl(id, name)
-    previewImages.value.push({ name, url })
-  }
 }
 
 watch(() => props.modelValue, (val) => {
@@ -126,8 +101,6 @@ watch(() => props.modelValue, (val) => {
     title: '', content: '', mood: 3, weather: '', location: '',
     latitude: null, longitude: null, imageFiles: [],
   }
-  previewImages.value.forEach(img => revokePreviewUrl(img.url))
-  previewImages.value = []
 })
 
 watch(() => props.entityId, (id) => {
@@ -146,25 +119,21 @@ const { onSaved } = useEntityDialog({
   loadEntity,
 })
 
-async function handleSave() {
-  saving.value = true
-  try {
-    const payload = { ...form.value }
-    if (workingId.value) {
-      await updateDiary(workingId.value, payload)
-      ElMessage.success('已更新')
-      onSaved()
-    } else {
-      const res = await createDiary(payload)
-      const id = res.data.data.id
-      workingId.value = id
-      emit('created', id)
-      ElMessage.success('已创建，可以添加配图')
-    }
-  } catch (e) {
-    handleApiError(e, '保存失败')
-  } finally { saving.value = false }
-}
+const { saving, handleSave } = useEntityFormSave({
+  entityId: workingId,
+  validate: () => null,
+  create: async () => {
+    const created = await unwrapResult(createDiary({ ...form.value }))
+    workingId.value = created.id
+    emit('created', created.id)
+  },
+  update: (id) => updateDiary(id, { ...form.value }).then(() => undefined),
+  onSaved,
+  createSuccessMessage: '已创建，可以添加配图',
+  updateSuccessMessage: '已更新',
+  errorMessage: '保存失败',
+  invokeOnSavedAfterCreate: false,
+})
 
 const hasCoords = computed(() =>
   form.value.latitude != null && form.value.longitude != null
@@ -208,123 +177,7 @@ function locateHere() {
     { enableHighAccuracy: true, timeout: 12000, maximumAge: 60_000 },
   )
 }
-
-async function handleImageUpload(files: FileList | File[]) {
-  if (!workingId.value) {
-    ElMessage.warning('请先保存日记，再添加配图')
-    return
-  }
-  const diaryId = workingId.value
-  const valid: File[] = []
-  for (const f of files) {
-    if (f.type.startsWith('image/')) valid.push(f)
-    else ElMessage.warning(`"${f.name}" 不是图片，已跳过`)
-  }
-  if (!valid.length) return
-
-  uploading.value = true
-  try {
-    for (const file of valid) {
-      const res = await uploadDiaryImage(diaryId, file)
-      const name = res.data.data.name
-      form.value.imageFiles.push(name)
-      const url = await getDiaryImagePreviewUrl(diaryId, name)
-      previewImages.value.push({ name, url })
-    }
-  } finally { uploading.value = false }
-}
-
-function onFileChange(e: Event) {
-  const files = (e.target as HTMLInputElement).files
-  if (files?.length) {
-    handleImageUpload(files)
-    ;(e.target as HTMLInputElement).value = ''
-  }
-}
-
-function openLightbox(idx: number) {
-  if (suppressLightboxClick) return
-  lightboxIndex.value = idx
-  lightboxOpen.value = true
-}
-
-function destroyImageSortable() {
-  imageSortable?.destroy()
-  imageSortable = null
-}
-
-async function initImageSortable() {
-  await nextTick()
-  destroyImageSortable()
-  if (!imageGridRef.value || previewImages.value.length < 2 || !workingId.value) return
-  const diaryId = workingId.value
-  imageSortable = Sortable.create(imageGridRef.value, {
-    animation: 200,
-    easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-    ghostClass: 'image-sortable-ghost',
-    chosenClass: 'image-sortable-chosen',
-    dragClass: 'image-sortable-drag',
-    filter: '.image-remove-btn',
-    preventOnFilter: true,
-    onStart() {
-      suppressLightboxClick = true
-    },
-    async onEnd(evt) {
-      const { oldIndex, newIndex } = evt
-      window.setTimeout(() => { suppressLightboxClick = false }, 0)
-      if (oldIndex == null || newIndex == null || oldIndex === newIndex) return
-      const list = [...previewImages.value]
-      const [item] = list.splice(oldIndex, 1)
-      list.splice(newIndex, 0, item)
-      previewImages.value = list
-      form.value.imageFiles = list.map(i => i.name)
-      try {
-        await updateDiary(diaryId, { ...form.value, imageFiles: form.value.imageFiles })
-      } catch {
-        ElMessage.warning('顺序保存失败，请再试一次')
-      }
-    },
-  })
-}
-
-watch(() => previewImages.value.map(i => i.name).join(','), () => {
-  initImageSortable()
-})
-
-async function handleRemoveImage(img: ImageItem) {
-  if (!workingId.value) return
-  try {
-    await deleteDiaryImage(workingId.value, img.name)
-  } catch {
-    // ignore
-  }
-  revokePreviewUrl(img.url)
-  form.value.imageFiles = form.value.imageFiles.filter(n => n !== img.name)
-  previewImages.value = previewImages.value.filter(p => p.name !== img.name)
-}
-
-function onDragOver(e: DragEvent) {
-  e.preventDefault()
-  isDragging.value = true
-}
-
-function onDragLeave() {
-  isDragging.value = false
-}
-
-function onDrop(e: DragEvent) {
-  e.preventDefault()
-  isDragging.value = false
-  const files = e.dataTransfer?.files
-  if (files?.length) handleImageUpload(files)
-}
-
-onUnmounted(() => {
-  destroyImageSortable()
-  previewImages.value.forEach(img => revokePreviewUrl(img.url))
-})
 </script>
-
 
 <template>
   <UiDialog
@@ -372,7 +225,7 @@ onUnmounted(() => {
                 class="location-input"
                 placeholder="添加地点（可选）"
                 maxlength="200"
-              />
+              >
             </div>
             <button
               type="button"
@@ -394,60 +247,7 @@ onUnmounted(() => {
       </DialogPropCard>
 
       <DialogPropCard label="配图">
-        <p v-if="!canUploadImages" class="image-need-save">请先保存日记，再添加配图</p>
-        <div v-if="previewImages.length" ref="imageGridRef" class="image-grid">
-          <div
-            v-for="(img, idx) in previewImages"
-            :key="img.name"
-            class="image-item"
-            :title="previewImages.length > 1 ? '拖拽调整顺序' : undefined"
-          >
-            <img
-              :src="img.url"
-              class="preview-img"
-              alt=""
-              draggable="false"
-              @click="openLightbox(idx)"
-            />
-            <button
-              type="button"
-              class="image-remove-btn"
-              :disabled="uploading"
-              @click.stop="handleRemoveImage(img)"
-            >
-              <X :size="16" />
-            </button>
-          </div>
-        </div>
-        <p v-if="previewImages.length > 1" class="image-sort-hint">拖拽缩略图可调整顺序，首张将作为封面</p>
-
-        <ImageLightbox
-          v-model="lightboxOpen"
-          v-model:index="lightboxIndex"
-          :urls="previewImages.map(i => i.url)"
-        />
-
-        <div
-          class="dropzone"
-          :class="{ 'dropzone--dragging': isDragging, 'dropzone--disabled': !canUploadImages }"
-          @dragover="canUploadImages && onDragOver($event)"
-          @dragleave="onDragLeave"
-          @drop="canUploadImages && onDrop($event)"
-          @click="canUploadImages && fileInputRef?.click()"
-        >
-          <ImagePlus :size="28" class="dropzone-icon" />
-          <span class="dropzone-text">{{ canUploadImages ? '拖拽图片到这里，或点击上传' : '保存后可上传配图' }}</span>
-          <span class="dropzone-hint">支持 JPG、PNG、WEBP，可多选</span>
-          <input
-            ref="fileInputRef"
-            type="file"
-            accept="image/*"
-            multiple
-            class="dropzone-input"
-            :disabled="!canUploadImages"
-            @change="onFileChange"
-          />
-        </div>
+        <DiaryImagePanel v-model:image-files="form.imageFiles" :diary-id="workingId" />
       </DialogPropCard>
     </DialogPropGrid>
 
@@ -470,12 +270,7 @@ onUnmounted(() => {
   gap: var(--sp-4);
   flex-wrap: wrap;
 }
-
-.weather-group {
-  display: flex;
-  gap: 4px;
-}
-
+.weather-group { display: flex; gap: 4px; }
 .weather-btn {
   width: 36px;
   height: 36px;
@@ -498,7 +293,6 @@ onUnmounted(() => {
   border-color: var(--accent);
   background: var(--accent-light);
 }
-
 .location-block {
   display: flex;
   align-items: center;
@@ -506,7 +300,6 @@ onUnmounted(() => {
   flex: 1;
   min-width: 180px;
 }
-
 .location-input-wrapper {
   display: flex;
   align-items: center;
@@ -518,12 +311,10 @@ onUnmounted(() => {
   border: 1px solid var(--border-color, var(--border));
   background: var(--bg-hover);
 }
-
 .location-icon {
   flex-shrink: 0;
   color: var(--text-tertiary);
 }
-
 .location-input {
   border: none;
   background: transparent;
@@ -534,13 +325,8 @@ onUnmounted(() => {
   min-width: 0;
   width: 100%;
 }
-.location-input::placeholder {
-  color: var(--text-placeholder);
-}
-.location-input:focus {
-  color: var(--text-primary);
-}
-
+.location-input::placeholder { color: var(--text-placeholder); }
+.location-input:focus { color: var(--text-primary); }
 .locate-btn {
   display: inline-flex;
   align-items: center;
@@ -560,18 +346,13 @@ onUnmounted(() => {
   color: var(--accent);
   background: var(--accent-light);
 }
-.locate-btn:disabled {
-  opacity: 0.65;
-  cursor: wait;
-}
-
+.locate-btn:disabled { opacity: 0.65; cursor: wait; }
 .coords-row {
   display: flex;
   align-items: center;
   gap: var(--sp-2);
   width: 100%;
 }
-
 .coords-pill {
   font-size: var(--text-xs);
   color: var(--accent);
@@ -579,7 +360,6 @@ onUnmounted(() => {
   padding: 2px 10px;
   border-radius: var(--radius-sm);
 }
-
 .coords-clear {
   border: none;
   background: transparent;
@@ -588,130 +368,9 @@ onUnmounted(() => {
   cursor: pointer;
   padding: 0;
 }
-.coords-clear:hover {
-  color: var(--danger);
-}
-
-.spin {
-  animation: locate-spin 0.8s linear infinite;
-}
+.coords-clear:hover { color: var(--danger); }
+.spin { animation: locate-spin 0.8s linear infinite; }
 @keyframes locate-spin {
   to { transform: rotate(360deg); }
-}
-
-.image-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--sp-3);
-  margin-bottom: var(--sp-2);
-}
-
-.image-item {
-  position: relative;
-  flex: 0 0 auto;
-  cursor: grab;
-  touch-action: none;
-}
-.image-item:active {
-  cursor: grabbing;
-}
-
-.image-sort-hint {
-  margin: 0 0 var(--sp-3);
-  font-size: var(--text-xs);
-  color: var(--text-tertiary);
-}
-
-.image-need-save {
-  margin: 0 0 var(--sp-3);
-  font-size: var(--text-xs);
-  color: var(--warning);
-}
-
-.image-sortable-ghost {
-  opacity: 0.35;
-}
-.image-sortable-chosen .preview-img {
-  box-shadow: 0 0 0 2px var(--accent);
-}
-.image-sortable-drag {
-  opacity: 1;
-  cursor: grabbing;
-}
-
-.preview-img {
-  width: 96px;
-  height: 96px;
-  border-radius: var(--radius-md);
-  object-fit: cover;
-  border: 1px solid var(--border-color);
-  cursor: zoom-in;
-  display: block;
-}
-
-.image-remove-btn {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.55);
-  color: #fff;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background var(--transition);
-}
-.image-remove-btn:hover {
-  background: rgba(0, 0, 0, 0.75);
-}
-
-.dropzone {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: var(--sp-6);
-  border: 2px dashed var(--border-color);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: all var(--transition);
-}
-.dropzone:hover,
-.dropzone--dragging {
-  border-color: var(--accent);
-  background: var(--accent-light);
-}
-.dropzone--disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-.dropzone--disabled:hover {
-  border-color: var(--border-color);
-  background: transparent;
-}
-
-.dropzone-icon {
-  color: var(--text-tertiary);
-}
-.dropzone:hover .dropzone-icon,
-.dropzone--dragging .dropzone-icon {
-  color: var(--accent);
-}
-
-.dropzone-text {
-  font-size: var(--text-sm);
-  color: var(--text-secondary);
-}
-.dropzone-hint {
-  font-size: var(--text-xs);
-  color: var(--text-tertiary);
-}
-.dropzone-input {
-  display: none;
 }
 </style>

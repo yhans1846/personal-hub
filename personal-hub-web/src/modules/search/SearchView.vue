@@ -5,7 +5,12 @@ import { globalSearch } from '@/modules/dashboard/api'
 import { ElMessage } from 'element-plus'
 import { Search, FileText, PenLine, CheckSquare, BookOpen, Bookmark, BookMarked, FolderOpen, Target, type LucideIcon } from 'lucide-vue-next'
 import { EmptyState } from '@/components'
+import VirtualList from '@/components/VirtualList.vue'
 import type { SearchGroup, SearchItem } from '@/modules/dashboard/api'
+
+const SEARCH_ITEM_HEIGHT = 72
+/** 超过此数量用窗口化滚动，避免一次渲染过多结果行 */
+const VIRTUALIZE_THRESHOLD = 12
 
 const router = useRouter()
 const route = useRoute()
@@ -105,7 +110,25 @@ function highlight(text: string, kw: string): string {
             <span>{{ group.label }}</span>
             <span class="group-count">{{ group.count }}</span>
           </div>
-          <div class="group-items">
+          <VirtualList
+            v-if="group.items.length > VIRTUALIZE_THRESHOLD"
+            class="group-items group-items--virtual"
+            :items="group.items"
+            :item-height="SEARCH_ITEM_HEIGHT"
+            :max-height="Math.min(group.items.length, 8) * SEARCH_ITEM_HEIGHT"
+            :get-key="(item) => `${group.type}-${item.id}`"
+          >
+            <template #default="{ item }">
+              <div class="result-item result-item--fixed" @click="goTo(item)">
+                <div class="item-title" v-html="highlight(item.title, keyword)" />
+                <div v-if="item.snippet" class="item-snippet" v-html="highlight(item.snippet, keyword)" />
+                <div class="item-meta">
+                  <span v-if="item.date">{{ item.date }}</span>
+                </div>
+              </div>
+            </template>
+          </VirtualList>
+          <div v-else class="group-items">
             <div
               v-for="item in group.items" :key="`${group.type}-${item.id}`"
               class="result-item"
@@ -146,10 +169,16 @@ function highlight(text: string, kw: string): string {
 }
 
 .group-items { display: flex; flex-direction: column; gap: 2px; }
+.group-items--virtual { margin: 0 -4px; }
 .result-item {
   padding: var(--sp-3) var(--sp-4); border-radius: var(--radius-sm);
   cursor: pointer; transition: background var(--transition);
   border: 1px solid transparent;
+}
+.result-item--fixed {
+  height: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 .result-item:hover { background: var(--bg-hover); border-color: var(--border-light); }
 
@@ -158,6 +187,12 @@ function highlight(text: string, kw: string): string {
   font-size: var(--text-xs); color: var(--text-secondary);
   line-height: var(--leading-normal); overflow: hidden;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+}
+.result-item--fixed .item-snippet {
+  -webkit-line-clamp: 1;
+  white-space: nowrap;
+  display: block;
+  text-overflow: ellipsis;
 }
 .item-meta { font-size: var(--text-xs); color: var(--text-tertiary); margin-top: 4px; }
 

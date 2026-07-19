@@ -54,6 +54,12 @@ export function useEntityFormSave(options: {
   createSuccessMessage?: string
   updateSuccessMessage?: string
   errorMessage?: string
+  /**
+   * 创建成功后是否调用 onSaved（通常会关窗）。
+   * 日记等「创建后留窗配图」场景设为 false。
+   * @default true
+   */
+  invokeOnSavedAfterCreate?: boolean
 }) {
   const saving = ref(false)
 
@@ -68,11 +74,14 @@ export function useEntityFormSave(options: {
       if (options.entityId.value != null) {
         await options.update(options.entityId.value)
         ElMessage.success(options.updateSuccessMessage ?? '已更新')
+        options.onSaved()
       } else {
         await options.create()
         ElMessage.success(options.createSuccessMessage ?? '已创建')
+        if (options.invokeOnSavedAfterCreate !== false) {
+          options.onSaved()
+        }
       }
-      options.onSaved()
     } catch (e) {
       handleApiError(e, options.errorMessage ?? '保存失败')
     } finally {

@@ -34,7 +34,7 @@ export const useNotificationStore = defineStore('notification', () => {
   async function fetchRecent() {
     loading.value = true
     try {
-      const res = await getNotificationList({ page: 1, size: 20 })
+      const res = await getNotificationList({ page: 1, size: 50 })
       notifications.value = filterNotificationsByTypes(res.data.data.records, enabledTypes())
       unreadCount.value = countUnreadByTypes(res.data.data.records, enabledTypes())
     } catch { /* ignore */ }

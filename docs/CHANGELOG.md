@@ -5,6 +5,7 @@
 ## [Unreleased]
 
 ### 2026-07-19
+- **代码质量（前端）**：StatsView 拆 KPI/图表/活动子组件；DiaryDialog 迁 `useEntityFormSave`（创建不关窗）并抽 `DiaryImagePanel`；学习计划表 / 日记月历拆分子组件；搜索分组超量结果与通知列表走 `VirtualList`
 - **代码质量（前端）**：接入 knip（`pnpm knip`）；收紧未对外使用的 export；katex/mermaid 按 vditor CDN 忽略
 - **代码质量（前端）**：`useVirtualList` + `VirtualList` 接入通知下拉；标签/分类卡片 `content-visibility`
 - **代码质量（前端）**：清零 `vue-tsc`（layoutApi Result、日记 viewMode 对齐 table/card、ListToolbar keyword 等）

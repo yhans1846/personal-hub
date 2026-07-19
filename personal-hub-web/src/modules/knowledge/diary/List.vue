@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onUnmounted } from 'vue'
+import { ref, watch, onUnmounted } from 'vue'
 import { getDiaryList, getDiaryByMonth, deleteDiary } from '@/modules/knowledge/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Pencil, Trash2, PenLine, Sun, Cloud, CloudRain, Smile, Frown, Meh, MapPin, Images, CalendarDays, LayoutList, LayoutGrid, Camera, Calendar, MoreHorizontal, Type, type LucideIcon } from 'lucide-vue-next'
@@ -7,6 +7,7 @@ import { EmptyState, PageHeader, ListToolbar, ListPagination } from '@/component
 import ImageLightbox from '@/components/ImageLightbox.vue'
 import { getDiaryImagePreviewUrl, revokePreviewUrl } from '@/utils/file'
 import DiaryDialog from './DiaryDialog.vue'
+import DiaryCalendarPanel from './DiaryCalendarPanel.vue'
 import type { DiaryVO, DiaryQuery } from '@/types/diary'
 import { useDeepLinkDialog } from '@/composables/useDeepLinkDialog'
 import { useMainContentFill } from '@/composables/useMainContentFill'
@@ -98,24 +99,6 @@ const showCalendar = ref(false)
 const calendarMonth = ref(new Date())
 const calendarEntries = ref<DiaryVO[]>([])
 const calendarLoading = ref(false)
-
-const WEEKDAYS = ['日', '一', '二', '三', '四', '五', '六']
-
-const calendarDays = computed(() => {
-  const year = calendarMonth.value.getFullYear()
-  const month = calendarMonth.value.getMonth()
-  const firstDay = new Date(year, month, 1).getDay()
-  const daysInMonth = new Date(year, month + 1, 0).getDate()
-  const days: { date: number; entries: DiaryVO[] }[] = []
-
-  for (let i = 0; i < firstDay; i++) days.push({ date: 0, entries: [] })
-  for (let d = 1; d <= daysInMonth; d++) {
-    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
-    const entries = calendarEntries.value.filter(e => e.date === dateStr)
-    days.push({ date: d, entries })
-  }
-  return days
-})
 
 async function loadCalendar() {
   calendarLoading.value = true
@@ -240,26 +223,16 @@ const moodOptions = [
     </div>
 
     <div class="plan-middle">
-      <!-- 日历视图 -->
-      <div v-if="showCalendar" class="calendar-view">
-        <div class="cal-header">
-          <button class="cal-nav" @click="prevMonth">&lt;</button>
-          <span class="cal-title">{{ calendarMonth.getFullYear() }} 年 {{ calendarMonth.getMonth() + 1 }} 月</span>
-          <button class="cal-nav" @click="nextMonth">&gt;</button>
-        </div>
-        <div v-if="calendarLoading" class="loading-skeleton" style="padding: 16px 0;">
-          <div v-for="i in 3" :key="i" class="skeleton-diary" style="height:60px" />
-        </div>
-        <div v-else class="cal-grid">
-          <div v-for="wd in WEEKDAYS" :key="wd" class="cal-weekday">{{ wd }}</div>
-          <div v-for="(day, idx) in calendarDays" :key="idx" class="cal-day" :class="{ 'cal-day--empty': day.date === 0, 'cal-day--has': day.entries.length > 0 }" @click="day.date > 0 && goDate(day.date)">
-            <span class="cal-day-num">{{ day.date || '' }}</span>
-            <div v-if="day.entries.length > 0" class="cal-day-dots">
-              <span v-for="e in day.entries.slice(0, 3)" :key="e.id" class="cal-dot" :style="{ background: getMoodColor(e.mood || 3) }" />
-            </div>
-          </div>
-        </div>
-      </div>
+      <DiaryCalendarPanel
+        v-if="showCalendar"
+        :month="calendarMonth"
+        :entries="calendarEntries"
+        :loading="calendarLoading"
+        :get-mood-color="getMoodColor"
+        @prev="prevMonth"
+        @next="nextMonth"
+        @select-day="goDate"
+      />
 
       <template v-else>
         <div v-if="loading" class="loading-skeleton">
@@ -679,28 +652,4 @@ const moodOptions = [
   color: var(--text-primary);
 }
 
-/* ---- 日历 ---- */
-.calendar-view {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  padding: var(--sp-4);
-}
-.cal-header { display: flex; align-items: center; justify-content: center; gap: var(--sp-4); margin-bottom: var(--sp-4); }
-.cal-nav { background: none; border: 1px solid var(--border-color); border-radius: var(--radius-sm); cursor: pointer; padding: 4px 12px; color: var(--text-secondary); font-size: var(--text-sm); transition: all var(--transition); }
-.cal-nav:hover { background: var(--bg-hover); color: var(--text-primary); }
-.cal-title { font-size: var(--text-base); font-weight: 600; min-width: 140px; text-align: center; }
-.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
-.cal-weekday { text-align: center; font-size: var(--text-xs); color: var(--text-tertiary); padding: 4px 0; font-weight: 500; }
-.cal-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: var(--radius-sm); cursor: pointer; transition: all var(--transition); position: relative; min-height: 48px; }
-.cal-day:hover { background: var(--bg-hover); }
-.cal-day--empty { cursor: default; }
-.cal-day--empty:hover { background: transparent; }
-.cal-day--has { font-weight: 600; }
-.cal-day-num { font-size: var(--text-sm); line-height: 1; }
-.cal-day-dots { display: flex; gap: 2px; margin-top: 4px; }
-.cal-dot { width: 5px; height: 5px; border-radius: 50%; }
 </style>
