@@ -4,10 +4,12 @@ import com.personalhub.common.exception.BusinessException;
 import com.personalhub.common.result.Result;
 import com.personalhub.common.util.CurrentUser;
 import com.personalhub.storage.StorageService;
+import com.personalhub.system.dto.PasswordUpdateDTO;
 import com.personalhub.system.dto.UserProfileUpdateDTO;
 import com.personalhub.system.service.UserService;
 import com.personalhub.system.vo.UserProfileVO;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -46,10 +48,22 @@ public class UserController {
 
     @PutMapping("/profile")
     @Operation(summary = "更新个人资料")
-    public Result<UserProfileVO> updateProfile(Authentication auth, @Valid @RequestBody UserProfileUpdateDTO dto) {
+    public Result<UserProfileVO> updateProfile(
+            @Parameter(hidden = true) Authentication auth,
+            @Valid @RequestBody UserProfileUpdateDTO dto) {
         Long userId = CurrentUser.id(auth);
         userService.updateProfile(userId, dto);
         return Result.success(userService.getProfile(userId));
+    }
+
+    @PutMapping("/password")
+    @Operation(summary = "修改密码")
+    public Result<Void> updatePassword(
+            @Parameter(hidden = true) Authentication auth,
+            @Valid @RequestBody PasswordUpdateDTO dto) {
+        Long userId = CurrentUser.id(auth);
+        userService.updatePassword(userId, dto.getOldPassword(), dto.getNewPassword());
+        return Result.success();
     }
 
     @PostMapping(value = "/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

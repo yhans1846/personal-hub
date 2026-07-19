@@ -30,6 +30,7 @@ login → `{token,user:{id,username,nickname,avatar}}`
 | 方法 | 路径 | 说明 |
 |------|------|------|
 | GET/PUT | /profile | 资料；PUT 不含 id/username/avatar |
+| PUT | /password | `{oldPassword,newPassword}`（新密码 6–50） |
 | POST | /avatar | multipart `file` → `{url}` |
 | GET | /api/files/avatar/{filename} | 公开读（7 天缓存）|
 
