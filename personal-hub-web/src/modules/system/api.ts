@@ -54,16 +54,22 @@ export function uploadAvatar(file: File) {
   })
 }
 
-// ====== 数据管理（备份占位，与后端 Backup 对齐）======
+// ====== 数据管理（备份 / 恢复）======
 
-/** 立即备份 */
+/** 立即备份（ZIP 流下载） */
 export function backupNow() {
-  return request.post<Result<{ id: number; downloadUrl: string }>>('/backup/now')
+  return request.post('/backup/now', null, {
+    responseType: 'blob',
+    timeout: 120000,
+  })
 }
 
-/** 导入备份 */
+/** 导入备份 ZIP（全量覆盖） */
 export function importBackup(file: File) {
   const formData = new FormData()
   formData.append('file', file)
-  return request.post<Result<void>>('/backup/import', formData)
+  return request.post<Result<void>>('/backup/import', formData, {
+    timeout: 120000,
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
 }

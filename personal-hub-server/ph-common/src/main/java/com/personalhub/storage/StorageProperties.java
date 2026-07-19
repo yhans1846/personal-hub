@@ -22,4 +22,9 @@ public class StorageProperties {
      * 单文件最大字节，默认 50MB
      */
     private long maxSize = 50 * 1024 * 1024;
+
+    /**
+     * 单次用户备份 ZIP 最大字节，默认 512MB
+     */
+    private long maxBackupSize = 512L * 1024 * 1024;
 }

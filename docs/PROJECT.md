@@ -63,7 +63,7 @@ ph-common ← ph-system ← ph-biz ← ph-boot
 |------|--------|
 | AI 总结/问答 · OCR · 双向链接 · Mermaid/KaTeX | 低 |
 | 日记历史配图迁移 · 笔记附件进统一资源索引 | 低 |
-| MD 导出 · 数据备份 | 中 |
+| MD 导出 · 数据备份 | ✅ 备份/恢复（手动 ZIP） |
 | Docker 部署 · 文件 PDF/文本预览 | ✅ |
 
 ## 开发历史（摘要）

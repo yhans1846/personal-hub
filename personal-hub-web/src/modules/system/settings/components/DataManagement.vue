@@ -3,6 +3,8 @@ import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Trash2, Upload, FileArchive, Loader2 } from 'lucide-vue-next'
 import { backupNow, importBackup } from '@/modules/system/api'
+import { triggerBlobDownload } from '@/utils/file'
+import { handleApiError } from '@/utils/apiResult'
 
 // ===== 缓存 =====
 const cacheSize = ref('计算中...')
@@ -41,17 +43,19 @@ async function handleClearCache() {
 
 // ===== 备份 =====
 const backingUp = ref(false)
+const importing = ref(false)
 const importFile = ref<File | null>(null)
 
 async function handleBackupNow() {
   backingUp.value = true
   try {
     const res = await backupNow()
-    const url = res.data.data?.downloadUrl
+    const blob = new Blob([res.data], { type: 'application/zip' })
+    const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, (c) => (c === 'T' ? '-' : ''))
+    triggerBlobDownload(blob, `personal-hub-backup-${stamp}.zip`)
     ElMessage.success('备份完成')
-    if (url) window.open(url, '_blank')
-  } catch {
-    ElMessage.error('备份失败')
+  } catch (e) {
+    handleApiError(e, '备份失败')
   } finally {
     backingUp.value = false
   }
@@ -73,11 +77,14 @@ async function handleImport() {
       '导入备份',
       { confirmButtonText: '确定导入', cancelButtonText: '取消', type: 'warning' },
     )
+    importing.value = true
     await importBackup(importFile.value)
-    ElMessage.success('数据恢复成功')
+    ElMessage.success('数据恢复成功，请刷新页面')
     importFile.value = null
-  } catch {
-    if (importFile.value) ElMessage.error('导入失败')
+  } catch (e) {
+    if (importing.value) handleApiError(e, '导入失败')
+  } finally {
+    importing.value = false
   }
 }
 
@@ -88,7 +95,6 @@ onMounted(() => {
 
 <template>
   <div class="data-management">
-    <!-- 缓存管理 -->
     <section class="setting-section">
       <h3 class="section-title">缓存管理</h3>
       <div class="cache-info">
@@ -103,9 +109,11 @@ onMounted(() => {
       </button>
     </section>
 
-    <!-- 数据备份 -->
     <section class="setting-section">
       <h3 class="section-title">数据备份</h3>
+      <p class="cache-hint" style="margin-bottom: var(--sp-3)">
+        导出业务数据与相关文件为 ZIP；不含密码、通知与审计日志。
+      </p>
       <div class="action-row">
         <button class="action-btn" :disabled="backingUp" @click="handleBackupNow">
           <Loader2 v-if="backingUp" :size="14" class="spin" />
@@ -118,12 +126,13 @@ onMounted(() => {
         <div class="file-select">
           <label class="file-label">
             <Upload :size="14" />
-            {{ importFile ? importFile.name : '选择备份文件' }}
-            <input type="file" accept=".json,.gz,.zip" class="file-input" @change="handleFileChange" />
+            {{ importFile ? importFile.name : '选择备份文件（.zip）' }}
+            <input type="file" accept=".zip,application/zip" class="file-input" @change="handleFileChange" />
           </label>
         </div>
-        <button class="action-btn danger" :disabled="!importFile" @click="handleImport">
-          导入恢复
+        <button class="action-btn danger" :disabled="!importFile || importing" @click="handleImport">
+          <Loader2 v-if="importing" :size="14" class="spin" />
+          {{ importing ? '导入中...' : '导入恢复' }}
         </button>
       </div>
       <p class="import-warning">警告：恢复操作将覆盖当前数据，不可撤销。</p>
