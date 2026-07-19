@@ -27,8 +27,22 @@ public class LocalStorageServiceImpl implements StorageService {
 
     private final StorageProperties storageProperties;
 
+    /**
+     * 将相对路径解析为绝对路径，并强制落在存储根目录内（防路径穿越）。
+     *
+     * @param relativePath 相对存储根的路径
+     * @return 规范化后的绝对路径
+     */
     private Path resolve(String relativePath) {
-        return storageProperties.getLocation().resolve(relativePath).normalize();
+        if (relativePath == null || relativePath.isBlank()) {
+            throw new BusinessException("非法存储路径");
+        }
+        Path root = storageProperties.getLocation().toAbsolutePath().normalize();
+        Path target = root.resolve(relativePath).normalize();
+        if (!target.startsWith(root)) {
+            throw new BusinessException("非法存储路径");
+        }
+        return target;
     }
 
     @Override
