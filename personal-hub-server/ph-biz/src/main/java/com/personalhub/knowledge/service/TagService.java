@@ -24,24 +24,24 @@ public interface TagService {
     /** 删除标签（同时清除关联） */
     void delete(Long id, Long userId);
 
-    // ========== 标签绑定 ==========
+    // ========== 标签绑定（须校验标签与实体归属） ==========
 
     /** 绑定标签到实体 */
-    void bindTag(Long tagId, String entityType, Long entityId);
+    void bindTag(Long userId, Long tagId, String entityType, Long entityId);
 
     /** 解绑标签 */
-    void unbindTag(Long tagId, String entityType, Long entityId);
+    void unbindTag(Long userId, Long tagId, String entityType, Long entityId);
 
     /** 解绑实体的所有标签 */
-    void unbindAll(String entityType, Long entityId);
+    void unbindAll(Long userId, String entityType, Long entityId);
 
     /** 批量绑定标签到实体（先清空再绑定） */
-    void bindTags(Long entityId, String entityType, List<Long> tagIds);
+    void bindTags(Long userId, Long entityId, String entityType, List<Long> tagIds);
 
     /** 获取实体的标签列表 */
-    List<TagVO> getTags(String entityType, Long entityId);
+    List<TagVO> getTags(Long userId, String entityType, Long entityId);
 
-    /** 批量获取实体的标签列表（key=entityId） */
-    Map<Long, List<TagVO>> getTagsMap(String entityType, List<Long> entityIds);
+    /** 批量获取实体的标签列表（key=entityId）；仅返回当前用户的标签 */
+    Map<Long, List<TagVO>> getTagsMap(Long userId, String entityType, List<Long> entityIds);
 
 }

@@ -41,7 +41,7 @@ public class BookmarkUrlServiceImpl implements BookmarkUrlService {
         // 批量加载分类名称和标签
         Map<Long, String> categoryMap = loadCategoryNames(userId);
         List<Long> bookmarkIds = urlPage.getRecords().stream().map(BookmarkUrl::getId).collect(Collectors.toList());
-        Map<Long, List<TagVO>> tagsMap = tagService.getTagsMap("bookmark", bookmarkIds);
+        Map<Long, List<TagVO>> tagsMap = tagService.getTagsMap(userId, "bookmark", bookmarkIds);
 
         return urlPage.convert(url -> {
             BookmarkVO vo = BookmarkVO.from(url);
@@ -68,7 +68,7 @@ public class BookmarkUrlServiceImpl implements BookmarkUrlService {
                     .filter(c -> c.getId().equals(url.getCategoryId())).findFirst().orElse(null);
             if (cat != null) vo.setCategoryName(cat.getName());
         }
-        vo.setTags(tagService.getTags("bookmark", id));
+        vo.setTags(tagService.getTags(userId, "bookmark", id));
         return vo;
     }
 
@@ -88,7 +88,7 @@ public class BookmarkUrlServiceImpl implements BookmarkUrlService {
 
         // 保存标签关联
         if (dto.getTagIds() != null && !dto.getTagIds().isEmpty()) {
-            tagService.bindTags(url.getId(), "bookmark", dto.getTagIds());
+            tagService.bindTags(userId, url.getId(), "bookmark", dto.getTagIds());
         }
 
         BookmarkVO vo = BookmarkVO.from(url);
@@ -97,7 +97,7 @@ public class BookmarkUrlServiceImpl implements BookmarkUrlService {
                     .filter(c -> c.getId().equals(url.getCategoryId())).findFirst().orElse(null);
             if (cat != null) vo.setCategoryName(cat.getName());
         }
-        vo.setTags(tagService.getTags("bookmark", url.getId()));
+        vo.setTags(tagService.getTags(userId, "bookmark", url.getId()));
         return vo;
     }
 
@@ -115,7 +115,7 @@ public class BookmarkUrlServiceImpl implements BookmarkUrlService {
         log.info("编辑收藏: id={}, userId={}", id, userId);
 
         // 更新标签关联
-        tagService.bindTags(id, "bookmark", dto.getTagIds());
+        tagService.bindTags(userId, id, "bookmark", dto.getTagIds());
 
         BookmarkVO vo = BookmarkVO.from(url);
         if (url.getCategoryId() != null) {
@@ -123,7 +123,7 @@ public class BookmarkUrlServiceImpl implements BookmarkUrlService {
                     .filter(c -> c.getId().equals(url.getCategoryId())).findFirst().orElse(null);
             if (cat != null) vo.setCategoryName(cat.getName());
         }
-        vo.setTags(tagService.getTags("bookmark", id));
+        vo.setTags(tagService.getTags(userId, "bookmark", id));
         return vo;
     }
 
@@ -133,7 +133,7 @@ public class BookmarkUrlServiceImpl implements BookmarkUrlService {
         EntityGuard.requireOwned(
                 bookmarkUrlMapper.selectById(id), userId, BookmarkUrl::getUserId, "收藏不存在");
         // 清除标签关联
-        tagService.unbindAll("bookmark", id);
+        tagService.unbindAll(userId, "bookmark", id);
         bookmarkUrlMapper.deleteById(id);
         log.info("删除收藏: id={}, userId={}", id, userId);
     }
@@ -149,7 +149,7 @@ public class BookmarkUrlServiceImpl implements BookmarkUrlService {
                         .last("LIMIT " + size));
         Map<Long, String> categoryMap = loadCategoryNames(userId);
         List<Long> ids = urls.stream().map(BookmarkUrl::getId).collect(Collectors.toList());
-        Map<Long, List<TagVO>> tagsMap = tagService.getTagsMap("bookmark", ids);
+        Map<Long, List<TagVO>> tagsMap = tagService.getTagsMap(userId, "bookmark", ids);
         return urls.stream().map(url -> {
             BookmarkVO vo = BookmarkVO.from(url);
             if (url.getCategoryId() != null) {

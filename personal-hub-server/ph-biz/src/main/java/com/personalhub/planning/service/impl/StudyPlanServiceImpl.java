@@ -77,7 +77,7 @@ public class StudyPlanServiceImpl implements StudyPlanService {
         IPage<StudyPlan> planPage = studyPlanMapper.selectPage(page, wrapper);
 
         List<Long> planIds = planPage.getRecords().stream().map(StudyPlan::getId).toList();
-        Map<Long, List<TagVO>> tagsMap = tagService.getTagsMap(ENTITY_TYPE, planIds);
+        Map<Long, List<TagVO>> tagsMap = tagService.getTagsMap(userId, ENTITY_TYPE, planIds);
 
         return planPage.convert(plan -> {
             StudyPlanVO vo = StudyPlanVO.from(plan);
@@ -153,7 +153,7 @@ public class StudyPlanServiceImpl implements StudyPlanService {
         StudyPlan plan = EntityGuard.requireOwned(
                 studyPlanMapper.selectById(id), userId, StudyPlan::getUserId, "学习计划不存在");
         StudyPlanVO vo = StudyPlanVO.from(plan);
-        vo.setTags(tagService.getTags(ENTITY_TYPE, id));
+        vo.setTags(tagService.getTags(userId, ENTITY_TYPE, id));
         return vo;
     }
 
@@ -178,11 +178,11 @@ public class StudyPlanServiceImpl implements StudyPlanService {
         }
         studyPlanMapper.insert(plan);
         if (dto.getTagIds() != null && !dto.getTagIds().isEmpty()) {
-            tagService.bindTags(plan.getId(), ENTITY_TYPE, dto.getTagIds());
+            tagService.bindTags(userId, plan.getId(), ENTITY_TYPE, dto.getTagIds());
         }
         log.info("新建学习计划: id={}, userId={}, name={}", plan.getId(), userId, dto.getName());
         StudyPlanVO vo = StudyPlanVO.from(plan);
-        vo.setTags(tagService.getTags(ENTITY_TYPE, plan.getId()));
+        vo.setTags(tagService.getTags(userId, ENTITY_TYPE, plan.getId()));
         return vo;
     }
 
@@ -193,10 +193,10 @@ public class StudyPlanServiceImpl implements StudyPlanService {
                 studyPlanMapper.selectById(id), userId, StudyPlan::getUserId, "学习计划不存在");
         applyDto(plan, dto);
         studyPlanMapper.updateById(plan);
-        tagService.bindTags(id, ENTITY_TYPE, dto.getTagIds());
+        tagService.bindTags(userId, id, ENTITY_TYPE, dto.getTagIds());
         log.info("编辑学习计划: id={}, userId={}", id, userId);
         StudyPlanVO vo = StudyPlanVO.from(plan);
-        vo.setTags(tagService.getTags(ENTITY_TYPE, id));
+        vo.setTags(tagService.getTags(userId, ENTITY_TYPE, id));
         return vo;
     }
 
@@ -205,7 +205,7 @@ public class StudyPlanServiceImpl implements StudyPlanService {
     public void delete(Long id, Long userId) {
         StudyPlan plan = EntityGuard.requireOwned(
                 studyPlanMapper.selectById(id), userId, StudyPlan::getUserId, "学习计划不存在");
-        tagService.unbindAll(ENTITY_TYPE, id);
+        tagService.unbindAll(userId, ENTITY_TYPE, id);
         studyPlanMapper.deleteById(id);
         log.info("删除学习计划: id={}, userId={}", id, userId);
     }
@@ -291,7 +291,7 @@ public class StudyPlanServiceImpl implements StudyPlanService {
             return Collections.emptyList();
         }
         List<Long> planIds = plans.stream().map(StudyPlan::getId).toList();
-        Map<Long, List<TagVO>> tagsMap = tagService.getTagsMap(ENTITY_TYPE, planIds);
+        Map<Long, List<TagVO>> tagsMap = tagService.getTagsMap(userId, ENTITY_TYPE, planIds);
         return plans.stream().map(plan -> {
             StudyPlanVO vo = StudyPlanVO.from(plan);
             vo.setTags(tagsMap.getOrDefault(plan.getId(), List.of()));

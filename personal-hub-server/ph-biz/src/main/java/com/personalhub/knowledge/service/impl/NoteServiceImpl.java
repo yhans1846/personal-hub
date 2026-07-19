@@ -63,7 +63,7 @@ public class NoteServiceImpl implements NoteService {
         NoteVO vo = NoteVO.from(note);
         vo.setContent(readContent(note));
         vo.setCategories(getCategories(id));
-        vo.setTags(getTags(id));
+        vo.setTags(getTags(id, userId));
         return vo;
     }
 
@@ -87,7 +87,7 @@ public class NoteServiceImpl implements NoteService {
         noteMapper.updateById(note);
 
         saveCategoryRels(note.getId(), dto.getCategoryIds());
-        saveTagRels(note.getId(), dto.getTagIds());
+        saveTagRels(userId, note.getId(), dto.getTagIds());
 
         return getById(note.getId(), userId);
     }
@@ -116,7 +116,7 @@ public class NoteServiceImpl implements NoteService {
 
         noteMapper.deleteCategoryRelsByNoteId(id);
         saveCategoryRels(id, dto.getCategoryIds());
-        tagService.bindTags(id, "note", dto.getTagIds());
+        tagService.bindTags(userId, id, "note", dto.getTagIds());
 
         return getById(id, userId);
     }
@@ -158,7 +158,7 @@ public class NoteServiceImpl implements NoteService {
         Note note = EntityGuard.requireOwned(
                 noteMapper.selectById(id), userId, Note::getUserId, "笔记不存在");
         noteMapper.deleteCategoryRelsByNoteId(id);
-        tagService.unbindAll("note", id);
+        tagService.unbindAll(userId, "note", id);
         if (note.getMdPath() != null) {
             String noteDir = note.getMdPath().substring(0, note.getMdPath().indexOf("/note.md"));
             storageService.delete(noteDir);
@@ -194,7 +194,7 @@ public class NoteServiceImpl implements NoteService {
         NoteVO vo = NoteVO.from(note);
         vo.setContent(readContent(note));
         vo.setCategories(getCategories(id));
-        vo.setTags(getTags(id));
+        vo.setTags(getTags(id, userId));
         return vo;
     }
 
@@ -219,7 +219,8 @@ public class NoteServiceImpl implements NoteService {
 
         List<Long> noteIds = notes.stream().map(Note::getId).collect(Collectors.toList());
         Map<Long, List<NoteVO.CategoryItem>> categoriesMap = batchCategories(noteIds);
-        Map<Long, List<TagVO>> tagsMap = tagService.getTagsMap("note", noteIds);
+        Long userId = notes.get(0).getUserId();
+        Map<Long, List<TagVO>> tagsMap = tagService.getTagsMap(userId, "note", noteIds);
 
         return notePage.convert(note -> {
             NoteVO vo = NoteVO.from(note);
@@ -296,8 +297,8 @@ public class NoteServiceImpl implements NoteService {
         }
     }
 
-    private void saveTagRels(Long noteId, List<Long> tagIds) {
-        tagService.bindTags(noteId, "note", tagIds);
+    private void saveTagRels(Long userId, Long noteId, List<Long> tagIds) {
+        tagService.bindTags(userId, noteId, "note", tagIds);
     }
 
     private List<NoteVO.CategoryItem> getCategories(Long noteId) {
@@ -312,8 +313,8 @@ public class NoteServiceImpl implements NoteService {
         }).collect(Collectors.toList());
     }
 
-    private List<NoteVO.TagItem> getTags(Long noteId) {
-        return toTagItems(tagService.getTags("note", noteId));
+    private List<NoteVO.TagItem> getTags(Long noteId, Long userId) {
+        return toTagItems(tagService.getTags(userId, "note", noteId));
     }
 
     private List<NoteVO.TagItem> toTagItems(List<TagVO> tagVOs) {
