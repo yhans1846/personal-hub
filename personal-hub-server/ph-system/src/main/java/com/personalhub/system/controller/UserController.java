@@ -19,6 +19,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -91,7 +92,11 @@ public class UserController {
         String storedName = UUID.randomUUID().toString().replace("-", "") + "." + ext;
         String relativePath = "avatars/" + storedName;
 
-        storageService.store(file, relativePath);
+        try {
+            storageService.store(file.getBytes(), relativePath);
+        } catch (IOException e) {
+            throw new BusinessException("读取上传文件失败", e);
+        }
 
         String avatarUrl = "/api/files/avatar/" + storedName;
 

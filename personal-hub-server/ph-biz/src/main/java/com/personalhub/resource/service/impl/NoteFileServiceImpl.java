@@ -14,6 +14,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.UUID;
 
@@ -53,7 +54,7 @@ public class NoteFileServiceImpl implements NoteFileService {
         validateFile(file);
         String ext = getExtension(file.getOriginalFilename());
         String filename = UUID.randomUUID().toString().replace("-", "") + "." + ext;
-        storageService.store(file, getNoteDir(noteId) + "/images/" + filename);
+        storageService.store(readBytes(file), getNoteDir(noteId) + "/images/" + filename);
         log.info("笔记配图上传成功: noteId={}, filename={}", noteId, filename);
         return Map.of("url", "images/" + filename, "name", filename);
     }
@@ -63,7 +64,7 @@ public class NoteFileServiceImpl implements NoteFileService {
         validateNote(noteId, userId);
         validateFile(file);
         String originalName = sanitizeOriginalFilename(file.getOriginalFilename());
-        storageService.store(file, getNoteDir(noteId) + "/attachments/" + originalName);
+        storageService.store(readBytes(file), getNoteDir(noteId) + "/attachments/" + originalName);
         log.info("笔记附件上传成功: noteId={}, filename={}", noteId, originalName);
         return Map.of("url", "attachments/" + originalName, "name", originalName);
     }
@@ -93,5 +94,13 @@ public class NoteFileServiceImpl implements NoteFileService {
         if (filename == null) return "png";
         int dot = filename.lastIndexOf('.');
         return (dot > 0) ? filename.substring(dot + 1).toLowerCase() : "png";
+    }
+
+    private byte[] readBytes(MultipartFile file) {
+        try {
+            return file.getBytes();
+        } catch (IOException e) {
+            throw new BusinessException("读取上传文件失败", e);
+        }
     }
 }

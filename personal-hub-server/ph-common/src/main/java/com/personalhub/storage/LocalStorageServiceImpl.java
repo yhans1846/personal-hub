@@ -6,7 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -43,18 +42,6 @@ public class LocalStorageServiceImpl implements StorageService {
             throw new BusinessException("非法存储路径");
         }
         return target;
-    }
-
-    @Override
-    public void store(MultipartFile file, String relativePath) {
-        try {
-            Path targetPath = resolve(relativePath);
-            Files.createDirectories(targetPath.getParent());
-            file.transferTo(targetPath.toFile());
-            log.debug("文件存储成功: {}", relativePath);
-        } catch (IOException e) {
-            throw new BusinessException("文件存储失败: " + relativePath, e);
-        }
     }
 
     @Override

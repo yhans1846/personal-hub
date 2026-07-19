@@ -1,22 +1,19 @@
 package com.personalhub.storage;
 
 import org.springframework.core.io.Resource;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
 /**
- * 统一存储接口，支持本地文件/MinIO/OSS 等实现
+ * 统一存储接口，支持本地文件/MinIO/OSS 等实现（不依赖 Web Multipart）。
  */
 public interface StorageService {
 
     /**
-     * 上传 MultipartFile 到指定相对路径
-     */
-    void store(MultipartFile file, String relativePath);
-
-    /**
      * 上传字节数据到指定相对路径
+     *
+     * @param data         文件内容
+     * @param relativePath 相对存储根的路径
      */
     void store(byte[] data, String relativePath);
 

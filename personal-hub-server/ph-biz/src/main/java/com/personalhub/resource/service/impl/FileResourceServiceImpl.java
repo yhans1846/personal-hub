@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
@@ -134,7 +135,11 @@ public class FileResourceServiceImpl implements FileResourceService {
         String relativePath = "uploads/" + dirPrefix + "/" + yearMonth + "/" + storedName;
 
         // 存储文件
-        storageService.store(multipartFile, relativePath);
+        try {
+            storageService.store(multipartFile.getBytes(), relativePath);
+        } catch (IOException e) {
+            throw new BusinessException("读取上传文件失败", e);
+        }
 
         // 保存DB记录
         var file = FileResource.builder()

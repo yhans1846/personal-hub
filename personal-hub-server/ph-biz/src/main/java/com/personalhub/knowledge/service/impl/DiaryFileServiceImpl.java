@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -84,12 +85,20 @@ public class DiaryFileServiceImpl implements DiaryFileService {
         DiaryEntry entry = requireDiary(diaryId, userId);
         validateFile(file);
         String filename = UUID.randomUUID().toString().replace("-", "") + "." + extension(file.getOriginalFilename());
-        storageService.store(file, imagePath(diaryId, filename));
+        storageService.store(readBytes(file), imagePath(diaryId, filename));
         List<String> names = new ArrayList<>(entry.parseImageFiles());
         names.add(filename);
         persistImageFiles(diaryId, names);
         log.info("日记配图上传成功: diaryId={}, filename={}", diaryId, filename);
         return Map.of("name", filename);
+    }
+
+    private byte[] readBytes(MultipartFile file) {
+        try {
+            return file.getBytes();
+        } catch (IOException e) {
+            throw new BusinessException("读取上传文件失败", e);
+        }
     }
 
     @Override
