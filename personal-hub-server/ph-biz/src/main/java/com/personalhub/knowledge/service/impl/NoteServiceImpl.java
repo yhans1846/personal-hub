@@ -12,6 +12,7 @@ import com.personalhub.knowledge.dto.NoteCreateDTO;
 import com.personalhub.knowledge.dto.NoteQueryDTO;
 import com.personalhub.knowledge.entity.Category;
 import com.personalhub.knowledge.entity.Note;
+import com.personalhub.knowledge.enums.NoteDeleteReason;
 import com.personalhub.knowledge.mapper.CategoryMapper;
 import com.personalhub.knowledge.mapper.NoteMapper;
 import com.personalhub.knowledge.service.NoteService;
@@ -130,16 +131,30 @@ public class NoteServiceImpl implements NoteService {
     @Transactional
     @CacheEvict(cacheNames = "categories", allEntries = true)
     public void delete(Long id, Long userId) {
+        softDelete(id, userId, NoteDeleteReason.USER_DELETE, "DELETE", "删除笔记");
+    }
+
+    @Override
+    @Transactional
+    @CacheEvict(cacheNames = "categories", allEntries = true)
+    public void archive(Long id, Long userId) {
+        softDelete(id, userId, NoteDeleteReason.AUTO_ARCHIVE, "ARCHIVE", "归档笔记");
+    }
+
+    private void softDelete(Long id, Long userId, NoteDeleteReason reason, String auditAction, String auditVerb) {
         Note note = EntityGuard.requireOwned(
                 noteMapper.selectById(id), userId, Note::getUserId, "笔记不存在");
+        if (Integer.valueOf(Flags.YES).equals(note.getIsDeleted())) {
+            throw new NotFoundException("笔记不存在");
+        }
         LocalDateTime now = LocalDateTime.now();
         note.setIsDeleted(Flags.YES);
         note.setDeletedAt(now);
-        note.setDeleteReason("USER_DELETE");
+        note.setDeleteReason(reason.getCode());
         noteMapper.updateById(note);
-        auditLogService.log("NOTE", id, "DELETE",
-                "删除笔记：《" + note.getTitle() + "》", userId);
-        log.info("笔记移入回收站: id={}, userId={}, deletedAt={}", id, userId, now);
+        auditLogService.log("NOTE", id, auditAction,
+                auditVerb + "：《" + note.getTitle() + "》", userId);
+        log.info("笔记移入回收站: id={}, userId={}, reason={}, deletedAt={}", id, userId, reason.getCode(), now);
     }
 
     @Override

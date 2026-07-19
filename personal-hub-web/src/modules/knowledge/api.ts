@@ -23,6 +23,9 @@ export function updateNote(id: number, data: NoteCreateDTO) {
 export function deleteNote(id: number) {
   return request.delete<Result<void>>(`/notes/${id}`)
 }
+export function archiveNote(id: number) {
+  return request.post<Result<void>>(`/notes/${id}/archive`)
+}
 export function toggleFavorite(id: number) {
   return request.put<Result<void>>(`/notes/${id}/favorite`)
 }

@@ -38,7 +38,9 @@ login → `{token,user:{id,username,nickname,avatar}}`
 
 ## 笔记 `/api/notes`
 
-列表/详情/CRUD · favorite · recent · recycle · preview · restore · permanent · import · import-content · export ZIP · images/attachments 上传与读取。
+列表/详情/CRUD · favorite · archive · recent · recycle · preview · restore · permanent · import · import-content · export ZIP · images/attachments 上传与读取。
+
+`POST /{id}/archive`：归档进回收站（`delete_reason=AUTO_ARCHIVE`）；`DELETE /{id}` 为用户删除（`USER_DELETE`）。
 
 列表参数：page,size,keyword,categoryId,tagId,isFavorite,isDeleted  
 新建：`{title,content,categoryIds,tagIds}`

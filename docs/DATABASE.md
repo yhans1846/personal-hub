@@ -14,7 +14,7 @@
 username UK · password · nickname · avatar · email · gender(0/1/2) · birthday · phone · country/province/city/district · website/github · bio · created_at/updated_at · is_deleted
 
 ### `note_note`
-user_id · title · md_path · excerpt · is_favorite · is_deleted · deleted_at · delete_reason · 时间  
+user_id · title · md_path · excerpt · is_favorite · is_deleted · deleted_at · delete_reason（`USER_DELETE`|`AUTO_ARCHIVE`）· 时间  
 正文在文件系统；分类 `note_category_rel`；标签 `tag_rel`。索引：user_id · updated_at · (user_id,is_deleted,updated_at)
 
 ### `category`

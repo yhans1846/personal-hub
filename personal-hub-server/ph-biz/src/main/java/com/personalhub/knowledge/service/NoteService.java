@@ -48,12 +48,20 @@ public interface NoteService {
     NoteVO update(Long id, Long userId, NoteCreateDTO dto);
 
     /**
-     * 删除笔记（软删除到回收站）
+     * 删除笔记（软删除到回收站，原因 USER_DELETE）
      *
      * @param id     笔记ID
      * @param userId 用户ID
      */
     void delete(Long id, Long userId);
+
+    /**
+     * 归档笔记（软删除到回收站，原因 AUTO_ARCHIVE）
+     *
+     * @param id     笔记ID
+     * @param userId 用户ID
+     */
+    void archive(Long id, Long userId);
 
     /**
      * 恢复笔记

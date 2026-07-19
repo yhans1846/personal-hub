@@ -43,7 +43,7 @@ public class Note {
     /** 删除时间（回收站排序/展示） */
     private LocalDateTime deletedAt;
 
-    /** 删除原因（USER_DELETE/AUTO_ARCHIVE） */
+    /** 删除原因（{@link com.personalhub.knowledge.enums.NoteDeleteReason}） */
     @TableField(insertStrategy = FieldStrategy.IGNORED)
     private String deleteReason;
 

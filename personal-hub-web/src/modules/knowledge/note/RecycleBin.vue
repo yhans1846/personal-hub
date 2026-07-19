@@ -113,6 +113,12 @@ function displayTitle(title?: string | null): string {
   if (!title) return '未命名笔记'
   return title.replace(/^\[已删\]\s*/, '')
 }
+
+function deleteReasonLabel(reason?: string | null): string {
+  if (reason === 'USER_DELETE') return '用户删除'
+  if (reason === 'AUTO_ARCHIVE') return '归档'
+  return reason || ''
+}
 </script>
 
 <template>
@@ -163,7 +169,7 @@ function displayTitle(title?: string | null): string {
               </span>
               <span v-if="note.deleteReason" class="meta-item">
                 <span class="meta-label">原因</span>
-                <span class="delete-reason">{{ note.deleteReason === 'USER_DELETE' ? '用户删除' : note.deleteReason }}</span>
+                <span class="delete-reason">{{ deleteReasonLabel(note.deleteReason) }}</span>
               </span>
             </div>
             <div class="recycle-card__times">

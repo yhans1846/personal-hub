@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { getNoteList, deleteNote, toggleFavorite } from '@/modules/knowledge/api'
+import { getNoteList, deleteNote, archiveNote, toggleFavorite } from '@/modules/knowledge/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, FileText, Star, Trash2, Clock, Eye, Upload, LayoutList, LayoutGrid } from 'lucide-vue-next'
 import { EmptyState, PageHeader, ListToolbar, ListPagination } from '@/components'
@@ -43,6 +43,7 @@ const cardMenuEntries: CardMenuEntry[] = [
   { type: 'item', id: 'favorite', label: '收藏 / 取消收藏' },
   { type: 'item', id: 'export', label: '导出 Markdown' },
   { type: 'separator' },
+  { type: 'item', id: 'archive', label: '归档' },
   { type: 'item', id: 'delete', label: '移入回收站', danger: true },
 ]
 
@@ -78,6 +79,17 @@ async function handleDelete(id: number) {
     fetchList()
   } catch (e) {
     handleApiError(e, '移入回收站失败')
+  }
+}
+
+async function handleArchive(id: number) {
+  await ElMessageBox.confirm('确定归档此笔记？归档后可在回收站恢复。', '归档', { type: 'info' })
+  try {
+    await archiveNote(id)
+    ElMessage.success('已归档')
+    fetchList()
+  } catch (e) {
+    handleApiError(e, '归档失败')
   }
 }
 
@@ -118,6 +130,9 @@ async function onCardMenuAction(actionId: string) {
       break
     case 'export':
       handleExport(note)
+      break
+    case 'archive':
+      await handleArchive(note.id)
       break
     case 'delete':
       await handleDelete(note.id)

@@ -17,6 +17,7 @@
 - **架构（后端）**：抽取 `StoragePaths` / `FileUploadValidator` / `FileAssetService`；头像上传下沉 UserService
 - **架构（后端）**：通知扫描改 `PlanningNotificationSource`（biz 实现），去掉 system 跨域查 todo/plan 表
 - **代码质量（后端）**：StudyPlan/Todo 魔法状态码改用枚举 `getCode()`
+- **功能**：笔记手动归档 `POST /api/notes/{id}/archive`（`delete_reason=AUTO_ARCHIVE`）；回收站区分用户删除/归档
 - **修复（前端）**：回收站卡片行高被 `minmax(0,1fr)` 压扁导致时间戳错乱；保证最小行高、时间行 nowrap；展示时去掉冗余 `[已删]` 前缀
 - **代码质量（前端）**：StatsView 拆 KPI/图表/活动子组件；DiaryDialog 迁 `useEntityFormSave`（创建不关窗）并抽 `DiaryImagePanel`；学习计划表 / 日记月历拆分子组件；搜索分组超量结果与通知列表走 `VirtualList`
 - **代码质量（前端）**：接入 knip（`pnpm knip`）；收紧未对外使用的 export；katex/mermaid 按 vditor CDN 忽略

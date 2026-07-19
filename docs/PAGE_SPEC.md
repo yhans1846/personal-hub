@@ -102,6 +102,7 @@ TOC 宽 220（收起 34，拖 160–400）。主题：`data-preview-theme` → `
 ## 5. Checklist
 
 **列表：** Header+Toolbar+Empty+Pagination · Table/Card 或例外 · 槽位/fill · Dialog+深链 · Token+骨架+深色  
+**笔记：** 右键「归档」→`AUTO_ARCHIVE`；「移入回收站」→`USER_DELETE`；回收站展示删除原因  
 **预览：** DocLayout+prose · readingConfig · §3 注意项  
 **Dialog：** 积木骨架 · FooterActions · 日记配图先保存  
 **文件：** 内嵌预览 · 鉴权下载 · 不与笔记/日记资源混库

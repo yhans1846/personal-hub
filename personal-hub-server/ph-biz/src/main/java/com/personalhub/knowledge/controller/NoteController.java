@@ -92,6 +92,16 @@ public class NoteController {
         return Result.success();
     }
 
+    @Operation(summary = "归档笔记（移入回收站，原因 AUTO_ARCHIVE）")
+    @PostMapping("/{id}/archive")
+    public Result<Void> archive(
+            @Parameter(hidden = true) Authentication authentication,
+            @PathVariable Long id) {
+        Long userId = CurrentUser.id(authentication);
+        noteService.archive(id, userId);
+        return Result.success();
+    }
+
     @Operation(summary = "切换收藏")
     @PutMapping("/{id}/favorite")
     public Result<Void> toggleFavorite(
