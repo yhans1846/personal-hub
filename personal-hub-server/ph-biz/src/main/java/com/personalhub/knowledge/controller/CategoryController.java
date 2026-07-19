@@ -69,8 +69,11 @@ public class CategoryController {
 
     @Operation(summary = "批量更新排序")
     @PutMapping("/sort")
-    public Result<Void> updateSort(@RequestBody List<SortOrderDTO> sortList) {
-        categoryService.updateSortOrder(sortList);
+    public Result<Void> updateSort(
+            @Parameter(hidden = true) Authentication authentication,
+            @RequestBody List<SortOrderDTO> sortList) {
+        Long userId = CurrentUser.id(authentication);
+        categoryService.updateSortOrder(userId, sortList);
         return Result.success();
     }
 }

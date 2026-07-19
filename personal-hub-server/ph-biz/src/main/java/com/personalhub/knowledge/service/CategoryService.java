@@ -33,7 +33,10 @@ public interface CategoryService {
     void delete(Long id, Long userId);
 
     /**
-     * 批量更新排序
+     * 批量更新排序（校验归属）
+     *
+     * @param userId 当前用户
+     * @param list   排序项
      */
-    void updateSortOrder(List<SortOrderDTO> list);
+    void updateSortOrder(Long userId, List<SortOrderDTO> list);
 }

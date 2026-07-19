@@ -122,8 +122,13 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional
     @CacheEvict(cacheNames = "categories", allEntries = true)
-    public void updateSortOrder(List<SortOrderDTO> list) {
+    public void updateSortOrder(Long userId, List<SortOrderDTO> list) {
+        if (list == null || list.isEmpty()) {
+            return;
+        }
         for (SortOrderDTO dto : list) {
+            EntityGuard.requireOwned(
+                    categoryMapper.selectById(dto.getId()), userId, Category::getUserId, "分类不存在");
             Category category = new Category();
             category.setId(dto.getId());
             category.setSortOrder(dto.getSortOrder());
