@@ -1,11 +1,10 @@
 # ---- build ----
-# 默认走 npmmirror，构建期主动清空代理，避免误走宿主机 Clash（未 Allow LAN 会 ECONNREFUSED）
+# 默认走 npmmirror；构建期清空代理，避免误连 Clash
 FROM node:22-bookworm-slim AS build
 WORKDIR /web
 
 ARG NPM_REGISTRY=https://registry.npmmirror.com
 
-# 忽略 compose 传入的 BUILD_HTTP_PROXY，国内镜像直连即可
 ENV HTTP_PROXY= \
     HTTPS_PROXY= \
     http_proxy= \
@@ -19,7 +18,9 @@ RUN npm install -g pnpm@9.15.0 \
     && pnpm config delete proxy || true \
     && pnpm config delete https-proxy || true
 
+# postinstall 需要 scripts/，须在 install 前拷入
 COPY personal-hub-web/package.json personal-hub-web/pnpm-lock.yaml ./
+COPY personal-hub-web/scripts ./scripts
 RUN pnpm install --frozen-lockfile
 
 COPY personal-hub-web/ ./
