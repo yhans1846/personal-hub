@@ -46,7 +46,7 @@ export interface StorageSyncResult<T extends object> {
 
 /** 简易深层合并（仅处理一层嵌套对象） */
 function deepMerge<T extends object>(target: T, source: Partial<T>): T {
-  const result: Record<string, unknown> = { ...target }
+  const result = { ...(target as Record<string, unknown>) }
   const src = source as Record<string, unknown>
   for (const key of Object.keys(src)) {
     const sv = src[key]

@@ -1,5 +1,6 @@
 import request from './request'
-import type { Result, LayoutResponse, LayoutSaveRequest } from '@/types/layout'
+import type { Result } from '@/types/common'
+import type { LayoutResponse, LayoutSaveRequest } from '@/types/layout'
 
 /** 获取用户所有布局配置 */
 export function getLayoutAll() {

@@ -73,7 +73,7 @@ export function useStatsCharts(options: UseStatsChartsOptions) {
           const list = Array.isArray(params) ? params : [params]
           const p = list[0]
           if (!p) return ''
-          return `${p.axisValueLabel ?? p.name}<br/>${p.marker} 学习时长: ${p.value} 分钟`
+          return `${String((p as { axisValue?: string }).axisValue ?? p.name)}<br/>${p.marker} 学习时长: ${p.value} 分钟`
         },
       },
       xAxis: {
@@ -126,7 +126,7 @@ export function useStatsCharts(options: UseStatsChartsOptions) {
           if (avgLine?.seriesName === '平均线') {
             extra = `<br/>${avgLine.marker} 日均: ${avg}`
           }
-          return `${p.axisValueLabel ?? p.name}<br/>${p.marker} 新增笔记: ${p.value}${extra}`
+          return `${String((p as { axisValue?: string }).axisValue ?? p.name)}<br/>${p.marker} 新增笔记: ${p.value}${extra}`
         },
       },
       xAxis: {
@@ -239,7 +239,7 @@ export function useStatsCharts(options: UseStatsChartsOptions) {
           const list = Array.isArray(params) ? params : [params]
           const p = list[0]
           if (!p) return ''
-          return `${p.axisValueLabel ?? p.name}<br/>${p.marker} ${p.value}`
+          return `${String((p as { axisValue?: string }).axisValue ?? p.name)}<br/>${p.marker} ${p.value}`
         },
       },
       xAxis: {

@@ -25,7 +25,7 @@ const { list, total, loading, query, fetchList, onSearch, onPageChange } = usePa
 })
 
 // ---- 视图模式（localStorage 持久化） ----
-const { viewMode, setViewMode } = useProductViewMode('diary-view', 'list')
+const { viewMode, setViewMode } = useProductViewMode('diary-view', 'table')
 const cardImages = ref<Map<number, string[]>>(new Map())
 const lightboxOpen = ref(false)
 const lightboxUrls = ref<string[]>([])
@@ -218,7 +218,7 @@ const moodOptions = [
     <div class="plan-top">
       <PageHeader title="日记" />
 
-      <ListToolbar :search="query.keyword" search-placeholder="搜索日记..." search-width="200px" create-label="写日记" @update:search="query.keyword = $event" @search="onSearch" @create="goCreate">
+      <ListToolbar :search="query.keyword ?? ''" search-placeholder="搜索日记..." search-width="200px" create-label="写日记" @update:search="query.keyword = $event" @search="onSearch" @create="goCreate">
         <template #filters>
           <el-select v-model="query.mood" placeholder="心情" style="width:120px" clearable @change="onFilterChange">
             <el-option v-for="item in moodOptions" :key="item.label" :value="item.value" :label="item.label" />
@@ -228,7 +228,7 @@ const moodOptions = [
             <CalendarDays :size="14" /> {{ showCalendar ? '列表' : '月历' }}
           </el-button>
           <div class="view-toggle">
-            <button type="button" class="view-btn" :class="{ active: viewMode === 'list' }" title="列表" @click="setViewMode('list')">
+            <button type="button" class="view-btn" :class="{ active: viewMode === 'table' }" title="列表" @click="setViewMode('table')">
               <LayoutList :size="15" />
             </button>
             <button type="button" class="view-btn" :class="{ active: viewMode === 'card' }" title="卡片" @click="setViewMode('card')">
@@ -269,7 +269,7 @@ const moodOptions = [
         <EmptyState v-else-if="list.length === 0" :icon="PenLine" illustration="diary" text="还没有日记，开始记录吧" action-label="写日记" :action-icon="Plus" @action="goCreate" />
 
         <!-- ---- 列表模式 ---- -->
-        <div v-else-if="viewMode === 'list'" class="diary-list">
+        <div v-else-if="viewMode === 'table'" class="diary-list">
           <div v-for="entry in list" :key="entry.id" class="diary-item" @click="goEdit(entry.id)">
             <div class="diary-date">
               <div class="diary-date-day">{{ entry.date.slice(8) }}</div>

@@ -60,7 +60,7 @@
 | class | kebab |
 
 - 一律 `<script setup lang="ts">`
-- 前端门禁：`pnpm lint`（unused-imports 为 error；`any` 暂 warn）
+- 前端门禁：`pnpm lint`（0 warn）；`vue-tsc -b`（`pnpm build` 前置）通过
 - API：`src/api/` + `modules/*/api.ts`；禁一表一文件
 - Pinia 仅全局（auth/theme/layout/readingConfig/notification/notificationConfig/featureFlags）；列表页内拉 API
 - `themeStore`：外观（主题/强调色/圆角/密度/内容宽）；`layoutStore`：菜单/工作台/统计卡片

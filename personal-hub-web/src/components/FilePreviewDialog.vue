@@ -32,7 +32,7 @@ const loading = ref(false)
 const kind = ref<FilePreviewKind>('unsupported')
 const blobUrl = ref('')
 const textContent = ref('')
-const mdRef = ref<HTMLElement | null>(null)
+const mdRef = ref<HTMLDivElement | null>(null)
 const lightboxOpen = ref(false)
 const downloading = ref(false)
 

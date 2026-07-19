@@ -5,6 +5,7 @@
 ## [Unreleased]
 
 ### 2026-07-19
+- **代码质量（前端）**：清零 `vue-tsc`（layoutApi Result、日记 viewMode 对齐 table/card、ListToolbar keyword 等）
 - **代码质量（前端）**：清零 ESLint warn（分类/标签/笔记编辑/登录等 `any` → 具体类型或 `handleApiError`）
 - **代码质量（前端）**：清理壳层死代码（AppLayout 快捷创建弹窗、未接线的自动保存提示、`getBackupList`/`getUnreadCount`）；图表/命令面板等去掉一批 `any`
 - **代码质量（前端）**：`useStorageSync` / `readingConfigStore` 去掉 `any`；通知/实验/数据管理设置页收敛 design token；移除未展示的备份列表拉取

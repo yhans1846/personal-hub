@@ -26,6 +26,7 @@
 | vditor | Markdown WYSIWYG（IR） |
 | sortablejs · ECharts 6 | 拖拽 / 图表 |
 | ESLint 9+ · typescript-eslint · eslint-plugin-vue · unused-imports | `pnpm lint`（扫 `src`） |
+| vue-tsc | `pnpm build` 前置类型检查已通过 |
 
 Node **22 LTS** · **pnpm**。编码与 UI 见 `STYLE_GUIDE.md`；页面形态见 `PAGE_SPEC.md`。
 

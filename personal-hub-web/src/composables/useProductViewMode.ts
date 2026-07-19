@@ -4,6 +4,8 @@ export type ProductViewMode = 'table' | 'card'
 
 function readStoredMode(storageKey: string, defaultMode: ProductViewMode): ProductViewMode {
   const stored = localStorage.getItem(storageKey)
+  // 日记等旧版曾用 list，统一迁到 table（列表态）
+  if (stored === 'list') return 'table'
   if (stored === 'table' || stored === 'card') return stored
   return defaultMode
 }

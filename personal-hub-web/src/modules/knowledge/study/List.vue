@@ -83,7 +83,7 @@ watch(list, (val) => { groupedList.value = groupByDate(val) }, { immediate: true
         <div class="stat-item"><span class="stat-num">{{ stats.streak }}</span> 天 <span class="stat-label">连续学习</span></div>
       </div>
 
-      <ListToolbar :search="query.keyword" search-placeholder="搜索学习记录..." search-width="240px" create-label="新建记录" @update:search="query.keyword = $event" @search="onSearch" @create="goCreate" />
+      <ListToolbar :search="query.keyword ?? ''" search-placeholder="搜索学习记录..." search-width="240px" create-label="新建记录" @update:search="query.keyword = $event" @search="onSearch" @create="goCreate" />
     </div>
 
     <div class="plan-middle">

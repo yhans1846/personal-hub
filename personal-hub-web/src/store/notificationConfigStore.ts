@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { getLayoutAll, saveLayout, resetLayout } from '@/api/layoutApi'
 import { useStorageSync } from '@/composables/useStorageSync'
-import type { NotificationConfig } from '@/types/layout'
+import type { LayoutResponse, NotificationConfig } from '@/types/layout'
 import {
   NOTIFICATION_TYPE_OPTIONS,
   NOTIFICATION_TYPE_VALUES,
@@ -48,7 +48,8 @@ export const useNotificationConfigStore = defineStore('notificationConfig', () =
     },
     fetchApi: async () => {
       const res = await getLayoutAll()
-      const notifLayout = (res.data.data ?? []).find((l) => l.layoutType === LAYOUT_TYPE)
+      const layouts: LayoutResponse[] = res.data.data ?? []
+      const notifLayout = layouts.find((l) => l.layoutType === LAYOUT_TYPE)
       if (!notifLayout?.layoutJson) return null
       try {
         return sanitizeConfig(JSON.parse(notifLayout.layoutJson) as NotificationConfig)

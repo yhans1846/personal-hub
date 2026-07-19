@@ -80,6 +80,11 @@ async function fetchCategories() {
   } catch { /* ignore */ }
 }
 
+function openUploadPicker(e: MouseEvent) {
+  const zone = (e.currentTarget as HTMLElement | null)?.closest('.upload-zone')
+  zone?.querySelector<HTMLInputElement>('input[type=file]')?.click()
+}
+
 async function handleUpload(files: FileList | null) {
   if (!files || files.length === 0) return
   uploadLoading.value = true
@@ -188,7 +193,7 @@ watch(previewOpen, (open) => {
         <Upload :size="28" />
         <p>
           拖拽文件到此处或
-          <el-button text type="primary" :loading="uploadLoading" @click="($event) => { const el = ($event.currentTarget as HTMLElement).closest('.upload-zone')?.querySelector<HTMLInputElement>('input[type=file]'); el?.click() }">
+          <el-button text type="primary" :loading="uploadLoading" @click="openUploadPicker">
             点击选择
           </el-button>
         </p>
