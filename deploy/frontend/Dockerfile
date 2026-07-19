@@ -1,27 +1,23 @@
 # ---- build ----
-# 默认走 npmmirror，国内无需代理即可装 pnpm/依赖；仍可通过 BUILD_HTTP_PROXY 覆盖
+# 默认走 npmmirror，构建期主动清空代理，避免误走宿主机 Clash（未 Allow LAN 会 ECONNREFUSED）
 FROM node:22-bookworm-slim AS build
 WORKDIR /web
 
-ARG HTTP_PROXY
-ARG HTTPS_PROXY
-ARG http_proxy
-ARG https_proxy
-ARG NO_PROXY=localhost,127.0.0.1
-ARG no_proxy=localhost,127.0.0.1
 ARG NPM_REGISTRY=https://registry.npmmirror.com
 
-ENV HTTP_PROXY=${HTTP_PROXY} \
-    HTTPS_PROXY=${HTTPS_PROXY} \
-    http_proxy=${http_proxy} \
-    https_proxy=${https_proxy} \
-    NO_PROXY=${NO_PROXY} \
-    no_proxy=${no_proxy} \
-    npm_config_registry=${NPM_REGISTRY}
+# 忽略 compose 传入的 BUILD_HTTP_PROXY，国内镜像直连即可
+ENV HTTP_PROXY= \
+    HTTPS_PROXY= \
+    http_proxy= \
+    https_proxy= \
+    npm_config_registry=${NPM_REGISTRY} \
+    npm_config_proxy= \
+    npm_config_https_proxy=
 
-# 用镜像源装 pnpm，避免 corepack 直连 registry.npmjs.org
 RUN npm install -g pnpm@9.15.0 \
-    && pnpm config set registry "${NPM_REGISTRY}"
+    && pnpm config set registry "${NPM_REGISTRY}" \
+    && pnpm config delete proxy || true \
+    && pnpm config delete https-proxy || true
 
 COPY personal-hub-web/package.json personal-hub-web/pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile

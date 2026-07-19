@@ -166,21 +166,11 @@ IDE（DataGrip / Cursor MySQL MCP 等）：Host=`127.0.0.1`，Port=`3306` / `637
 
 ### 0.4.2 构建时网络（国内）
 
-前端 Dockerfile 默认用 **npmmirror** 装 pnpm/依赖，一般不必为 npm 开代理。
+前端用 **npmmirror**、后端 Maven 用 **阿里云**，构建期**不走** Clash，避免容器访问 `host.docker.internal:7897` 被拒绝。
 
-若 Maven/apt 仍超时，在 `/opt/personal-hub/.env` 增加（Clash 须 **Allow LAN**）：
+若 `.env` 里已有 `BUILD_HTTP_PROXY`，可删掉或注释掉（当前前端/后端 Dockerfile 会清空代理环境变量）。
 
-```bash
-BUILD_HTTP_PROXY=http://host.docker.internal:7897
-```
-
-然后再：
-
-```bash
-$COMPOSE up -d --build
-```
-
-说明：`docker pull` 仍可用守护进程代理 `127.0.0.1:7897`；Dockerfile 内 `RUN` 若要走 Clash，须用 `host.docker.internal`，不能用容器内的 `127.0.0.1`。
+`docker pull` 基础镜像若仍超时，继续用守护进程代理 `127.0.0.1:7897`（只影响拉镜像，不影响 Dockerfile 内 npm/maven）。
 
 ### 0.5 首次启动
 
