@@ -4,8 +4,9 @@
     <springProperty scope="context" name="APP_NAME" source="spring.application.name" defaultValue="personal-hub"/>
     <springProperty scope="context" name="LOG_PATH" source="logging.file.path" defaultValue="logs"/>
 
+    <!-- 显式 Asia/Shanghai，避免容器默认 UTC 导致日志比系统时间慢 8 小时 -->
     <property name="LOG_PATTERN"
-              value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"/>
+              value="%d{yyyy-MM-dd HH:mm:ss.SSS, Asia/Shanghai} [%thread] %-5level %logger{50} - %msg%n"/>
 
     <!-- 控制台 -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">

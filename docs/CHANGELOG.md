@@ -5,6 +5,7 @@
 ## [Unreleased]
 
 ### 2026-07-19
+- **部署**：后端/Redis 固定 `Asia/Shanghai`（TZ + JVM `user.timezone` + Logback 显式时区），修复日志比系统时间慢 8 小时
 - **安全（后端）**：本地存储 `resolve` 强制路径落在上传根目录内，拒绝 `../` 穿越
 - **安全（后端）**：抽取 `FilenameGuard`；头像/笔记附件/日记配图统一消毒文件名
 - **安全（后端）**：标签 bind/unbind/批量设置校验标签与实体归属（防 IDOR）

@@ -24,14 +24,17 @@ ENV HTTP_PROXY= \
     https_proxy=
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl \
+    && apt-get install -y --no-install-recommends curl tzdata \
+    && ln -snf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
+    && echo Asia/Shanghai > /etc/timezone \
     && rm -rf /var/lib/apt/lists/* \
     && mkdir -p /data/personal-hub/uploads /data/personal-hub/logs
 
 COPY --from=build /src/app.jar /app/app.jar
 
-ENV SPRING_PROFILES_ACTIVE=prod \
-    JAVA_OPTS="-Xms256m -Xmx512m"
+ENV TZ=Asia/Shanghai \
+    SPRING_PROFILES_ACTIVE=prod \
+    JAVA_OPTS="-Xms256m -Xmx512m -Duser.timezone=Asia/Shanghai"
 
 EXPOSE 8080
 

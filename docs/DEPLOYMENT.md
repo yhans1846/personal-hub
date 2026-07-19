@@ -132,6 +132,9 @@ sudo vim /opt/personal-hub/.env
 可选：`HTTP_PORT`（默认 `80`；冲突可改 `8088`）· `MYSQL_PUBLISH`（默认 `3306`）· `REDIS_PUBLISH`（默认 `6379`）。  
 `.env` 只放 `/opt/personal-hub/.env`，**勿提交 Git**。
 
+> **端口勿混用：** `MYSQL_PORT` / `REDIS_PORT` 是容器内端口（后端连库用），**必须**保持 `3306` / `6379`。  
+> 宿主机映射端口只用 `MYSQL_PUBLISH` / `REDIS_PUBLISH`。若把 `REDIS_PORT=6380` 之类写进 `.env`，后端会连 `redis:6380` → `Connection refused`，健康检查刷屏。
+
 ### 0.4.1 本机 / IDE 直连 MySQL、Redis
 
 Compose 已映射宿主机端口（`.env` 中 `MYSQL_PUBLISH` / `REDIS_PUBLISH`）。改端口后需 `$COMPOSE up -d`。
@@ -295,6 +298,7 @@ $COMPOSE exec -T mysql mysql -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABAS
 | 改 .env 无效              | `up -d`；**MySQL 密码仅建卷时生效**                           |
 | 80 占用                  | `HTTP_PORT=8088`                                     |
 | 3306/6379 占用           | `.env` 改 `MYSQL_PUBLISH` / `REDIS_PUBLISH` 后 `up -d` |
+| 日志时间比系统慢 8 小时 | 后端容器时区未设；Compose/镜像已固定 `Asia/Shanghai`，重建 backend 即可 |
 | 外网连不上库                 | 查防火墙；或只用 SSH 隧道；勿对公网裸奔 MySQL/Redis                   |
 
 
