@@ -4,7 +4,11 @@
 
 ## [Unreleased]
 
+### 2026-07-20
+- **文档**：DEPLOYMENT 备注 `.env` 含 `!` `&` 等须单引号，避免 CI Wait for HTTP `source` 失败（`2!: 未找到命令`）
+
 ### 2026-07-19
+- **文档**：DEPLOYMENT 方案三扩写为完整 CI/CD（架构、Runner 安装、验收、日常流、排障）
 - **文档**：DEPLOYMENT 增补常用命令速查（状态 / 启停 / 日志 / 进容器）
 - **文档**：DEPLOYMENT 重构为方案一首次 / 方案二日常更新 / 方案三 CI/CD / 方案四运维 + 附录（Docker、环境变量、排障）
 - **文档**：DEPLOYMENT 同步 PORT/PUBLISH、时区、进容器/宿主机/SSH 连库，修正 `.env.example` 复制与后端健康检查写法

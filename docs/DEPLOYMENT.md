@@ -30,7 +30,7 @@ cd ~/personal-hub
 | 看状态 / 启停 / 日志等常用命令 | **常用命令速查** |
 | 全新机器第一次上线 | **方案一 · 首次部署** |
 | 已上线，拉代码发新版 | **方案二 · 日常更新** |
-| push `main` 自动发布 | **方案三 · CI/CD（可选）** |
+| push `main` 自动发布 | **方案三 · CI/CD（可选）**（架构 + Runner + 日常流） |
 | 连库、回滚、改密、清库 | **方案四 · 运维手册** |
 | 装 Docker / 改 `.env` / 排障 | **附录** |
 
@@ -161,6 +161,9 @@ sudo vim /opt/personal-hub/.env
 | `REDIS_PASSWORD` | Redis密码                          |
 | `JWT_SECRET` | `可以命令生成 openssl rand -base64 48` |
 
+**特殊字符须单引号（易错）：** 密码 / `JWT_SECRET` 若含 `!` `&` `$` `#` 空格 `/` 等，必须写成 `MYSQL_PASSWORD='a@x&2!'`。  
+`docker compose --env-file` 多数能吃裸值，但 CI 的 **Wait for HTTP** 会 `source` `.env`：裸 `&` / `!` 会被 bash 当成命令（典型报错：`行 N: 2!: 未找到命令`，exit 127），Deploy 已绿也会挂在健康检查。
+
 **端口规则（易错）：**
 
 | 变量 | 含义          | 取值 |
@@ -247,24 +250,129 @@ $COMPOSE logs --tail 50 backend
 
 ## 方案三 · CI/CD（可选）
 
-仅在需要「push `main` 自动部署」时配置。**首次上线不依赖本方案**。
+目标：开发机 `git push origin main` 后，**VM 上 Self-hosted Runner 自动**执行 `compose up -d --build` 并验收首页。  
+**首次上线请先完成方案一**；本方案不替代手动部署，只做自动发布。不需要自动发布则跳过本方案，继续用方案二即可。
 
-### 1. 注册 Runner
+### 架构
 
-1. GitHub → Settings → Actions → Runners → New（Linux x64）
-2. VM 安装到 `~/actions-runner`：`config.sh` → `sudo ./svc.sh install && start`
-3. Runner 用户须在 `docker` 组；机器能出网取任务
+```
+开发机 push main
+       │
+       ▼
+ GitHub Actions（云端只调度，不在云端构建）
+       │  任务下发到 Self-hosted Runner
+       ▼
+ Ubuntu VM（Runner + Docker）
+       │  checkout → compose up -d --build
+       │  读 /opt/personal-hub/.env（密钥不进仓库）
+       ▼
+ 轮询 http://127.0.0.1:$HTTP_PORT/ → 成功 / 打日志失败
+```
 
-### 2. 前置条件
+| 组件 | 位置 | 作用 |
+|------|------|------|
+| Workflow | `.github/workflows/deploy.yml` | 触发与步骤 |
+| Runner | VM `~/actions-runner` | 在部署机本地执行 job |
+| 密钥 | `/opt/personal-hub/.env` | Compose 环境变量（**勿进 Git**） |
+| 构建目录 | Runner `_work/...`（checkout） | 构建上下文；可与 `~/personal-hub` 并存 |
 
-- `/opt/personal-hub/.env` 已存在且密钥有效
-- `/data/personal-hub/{uploads,logs}` 已创建
-- 方案一已成功手动跑通过至少一次
+触发：`push` 到 `main`，或 Actions 里 **Deploy (self-hosted)** → **Run workflow**。  
+并发：组名 `personal-hub-deploy`，同时只跑一个（新的会取消旧的）。
 
-### 3. 触发
+### 按序配置
 
-- `push` 到 `main`，或 Actions 里 `workflow_dispatch`
-- 流程：checkout → `compose up -d --build` → 轮询首页（见 `.github/workflows/deploy.yml`）
+#### 1. 确认方案一已跑通
+
+- `$COMPOSE ps` 中各服务正常
+- `/opt/personal-hub/.env` 存在且可启动
+- `/data/personal-hub/uploads`、`logs` 已创建
+- 部署用户在 `docker` 组，可无交互跑 `docker`
+
+#### 2. GitHub 创建 Runner 令牌
+
+仓库 → **Settings** → **Actions** → **Runners** → **New self-hosted runner** → 选 **Linux** / **x64**。  
+页面给出下载命令与一次性 token（勿泄露、勿提交）。
+
+#### 3. VM 安装 Runner
+
+用**将跑 Docker 的同一用户**安装（须已在 `docker` 组）：
+
+```bash
+mkdir -p ~/actions-runner && cd ~/actions-runner
+# 版本号以 GitHub 页面为准，以下为示意
+curl -o actions-runner-linux-x64.tar.gz -L \
+  https://github.com/actions/runner/releases/download/v2.321.0/actions-runner-linux-x64-2.321.0.tar.gz
+tar xzf ./actions-runner-linux-x64-*.tar.gz
+
+./config.sh --url https://github.com/<owner>/<repo> --token <页面复制的token>
+
+sudo ./svc.sh install
+sudo ./svc.sh start
+sudo ./svc.sh status
+```
+
+GitHub Runners 列表应显示 **Idle**。
+
+#### 4. 权限与出网
+
+```bash
+groups && docker ps    # 须含 docker 且可执行
+```
+
+- Runner 须能访问 `github.com`（拉任务 / checkout）
+- 构建网络同方案一（Docker Hub / 国内镜像）
+- Runner 用户对 `/opt/personal-hub/.env` 至少可读
+
+#### 5. 验收流水线
+
+1. Actions → **Deploy (self-hosted)** → **Run workflow** → `main`
+2. 确认步骤全绿：Checkout → Ensure data directories → Deploy → Wait for HTTP
+3. VM：`$COMPOSE ps`；浏览器打开站点确认已更新
+
+#### 6. 日常发布流
+
+| 步骤 | 谁 | 做什么 |
+|------|----|--------|
+| 1 | 开发机 | 改代码 → 验证 → `git push origin main` |
+| 2 | Actions | 自动在 VM 执行 `deploy.yml` |
+| 3 | 你 | Actions 看结果；失败查 Job 日志或 `$COMPOSE logs` |
+
+有 `sql/alter_*.sql` 时：流水线**不会**自动迁移。先 SSH 按方案二执行 alter，再 push（或 push 后立刻执行，注意窗口）。
+
+### Workflow 步骤对照
+
+| 步骤 | 行为 |
+|------|------|
+| Checkout | 拉取本次部署的 commit |
+| Ensure data directories | 确保 uploads/logs 存在并 `chmod 775` |
+| Deploy | 校验 `.env` → `docker compose … up -d --build` |
+| Wait for HTTP | `source` `.env` 读 `HTTP_PORT`，约 5 分钟内轮询首页；失败输出 `logs --tail=100` |
+
+定义文件：`.github/workflows/deploy.yml`。
+
+### Runner 运维
+
+```bash
+cd ~/actions-runner
+sudo ./svc.sh status | stop | start
+```
+
+移除：GitHub Settings → Runners → Remove；VM 上 `./config.sh remove`（需新 token）。
+
+### 排障（CI/CD）
+
+| 现象 | 处理 |
+|------|------|
+| Runner Offline | `svc.sh status`；网络；`svc.sh start` |
+| Waiting for a runner | 未注册 / 标签不是默认 `self-hosted` |
+| 缺 `.env` | 按方案一创建 |
+| docker permission denied | Runner 用户进 `docker` 组后重启 svc |
+| Deploy 成功但站点旧 | 确认 push 的是 `main`；看 checkout SHA |
+| Wait for HTTP：`2!: 未找到命令` / exit 127 | `.env` 密码含 `!` `&` 等未加单引号 → 见方案一 §3；`sudo vim /opt/personal-hub/.env` 后 Re-run |
+| Wait for HTTP 超时 | `$COMPOSE ps` / logs；检查 `HTTP_PORT` |
+| 与手动部署冲突 | 避免 Actions 进行中同时手动 `up` |
+
+安全：勿提交 `.env` / Runner token；Self-hosted 有本机 Docker 权限，**勿对 fork PR 开放可写 Actions**；仅可信协作者。
 
 ---
 
@@ -338,9 +446,11 @@ $COMPOSE up -d --build
 ### 4.5 修改 `.env` / 密码
 
 ```bash
-sudo vim /opt/personal-hub/.env
+sudo vim /opt/personal-hub/.env   # 普通用户打开会只读，须 sudo
 $COMPOSE up -d          # 多数变量重启即生效
 ```
+
+改密码时记得给含 `!` `&` 等的值加单引号（见方案一 §3），否则下次 CI 健康检查仍会炸。
 
 **MySQL 密码仅在数据卷首次初始化时写入。** 改密后仍用旧密码 → 要么容器内 `ALTER USER`，要么删卷重建（见下，会丢库）。
 
@@ -414,12 +524,13 @@ sudo docker run --rm hello-world
 |------|------|
 | `MYSQL_*` | 见方案一 §3；`PORT`≠`PUBLISH` |
 | `REDIS_*` | 同上 |
-| `JWT_SECRET` / `JWT_EXPIRATION` | 生产强密钥 |
+| `JWT_SECRET` / `JWT_EXPIRATION` | 生产强密钥；含特殊字符须单引号 |
 | `STORAGE_LOCATION` / `STORAGE_MAX_SIZE` | 容器内上传路径与上限 |
 | `LOG_PATH` | 日志目录 |
 | `HTTP_PORT` | 站点端口 |
 | `BUILD_HTTP_PROXY` | 一般不需要；若用须 Allow LAN，勿填 `127.0.0.1` |
 
+密码 / JWT 含 `!` `&` `$` 等 → **单引号包裹**（方案一 §3）；否则 CI `source .env` 会失败。  
 时区由 Compose / 镜像固定，无需在 `.env` 设 `TZ`。
 
 ---
@@ -434,6 +545,7 @@ sudo docker run --rm hello-world
 | DataSource/Redis Connection refused | `MYSQL_PORT=3306`、`REDIS_PORT=6379`（勿写成 PUBLISH） |
 | `MYSQL_USER=root` 非法 | 改为普通用户；必要时删卷重建 |
 | 改 `.env` 密码无效 | MySQL 密码随卷固化；`ALTER USER` 或删卷 |
+| `source .env` 报 `2!: 未找到命令` | 值含 `!` `&` 未加单引号；见方案一 §3 |
 | 80 占用 | `HTTP_PORT=8088` |
 | 3306/6379 占用 | 改 `MYSQL_PUBLISH` / `REDIS_PUBLISH` |
 | 日志慢 8 小时 | `--build backend`；`exec backend date` |
