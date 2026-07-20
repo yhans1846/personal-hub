@@ -37,7 +37,7 @@ function handleReset() {
         <h3 class="section-title">功能开关</h3>
         <button class="reset-link" @click="handleReset">
           <RotateCcw :size="12" />
-          关闭全部
+          恢复默认
         </button>
       </div>
       <div class="flag-list">

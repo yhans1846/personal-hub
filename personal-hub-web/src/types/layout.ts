@@ -61,10 +61,8 @@ export interface NotificationConfig {
   dndEnd: string
 }
 
-/** 实验功能配置 */
+/** 实验功能配置（mermaid/katex 已毕业，不在此开关） */
 export interface FeatureFlags {
-  mermaid: boolean
-  katex: boolean
   aiAssistant: boolean
   backlink: boolean
 }

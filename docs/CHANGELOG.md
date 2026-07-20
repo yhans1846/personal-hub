@@ -5,6 +5,7 @@
 ## [Unreleased]
 
 ### 2026-07-20
+- **功能**：Mermaid / KaTeX 毕业为正式能力——实验开关移除；右键常显插入（含选区行内公式）；文件 md 预览对齐笔记 Vditor 配置
 - **治理**：`user_layout.layout_type` 对齐设置 Tab——`preview`→`reading`、`notification`→`advanced`、`backup`→`data`（读写兼容旧值）；见 `sql/alter-20260720-layout-type-align-tabs.sql`
 - **UI**：系统设置将「数据管理」从高级拆为独立 Tab（缓存/备份/历史）；高级仅保留通知与实验功能
 - **功能**：自动备份 + 服务器历史——`user_backup` 表；立即备份落盘并下载；频率 off/每天/每周；02:00 定时；历史下载/恢复（先快照）/删除；成功保留 7

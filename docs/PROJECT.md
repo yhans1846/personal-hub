@@ -63,7 +63,8 @@ ph-common ← ph-system ← ph-biz ← ph-boot
 
 | 功能 | 优先级 |
 |------|--------|
-| AI 总结/问答 · OCR · 双向链接 · Mermaid/KaTeX | 低 |
+| AI 总结/问答 · OCR · 双向链接 | 低 |
+| Mermaid 图表 · KaTeX 公式（Vditor 正式能力） | ✅ |
 | 日记历史配图迁移 · 笔记附件进统一资源索引 | 低 |
 | 自动备份 / 备份历史列表（服务端落盘 · 可回滚） | ✅ |
 | MD 批量导出（勾选 ZIP）· 回收站清空 | ✅ |

@@ -4,10 +4,8 @@ import type { FeatureFlags } from '@/types/layout'
 
 const STORAGE_KEY = 'feature-flags'
 
-/** mermaid/katex 默认开启，与当前编辑器能力一致；未实现功能保持关闭 */
+/** 仅保留未落地实验项；mermaid/katex 已毕业为正式能力 */
 const DEFAULTS: FeatureFlags = {
-  mermaid: true,
-  katex: true,
   aiAssistant: false,
   backlink: false,
 }
@@ -21,16 +19,26 @@ export type FlagMeta = {
 }
 
 const FLAG_META: FlagMeta[] = [
-  { key: 'mermaid', label: 'Mermaid 图表渲染', description: '右键菜单可插入 Mermaid 流程图等', available: true },
-  { key: 'katex', label: '数学公式 (KaTeX)', description: '右键菜单可插入行内/块级公式', available: true },
   { key: 'aiAssistant', label: 'AI 笔记助手', description: '选中文本后触发 AI 总结/润色/翻译（即将推出）', available: false },
   { key: 'backlink', label: '双向链接 (Backlink)', description: '笔记间 [[引用]] 关系图谱（即将推出）', available: false },
 ]
 
+function sanitize(raw: Record<string, unknown>): FeatureFlags {
+  return {
+    aiAssistant: typeof raw.aiAssistant === 'boolean' ? raw.aiAssistant : DEFAULTS.aiAssistant,
+    backlink: typeof raw.backlink === 'boolean' ? raw.backlink : DEFAULTS.backlink,
+  }
+}
+
 function loadFlags(): FeatureFlags {
   try {
     const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored) return { ...DEFAULTS, ...JSON.parse(stored) }
+    if (stored) {
+      const flags = sanitize(JSON.parse(stored) as Record<string, unknown>)
+      // 剥离已毕业的 mermaid/katex 等遗留键
+      saveFlags(flags)
+      return flags
+    }
   } catch { /* ignore */ }
   return { ...DEFAULTS }
 }

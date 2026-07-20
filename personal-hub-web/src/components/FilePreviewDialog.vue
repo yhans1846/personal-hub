@@ -4,6 +4,7 @@ import { ElMessage } from 'element-plus'
 import { Download, FileWarning } from 'lucide-vue-next'
 import Vditor from 'vditor'
 import 'vditor/dist/index.css'
+import { buildPreviewOptions } from '@/modules/knowledge/note/editor/vditorSetup'
 import {
   UiDialog,
   UiButton,
@@ -63,11 +64,7 @@ async function loadPreview() {
         await nextTick()
         if (mdRef.value) {
           const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'
-          await Vditor.preview(mdRef.value, textContent.value, {
-            mode: 'light',
-            theme: { current: theme },
-            hljs: { style: theme === 'dark' ? 'native' : 'github' },
-          })
+          await Vditor.preview(mdRef.value, textContent.value, buildPreviewOptions(theme))
         }
       }
     }
