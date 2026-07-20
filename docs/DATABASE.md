@@ -61,8 +61,13 @@ user_id · type · title · content · is_read · is_dismissed · related_id/typ
 索引 (user_id,is_read) / created_at。同 type+related_id 不重复生成。
 
 ### `user_layout`
-user_id · layout_type(menu|dashboard|preview) · layout_json · 时间 · is_deleted  
-UK `(user_id,layout_type)`
+user_id · layout_type(menu|dashboard|preview|appearance|notification|backup) · layout_json · 时间 · is_deleted  
+UK `(user_id,layout_type)`  
+`backup`：`{"frequency":"off|daily|weekly"}`，缺省按 daily。
+
+### `user_backup`
+user_id · file_path · file_size · trigger_type(MANUAL|AUTO) · status(OK|FAILED) · error_message · created_at  
+索引 (user_id, created_at)。物理删除；文件在 `backups/{userId}/{id}.zip`。
 
 ### `audit_log`
 module（含 NOTE/…/USER/BACKUP；业务侧写 AUTH）· business_id · action（含 LOGIN/DELETE/RESTORE/ARCHIVE/EXPORT 等）· content · operator_id · created_at（仅追加）  
@@ -79,8 +84,9 @@ module（含 NOTE/…/USER/BACKUP；业务侧写 AUTH）· business_id · action
 | `diaries/{id}/images/` | 日记配图 |
 | `uploads/` | 文件管理页上传 |
 | `avatars/` | 用户头像 |
+| `backups/{userId}/` | 服务器备份 ZIP 历史 |
 
-应用内备份 ZIP 覆盖上表业务数据与对应文件（含资料字段与头像）；契约见 `API.md` `/api/backup`。
+应用内备份 ZIP 覆盖上表业务数据与对应文件（含资料字段与头像），**不含** `backups/`；契约见 `API.md` `/api/backup`。
 
 ---
 

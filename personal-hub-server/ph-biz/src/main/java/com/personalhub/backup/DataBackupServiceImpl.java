@@ -32,8 +32,11 @@ import com.personalhub.system.entity.UserLayout;
 import com.personalhub.system.mapper.UserLayoutMapper;
 import com.personalhub.system.mapper.UserMapper;
 import com.personalhub.system.service.AuditLogService;
+import com.personalhub.system.service.UserLayoutService;
+import com.personalhub.system.vo.LayoutVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
@@ -47,6 +50,8 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -86,6 +91,8 @@ public class DataBackupServiceImpl implements DataBackupService {
     private final UserLayoutMapper userLayoutMapper;
     private final UserMapper userMapper;
     private final AuditLogService auditLogService;
+    private final UserBackupMapper userBackupMapper;
+    private final UserLayoutService userLayoutService;
 
     @Override
     public byte[] exportZip(Long userId) {
@@ -291,6 +298,176 @@ public class DataBackupServiceImpl implements DataBackupService {
             if (staging != null) {
                 deleteRecursively(staging);
             }
+        }
+    }
+
+    @Override
+    public byte[] createStoredBackup(Long userId, String triggerType) {
+        String type = "AUTO".equals(triggerType) ? "AUTO" : "MANUAL";
+        UserBackup row = UserBackup.builder()
+                .userId(userId)
+                .filePath("")
+                .fileSize(0L)
+                .triggerType(type)
+                .status("FAILED")
+                .createdAt(LocalDateTime.now())
+                .build();
+        userBackupMapper.insert(row);
+        Long id = row.getId();
+        String path = "backups/" + userId + "/" + id + ".zip";
+        try {
+            byte[] zip = exportZip(userId);
+            storageService.store(zip, path);
+            row.setFilePath(path);
+            row.setFileSize((long) zip.length);
+            row.setStatus("OK");
+            row.setErrorMessage(null);
+            userBackupMapper.updateById(row);
+            pruneBackups(userId);
+            return zip;
+        } catch (Exception e) {
+            String msg = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
+            if (msg.length() > 500) {
+                msg = msg.substring(0, 500);
+            }
+            row.setErrorMessage(msg);
+            userBackupMapper.updateById(row);
+            pruneBackups(userId);
+            if (e instanceof BusinessException be) {
+                throw be;
+            }
+            throw new BusinessException("备份失败: " + msg, e);
+        }
+    }
+
+    @Override
+    public List<UserBackupVO> listBackups(Long userId) {
+        return userBackupMapper.selectList(new LambdaQueryWrapper<UserBackup>()
+                        .eq(UserBackup::getUserId, userId)
+                        .orderByDesc(UserBackup::getCreatedAt))
+                .stream()
+                .map(UserBackupVO::from)
+                .toList();
+    }
+
+    @Override
+    public byte[] downloadBackup(Long userId, Long backupId) {
+        UserBackup row = requireOwnedOk(userId, backupId);
+        return readStoredZip(row);
+    }
+
+    @Override
+    public void restoreFromBackup(Long userId, Long backupId) {
+        UserBackup row = requireOwnedOk(userId, backupId);
+        byte[] zip = readStoredZip(row);
+        createStoredBackup(userId, "MANUAL");
+        importZip(userId, zip);
+    }
+
+    @Override
+    public void deleteBackup(Long userId, Long backupId) {
+        UserBackup row = userBackupMapper.selectById(backupId);
+        if (row == null || !userId.equals(row.getUserId())) {
+            throw new BusinessException("备份不存在");
+        }
+        if (row.getFilePath() != null && !row.getFilePath().isBlank()) {
+            try {
+                storageService.delete(row.getFilePath());
+            } catch (Exception e) {
+                log.warn("删除备份文件失败: path={}", row.getFilePath(), e);
+            }
+        }
+        userBackupMapper.deleteById(backupId);
+    }
+
+    @Override
+    public BackupSettingsDTO getSettings(Long userId) {
+        BackupSettingsDTO dto = new BackupSettingsDTO();
+        dto.setFrequency("daily");
+        try {
+            LayoutVO layout = userLayoutService.get(userId, "backup");
+            if (layout != null && layout.getLayoutJson() != null && !layout.getLayoutJson().isBlank()) {
+                BackupSettingsDTO parsed = objectMapper.readValue(layout.getLayoutJson(), BackupSettingsDTO.class);
+                if (parsed.getFrequency() != null && parsed.getFrequency().matches("off|daily|weekly")) {
+                    dto.setFrequency(parsed.getFrequency());
+                }
+            }
+        } catch (Exception e) {
+            log.debug("读取备份设置失败，使用默认 daily: userId={}", userId);
+        }
+        return dto;
+    }
+
+    @Override
+    public void updateSettings(Long userId, BackupSettingsDTO dto) {
+        try {
+            String json = objectMapper.writeValueAsString(dto);
+            userLayoutService.save(userId, "backup", json);
+        } catch (Exception e) {
+            throw new BusinessException("保存备份设置失败", e);
+        }
+    }
+
+    @Override
+    public void runScheduledBackupIfDue(Long userId) {
+        String frequency = getSettings(userId).getFrequency();
+        if ("off".equals(frequency)) {
+            return;
+        }
+        if ("weekly".equals(frequency) && LocalDate.now().getDayOfWeek() != DayOfWeek.MONDAY) {
+            return;
+        }
+        LocalDateTime since = LocalDateTime.now().minusHours(20);
+        Long recent = userBackupMapper.selectCount(new LambdaQueryWrapper<UserBackup>()
+                .eq(UserBackup::getUserId, userId)
+                .eq(UserBackup::getTriggerType, "AUTO")
+                .eq(UserBackup::getStatus, "OK")
+                .ge(UserBackup::getCreatedAt, since));
+        if (recent != null && recent > 0) {
+            return;
+        }
+        createStoredBackup(userId, "AUTO");
+    }
+
+    private void pruneBackups(Long userId) {
+        List<UserBackup> all = userBackupMapper.selectList(new LambdaQueryWrapper<UserBackup>()
+                .eq(UserBackup::getUserId, userId));
+        for (UserBackup row : BackupRetention.selectToDelete(all)) {
+            if (row.getFilePath() != null && !row.getFilePath().isBlank()) {
+                try {
+                    storageService.delete(row.getFilePath());
+                } catch (Exception e) {
+                    log.warn("裁剪删除备份文件失败: {}", row.getFilePath(), e);
+                }
+            }
+            userBackupMapper.deleteById(row.getId());
+        }
+    }
+
+    private UserBackup requireOwnedOk(Long userId, Long backupId) {
+        UserBackup row = userBackupMapper.selectById(backupId);
+        if (row == null || !userId.equals(row.getUserId())) {
+            throw new BusinessException("备份不存在");
+        }
+        if (!"OK".equals(row.getStatus())) {
+            throw new BusinessException("该备份不可用");
+        }
+        if (row.getFilePath() == null || row.getFilePath().isBlank() || !storageService.exists(row.getFilePath())) {
+            throw new BusinessException("备份文件不存在");
+        }
+        return row;
+    }
+
+    private byte[] readStoredZip(UserBackup row) {
+        try {
+            Resource resource = storageService.load(row.getFilePath());
+            try (InputStream in = resource.getInputStream()) {
+                return in.readAllBytes();
+            }
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new BusinessException("读取备份失败", e);
         }
     }
 

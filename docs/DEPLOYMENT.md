@@ -16,7 +16,7 @@ cd ~/personal-hub
 |------|------|
 | `~/personal-hub` | 代码（git） |
 | `/opt/personal-hub/.env` | 密钥（勿提交 Git） |
-| `/data/personal-hub/uploads` | 上传文件 |
+| `/data/personal-hub/uploads` | 上传文件（含 `notes/`、`diaries/`、`backups/` 等） |
 | `/data/personal-hub/logs` | 应用日志 |
 
 服务：`mysql` · `redis` · `backend` · `frontend`（Nginx，对外 `HTTP_PORT`）。

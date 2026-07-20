@@ -56,7 +56,7 @@ export function uploadAvatar(file: File) {
 
 // ====== 数据管理（备份 / 恢复）======
 
-/** 立即备份（ZIP 流下载） */
+/** 立即备份（落盘历史 + ZIP 流下载） */
 export function backupNow() {
   return request.post('/backup/now', null, {
     responseType: 'blob',
@@ -73,3 +73,46 @@ export function importBackup(file: File) {
     headers: { 'Content-Type': 'multipart/form-data' },
   })
 }
+
+export type BackupFrequency = 'off' | 'daily' | 'weekly'
+
+export interface BackupSettings {
+  frequency: BackupFrequency
+}
+
+export interface UserBackupItem {
+  id: number
+  fileSize: number
+  triggerType: 'MANUAL' | 'AUTO' | string
+  status: 'OK' | 'FAILED' | string
+  errorMessage?: string | null
+  createdAt: string
+}
+
+export function getBackupList() {
+  return request.get<Result<UserBackupItem[]>>('/backup/list')
+}
+
+export function getBackupSettings() {
+  return request.get<Result<BackupSettings>>('/backup/settings')
+}
+
+export function updateBackupSettings(data: BackupSettings) {
+  return request.put<Result<void>>('/backup/settings', data)
+}
+
+export function downloadBackup(id: number) {
+  return request.get(`/backup/${id}/download`, {
+    responseType: 'blob',
+    timeout: 120000,
+  })
+}
+
+export function restoreBackup(id: number) {
+  return request.post<Result<void>>(`/backup/${id}/restore`, null, { timeout: 120000 })
+}
+
+export function deleteBackup(id: number) {
+  return request.delete<Result<void>>(`/backup/${id}`)
+}
+

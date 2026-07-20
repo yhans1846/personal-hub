@@ -115,7 +115,13 @@ GET 全部或 `/{type}` · PUT 保存 · POST import · DELETE 恢复默认
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| POST | `/now` | 导出当前用户业务数据+文件+资料/头像为 ZIP（附件流下载） |
-| POST | `/import` | 上传 `.zip`，全量覆盖当前用户业务数据与资料（username/password 不变） |
+| POST | `/now` | 写入服务端历史（MANUAL）并下载 ZIP |
+| GET | `/list` | 当前用户备份历史 |
+| GET | `/{id}/download` | 下载历史包（OK） |
+| POST | `/{id}/restore` | 先打当前快照再全量恢复该包 |
+| DELETE | `/{id}` | 删除历史记录与文件 |
+| GET/PUT | `/settings` | `{ frequency: off\|daily\|weekly }`，默认 daily |
+| POST | `/import` | 上传 `.zip` 全量覆盖（username/password 不变） |
 
-不含：密码、用户名、通知、审计。含：回收站笔记、`user_layout`、`profile.json`、头像文件。包格式见规格 `2026-07-19-data-backup-restore-design`。
+定时：每日 02:00 按频率自动备份；成功保留 7、失败保留 3。磁盘：`backups/{userId}/{id}.zip`（不打入 ZIP 包内）。  
+不含：密码、用户名、通知、审计。含：回收站笔记、`user_layout`、`profile.json`、头像。包格式见 `2026-07-19-data-backup-restore-design`；历史见 `2026-07-20-auto-backup-history-design`。
