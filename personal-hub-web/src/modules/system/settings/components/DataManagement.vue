@@ -205,52 +205,53 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="data-management">
-    <section class="setting-section">
-      <h3 class="section-title">缓存管理</h3>
-      <div class="cache-info">
-        <p class="cache-detail">
-          当前缓存数据：<strong>{{ cacheSize }}</strong>
-        </p>
-        <p class="cache-hint">清空后系统会自动重建，登录状态和账号偏好不会丢失。</p>
-      </div>
-      <button class="action-btn" @click="handleClearCache">
-        <Trash2 :size="14" />
-        清空缓存
-      </button>
-    </section>
-
-    <section class="setting-section">
-      <h3 class="section-title">数据备份</h3>
-      <p class="cache-hint" style="margin-bottom: var(--sp-3)">
-        导出业务数据、用户资料、头像与相关文件为 ZIP；不含密码、用户名、通知与审计日志。立即备份会写入服务器历史并下载到本地。
+  <!-- 多根节点，对齐高级 Tab：card-title + 卡片内 section-title -->
+  <UiCard class="settings-card">
+    <h3 class="card-title">缓存管理</h3>
+    <div class="cache-info">
+      <p class="cache-detail">
+        当前缓存数据：<strong>{{ cacheSize }}</strong>
       </p>
+      <p class="cache-hint">清空后系统会自动重建，登录状态和账号偏好不会丢失。</p>
+    </div>
+    <button class="action-btn" @click="handleClearCache">
+      <Trash2 :size="14" />
+      清空缓存
+    </button>
+  </UiCard>
 
-      <div class="freq-row">
-        <span class="freq-label">自动备份</span>
-        <el-select
-          v-model="frequency"
-          size="small"
-          style="width: 140px"
-          :disabled="savingFreq"
-          @change="onFrequencyChange"
-        >
-          <el-option label="关闭" value="off" />
-          <el-option label="每天" value="daily" />
-          <el-option label="每周" value="weekly" />
-        </el-select>
-        <span class="cache-hint">服务器保留最近 7 份成功备份（凌晨 2:00）</span>
-      </div>
+  <UiCard class="settings-card">
+    <h3 class="card-title">数据备份</h3>
+    <p class="cache-hint" style="margin-bottom: var(--sp-3)">
+      导出业务数据、用户资料、头像与相关文件为 ZIP；不含密码、用户名、通知与审计日志。立即备份会写入服务器历史并下载到本地。
+    </p>
 
-      <div class="action-row">
-        <button class="action-btn" :disabled="backingUp" @click="handleBackupNow">
-          <Loader2 v-if="backingUp" :size="14" class="spin" />
-          <FileArchive v-else :size="14" />
-          {{ backingUp ? '备份中...' : '立即备份' }}
-        </button>
-      </div>
+    <div class="freq-row">
+      <span class="freq-label">自动备份</span>
+      <el-select
+        v-model="frequency"
+        size="small"
+        style="width: 140px"
+        :disabled="savingFreq"
+        @change="onFrequencyChange"
+      >
+        <el-option label="关闭" value="off" />
+        <el-option label="每天" value="daily" />
+        <el-option label="每周" value="weekly" />
+      </el-select>
+      <span class="cache-hint">服务器保留最近 7 份成功备份（凌晨 2:00）</span>
+    </div>
 
-      <h3 class="backup-divider">服务器备份历史</h3>
+    <div class="action-row">
+      <button class="action-btn" :disabled="backingUp" @click="handleBackupNow">
+        <Loader2 v-if="backingUp" :size="14" class="spin" />
+        <FileArchive v-else :size="14" />
+        {{ backingUp ? '备份中...' : '立即备份' }}
+      </button>
+    </div>
+
+    <div class="setting-section">
+      <h3 class="section-title">服务器备份历史</h3>
       <div v-if="historyLoading" class="cache-hint">加载中…</div>
       <p v-else-if="history.length === 0" class="cache-hint">暂无服务器备份</p>
       <div v-else class="history-list">
@@ -286,8 +287,10 @@ onMounted(() => {
           </div>
         </div>
       </div>
+    </div>
 
-      <h3 class="backup-divider">数据恢复</h3>
+    <div class="setting-section">
+      <h3 class="section-title">数据恢复</h3>
       <div class="action-row">
         <div class="file-select">
           <label class="file-label">
@@ -302,21 +305,11 @@ onMounted(() => {
         </button>
       </div>
       <p class="import-warning">警告：恢复操作将覆盖当前数据，不可撤销。</p>
-    </section>
-  </div>
+    </div>
+  </UiCard>
 </template>
 
 <style scoped>
-.setting-section { margin-bottom: var(--sp-5); }
-.setting-section:last-child { margin-bottom: 0; }
-
-.section-title {
-  margin: 0 0 var(--sp-3);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--text-secondary);
-}
-
 .cache-info { margin-bottom: var(--sp-3); }
 .cache-detail { margin: 0 0 var(--sp-1); font-size: var(--text-sm); color: var(--text-primary); }
 .cache-hint { margin: 0; font-size: var(--text-xs); color: var(--text-tertiary); line-height: 1.5; }
@@ -352,12 +345,6 @@ onMounted(() => {
   margin-bottom: var(--sp-3);
 }
 .action-row:last-child { margin-bottom: 0; }
-.backup-divider {
-  margin: var(--sp-5) 0 var(--sp-3);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--text-secondary);
-}
 .file-select { flex: 1; min-width: 0; }
 .file-label {
   display: flex; align-items: center; gap: 6px;
