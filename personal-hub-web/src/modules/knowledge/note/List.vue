@@ -207,7 +207,7 @@ async function onCardMenuAction(actionId: string) {
     <div class="plan-top">
       <PageHeader title="笔记" />
 
-      <ListToolbar :search="query.keyword ?? ''" search-placeholder="搜索笔记标题..." search-width="240px" create-label="新建笔记" @update:search="query.keyword = $event" @search="onSearch" @create="goCreate">
+      <ListToolbar :search="query.keyword ?? ''" search-placeholder="搜索笔记标题或摘要..." search-width="240px" create-label="新建笔记" @update:search="query.keyword = $event" @search="onSearch" @create="goCreate">
         <template #filters>
           <div class="view-toggle">
             <button type="button" class="view-btn" :class="{ active: viewMode === 'table' }" title="列表" @click="setViewMode('table')">

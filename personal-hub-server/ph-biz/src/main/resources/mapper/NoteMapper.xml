@@ -12,7 +12,8 @@
                 <otherwise>0</otherwise>
             </choose>
             <if test="query.keyword != null and query.keyword != ''">
-                AND n.title LIKE CONCAT('%', #{query.keyword}, '%')
+                AND (n.title LIKE CONCAT('%', #{query.keyword}, '%')
+                  OR IFNULL(n.excerpt, '') LIKE CONCAT('%', #{query.keyword}, '%'))
             </if>
             <if test="query.isFavorite != null and query.isFavorite">
                 AND n.is_favorite = 1
@@ -33,7 +34,8 @@
         <where>
             n.user_id = #{userId} AND n.is_deleted = 1
             <if test="query.keyword != null and query.keyword != ''">
-                AND n.title LIKE CONCAT('%', #{query.keyword}, '%')
+                AND (n.title LIKE CONCAT('%', #{query.keyword}, '%')
+                  OR IFNULL(n.excerpt, '') LIKE CONCAT('%', #{query.keyword}, '%'))
             </if>
         </where>
         ORDER BY n.deleted_at DESC

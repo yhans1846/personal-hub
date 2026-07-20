@@ -93,7 +93,7 @@ POST 可含 `tagIds`、`showOnDashboard`
 |------|------|
 | /stats | 首页计数 |
 | /trends?days= | 趋势 |
-| /search?keyword= | 跨模块搜索 |
+| /search?keyword= | 跨模块搜索（8 组，每组最多 20；标题命中优先） |
 | /detail?days= | 统计页综合（见 `StatsVO`）|
 
 ## 标签 `/api/tags`

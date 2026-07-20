@@ -5,6 +5,7 @@
 ## [Unreleased]
 
 ### 2026-07-20
+- **功能**：跨模块检索升级——笔记列表/回收站 keyword 搜 title+excerpt；全局搜索每组上限 20、标题命中优先
 - **功能**：笔记列表多选批量导出 ZIP（`POST /api/notes/export`，每篇独立目录）；回收站一键清空（`DELETE /api/notes/recycle-bin`）
 - **文档**：DEPLOYMENT 备注 `.env` 含 `!` `&` 等须单引号，避免 CI Wait for HTTP `source` 失败（`2!: 未找到命令`）
 
