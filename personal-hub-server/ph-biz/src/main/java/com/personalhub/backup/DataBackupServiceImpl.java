@@ -385,7 +385,10 @@ public class DataBackupServiceImpl implements DataBackupService {
         BackupSettingsDTO dto = new BackupSettingsDTO();
         dto.setFrequency("daily");
         try {
-            LayoutVO layout = userLayoutService.get(userId, "backup");
+            LayoutVO layout = userLayoutService.get(userId, "data");
+            if (layout == null) {
+                layout = userLayoutService.get(userId, "backup");
+            }
             if (layout != null && layout.getLayoutJson() != null && !layout.getLayoutJson().isBlank()) {
                 BackupSettingsDTO parsed = objectMapper.readValue(layout.getLayoutJson(), BackupSettingsDTO.class);
                 if (parsed.getFrequency() != null && parsed.getFrequency().matches("off|daily|weekly")) {
@@ -402,7 +405,7 @@ public class DataBackupServiceImpl implements DataBackupService {
     public void updateSettings(Long userId, BackupSettingsDTO dto) {
         try {
             String json = objectMapper.writeValueAsString(dto);
-            userLayoutService.save(userId, "backup", json);
+            userLayoutService.save(userId, "data", json);
         } catch (Exception e) {
             throw new BusinessException("保存备份设置失败", e);
         }

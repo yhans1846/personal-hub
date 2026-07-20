@@ -22,7 +22,9 @@ export interface ReadingConfig {
 // ========== 常量 ==========
 
 const STORAGE_KEY = 'reading-config'
-const LAYOUT_TYPE = 'preview'
+/** 对齐设置 Tab key=reading；兼容旧值 preview */
+const LAYOUT_TYPE = 'reading'
+const LEGACY_LAYOUT_TYPE = 'preview'
 
 const DEFAULTS: ReadingConfig = {
   fontSize: 18,
@@ -89,6 +91,7 @@ export const useReadingConfigStore = defineStore('readingConfig', () => {
       const res = await getLayoutAll()
       const layouts = (res.data.data ?? []) as LayoutResponse[]
       const previewLayout = layouts.find((l) => l.layoutType === LAYOUT_TYPE)
+        ?? layouts.find((l) => l.layoutType === LEGACY_LAYOUT_TYPE)
       if (previewLayout?.layoutJson) {
         const parsed = JSON.parse(previewLayout.layoutJson) as Partial<ReadingConfig>
         // 旧值迁移：readingWidth=960 → 1100

@@ -9,7 +9,9 @@ import {
 } from '@/utils/notificationFilter'
 
 const STORAGE_KEY = 'notification-config'
-const LAYOUT_TYPE = 'notification'
+/** 对齐设置 Tab key=advanced；兼容旧值 notification */
+const LAYOUT_TYPE = 'advanced'
+const LEGACY_LAYOUT_TYPE = 'notification'
 
 const DEFAULTS: NotificationConfig = {
   desktopEnabled: false,
@@ -50,6 +52,7 @@ export const useNotificationConfigStore = defineStore('notificationConfig', () =
       const res = await getLayoutAll()
       const layouts: LayoutResponse[] = res.data.data ?? []
       const notifLayout = layouts.find((l) => l.layoutType === LAYOUT_TYPE)
+        ?? layouts.find((l) => l.layoutType === LEGACY_LAYOUT_TYPE)
       if (!notifLayout?.layoutJson) return null
       try {
         return sanitizeConfig(JSON.parse(notifLayout.layoutJson) as NotificationConfig)

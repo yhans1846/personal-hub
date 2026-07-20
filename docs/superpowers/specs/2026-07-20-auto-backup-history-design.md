@@ -37,13 +37,14 @@
 
 ### 2.2 频率配置
 
-`user_layout.layout_type = 'backup'`，`layout_json`：
+`user_layout.layout_type = 'data'`，`layout_json`：
 
 ```json
 { "frequency": "daily" }
 ```
 
 取值：`off` | `daily` | `weekly`。缺省按 **daily**。  
+（兼容读取旧 type `backup`；新写入一律 `data`，对齐设置 Tab。）
 不新增 `sys_user` 列。
 
 ### 2.3 磁盘

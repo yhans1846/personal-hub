@@ -354,7 +354,7 @@ DROP TABLE IF EXISTS `user_layout`;
 CREATE TABLE `user_layout` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `user_id` bigint NOT NULL COMMENT '所属用户',
-  `layout_type` varchar(30) NOT NULL COMMENT '类型: menu / dashboard',
+  `layout_type` varchar(30) NOT NULL COMMENT '类型: menu/dashboard/stats | reading | appearance | data | advanced',
   `layout_json` text NOT NULL COMMENT '布局配置 JSON',
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -366,9 +366,10 @@ CREATE TABLE `user_layout` (
 
 INSERT INTO `user_layout` (`id`, `user_id`, `layout_type`, `layout_json`, `created_at`, `updated_at`, `is_deleted`) VALUES (1, 1, 'dashboard', '{\"items\":[{\"code\":\"today_plan\",\"visible\":true,\"order\":1},{\"code\":\"recent_studies\",\"visible\":true,\"order\":2},{\"code\":\"recent_notes\",\"visible\":false,\"order\":3},{\"code\":\"recent_reading\",\"visible\":true,\"order\":4},{\"code\":\"external_links\",\"visible\":true,\"order\":5},{\"code\":\"quick_actions\",\"visible\":true,\"order\":6}]}', NOW(), NOW(), 0);
 INSERT INTO `user_layout` (`id`, `user_id`, `layout_type`, `layout_json`, `created_at`, `updated_at`, `is_deleted`) VALUES (2, 1, 'menu', '{\"items\":[{\"code\":\"dashboard\",\"visible\":true,\"order\":1},{\"code\":\"notes\",\"visible\":true,\"order\":2},{\"code\":\"diaries\",\"visible\":true,\"order\":3},{\"code\":\"readings\",\"visible\":true,\"order\":4},{\"code\":\"study-records\",\"visible\":true,\"order\":5},{\"code\":\"todos\",\"visible\":true,\"order\":6},{\"code\":\"study-plans\",\"visible\":true,\"order\":7},{\"code\":\"bookmarks\",\"visible\":true,\"order\":8},{\"code\":\"files\",\"visible\":true,\"order\":9},{\"code\":\"tags\",\"visible\":true,\"order\":10},{\"code\":\"categories\",\"visible\":true,\"order\":11},{\"code\":\"settings\",\"visible\":true,\"order\":12},{\"code\":\"recycle\",\"visible\":true,\"order\":13},{\"code\":\"stats\",\"visible\":true,\"order\":14}]}', NOW(), NOW(), 0);
-INSERT INTO `user_layout` (`id`, `user_id`, `layout_type`, `layout_json`, `created_at`, `updated_at`, `is_deleted`) VALUES (3, 1, 'preview', '{\"fontSize\":14,\"readingWidth\":1280,\"lineHeight\":2,\"theme\":\"sepia\",\"imageMaxWidth\":100,\"paragraphGap\":1,\"codeFontSize\":\"14px\",\"codeFontFamily\":\"monospace\"}', NOW(), NOW(), 0);
+INSERT INTO `user_layout` (`id`, `user_id`, `layout_type`, `layout_json`, `created_at`, `updated_at`, `is_deleted`) VALUES (3, 1, 'reading', '{\"fontSize\":14,\"readingWidth\":1280,\"lineHeight\":2,\"theme\":\"sepia\",\"imageMaxWidth\":100,\"paragraphGap\":1,\"codeFontSize\":\"14px\",\"codeFontFamily\":\"monospace\"}', NOW(), NOW(), 0);
 INSERT INTO `user_layout` (`id`, `user_id`, `layout_type`, `layout_json`, `created_at`, `updated_at`, `is_deleted`) VALUES (6, 1, 'appearance', '{\"theme\":\"light\",\"accent\":\"purple\",\"borderRadius\":\"xl\",\"animationSpeed\":\"slow\",\"density\":\"compact\",\"contentWidth\":95}', NOW(), NOW(), 0);
-INSERT INTO `user_layout` (`id`, `user_id`, `layout_type`, `layout_json`, `created_at`, `updated_at`, `is_deleted`) VALUES (7, 1, 'notification', '{\"desktopEnabled\":true,\"enabledTypes\":[\"note_reminder\",\"todo_due\",\"study_progress\",\"system\"],\"soundEnabled\":true,\"soundName\":\"default\",\"doNotDisturb\":false,\"dndStart\":\"22:00\",\"dndEnd\":\"08:00\"}', NOW(), NOW(), 0);
+INSERT INTO `user_layout` (`id`, `user_id`, `layout_type`, `layout_json`, `created_at`, `updated_at`, `is_deleted`) VALUES (7, 1, 'advanced', '{\"desktopEnabled\":true,\"enabledTypes\":[\"note_reminder\",\"todo_due\",\"study_progress\",\"system\"],\"soundEnabled\":true,\"soundName\":\"default\",\"doNotDisturb\":false,\"dndStart\":\"22:00\",\"dndEnd\":\"08:00\"}', NOW(), NOW(), 0);
+INSERT INTO `user_layout` (`id`, `user_id`, `layout_type`, `layout_json`, `created_at`, `updated_at`, `is_deleted`) VALUES (8, 1, 'data', '{\"frequency\":\"daily\"}', NOW(), NOW(), 0);
 
 
 -- ----------------------------

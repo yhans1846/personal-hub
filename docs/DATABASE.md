@@ -61,9 +61,18 @@ user_id · type · title · content · is_read · is_dismissed · related_id/typ
 索引 (user_id,is_read) / created_at。同 type+related_id 不重复生成。
 
 ### `user_layout`
-user_id · layout_type(menu|dashboard|preview|appearance|notification|backup) · layout_json · 时间 · is_deleted  
+user_id · layout_type · layout_json · 时间 · is_deleted  
 UK `(user_id,layout_type)`  
-`backup`：`{"frequency":"off|daily|weekly"}`，缺省按 daily。
+
+与设置 Tab 对齐：
+
+| layout_type | 设置 Tab | 说明 |
+|-------------|---------|------|
+| `menu` / `dashboard` / `stats` | 工作台 | 侧栏菜单 / 工作台卡片 / 统计卡片 |
+| `reading` | 阅读 | 原 `preview` |
+| `appearance` | 外观 | |
+| `data` | 数据管理 | 备份频率等；原设计名 `backup` |
+| `advanced` | 高级 | 通知偏好等；原 `notification` |
 
 ### `user_backup`
 user_id · file_path · file_size · trigger_type(MANUAL|AUTO) · status(OK|FAILED) · error_message · created_at  
