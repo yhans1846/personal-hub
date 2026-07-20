@@ -2,8 +2,12 @@
 import { ref, computed, onMounted, onUnmounted, watch, type Component } from 'vue'
 import { useRouter } from 'vue-router'
 import { globalSearch } from '@/modules/dashboard/api'
-import { Search, LayoutDashboard, FileText, CheckSquare, PenLine, BookOpen, Bookmark, Target, BookMarked, FolderOpen, BarChart3, Clock } from 'lucide-vue-next'
+import {
+  Search, LayoutDashboard, FileText, CheckSquare, PenLine, BookOpen, Bookmark,
+  Target, BookMarked, FolderOpen, BarChart3, Clock, Plus,
+} from 'lucide-vue-next'
 import type { SearchGroup, SearchItem } from '@/modules/dashboard/api'
+import { buildCreatePath } from '@/utils/deepLink'
 
 const router = useRouter()
 const visible = ref(false)
@@ -41,12 +45,32 @@ const pageRoutes = [
   { path: '/stats', label: '数据统计', icon: BarChart3 },
 ]
 
+/** 快捷新建（对齐 Dashboard 快捷操作） */
+const createActions: { label: string; path: string; icon: Component; aliases: string[] }[] = [
+  { label: '新建笔记', path: '/notes/new', icon: FileText, aliases: ['笔记', 'note', '写笔记'] },
+  { label: '写日记', path: buildCreatePath('/diaries'), icon: PenLine, aliases: ['日记', 'diary'] },
+  { label: '添加书籍', path: buildCreatePath('/readings'), icon: BookMarked, aliases: ['阅读', '书籍', 'reading'] },
+  { label: '开始学习', path: buildCreatePath('/study-records'), icon: BookOpen, aliases: ['学习', '学习记录', 'study'] },
+  { label: '新建任务', path: buildCreatePath('/todos'), icon: CheckSquare, aliases: ['待办', '任务', 'todo'] },
+  { label: '新建计划', path: buildCreatePath('/study-plans'), icon: Target, aliases: ['计划', '学习计划', 'plan'] },
+]
+
 const filteredPages = computed(() => {
   const kw = keyword.value.toLowerCase().trim()
   if (!kw) return pageRoutes
   return pageRoutes.filter(p =>
     p.label.toLowerCase().includes(kw) || p.path.includes(kw)
   )
+})
+
+const filteredCreates = computed(() => {
+  const kw = keyword.value.toLowerCase().trim()
+  if (!kw) return createActions
+  return createActions.filter((a) => {
+    if (a.label.toLowerCase().includes(kw)) return true
+    if (kw === '新建' || kw === 'create' || kw === 'new') return true
+    return a.aliases.some((x) => x.toLowerCase().includes(kw) || kw.includes(x.toLowerCase()))
+  })
 })
 
 const allResults = computed(() => {
@@ -60,6 +84,9 @@ const allResults = computed(() => {
       icon: Search,
     })
   }
+  for (const a of filteredCreates.value) {
+    items.push({ type: 'create', label: a.label, path: a.path, icon: a.icon })
+  }
   for (const p of filteredPages.value) {
     items.push({ type: 'page', label: p.label, path: p.path, icon: p.icon })
   }
@@ -72,7 +99,6 @@ const allResults = computed(() => {
   }
   return items
 })
-
 function submitGlobalSearch(kw?: string) {
   const q = (kw ?? keyword.value).trim()
   if (!q) return
@@ -190,7 +216,7 @@ defineExpose({ open })
             id="cp-input"
             v-model="keyword"
             class="cp-input"
-            placeholder="搜索页面、笔记、任务..."
+            placeholder="搜索或新建：笔记、日记、任务..."
             spellcheck="false"
           />
           <kbd class="cp-kbd">ESC</kbd>
@@ -208,26 +234,23 @@ defineExpose({ open })
             <component :is="item.icon" v-if="item.icon" :size="14" class="cp-item-icon" />
             <span class="cp-item-label">{{ item.label }}</span>
             <span v-if="item.type === 'search'" class="cp-item-badge">搜索</span>
+            <span v-else-if="item.type === 'create'" class="cp-item-badge cp-item-badge--create">
+              <Plus :size="10" /> 新建
+            </span>
             <span v-else-if="item.type === 'page'" class="cp-item-badge">页面</span>
             <span v-else class="cp-item-badge cp-item-badge--api">{{ item.type }}</span>
           </div>
           <div v-if="loading" class="cp-loading">搜索中...</div>
         </div>
 
-        <div v-else-if="keyword.trim().length > 0 && !loading" class="cp-empty">
-          <button type="button" class="cp-search-fallback" @click="submitGlobalSearch()">
-            在全站搜索「{{ keyword.trim() }}」
-          </button>
-        </div>
-
-        <div v-else-if="!keyword.trim() && searchHistory.length > 0" class="cp-history">
+        <div v-if="!keyword.trim() && searchHistory.length > 0" class="cp-history">
           <div class="cp-history-header">
             <Clock :size="12" />
             <span>最近搜索</span>
           </div>
           <div
             v-for="(item, idx) in searchHistory"
-            :key="idx"
+            :key="'h-' + idx"
             class="cp-history-item"
             @click="goToSearchPage(item)"
           >
@@ -236,9 +259,10 @@ defineExpose({ open })
           </div>
         </div>
 
-        <div v-else class="cp-hint">
-          <p>输入关键词搜索页面和内容</p>
-          <p class="cp-hint-sub"><kbd>↑</kbd> <kbd>↓</kbd> 导航 <kbd>⏎</kbd> 打开 <kbd>ESC</kbd> 关闭</p>
+        <div v-else-if="keyword.trim().length > 0 && !loading && allResults.length === 0" class="cp-empty">
+          <button type="button" class="cp-search-fallback" @click="submitGlobalSearch()">
+            在全站搜索「{{ keyword.trim() }}」
+          </button>
         </div>
       </div>
     </div>
@@ -252,7 +276,7 @@ defineExpose({ open })
   display: flex; justify-content: center; padding-top: 15vh;
 }
 .cp-panel {
-  width: 560px; max-height: 400px;
+  width: 560px; max-height: 480px;
   background: var(--bg-card);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-xl);
@@ -298,6 +322,13 @@ defineExpose({ open })
   background: var(--accent-light); color: var(--accent);
 }
 .cp-item-badge--api { background: var(--bg-hover); color: var(--text-tertiary); }
+.cp-item-badge--create {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--accent-light);
+  color: var(--accent);
+}
 .cp-loading {
   text-align: center; padding: var(--sp-4);
   font-size: var(--text-sm); color: var(--text-tertiary);
