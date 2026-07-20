@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.personalhub.knowledge.dto.NoteCreateDTO;
 import com.personalhub.knowledge.dto.NoteQueryDTO;
 import com.personalhub.knowledge.vo.NoteVO;
+import com.personalhub.knowledge.vo.RecycleEmptyVO;
 
 /**
  * 笔记服务接口
@@ -78,6 +79,14 @@ public interface NoteService {
      * @param userId 用户ID
      */
     void permanentDelete(Long id, Long userId);
+
+    /**
+     * 清空回收站（永久删除当前用户全部已删/已归档笔记）
+     *
+     * @param userId 用户ID
+     * @return 删除条数
+     */
+    RecycleEmptyVO emptyRecycleBin(Long userId);
 
     /**
      * 切换收藏状态

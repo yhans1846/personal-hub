@@ -49,6 +49,15 @@ export function exportNote(id: number) {
   return request.get(`/notes/${id}/export`, { responseType: 'blob' })
 }
 
+/** 批量导出勾选笔记为 ZIP */
+export function exportNotesBatch(ids: number[]) {
+  return request.post('/notes/export', { ids }, { responseType: 'blob' })
+}
+
+export function emptyRecycleBin() {
+  return request.delete<Result<{ deleted: number }>>('/notes/recycle-bin')
+}
+
 /** 导入 Markdown 文件 */
 export function importMarkdownFile(
   file: File,

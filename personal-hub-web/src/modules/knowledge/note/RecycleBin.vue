@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { getRecycleList, restoreNote, permanentDeleteNote } from '@/modules/knowledge/api'
+import { getRecycleList, restoreNote, permanentDeleteNote, emptyRecycleBin } from '@/modules/knowledge/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Trash2, Eye, RotateCcw, AlertTriangle } from 'lucide-vue-next'
 import type { NoteVO } from '@/types/note'
@@ -12,6 +12,7 @@ import NoteCardContextMenu, { type CardMenuEntry } from './NoteCardContextMenu.v
 import { useMainContentFill } from '@/composables/useMainContentFill'
 import { useFillPageSize } from '@/composables/useFillPageSize'
 import { formatUpdated } from '@/utils/formatTime'
+import { handleApiError, unwrapResult } from '@/utils/apiResult'
 
 const loading = ref(false)
 const total = ref(0)
@@ -83,6 +84,28 @@ async function handlePermanentDelete(id: number) {
   }
 }
 
+async function handleEmptyRecycleBin() {
+  if (total.value === 0 && !keyword.value) {
+    ElMessage.info('回收站已空')
+    return
+  }
+  try {
+    await ElMessageBox.confirm(
+      '将永久删除回收站内全部笔记及附件，不可恢复。确定清空？',
+      '清空回收站',
+      { type: 'error', confirmButtonText: '确定清空', cancelButtonText: '取消' },
+    )
+    const deleted = (await unwrapResult(emptyRecycleBin())).deleted
+    ElMessage.success(deleted > 0 ? `已清空 ${deleted} 篇笔记` : '回收站已空')
+    page.value = 1
+    keyword.value = ''
+    fetchList()
+  } catch (e) {
+    if (e === 'cancel' || (e && typeof e === 'object' && 'action' in e)) return
+    handleApiError(e, '清空失败')
+  }
+}
+
 function handlePreview(id: number) {
   window.open(`/notes/${id}/preview`, '_blank')
 }
@@ -130,7 +153,18 @@ function deleteReasonLabel(reason?: string | null): string {
         v-model:search="keyword"
         search-placeholder="搜索已删除的笔记..."
         @search="onSearch"
-      />
+      >
+        <template #actions>
+          <button
+            type="button"
+            class="toolbar-danger-btn"
+            :disabled="total === 0 && !keyword"
+            @click="handleEmptyRecycleBin"
+          >
+            <Trash2 :size="14" /> 清空回收站
+          </button>
+        </template>
+      </ListToolbar>
     </div>
 
     <div class="plan-middle">
@@ -245,6 +279,29 @@ function deleteReasonLabel(reason?: string | null): string {
 .plan-foot {
   flex-shrink: 0;
   padding-top: 8px;
+}
+
+.toolbar-danger-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  color: var(--danger);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+.toolbar-danger-btn:hover:not(:disabled) {
+  background: var(--danger-light);
+}
+.toolbar-danger-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .list-skeleton {

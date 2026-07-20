@@ -38,9 +38,11 @@ login → `{token,user:{id,username,nickname,avatar}}`
 
 ## 笔记 `/api/notes`
 
-列表/详情/CRUD · favorite · archive · recent · recycle · preview · restore · permanent · import · import-content · export ZIP · images/attachments 上传与读取。
+列表/详情/CRUD · favorite · archive · recent · recycle · recycle-bin 清空 · preview · restore · permanent · import · import-content · export ZIP（单篇 / 批量）· images/attachments 上传与读取。
 
-`POST /{id}/archive`：归档进回收站（`delete_reason=AUTO_ARCHIVE`）；`DELETE /{id}` 为用户删除（`USER_DELETE`）。
+`POST /{id}/archive`：归档进回收站（`delete_reason=AUTO_ARCHIVE`）；`DELETE /{id}` 为用户删除（`USER_DELETE`）。  
+`POST /export`：body `{ids}`（1–50），打包 ZIP（每篇目录含 `note.md` + images/attachments）。  
+`DELETE /recycle-bin`：清空回收站，返回 `{deleted}`。
 
 列表参数：page,size,keyword,categoryId,tagId,isFavorite,isDeleted  
 新建：`{title,content,categoryIds,tagIds}`

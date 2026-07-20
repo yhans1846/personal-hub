@@ -18,6 +18,7 @@ import com.personalhub.knowledge.mapper.NoteMapper;
 import com.personalhub.knowledge.service.NoteService;
 import com.personalhub.knowledge.service.TagService;
 import com.personalhub.knowledge.vo.NoteVO;
+import com.personalhub.knowledge.vo.RecycleEmptyVO;
 import com.personalhub.knowledge.vo.TagVO;
 import com.personalhub.storage.StorageService;
 import com.personalhub.system.service.AuditLogService;
@@ -185,6 +186,23 @@ public class NoteServiceImpl implements NoteService {
         }
         noteMapper.deleteById(id);
         log.info("笔记永久删除: id={}, userId={}", id, userId);
+    }
+
+    @Override
+    @Transactional
+    @CacheEvict(cacheNames = "categories", allEntries = true)
+    public RecycleEmptyVO emptyRecycleBin(Long userId) {
+        List<Note> deleted = noteMapper.selectList(new LambdaQueryWrapper<Note>()
+                .eq(Note::getUserId, userId)
+                .eq(Note::getIsDeleted, Flags.YES)
+                .select(Note::getId));
+        int count = 0;
+        for (Note note : deleted) {
+            permanentDelete(note.getId(), userId);
+            count++;
+        }
+        log.info("清空回收站: userId={}, deleted={}", userId, count);
+        return new RecycleEmptyVO(count);
     }
 
     @Override

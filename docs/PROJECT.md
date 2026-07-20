@@ -66,7 +66,7 @@ ph-common ← ph-system ← ph-biz ← ph-boot
 | AI 总结/问答 · OCR · 双向链接 · Mermaid/KaTeX | 低 |
 | 日记历史配图迁移 · 笔记附件进统一资源索引 | 低 |
 | 自动备份 / 备份历史列表 | 低 |
-| MD 批量导出 | 中 |
+| MD 批量导出（勾选 ZIP）· 回收站清空 | ✅ |
 | 数据备份（手动 ZIP）· Docker 部署 · 文件 PDF/文本预览 | ✅ |
 
 ## 开发历史（摘要）

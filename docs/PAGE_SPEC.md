@@ -102,7 +102,7 @@ TOC 宽 220（收起 34，拖 160–400）。主题：`data-preview-theme` → `
 ## 5. Checklist
 
 **列表：** Header+Toolbar+Empty+Pagination · Table/Card 或例外 · 槽位/fill · Dialog+深链 · Token+骨架+深色  
-**笔记：** 右键「归档」→`AUTO_ARCHIVE`；「移入回收站」→`USER_DELETE`；回收站展示删除原因  
+**笔记：** 右键「归档」→`AUTO_ARCHIVE`；「移入回收站」→`USER_DELETE`；列表多选 →「导出 ZIP」（≤50，仅勾选）；回收站展示删除原因 +「清空回收站」  
 **设置·数据：** 立即备份下载 ZIP（含业务数据/资料/头像文件）；导入 `.zip` 全量覆盖（二次确认；不改 username/password）  
 **预览：** DocLayout+prose · readingConfig · §3 注意项  
 **Dialog：** 积木骨架 · FooterActions · 日记配图先保存  

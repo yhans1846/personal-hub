@@ -6,6 +6,7 @@ import com.personalhub.common.result.PageResult;
 import com.personalhub.common.result.Result;
 import com.personalhub.common.util.CurrentUser;
 import com.personalhub.knowledge.dto.ImportContentDTO;
+import com.personalhub.knowledge.dto.NoteBatchExportDTO;
 import com.personalhub.knowledge.dto.NoteCreateDTO;
 import com.personalhub.knowledge.dto.NoteQueryDTO;
 import com.personalhub.knowledge.imports.ImportReport;
@@ -13,6 +14,7 @@ import com.personalhub.knowledge.imports.ImportService;
 import com.personalhub.knowledge.service.NoteExportService;
 import com.personalhub.knowledge.service.NoteService;
 import com.personalhub.knowledge.vo.NoteVO;
+import com.personalhub.knowledge.vo.RecycleEmptyVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -28,6 +30,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 /**
@@ -142,6 +146,14 @@ public class NoteController {
         return Result.success();
     }
 
+    @Operation(summary = "清空回收站", description = "永久删除当前用户回收站全部笔记及磁盘资源")
+    @DeleteMapping("/recycle-bin")
+    public Result<RecycleEmptyVO> emptyRecycleBin(
+            @Parameter(hidden = true) Authentication authentication) {
+        Long userId = CurrentUser.id(authentication);
+        return Result.success(noteService.emptyRecycleBin(userId));
+    }
+
     @Operation(summary = "导入 Markdown 文件", description = "上传 .md 文件，自动本地化资源。可选 baseDir 用于解析相对路径")
     @PostMapping("/import")
     public Result<ImportReport> importMarkdown(
@@ -195,6 +207,23 @@ public class NoteController {
         Long userId = CurrentUser.id(authentication);
         byte[] zipData = noteExportService.exportNote(id, userId);
         String encodedName = URLEncoder.encode("笔记导出", StandardCharsets.UTF_8).replace("+", "%20");
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename*=UTF-8''" + encodedName + ".zip")
+                .body(zipData);
+    }
+
+    @Operation(summary = "批量导出笔记", description = "勾选多篇笔记打包为 ZIP，每篇独立目录含 note.md 与资源")
+    @PostMapping("/export")
+    public ResponseEntity<byte[]> exportBatch(
+            @Parameter(hidden = true) Authentication authentication,
+            @Valid @RequestBody NoteBatchExportDTO dto) {
+        Long userId = CurrentUser.id(authentication);
+        byte[] zipData = noteExportService.exportNotes(dto.getIds(), userId);
+        String stamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmm"));
+        String encodedName = URLEncoder.encode("notes-export-" + stamp, StandardCharsets.UTF_8)
+                .replace("+", "%20");
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .header(HttpHeaders.CONTENT_DISPOSITION,

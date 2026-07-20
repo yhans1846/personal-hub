@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { getNoteList, deleteNote, archiveNote, toggleFavorite } from '@/modules/knowledge/api'
+import { getNoteList, deleteNote, archiveNote, toggleFavorite, exportNotesBatch } from '@/modules/knowledge/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, FileText, Star, Trash2, Clock, Eye, Upload, LayoutList, LayoutGrid } from 'lucide-vue-next'
+import { Plus, FileText, Star, Trash2, Clock, Eye, Upload, LayoutList, LayoutGrid, Download, CheckSquare } from 'lucide-vue-next'
 import { EmptyState, PageHeader, ListToolbar, ListPagination } from '@/components'
 import type { NoteVO, NoteQuery } from '@/types/note'
 import { estimateReadingTime, formatRelativeTime, isRecentlyEdited } from '@/utils/readingTime'
@@ -15,12 +15,19 @@ import { useFillPageSize } from '@/composables/useFillPageSize'
 import { useProductViewMode } from '@/composables/useProductViewMode'
 import { usePaginatedList } from '@/composables/usePaginatedList'
 import { handleApiError, unwrapPage } from '@/utils/apiResult'
+import { triggerBlobDownload } from '@/utils/file'
+
+const MAX_EXPORT = 50
 
 const router = useRouter()
 const showImport = ref(false)
+const selectMode = ref(false)
+const selectedIds = ref<number[]>([])
+const exporting = ref(false)
 const cardMenuRef = ref<InstanceType<typeof NoteCardContextMenu> | null>(null)
 const activeNote = ref<NoteVO | null>(null)
 const { viewMode, setViewMode } = useProductViewMode('note-view', 'card')
+const selectedCount = computed(() => selectedIds.value.length)
 
 const { list, total, loading, query, fetchList, onSearch, onPageChange } = usePaginatedList<NoteVO, NoteQuery & { page: number; size: number }>({
   initialQuery: { page: 1, size: 10, keyword: '' },
@@ -53,6 +60,60 @@ function openImport() {
 function goCreate() { router.push('/notes/new') }
 function goEdit(id: number) { router.push(`/notes/${id}/edit`) }
 function goPreview(id: number) { window.open(`/notes/${id}/preview`, '_blank') }
+
+function toggleSelectMode() {
+  selectMode.value = !selectMode.value
+  if (!selectMode.value) selectedIds.value = []
+}
+
+function isSelected(id: number) {
+  return selectedIds.value.includes(id)
+}
+
+function toggleSelect(id: number) {
+  if (isSelected(id)) {
+    selectedIds.value = selectedIds.value.filter((x) => x !== id)
+  } else {
+    if (selectedIds.value.length >= MAX_EXPORT) {
+      ElMessage.warning(`单次最多导出 ${MAX_EXPORT} 篇`)
+      return
+    }
+    selectedIds.value = [...selectedIds.value, id]
+  }
+}
+
+function onRowClick(note: NoteVO) {
+  if (selectMode.value) {
+    toggleSelect(note.id)
+    return
+  }
+  goEdit(note.id)
+}
+
+async function handleBatchExport() {
+  if (exporting.value) return
+  if (selectedIds.value.length === 0) {
+    ElMessage.warning('请先勾选要导出的笔记')
+    return
+  }
+  if (selectedIds.value.length > MAX_EXPORT) {
+    ElMessage.warning(`单次最多导出 ${MAX_EXPORT} 篇`)
+    return
+  }
+  exporting.value = true
+  try {
+    const res = await exportNotesBatch(selectedIds.value)
+    const stamp = new Date()
+    const pad = (n: number) => String(n).padStart(2, '0')
+    const name = `notes-export-${stamp.getFullYear()}${pad(stamp.getMonth() + 1)}${pad(stamp.getDate())}-${pad(stamp.getHours())}${pad(stamp.getMinutes())}.zip`
+    triggerBlobDownload(new Blob([res.data], { type: 'application/zip' }), name)
+    ElMessage.success(`已导出 ${selectedIds.value.length} 篇笔记`)
+  } catch (e) {
+    handleApiError(e, '导出失败')
+  } finally {
+    exporting.value = false
+  }
+}
 
 function notePreviewText(note: NoteVO): string {
   return note.excerpt || note.content || ''
@@ -158,6 +219,23 @@ async function onCardMenuAction(actionId: string) {
           </div>
         </template>
         <template #actions>
+          <button
+            type="button"
+            class="toolbar-import-btn"
+            :class="{ active: selectMode }"
+            @click="toggleSelectMode"
+          >
+            <CheckSquare :size="14" /> {{ selectMode ? '取消多选' : '多选' }}
+          </button>
+          <button
+            v-if="selectMode"
+            type="button"
+            class="toolbar-import-btn"
+            :disabled="selectedCount === 0 || exporting"
+            @click="handleBatchExport"
+          >
+            <Download :size="14" /> 导出 ZIP{{ selectedCount ? ` (${selectedCount})` : '' }}
+          </button>
           <button class="toolbar-import-btn" @click="openImport">
             <Upload :size="14" /> 导入
           </button>
@@ -178,6 +256,7 @@ async function onCardMenuAction(actionId: string) {
 
       <div v-else-if="viewMode === 'table'" class="product-table">
         <div class="pt-head">
+          <div v-if="selectMode" class="col-check" />
           <div class="col-title">标题</div>
           <div class="col-cat">分类</div>
           <div class="col-tags">标签</div>
@@ -189,8 +268,12 @@ async function onCardMenuAction(actionId: string) {
             v-for="note in list"
             :key="note.id"
             class="pt-row"
-            @click="goEdit(note.id)"
+            :class="{ 'pt-row--selected': selectMode && isSelected(note.id) }"
+            @click="onRowClick(note)"
           >
+            <div v-if="selectMode" class="col-check" @click.stop>
+              <input type="checkbox" :checked="isSelected(note.id)" @change="toggleSelect(note.id)" />
+            </div>
             <div class="col-title">
               <div class="name-title">{{ note.title || '无标题笔记' }}</div>
             </div>
@@ -240,9 +323,13 @@ async function onCardMenuAction(actionId: string) {
           v-for="note in list"
           :key="note.id"
           class="note-card"
-          @click="goEdit(note.id)"
+          :class="{ 'note-card--selected': selectMode && isSelected(note.id) }"
+          @click="onRowClick(note)"
           @contextmenu="onCardContextMenu($event, note)"
         >
+          <div v-if="selectMode" class="note-card-check" @click.stop>
+            <input type="checkbox" :checked="isSelected(note.id)" @change="toggleSelect(note.id)" />
+          </div>
           <div class="note-card-header">
             <div class="note-card-title-row">
               <FileText :size="14" class="note-type-icon" />
@@ -350,7 +437,22 @@ async function onCardMenuAction(actionId: string) {
 }
 .skeleton-note-card { border-radius: var(--radius-lg); background: var(--bg-hover); animation: pulse 1.5s ease-in-out infinite; }
 
+.table-skeleton {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.table-skeleton .skeleton-row {
+  flex: 1;
+  border-radius: var(--radius-md);
+  background: var(--bg-hover);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
 .note-card {
+  position: relative;
   background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg);
   padding: var(--sp-4) var(--sp-5); cursor: pointer; height: 100%; min-height: 0;
   transition: all var(--transition); display: flex; flex-direction: column;
@@ -414,24 +516,47 @@ async function onCardMenuAction(actionId: string) {
   color: var(--accent);
   background: var(--accent-light);
 }
-
-.table-skeleton {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+.toolbar-import-btn.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-light);
 }
-.table-skeleton .skeleton-row {
-  flex: 1;
-  border-radius: var(--radius-md);
-  background: var(--bg-hover);
-  animation: pulse 1.5s ease-in-out infinite;
+.toolbar-import-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.note-card--selected {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 6%, var(--bg-card));
+}
+.note-card-check {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 1;
+}
+.col-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pt-row--selected {
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
 }
 
 /* 本页列宽（共享壳见 styles/product-list.css） */
 .pt-head, .pt-row {
   grid-template-columns:
+    minmax(160px, 2fr)
+    minmax(100px, 1fr)
+    minmax(120px, 1.2fr)
+    120px
+    72px;
+}
+.plan-page:has(.col-check) .pt-head,
+.plan-page:has(.col-check) .pt-row {
+  grid-template-columns:
+    36px
     minmax(160px, 2fr)
     minmax(100px, 1fr)
     minmax(120px, 1.2fr)

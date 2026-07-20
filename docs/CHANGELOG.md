@@ -5,6 +5,7 @@
 ## [Unreleased]
 
 ### 2026-07-20
+- **功能**：笔记列表多选批量导出 ZIP（`POST /api/notes/export`，每篇独立目录）；回收站一键清空（`DELETE /api/notes/recycle-bin`）
 - **文档**：DEPLOYMENT 备注 `.env` 含 `!` `&` 等须单引号，避免 CI Wait for HTTP `source` 失败（`2!: 未找到命令`）
 
 ### 2026-07-19
