@@ -104,7 +104,8 @@ TOC 宽 220（收起 34，拖 160–400）。主题：`data-preview-theme` → `
 **列表：** Header+Toolbar+Empty+Pagination · Table/Card 或例外 · 槽位/fill · Dialog+深链 · Token+骨架+深色  
 **笔记：** 右键「归档」→`AUTO_ARCHIVE`；「移入回收站」→`USER_DELETE`；列表多选 →「导出 ZIP」（≤50，仅勾选）；回收站展示删除原因 +「清空回收站」  
 **命令面板：** Ctrl/Cmd+K 支持快捷新建（笔记/日记/阅读/学习/待办/计划）与页面/内容搜索  
-**设置·数据：** 立即备份（落盘历史+下载）；自动备份频率 off/每天/每周；历史下载/恢复/删除；导入 `.zip` 全量覆盖（二次确认；不改 username/password）  
+**设置·数据：** 独立 Tab「数据管理」——缓存清理；立即备份（落盘历史+下载）；自动备份频率；历史下载/恢复/删除；导入 `.zip` 全量覆盖  
+**设置·高级：** 通知偏好 · 实验功能  
 **预览：** DocLayout+prose · readingConfig · §3 注意项  
 **Dialog：** 积木骨架 · FooterActions · 日记配图先保存  
 **文件：** 内嵌预览 · 鉴权下载 · 不与笔记/日记资源混库

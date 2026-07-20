@@ -3,7 +3,7 @@ import { ref, type Component } from 'vue'
 import { useLayoutStore } from '@/store/layoutStore'
 import { useThemeStore } from '@/store/themeStore'
 import { ElMessageBox, ElMessage } from 'element-plus'
-import { LayoutDashboard, BookOpen, Palette, Settings2, RotateCcw } from 'lucide-vue-next'
+import { LayoutDashboard, BookOpen, Palette, Settings2, RotateCcw, Database } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue'
 import UiCard from '@/components/ui/UiCard.vue'
 import MenuManager from './components/MenuManager.vue'
@@ -12,6 +12,7 @@ import StatsManager from './components/StatsManager.vue'
 import ReadingExperience from './components/ReadingExperience.vue'
 import AppearanceSettings from './components/AppearanceSettings.vue'
 import AdvancedSettings from './components/AdvancedSettings.vue'
+import DataManagement from './components/DataManagement.vue'
 import './settings-layout.css'
 
 const layoutStore = useLayoutStore()
@@ -27,6 +28,7 @@ const tabs: TabItem[] = [
   { key: 'workspace', icon: LayoutDashboard, label: '工作台' },
   { key: 'reading', icon: BookOpen, label: '阅读' },
   { key: 'appearance', icon: Palette, label: '外观' },
+  { key: 'data', icon: Database, label: '数据管理' },
   { key: 'advanced', icon: Settings2, label: '高级' },
 ]
 
@@ -98,6 +100,11 @@ async function handleResetAll() {
           <UiCard v-else-if="activeTab === 'appearance'" class="settings-card">
             <h3 class="card-title">外观</h3>
             <AppearanceSettings />
+          </UiCard>
+
+          <!-- 数据管理 -->
+          <UiCard v-else-if="activeTab === 'data'" class="settings-card">
+            <DataManagement />
           </UiCard>
 
           <!-- 高级 -->
