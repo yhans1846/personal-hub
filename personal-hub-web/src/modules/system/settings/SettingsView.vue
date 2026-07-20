@@ -102,10 +102,8 @@ async function handleResetAll() {
             <AppearanceSettings />
           </UiCard>
 
-          <!-- 数据管理 -->
-          <UiCard v-else-if="activeTab === 'data'" class="settings-card">
-            <DataManagement />
-          </UiCard>
+          <!-- 数据管理（多卡片，与高级 Tab 同构） -->
+          <DataManagement v-else-if="activeTab === 'data'" />
 
           <!-- 高级 -->
           <AdvancedSettings v-else-if="activeTab === 'advanced'" />

@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import {
-  Trash2, Upload, FileArchive, Loader2, Download, RotateCcw,
-} from 'lucide-vue-next'
+import { Trash2, Upload, FileArchive, Loader2, Download, RotateCcw } from 'lucide-vue-next'
 import {
   backupNow,
   importBackup,
@@ -19,6 +17,7 @@ import {
 import { triggerBlobDownload } from '@/utils/file'
 import { handleApiError, unwrapResult } from '@/utils/apiResult'
 import { formatUpdated } from '@/utils/formatTime'
+import UiCard from '@/components/ui/UiCard.vue'
 
 // ===== 缓存 =====
 const cacheSize = ref('计算中...')
