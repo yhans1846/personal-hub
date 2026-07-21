@@ -181,7 +181,7 @@ defineExpose({ scrollEl: scrollRef })
 .preview-main {
   flex: 1;
   min-width: 0;
-  max-width: 900px;
+  max-width: 100%;
 }
 .preview-title {
   font-size: 36px;

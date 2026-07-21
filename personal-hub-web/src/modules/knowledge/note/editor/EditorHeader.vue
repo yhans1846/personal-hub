@@ -125,8 +125,12 @@ const emit = defineEmits<{
 .editor-header.is-fullscreen {
   background: var(--bg-body);
 }
+/* 专注：常驻矮条，不再隐藏（App 侧栏/顶栏仍由 focus-hidden 处理） */
 .editor-header.is-focus {
-  display: none;
+  height: 48px;
+  padding: 0 20px;
+  background: var(--bg-body);
+  border-bottom-color: color-mix(in srgb, var(--border-color) 70%, transparent);
 }
 .header-left,
 .header-right {

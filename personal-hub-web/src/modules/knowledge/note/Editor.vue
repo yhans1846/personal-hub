@@ -314,16 +314,15 @@ const readingTimeText = computed(() => estimateReadingTime(form.value.content))
       :mode="mode"
       :save-status="saveStatus"
       :last-saved-at="lastSavedAt"
-      :is-fullscreen="isFullscreen"
+      :is-fullscreen="isFullscreen || mode === 'focus'"
     />
   </div>
 </template>
 
 <style scoped>
 .editor-backlinks {
-  max-width: 720px;
-  margin: 0 auto;
-  padding: 0 24px 32px;
+  margin-top: var(--sp-8);
+  padding: 0 0 32px;
 }
 .editor-page {
   display: flex;
@@ -347,12 +346,14 @@ const readingTimeText = computed(() => estimateReadingTime(form.value.content))
   padding: 0;
 }
 .editor-content-wrap {
-  max-width: 1000px;
+  max-width: 1280px;
   margin: 0 auto;
   padding: 0 48px;
+  width: 100%;
+  box-sizing: border-box;
 }
 .editor-content-wrap.is-focus-content {
-  max-width: 1000px;
+  max-width: none;
   padding: 0 48px;
   height: 100%;
   display: flex;
