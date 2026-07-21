@@ -25,18 +25,17 @@ Cursor Agent 做**全功能 / 跳转 / 日志对照**测试的标准做法（202
 ## 2. 工具组合（三件套）
 
 ```
-Browser MCP（复核/截图/Console）
-    ↓
-Playwright 批量脚本（路由/深链/API≥400）
+Browser MCP（主路径：路由/深链/交互/截图/Console）
     ↓
 后端双日志对照（error.log + app.log）
 ```
 
 | 工具 | 适用 | 产物 |
 |------|------|------|
-| **cursor-ide-browser** | 关键路径、弹窗、通知 | 截图 + Console |
-| **Playwright** `scripts/qa/full_button_scan.py`（首选；含验证码登录+按钮） / `full_feature_test.py`（旧，登录占位已过时） | 16+ 路由、深链、按钮 | `logs/qa-artifacts/full_button_scan_result.json` |
+| **cursor-ide-browser** | 关键路径、弹窗、通知、全路由巡检 | 截图 + Console |
 | **日志** | 后端故障判定 | ERROR / Exception |
+
+> 旧 Playwright 批量脚本（`scripts/qa/full_button_scan.py` 等）已移除；巡检以 Browser MCP + 日志对照为准。
 
 ---
 
@@ -75,27 +74,12 @@ Playwright 批量脚本（路由/深链/API≥400）
 
 ---
 
-## 4. Playwright 批量巡检
+## 4. 批量巡检（可选）
 
-### 4.1 脚本位置
+历史产物可参考 `logs/qa-artifacts/`（gitignore）与 `docs/qa/2026-07-17-功能巡检报告.md`。  
+新巡检请用 §3 Browser MCP 流程覆盖路由表与深链，不必依赖已删除的 Playwright 脚本。
 
-| 路径 | 说明 |
-|------|------|
-| `scripts/qa/full_button_scan.py` | 全路由+深链+按钮巡检（API 验证码登录） |
-| `scripts/qa/full_feature_test.py` | 旧烟测（登录需改适配新验证码） |
-| `logs/qa-artifacts/full_button_scan_result.json` | 结果（gitignore） |
-| `logs/qa-artifacts/screenshots/` | 截图（gitignore） |
-
-### 4.2 Windows 启动方式
-
-```powershell
-$env:PLAYWRIGHT_CHROMIUM_USE_HEADLESS_SHELL = '0'
-python scripts/qa/full_feature_test.py
-```
-
-策略：`channel="chrome"` · `wait_until="domcontentloaded"`（通知轮询致 `networkidle` 超时）· 每步 `save()` 写 JSON。
-
-### 4.3 脚本覆盖范围（与路由表对齐）
+### 4.1 覆盖范围（与路由表对齐）
 
 1. 登录 `admin` / `123456`
 2. 直访 dashboard / notes / diaries / readings / study-records / todos / study-plans / bookmarks / files / tags / categories / settings / stats / search / recycle
@@ -158,9 +142,8 @@ Dialog/Drawer 模块**不得**依赖未注册独立编辑页。正确形态：
 每次正式巡检：
 
 1. `docs/qa/YYYY-MM-DD-功能巡检报告.md`
-2. `logs/qa-artifacts/full_feature_result.json`
-3. `logs/qa-artifacts/screenshots/`
-4. 有修复 → 报告「修复回写」+ `docs/CHANGELOG.md`
+2. 可选：`logs/qa-artifacts/screenshots/`
+3. 有修复 → 报告「修复回写」+ `docs/CHANGELOG.md`
 
 最少：结论、日志对照、路由表、失败深链、根因、优先级。样例：`docs/qa/2026-07-15-功能巡检报告.md`。
 
@@ -171,7 +154,6 @@ Dialog/Drawer 模块**不得**依赖未注册独立编辑页。正确形态：
 ```markdown
 - [ ] 前端 3000 / 后端 8080 可达
 - [ ] Browser：navigate → lock → 关键路径 snapshot
-- [ ] Playwright：跑 full_feature_test.py，看 summary
 - [ ] 读 personal-hub-error.log 与 app.log ERROR/Exception
 - [ ] Console 是否有 Vue Router No match
 - [ ] 深链：?edit= / 旧 /:id/edit redirect / 笔记编辑页
@@ -188,6 +170,5 @@ Dialog/Drawer 模块**不得**依赖未注册独立编辑页。正确形态：
 | `.cursor/rules/browser-qa-testing.mdc` | Agent 规则 |
 | `docs/qa/CURSOR_BROWSER_TESTING.md` | 本文 |
 | `docs/qa/2026-07-15-功能巡检报告.md` | 首次全量报告 |
-| `scripts/qa/full_feature_test.py` | 批量脚本 |
 | `personal-hub-web/src/router/index.ts` | 路由与 redirect |
 | `personal-hub-web/src/utils/deepLink.ts` | 深链工具 |

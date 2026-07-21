@@ -9,7 +9,7 @@
 ---
 
 ### 任务 1：表 + Entity/Mapper
-- [ ] `sql/init.sql` 加 `user_backup`；`sql/alter-20260720-user-backup.sql` 补表
+- [x] `sql/init.sql` 加 `user_backup`（增量 alter 已移除，以 init 为准）
 - [ ] Entity/Mapper/VO/DTO 在 `ph-biz/.../backup/`
 
 ### 任务 2：服务

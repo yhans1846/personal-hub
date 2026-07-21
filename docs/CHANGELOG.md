@@ -5,6 +5,7 @@
 ## [Unreleased]
 
 ### 2026-07-21
+- **治理**：移除过时脚本与已并入 `sql/init.sql` 的增量 SQL（QA Playwright 脚本、演示种子、`sync_init_sql_from_db`、`alter-20260720-*`）；巡检文档改以 Browser MCP 为准
 - **功能**：文件管理支持一键清空——`DELETE /api/files` 删除当前用户全部文件（磁盘+库），工具栏强确认；列表工具栏次要/危险按钮统一为 `.toolbar-btn`，与主按钮并排
 - **修复**：笔记分屏滚动改为**左右 pane 统一滚动 + 比例联动**（Vditor IR 无行锚点、标题含 marker 导致标题映射失效）；大纲点击同时定位预览与编辑（同 id / 比例兜底）
 - **UI**：分屏/预览栏不再重复显示标题（标题仅在顶栏编辑）；编辑与预览栏等宽（大纲约 15%）；三栏用分割线与底色区分
@@ -21,7 +22,7 @@
 ### 2026-07-20
 - **UI**：收藏夹/文件列表去掉「分类管理」入口；二者均一屏 5×4 铺满（大预览区，不足 pad）
 - **功能**：Mermaid / KaTeX 毕业为正式能力——实验开关移除；右键常显插入（含选区行内公式）；文件 md 预览对齐笔记 Vditor 配置
-- **治理**：`user_layout.layout_type` 对齐设置 Tab——`preview`→`reading`、`notification`→`advanced`、`backup`→`data`（读写兼容旧值）；见 `sql/alter-20260720-layout-type-align-tabs.sql`
+- **治理**：`user_layout.layout_type` 对齐设置 Tab——`preview`→`reading`、`notification`→`advanced`、`backup`→`data`（读写兼容旧值；已并入 `sql/init.sql`）
 - **UI**：系统设置将「数据管理」从高级拆为独立 Tab（缓存/备份/历史）；高级仅保留通知与实验功能
 - **功能**：自动备份 + 服务器历史——`user_backup` 表；立即备份落盘并下载；频率 off/每天/每周；02:00 定时；历史下载/恢复（先快照）/删除；成功保留 7
 - **功能**：命令面板（Ctrl/Cmd+K）快捷捕获——空态与关键词过滤均可直达新建笔记/日记/阅读/学习/待办/计划
@@ -74,7 +75,7 @@
 - **UI**：全局隐藏页面/卡片滚动条（仍可滚轮与触控滚动）
 - **外观 Token**：全站硬编码圆角/过渡改为 `--radius-*` / `--transition`；主题/强调色/密度/动画经 `applyAppearanceToDOM` + EP Token 桥接；深色下 Select/按钮/分页反色
 - **通知音效**：内置 `src/assets/sounds/*.wav`；设置切换即时预览；未读增加时按偏好播放
-- **演示数据**：`scripts/seed_demo_data.py`（admin 下全模块样例 + `D:/PersonalHub/uploads` 真实文件）
+- **演示数据**：曾提供 `scripts/seed_demo_data.py`（admin 下全模块样例）；脚本已移除
 
 ### 2026-07-18
 - **日记配图资源包**：`diaries/{id}/images/` + `image_files`；新建先保存再上传；不进 `file_resource`；不做历史迁移
