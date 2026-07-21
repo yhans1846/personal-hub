@@ -10,10 +10,13 @@ import { useEditorMode } from './editor/useEditorMode'
 import { useImageUpload } from './editor/useImageUpload'
 import EditorHeader from './editor/EditorHeader.vue'
 import EditorStatusBar from './editor/EditorStatusBar.vue'
+import EditorOutline from './editor/EditorOutline.vue'
+import EditorPropsDrawer from './editor/EditorPropsDrawer.vue'
 import NoteVditor from './editor/NoteVditor.vue'
 import NoteMarkdownPreview from './editor/NoteMarkdownPreview.vue'
 import NoteBacklinks from './NoteBacklinks.vue'
 import { buildEditorId } from './editor/vditorSetup'
+import { useDebouncedRef } from './editor/debounceValue'
 import { useFeatureFlagStore } from '@/store/featureFlagStore'
 import { useMainContentEditor } from '@/composables/useMainContentFill'
 import { estimateReadingTime, formatRelativeTime } from '@/utils/readingTime'
@@ -89,6 +92,12 @@ const {
 
 const propsOpen = ref(false)
 
+const previewRef = ref<{ scrollToHeading: (id: string) => void } | null>(null)
+
+const rawContent = ref(form.value.content)
+watch(() => form.value.content, (v) => { rawContent.value = v })
+const debouncedContent = useDebouncedRef(rawContent, 150)
+
 const { handleUpload } = useImageUpload(noteId, forceSave)
 
 onMounted(async () => {
@@ -139,7 +148,7 @@ onMounted(async () => {
   hydrationDirty.value = shouldMarkDirty
   initialLoading.value = false
   await nextTick()
-  // 预览态无 Vditor，直接建立基线；编辑态等 @ready（避免编辑器初始化归一化误标 dirty）
+  // 纯预览态无 Vditor，直接建立基线；编辑/分屏态等 Vditor @ready（避免编辑器初始化归一化误标 dirty）
   if (mode.value === 'preview') {
     markReady(hydrationDirty.value)
     hydrationDone = true
@@ -226,24 +235,6 @@ function onUploadImg(files: File[], callback: (urls: string[]) => void) {
   handleUpload(files, callback)
 }
 
-function getCategoryNames(): string {
-  return form.value.categoryIds
-    .map(id => categories.value.find((c) => c.id === id)?.name)
-    .filter(Boolean)
-    .join('、')
-}
-
-function getTagNames(): string {
-  return form.value.tagIds
-    .map(id => tags.value.find((t) => t.id === id)?.name)
-    .filter(Boolean)
-    .join('、')
-}
-
-const savedTimeText = computed(() => {
-  if (!lastSavedAt.value) return ''
-  return formatRelativeTime(new Date(lastSavedAt.value).toISOString())
-})
 const readingTimeText = computed(() => estimateReadingTime(form.value.content))
 </script>
 
@@ -271,50 +262,8 @@ const readingTimeText = computed(() => estimateReadingTime(form.value.content))
       @remove="handleDelete"
     />
 
-    <div
-      class="editor-body"
-      :class="{
-        'is-fullscreen': isFullscreen,
-        'is-preview': mode === 'preview',
-      }"
-    >
-      <div class="editor-content-wrap">
-        <input
-          v-if="mode !== 'preview'"
-          v-model="form.title"
-          class="editor-title"
-          placeholder="请输入标题..."
-        />
-
-        <div v-if="mode === 'edit' && !initialLoading" class="editor-meta">
-          <el-popover trigger="click" placement="bottom" :width="280">
-            <template #reference>
-              <span class="meta-item">
-                📂 {{ form.categoryIds.length ? getCategoryNames() : '分类' }}
-              </span>
-            </template>
-            <el-select v-model="form.categoryIds" multiple placeholder="选择分类" style="width: 100%">
-              <el-option v-for="c in categories" :key="c.id" :label="c.name" :value="c.id" />
-            </el-select>
-          </el-popover>
-
-          <el-popover trigger="click" placement="bottom" :width="280">
-            <template #reference>
-              <span class="meta-item">
-                🏷 {{ form.tagIds.length ? getTagNames() : '标签' }}
-              </span>
-            </template>
-            <el-select v-model="form.tagIds" multiple placeholder="选择标签" style="width: 100%">
-              <el-option v-for="t in tags" :key="t.id" :label="t.name" :value="t.id" />
-            </el-select>
-          </el-popover>
-
-          <span v-if="createdAt" class="meta-item static">🕒 {{ formatRelativeTime(createdAt) }}</span>
-          <span v-if="readingTimeText" class="meta-item static">👁 {{ readingTimeText }}</span>
-        </div>
-
-        <div v-if="mode === 'edit'" class="editor-divider" />
-
+    <div class="editor-body">
+      <div class="editor-split" :class="`mode-${mode}`">
         <div v-if="initialLoading" class="editor-loading" aria-busy="true" aria-label="加载笔记中">
           <div class="editor-loading-bar title" />
           <div class="editor-loading-bar meta" />
@@ -323,37 +272,69 @@ const readingTimeText = computed(() => estimateReadingTime(form.value.content))
           <div class="editor-loading-bar line" />
         </div>
 
-        <NoteVditor
-          v-else-if="mode === 'edit'"
-          v-model="form.content"
-          :editor-id="editorId"
-          :theme="editorTheme"
-          :note-id="noteId"
-          :on-upload-img="onUploadImg"
-          class="editor-instance"
-          @ready="onVditorReady"
-        />
+        <template v-else>
+          <div
+            v-show="mode === 'edit' || mode === 'split'"
+            class="pane pane-editor"
+          >
+            <NoteVditor
+              v-if="mode === 'edit' || mode === 'split'"
+              v-model="form.content"
+              :editor-id="editorId"
+              :theme="editorTheme"
+              :note-id="noteId"
+              :on-upload-img="onUploadImg"
+              class="editor-instance"
+              @ready="onVditorReady"
+            />
+          </div>
 
-        <NoteMarkdownPreview
-          v-if="!initialLoading && mode === 'preview'"
-          :content="form.content"
-          :title="form.title"
-          :theme="editorTheme"
-          :editor-id="`${editorId}-preview`"
-          :note-id="noteId"
-          :reading-time-text="readingTimeText"
-          :category-names="getCategoryNames()"
-          :tag-names="getTagNames()"
-          :saved-time-text="savedTimeText"
-        />
-        <NoteBacklinks
-          v-if="!initialLoading && noteId && featureFlags.isEnabled('backlink')"
-          class="editor-backlinks"
-          :note-id="noteId"
-          :enabled="true"
-        />
+          <div
+            v-show="mode === 'preview' || mode === 'split'"
+            class="pane pane-preview"
+          >
+            <NoteMarkdownPreview
+              v-if="mode === 'preview' || mode === 'split'"
+              ref="previewRef"
+              :content="debouncedContent"
+              :title="form.title"
+              :show-toc="false"
+              :show-meta="false"
+              :theme="editorTheme"
+              :editor-id="`${editorId}-preview`"
+              :note-id="noteId"
+            />
+          </div>
+
+          <div
+            v-show="mode === 'split' || mode === 'preview'"
+            class="pane pane-outline"
+          >
+            <EditorOutline
+              :content="debouncedContent"
+              @scroll-to="(id) => previewRef?.scrollToHeading?.(id)"
+            />
+          </div>
+        </template>
       </div>
+
+      <NoteBacklinks
+        v-if="!initialLoading && noteId && featureFlags.isEnabled('backlink')"
+        class="editor-backlinks"
+        :note-id="noteId"
+        :enabled="true"
+      />
     </div>
+
+    <EditorPropsDrawer
+      v-model:visible="propsOpen"
+      v-model:category-ids="form.categoryIds"
+      v-model:tag-ids="form.tagIds"
+      :categories="categories"
+      :tags="tags"
+      :created-at-text="createdAt ? formatRelativeTime(createdAt) : ''"
+      :reading-time-text="readingTimeText"
+    />
 
     <EditorStatusBar
       :content="form.content"
@@ -368,7 +349,8 @@ const readingTimeText = computed(() => estimateReadingTime(form.value.content))
 <style scoped>
 .editor-backlinks {
   margin-top: var(--sp-8);
-  padding: 0 0 32px;
+  padding: 0 24px 32px;
+  flex-shrink: 0;
 }
 .editor-page {
   display: flex;
@@ -380,82 +362,40 @@ const readingTimeText = computed(() => estimateReadingTime(form.value.content))
 }
 .editor-body {
   flex: 1;
-  overflow-y: auto;
-  padding: 48px 0 32px;
-  transition: padding var(--transition);
-}
-.editor-body.is-fullscreen,
-.editor-body.is-preview {
-  padding: 0;
-}
-.editor-content-wrap {
-  max-width: none;
-  width: 100%;
-  margin: 0 auto;
-  padding: 0 24px;
-  box-sizing: border-box;
-}
-.editor-title {
-  width: 100%;
-  border: none;
-  outline: none;
-  font-size: 36px;
-  font-weight: 600;
-  color: var(--text-primary);
-  background: transparent;
-  padding: 0;
-  margin-bottom: 20px;
-  font-family: var(--font-sans);
-  line-height: 1.3;
-  letter-spacing: -0.02em;
-}
-.editor-title::placeholder {
-  color: var(--text-placeholder);
-}
-.editor-meta {
+  min-height: 0;
   display: flex;
-  align-items: center;
-  gap: 4px;
-  flex-wrap: wrap;
-  margin-bottom: 16px;
-  font-size: var(--text-sm);
-  color: var(--text-tertiary);
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
 }
-.meta-item {
+.editor-split {
+  flex: 1;
+  min-height: 0;
   display: flex;
-  align-items: center;
-  gap: 4px;
-  cursor: pointer;
-  padding: 3px 8px;
-  border-radius: var(--radius-sm);
-  transition: background var(--transition);
-  font-size: var(--text-sm);
+  overflow: hidden;
 }
-.meta-item:hover {
-  background: var(--bg-hover);
-  color: var(--text-secondary);
+.pane {
+  min-width: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
-.meta-item.static {
-  cursor: default;
-}
-.meta-item.static:hover {
-  background: transparent;
-  color: var(--text-tertiary);
-}
-.editor-divider {
-  height: 1px;
-  background: var(--border-color);
-  margin-bottom: 24px;
-}
+.pane-editor { flex: 0 0 38%; }
+.pane-preview { flex: 0 0 42%; }
+.pane-outline { flex: 0 0 20%; }
+.mode-edit .pane-editor { flex: 1; }
+.mode-preview .pane-preview { flex: 1; }
+.mode-preview .pane-outline { flex: 0 0 20%; }
 .editor-instance {
-  min-height: 60vh;
+  height: 100%;
+  min-height: 0;
 }
 .editor-loading {
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 14px;
-  min-height: 40vh;
-  padding-top: 8px;
+  padding: 48px 24px;
 }
 .editor-loading-bar {
   height: 14px;
@@ -489,14 +429,14 @@ const readingTimeText = computed(() => estimateReadingTime(form.value.content))
   100% { background-position: -200% 0; }
 }
 @media (max-width: 768px) {
-  .editor-content-wrap {
-    padding: 0 20px;
+  .pane-editor,
+  .pane-preview,
+  .pane-outline {
+    flex: 1 1 auto;
+    width: 100%;
   }
-  .editor-body {
-    padding: 24px 0 16px;
-  }
-  .editor-title {
-    font-size: 28px;
+  .editor-split {
+    flex-direction: column;
   }
 }
 </style>
