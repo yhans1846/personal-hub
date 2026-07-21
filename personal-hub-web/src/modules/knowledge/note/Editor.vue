@@ -1,5 +1,5 @@
 ﻿<script setup lang="ts">
-import { ref, computed, onMounted, watch, onUnmounted, nextTick } from 'vue'
+import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getNoteById, toggleFavorite, deleteNote } from '@/modules/knowledge/api'
 import { getCategories } from '@/modules/knowledge/api'
@@ -15,17 +15,45 @@ import NoteMarkdownPreview from './editor/NoteMarkdownPreview.vue'
 import NoteBacklinks from './NoteBacklinks.vue'
 import { buildEditorId } from './editor/vditorSetup'
 import { useFeatureFlagStore } from '@/store/featureFlagStore'
+import { useMainContentEditor } from '@/composables/useMainContentFill'
 import { estimateReadingTime, formatRelativeTime } from '@/utils/readingTime'
 import type { CategoryVO } from '@/types/category'
 import type { TagVO } from '@/types/tag'
 import type { CategoryItem, TagItem } from '@/types/note'
+import { resolveEditorClose, type CloseConfirmChoice } from './editor/requestEditorClose'
+
+const props = withDefaults(defineProps<{
+  /** 嵌入列表 Overlay 时为 true */
+  embedded?: boolean
+  /** 编辑已有笔记；缺省/undefined = 新建 */
+  initialNoteId?: number
+}>(), {
+  embedded: false,
+})
+
+const emit = defineEmits<{
+  close: []
+  /** 新建首次落库或 workspace 需同步 id */
+  'note-id': [id: number]
+}>()
 
 const route = useRoute()
 const router = useRouter()
 const featureFlags = useFeatureFlagStore()
-const isEdit = !!route.params.id
+if (!props.embedded) {
+  useMainContentEditor()
+}
 
-const form = ref({ title: isEdit ? '' : '未命名笔记', content: '', categoryIds: [] as number[], tagIds: [] as number[] })
+const resolvedNoteId = computed(() => {
+  if (props.initialNoteId != null) return props.initialNoteId
+  if (!props.embedded && route.params.id != null && route.params.id !== '') {
+    return Number(route.params.id)
+  }
+  return undefined
+})
+const isEdit = computed(() => resolvedNoteId.value != null)
+
+const form = ref({ title: isEdit.value ? '' : '未命名笔记', content: '', categoryIds: [] as number[], tagIds: [] as number[] })
 const categories = ref<CategoryVO[]>([])
 const tags = ref<TagVO[]>([])
 const isFavorite = ref(false)
@@ -44,7 +72,7 @@ const {
   restoreDraft,
   clearDraft,
   markReady,
-} = useAutoSave(form, isEdit ? Number(route.params.id) : undefined)
+} = useAutoSave(form, props.initialNoteId ?? (route.params.id ? Number(route.params.id) : undefined))
 
 /** 加载阶段是否因草稿与服务器不一致而需要 dirty */
 const hydrationDirty = ref(false)
@@ -56,20 +84,8 @@ const {
   mode,
   isFullscreen,
   togglePreview,
-  toggleFocus,
   toggleFullscreen,
 } = useEditorMode()
-
-watch(mode, (val) => {
-  if (val === 'focus') {
-    document.body.classList.add('editor-focus-mode')
-  } else {
-    document.body.classList.remove('editor-focus-mode')
-  }
-})
-onUnmounted(() => {
-  document.body.classList.remove('editor-focus-mode')
-})
 
 const { handleUpload } = useImageUpload(noteId, forceSave)
 
@@ -83,9 +99,10 @@ onMounted(async () => {
     ElMessage.error('加载分类/标签失败')
   }
 
-  if (isEdit) {
+  if (isEdit.value) {
     try {
-      const res = await getNoteById(Number(route.params.id))
+      const id = resolvedNoteId.value as number
+      const res = await getNoteById(id)
       const note = res.data.data
       form.value.title = note.title
       form.value.content = note.content
@@ -94,7 +111,7 @@ onMounted(async () => {
       isFavorite.value = note.isFavorite === 1
       createdAt.value = note.createdAt
 
-      const draftKey = `draft_note_${route.params.id}`
+      const draftKey = `draft_note_${id}`
       const draft = localStorage.getItem(draftKey)
       if (draft) {
         try {
@@ -168,13 +185,40 @@ async function handleDelete() {
     if (noteId.value) await deleteNote(noteId.value)
     clearDraft()
     ElMessage.success('笔记已删除')
-    router.push('/notes')
+    if (props.embedded) emit('close')
+    else router.push('/notes')
   } catch { /* 取消 */ }
 }
 
-function handleBack() {
-  router.push('/notes')
+async function confirmEditorClose(): Promise<CloseConfirmChoice> {
+  try {
+    await ElMessageBox.confirm('有未保存的更改，是否保存后离开？', '提示', {
+      confirmButtonText: '保存并离开',
+      cancelButtonText: '不保存',
+      distinguishCancelAndClose: true,
+      type: 'warning',
+    })
+    return 'save'
+  } catch (action) {
+    if (action === 'cancel') return 'discard'
+    return 'cancel'
+  }
 }
+
+async function handleBack() {
+  const result = await resolveEditorClose({
+    dirty: saveStatus.value === 'dirty',
+    confirm: confirmEditorClose,
+    forceSave,
+  })
+  if (result === 'abort') return
+  if (props.embedded) emit('close')
+  else router.push('/notes')
+}
+
+watch(noteId, (id) => {
+  if (id != null) emit('note-id', id)
+})
 
 function onUploadImg(files: File[], callback: (urls: string[]) => void) {
   handleUpload(files, callback)
@@ -205,20 +249,18 @@ const readingTimeText = computed(() => estimateReadingTime(form.value.content))
   <div
     class="editor-page"
     :class="{
-      'is-focus': mode === 'focus',
       'is-fullscreen': isFullscreen,
     }"
   >
     <EditorHeader
+      :close-mode="embedded ? 'close' : 'back'"
       :save-status="saveStatus"
       :is-favorite="isFavorite"
       :mode="mode"
       :is-fullscreen="isFullscreen"
-      :is-focus-mode="mode === 'focus'"
       @back="handleBack"
       @toggle-favorite="handleToggleFavorite"
       @toggle-mode="togglePreview"
-      @toggle-focus="toggleFocus"
       @toggle-fullscreen="toggleFullscreen"
       @export-note="handleExport"
       @remove="handleDelete"
@@ -227,12 +269,11 @@ const readingTimeText = computed(() => estimateReadingTime(form.value.content))
     <div
       class="editor-body"
       :class="{
-        'is-focus': mode === 'focus',
         'is-fullscreen': isFullscreen,
         'is-preview': mode === 'preview',
       }"
     >
-      <div class="editor-content-wrap" :class="{ 'is-focus-content': mode === 'focus' }">
+      <div class="editor-content-wrap">
         <input
           v-if="mode !== 'preview'"
           v-model="form.title"
@@ -278,13 +319,13 @@ const readingTimeText = computed(() => estimateReadingTime(form.value.content))
         </div>
 
         <NoteVditor
-          v-else-if="mode === 'edit' || mode === 'focus'"
+          v-else-if="mode === 'edit'"
           v-model="form.content"
           :editor-id="editorId"
           :theme="editorTheme"
           :note-id="noteId"
           :on-upload-img="onUploadImg"
-          :class="{ 'editor-instance': true, 'focus-editor': mode === 'focus' }"
+          class="editor-instance"
           @ready="onVditorReady"
         />
 
@@ -314,7 +355,7 @@ const readingTimeText = computed(() => estimateReadingTime(form.value.content))
       :mode="mode"
       :save-status="saveStatus"
       :last-saved-at="lastSavedAt"
-      :is-fullscreen="isFullscreen || mode === 'focus'"
+      :is-fullscreen="isFullscreen"
     />
   </div>
 </template>
@@ -338,30 +379,16 @@ const readingTimeText = computed(() => estimateReadingTime(form.value.content))
   padding: 48px 0 32px;
   transition: padding var(--transition);
 }
-.editor-body.is-focus {
-  padding: 0;
-}
 .editor-body.is-fullscreen,
 .editor-body.is-preview {
   padding: 0;
 }
 .editor-content-wrap {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 0 48px;
+  max-width: none;
   width: 100%;
+  margin: 0 auto;
+  padding: 0 24px;
   box-sizing: border-box;
-}
-.editor-content-wrap.is-focus-content {
-  max-width: none;
-  padding: 0 48px;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-.editor-page.is-focus .editor-content-wrap {
-  max-width: none;
-  height: 100%;
 }
 .editor-title {
   width: 100%;
@@ -417,11 +444,6 @@ const readingTimeText = computed(() => estimateReadingTime(form.value.content))
 }
 .editor-instance {
   min-height: 60vh;
-}
-.editor-instance.focus-editor {
-  flex: 1;
-  min-height: 0;
-  height: 100%;
 }
 .editor-loading {
   display: flex;
