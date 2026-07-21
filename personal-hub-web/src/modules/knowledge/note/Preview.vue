@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick, watch, onUnmounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import Vditor from 'vditor'
 import 'vditor/dist/index.css'
@@ -20,7 +20,6 @@ import NoteBacklinks from './NoteBacklinks.vue'
 import { useFeatureFlagStore } from '@/store/featureFlagStore'
 
 const route = useRoute()
-const router = useRouter()
 const readingStore = useReadingConfigStore()
 const featureFlags = useFeatureFlagStore()
 const { config } = storeToRefs(readingStore)

@@ -7,7 +7,6 @@ import { parseTocFromMarkdown, assignPreviewHeadingIds } from './parseToc'
 import { buildPreviewOptions } from './vditorSetup'
 import { preparePreviewMarkdown, setupPreviewImageZoom } from './previewEnhancements'
 import { useFeatureFlagStore } from '@/store/featureFlagStore'
-import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 
 const props = withDefaults(defineProps<{
@@ -37,7 +36,6 @@ const props = withDefaults(defineProps<{
 
 const emit = defineEmits<{ scroll: [] }>()
 const featureFlags = useFeatureFlagStore()
-const router = useRouter()
 
 const scrollRef = ref<HTMLElement | null>(null)
 const previewRef = ref<HTMLDivElement | null>(null)

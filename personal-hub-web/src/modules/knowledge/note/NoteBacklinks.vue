@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, computed } from 'vue'
-import { useRouter } from 'vue-router'
 import { Link2, ChevronRight } from 'lucide-vue-next'
 import { getNoteBacklinks } from '@/modules/knowledge/api'
 import { handleApiError } from '@/utils/apiResult'
@@ -10,7 +9,6 @@ const props = defineProps<{
   enabled: boolean
 }>()
 
-const router = useRouter()
 const loading = ref(false)
 const items = ref<{ id: number; title: string }[]>([])
 
