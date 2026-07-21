@@ -132,7 +132,7 @@ onBeforeUnmount(() => {
   disposeZoom = null
 })
 
-defineExpose({ scrollEl: scrollRef })
+defineExpose({ scrollEl: scrollRef, scrollToHeading })
 </script>
 
 <template>
@@ -141,7 +141,7 @@ defineExpose({ scrollEl: scrollRef })
       <PreviewToc
         :items="tocItems"
         :active-id="activeHeading"
-        @select="scrollToHeading"
+        @scroll-to="scrollToHeading"
       />
     </aside>
     <div class="preview-main">
