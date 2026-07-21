@@ -239,7 +239,7 @@ onBeforeUnmount(() => {
   vditorRef.value = null
 })
 
-defineExpose({ getVditor, focus })
+defineExpose({ getVditor, focus, getScrollEl: () => irRoot.value })
 </script>
 
 <template>

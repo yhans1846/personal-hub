@@ -1,5 +1,5 @@
 ﻿<script setup lang="ts">
-import { ref, computed, onMounted, nextTick, watch } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getNoteById, toggleFavorite, deleteNote } from '@/modules/knowledge/api'
 import { getCategories } from '@/modules/knowledge/api'
@@ -24,6 +24,7 @@ import type { CategoryVO } from '@/types/category'
 import type { TagVO } from '@/types/tag'
 import type { CategoryItem, TagItem } from '@/types/note'
 import { resolveEditorClose, type CloseConfirmChoice } from './editor/requestEditorClose'
+import { bindSyncScroll } from './editor/syncScroll'
 
 const props = withDefaults(defineProps<{
   /** 嵌入列表 Overlay 时为 true */
@@ -92,11 +93,57 @@ const {
 
 const propsOpen = ref(false)
 
-const previewRef = ref<{ scrollToHeading: (id: string) => void } | null>(null)
+const vditorPaneRef = ref<{ getScrollEl: () => HTMLElement | null } | null>(null)
+const previewRef = ref<{
+  scrollToHeading: (id: string) => void
+  scrollEl?: { value: HTMLElement | null } | HTMLElement | null
+} | null>(null)
 
 const rawContent = ref(form.value.content)
 watch(() => form.value.content, (v) => { rawContent.value = v })
 const debouncedContent = useDebouncedRef(rawContent, 150)
+
+let unbindSyncScroll: (() => void) | null = null
+
+function resolvePreviewScrollEl(): HTMLElement | null {
+  const exposed = previewRef.value?.scrollEl as unknown
+  if (!exposed) return null
+  if (exposed instanceof HTMLElement) return exposed
+  if (typeof exposed === 'object' && exposed !== null && 'value' in exposed) {
+    return (exposed as { value: HTMLElement | null }).value
+  }
+  return null
+}
+
+function setupSplitScrollSync() {
+  unbindSyncScroll?.()
+  unbindSyncScroll = null
+  if (mode.value !== 'split') return
+  const left = vditorPaneRef.value?.getScrollEl?.() ?? null
+  const right = resolvePreviewScrollEl()
+  if (!left || !right) return
+  unbindSyncScroll = bindSyncScroll(left, right)
+}
+
+watch(
+  () => [mode.value, initialLoading.value] as const,
+  async () => {
+    await nextTick()
+    // 预览重渲染后高度变化，稍后再绑
+    requestAnimationFrame(() => setupSplitScrollSync())
+  },
+)
+
+watch(debouncedContent, async () => {
+  if (mode.value !== 'split') return
+  await nextTick()
+  requestAnimationFrame(() => setupSplitScrollSync())
+})
+
+onBeforeUnmount(() => {
+  unbindSyncScroll?.()
+  unbindSyncScroll = null
+})
 
 const { handleUpload } = useImageUpload(noteId, forceSave)
 
@@ -156,10 +203,14 @@ onMounted(async () => {
 })
 
 function onVditorReady() {
-  if (hydrationDone) return
+  if (!hydrationDone) {
+    nextTick(() => {
+      markReady(hydrationDirty.value)
+      hydrationDone = true
+    })
+  }
   nextTick(() => {
-    markReady(hydrationDirty.value)
-    hydrationDone = true
+    requestAnimationFrame(() => setupSplitScrollSync())
   })
 }
 
@@ -279,6 +330,7 @@ const readingTimeText = computed(() => estimateReadingTime(form.value.content))
           >
             <NoteVditor
               v-if="mode === 'edit' || mode === 'split'"
+              ref="vditorPaneRef"
               v-model="form.content"
               compact
               :editor-id="editorId"
@@ -384,8 +436,8 @@ const readingTimeText = computed(() => estimateReadingTime(form.value.content))
 }
 .pane-editor {
   flex: 0 0 38%;
-  /* 限高栏内滚动；配合 NoteVditor compact 填满高度 */
-  overflow-y: auto;
+  /* 仅 IR 内滚动，便于与预览比例联动 */
+  overflow: hidden;
 }
 .pane-preview { flex: 0 0 42%; }
 .pane-outline { flex: 0 0 20%; }
