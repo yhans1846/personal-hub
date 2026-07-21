@@ -1,6 +1,5 @@
 ﻿<script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import { PageHeader, EmptyState, ListToolbar, ListPagination } from '@/components'
 import { getBookmarkList, deleteBookmark, updateBookmark } from '@/modules/resource/api'
 import { getCategories } from '@/modules/knowledge/api'
@@ -12,19 +11,20 @@ import type { BookmarkVO, BookmarkQuery } from '@/types/bookmark'
 import type { TagVO } from '@/types/tag'
 import type { CategoryVO } from '@/types/category'
 import { useMainContentFill } from '@/composables/useMainContentFill'
-import { useFillPageSize } from '@/composables/useFillPageSize'
 import { useDeepLinkDialog } from '@/composables/useDeepLinkDialog'
 import { useEntityDialogHost, usePaginatedList, type PageQuery } from '@/composables/usePaginatedList'
 import { handleApiError, unwrapPage, unwrapResult } from '@/utils/apiResult'
 
-const router = useRouter()
+/** 一屏 5×4 铺满（与文件列表一致） */
+const PAGE_SIZE = 20
+
 const categories = ref<CategoryVO[]>([])
 const tags = ref<TagVO[]>([])
 
 type BookmarkListQuery = BookmarkQuery & PageQuery
 
 const { list, total, loading, query, fetchList, onSearch, onPageChange } = usePaginatedList<BookmarkVO, BookmarkListQuery>({
-  initialQuery: { page: 1, size: 10, keyword: '' },
+  initialQuery: { page: 1, size: PAGE_SIZE, keyword: '' },
   fetchPage: (q) => unwrapPage(getBookmarkList(q)),
   errorMessage: '加载收藏失败',
 })
@@ -32,15 +32,11 @@ const { list, total, loading, query, fetchList, onSearch, onPageChange } = usePa
 const { dialogVisible, editId, openCreate, openEdit } = useEntityDialogHost()
 
 useMainContentFill()
-const { pageSize } = useFillPageSize((size) => {
-  query.value.size = size
-  query.value.page = 1
-  fetchList()
-})
 
 useDeepLinkDialog({ openCreate, openEdit })
 
 onMounted(() => {
+  fetchList()
   fetchCategories()
   fetchTags()
 })
@@ -60,7 +56,6 @@ async function fetchTags() {
 function onFilterChange() { query.value.page = 1; fetchList() }
 function goCreate() { openCreate() }
 function goEdit(id: number) { openEdit(id) }
-function goCategories() { router.push('/categories') }
 
 async function handleDelete(id: number) {
   await ElMessageBox.confirm('确定删除该收藏？', '提示', { type: 'warning' })
@@ -94,8 +89,15 @@ function extractDomain(url: string) {
 function getFaviconUrl(url: string) {
   try {
     const u = new URL(url)
-    return `https://www.google.com/s2/favicons?domain=${u.hostname}&sz=32`
+    return `https://www.google.com/s2/favicons?domain=${u.hostname}&sz=64`
   } catch { return '' }
+}
+
+function onFaviconError(e: Event) {
+  const el = e.target as HTMLImageElement
+  el.style.display = 'none'
+  const fallback = el.nextElementSibling as HTMLElement | null
+  if (fallback) fallback.style.display = 'block'
 }
 </script>
 
@@ -126,15 +128,12 @@ function getFaviconUrl(url: string) {
             </el-option>
           </el-select>
         </template>
-        <template #actions>
-          <el-button @click="goCategories">分类管理</el-button>
-        </template>
       </ListToolbar>
     </div>
 
     <div class="plan-middle">
       <div v-if="loading" class="bookmark-grid">
-        <div v-for="i in pageSize" :key="i" class="skeleton-card" />
+        <div v-for="i in PAGE_SIZE" :key="i" class="skeleton-card" />
       </div>
 
       <EmptyState
@@ -148,16 +147,22 @@ function getFaviconUrl(url: string) {
       />
 
       <div v-else class="bookmark-grid">
-        <div v-for="item in list" :key="item.id" class="bookmark-card" @click="goEdit(item.id)">
-          <div class="card-top">
+        <div
+          v-for="item in list"
+          :key="item.id"
+          class="bookmark-card"
+          @click="goEdit(item.id)"
+        >
+          <div class="card-preview">
             <img
               :src="getFaviconUrl(item.url)"
-              class="card-favicon"
+              class="card-preview-favicon"
               alt=""
-              @error="($event.target as HTMLImageElement).style.display='none'"
+              @error="onFaviconError"
             />
-            <div class="card-title">{{ item.title }}</div>
+            <Bookmark :size="28" class="card-preview-fallback" />
             <button
+              type="button"
               class="home-toggle"
               :class="{ active: item.showOnDashboard === 1 }"
               :title="item.showOnDashboard === 1 ? '取消首页展示' : '展示到首页'"
@@ -166,25 +171,30 @@ function getFaviconUrl(url: string) {
               <House :size="14" />
             </button>
           </div>
-          <div class="card-desc">{{ item.description || extractDomain(item.url) }}</div>
+          <div class="card-title" :title="item.title">{{ item.title }}</div>
           <div class="card-footer">
             <span v-if="item.categoryName" class="card-category">
               <FolderOpen :size="11" /> {{ item.categoryName }}
             </span>
+            <span v-else class="card-category">{{ item.description || extractDomain(item.url) }}</span>
             <div class="card-tags">
-              <span v-for="tag in (item.tags || [])" :key="tag.id" class="card-tag">
+              <span v-for="tag in (item.tags || []).slice(0, 2)" :key="tag.id" class="card-tag">
                 <span class="tag-dot" :style="{ background: tag.color }" />
                 {{ tag.name }}
               </span>
             </div>
             <div class="card-actions" @click.stop>
-              <button class="icon-btn" @click.stop="goEdit(item.id)"><Pencil :size="13" /></button>
-              <button class="icon-btn icon-btn--danger" @click.stop="handleDelete(item.id)"><Trash2 :size="13" /></button>
+              <button type="button" class="icon-btn" title="编辑" @click.stop="goEdit(item.id)">
+                <Pencil :size="13" />
+              </button>
+              <button type="button" class="icon-btn icon-btn--danger" title="删除" @click.stop="handleDelete(item.id)">
+                <Trash2 :size="13" />
+              </button>
             </div>
           </div>
         </div>
         <div
-          v-for="n in Math.max(0, pageSize - list.length)"
+          v-for="n in Math.max(0, PAGE_SIZE - list.length)"
           :key="'pad-' + n"
           class="bookmark-card bookmark-card--pad"
           aria-hidden="true"
@@ -193,7 +203,7 @@ function getFaviconUrl(url: string) {
     </div>
 
     <div class="plan-foot">
-      <ListPagination v-if="total > 0" :total="total" :page="query.page ?? 1" :size="pageSize" @update:page="onPageChange" />
+      <ListPagination v-if="total > 0" :total="total" :page="query.page ?? 1" :size="PAGE_SIZE" @update:page="onPageChange" />
     </div>
 
     <BookmarkDialog v-model="dialogVisible" :entity-id="editId" @saved="fetchList" />
@@ -242,17 +252,19 @@ function getFaviconUrl(url: string) {
 }
 
 .bookmark-card {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  gap: var(--sp-2);
-  padding: var(--sp-3) var(--sp-4);
+  gap: 6px;
+  padding: 8px;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all var(--transition);
-  min-height: 0;
-  min-width: 0;
+  transition: border-color var(--transition), box-shadow var(--transition);
   overflow: hidden;
 }
 .bookmark-card--pad {
@@ -260,25 +272,40 @@ function getFaviconUrl(url: string) {
   pointer-events: none;
   background: transparent;
   border-color: transparent;
+  cursor: default;
 }
 .bookmark-card:hover:not(.bookmark-card--pad) {
   box-shadow: var(--shadow-sm);
   border-color: var(--accent-border);
 }
 
-.card-top { display: flex; align-items: center; gap: var(--sp-2); }
-.card-favicon { width: 20px; height: 20px; border-radius: var(--radius-sm); flex-shrink: 0; }
-.card-title {
-  font-size: var(--text-sm);
-  font-weight: 500;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.card-preview {
+  position: relative;
   flex: 1;
-  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: color-mix(in srgb, var(--accent) 8%, var(--bg-hover));
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.card-preview-favicon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  object-fit: contain;
+}
+.card-preview-fallback {
+  display: none;
+  flex-shrink: 0;
 }
 .home-toggle {
-  flex-shrink: 0;
+  position: absolute;
+  top: 6px;
+  right: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -286,7 +313,7 @@ function getFaviconUrl(url: string) {
   height: 28px;
   border: none;
   border-radius: var(--radius-sm);
-  background: var(--bg-hover);
+  background: color-mix(in srgb, var(--bg-card) 88%, transparent);
   color: var(--text-tertiary);
   cursor: pointer;
   transition: all var(--transition);
@@ -296,27 +323,47 @@ function getFaviconUrl(url: string) {
   color: var(--accent);
   background: var(--accent-light);
 }
-.card-desc {
-  font-size: var(--text-xs);
-  color: var(--text-secondary);
-  line-height: var(--leading-normal);
+
+.card-title {
+  flex-shrink: 0;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  line-height: 1.3;
   overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  flex: 1;
-  min-height: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 2px;
+  color: var(--text-primary);
 }
 .card-footer {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: var(--sp-2);
   font-size: var(--text-xs);
   color: var(--text-tertiary);
-  flex-wrap: wrap;
+  padding: 0 2px;
+  min-height: 22px;
 }
-.card-category { display: flex; align-items: center; gap: 2px; white-space: nowrap; }
-.card-tags { display: flex; gap: 4px; flex-wrap: wrap; flex: 1; min-width: 0; }
+.card-category {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 42%;
+  flex-shrink: 1;
+  min-width: 0;
+}
+.card-tags {
+  display: flex;
+  gap: 4px;
+  flex-wrap: nowrap;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
 .card-tag {
   display: flex;
   align-items: center;
@@ -325,9 +372,18 @@ function getFaviconUrl(url: string) {
   padding: 1px 6px;
   border-radius: var(--radius-sm);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 72px;
 }
-.card-actions { display: flex; gap: 2px; opacity: 0; transition: opacity var(--transition); }
-.bookmark-card:hover .card-actions { opacity: 1; }
+.card-actions {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+.bookmark-card:hover:not(.bookmark-card--pad) .card-actions { opacity: 1; }
 .icon-btn {
   background: none;
   border: none;

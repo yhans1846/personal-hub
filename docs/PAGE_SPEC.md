@@ -30,7 +30,7 @@
 ### 一屏铺满
 
 `useMainContentFill` + `useFillPageSize`（禁手写 class / 固定 PAGE_SIZE）。  
-适用：计划、阅读、笔记、日记、学习记录、待办、收藏、文件、回收站、Dashboard。
+适用：计划、阅读、笔记、日记、学习记录、待办、回收站、Dashboard。
 
 | 可视高 | PAGE_SIZE | Card 桌面 |
 |--------|-----------|-----------|
@@ -43,6 +43,11 @@
 ### 学习记录例外
 
 `/study-records`：时间线 + fill + ListToolbar，无 Table/Card 切换。
+
+### 收藏夹 / 文件例外
+
+- `/bookmarks`、`/files`：一屏铺满 5×4（`size=20`，不足 pad）；大预览区 + 标题 + 底栏；工具栏无「分类管理」
+- 侧栏「分类管理」页仍可用
 
 ### Product Table / Card
 
@@ -72,7 +77,7 @@ ListToolbar + 可选状态徽章（非 KPI 大卡）。禁营销副标题。
 
 - 点击卡片 → `FilePreviewDialog`（图 / PDF / txt·md；其余提示下载）
 - 下载须鉴权 blob，禁裸 `window.open`
-- 上传可选分类；卡片可改 `PATCH /category`；列表仅本页上传文件
+- 上传可选分类；卡片展示分类名（与收藏夹一致）；列表仅本页上传文件；工具栏无「分类管理」链接；一屏 5×4 铺满（`size=20`）
 
 ---
 

@@ -1,21 +1,21 @@
 ﻿<script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch } from 'vue'
-import { useRouter } from 'vue-router'
-import { getFileList, uploadFile, deleteFile, updateFileCategory } from '@/modules/resource/api'
+import { getFileList, uploadFile, deleteFile } from '@/modules/resource/api'
 import { getCategories } from '@/modules/knowledge/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Upload, FileIcon, ImageIcon, FileText, Archive, Download, Trash2, Eye } from 'lucide-vue-next'
+import { Upload, FileIcon, ImageIcon, FileText, Archive, Download, Trash2, Eye, FolderOpen } from 'lucide-vue-next'
 import type { FileVO, FileQuery } from '@/types/file'
 import type { CategoryVO } from '@/types/category'
 import { PageHeader, EmptyState, ListToolbar, ListPagination } from '@/components'
 import FilePreviewDialog from '@/components/FilePreviewDialog.vue'
 import { useMainContentFill } from '@/composables/useMainContentFill'
-import { useFillPageSize } from '@/composables/useFillPageSize'
 import { usePaginatedList, type PageQuery } from '@/composables/usePaginatedList'
 import { downloadFileBlob, getFilePreviewUrl, revokePreviewUrl, getFilePreviewKind } from '@/utils/file'
 import { handleApiError, unwrapPage, unwrapResult } from '@/utils/apiResult'
 
-const router = useRouter()
+/** 一屏 5×4 铺满 */
+const PAGE_SIZE = 20
+
 type FileListQuery = FileQuery & PageQuery
 const uploadLoading = ref(false)
 const categories = ref<CategoryVO[]>([])
@@ -32,7 +32,7 @@ const typeOptions = [
 ]
 
 const { list, total, loading, query, fetchList, onSearch, onPageChange } = usePaginatedList<FileVO, FileListQuery>({
-  initialQuery: { page: 1, size: 10, keyword: '' },
+  initialQuery: { page: 1, size: PAGE_SIZE, keyword: '' },
   fetchPage: async (q) => {
     const params: FileQuery = {
       page: q.page,
@@ -48,13 +48,9 @@ const { list, total, loading, query, fetchList, onSearch, onPageChange } = usePa
 })
 
 useMainContentFill()
-const { pageSize } = useFillPageSize((size) => {
-  query.value.size = size
-  query.value.page = 1
-  fetchList()
-})
 
 onMounted(() => {
+  fetchList()
   fetchCategories()
 })
 
@@ -102,18 +98,6 @@ async function handleUpload(files: FileList | null) {
   }
 }
 
-async function handleCategoryChange(file: FileVO, categoryId: number | null, e?: Event) {
-  e?.stopPropagation()
-  try {
-    const updated = await unwrapResult(updateFileCategory(file.id, categoryId))
-    const idx = list.value.findIndex(f => f.id === file.id)
-    if (idx >= 0) list.value[idx] = { ...list.value[idx], ...updated }
-    ElMessage.success(categoryId ? '已更新分类' : '已清除分类')
-  } catch (err) {
-    handleApiError(err, '更新分类失败')
-  }
-}
-
 async function handleDownload(file: FileVO, e?: Event) {
   e?.stopPropagation()
   try {
@@ -149,8 +133,6 @@ function getFileIcon(icon: string) {
   }
 }
 
-function goCategories() { router.push('/categories') }
-
 watch(previewOpen, (open) => {
   if (!open) previewFile.value = null
 })
@@ -177,9 +159,6 @@ watch(previewOpen, (open) => {
           <el-select v-model="query.categoryId" placeholder="分类" style="width:140px" clearable @change="onSearch">
             <el-option v-for="c in categories" :key="c.id" :label="c.name" :value="c.id" />
           </el-select>
-        </template>
-        <template #actions>
-          <el-button @click="goCategories">分类管理</el-button>
         </template>
       </ListToolbar>
 
@@ -210,7 +189,7 @@ watch(previewOpen, (open) => {
 
     <div class="plan-middle">
       <div v-if="loading" class="file-grid">
-        <div v-for="i in pageSize" :key="i" class="skeleton-file-card" />
+        <div v-for="i in PAGE_SIZE" :key="i" class="skeleton-card" />
       </div>
 
       <EmptyState
@@ -228,48 +207,47 @@ watch(previewOpen, (open) => {
           v-for="file in list"
           :key="file.id"
           class="file-card"
-          role="button"
-          tabindex="0"
           @click="openPreview(file)"
-          @keydown.enter="openPreview(file)"
         >
-          <div class="file-card-icon" :class="{ 'file-card-icon--thumb': !!thumbMap[file.id] }">
-            <img v-if="thumbMap[file.id]" :src="thumbMap[file.id]" class="file-thumb" alt="" loading="lazy" decoding="async" />
-            <component v-else :is="getFileIcon(file.typeIcon)" :size="24" />
+          <div class="card-preview">
+            <img
+              v-if="thumbMap[file.id]"
+              :src="thumbMap[file.id]"
+              class="card-preview-img"
+              alt=""
+              loading="lazy"
+              decoding="async"
+            />
+            <component
+              v-else
+              :is="getFileIcon(file.typeIcon)"
+              :size="28"
+              class="card-preview-icon"
+            />
           </div>
-          <div class="file-card-info">
-            <span class="file-card-name" :title="file.name">{{ file.name }}</span>
-            <div class="file-card-meta">
-              <span class="meta-type">{{ file.typeLabel }}</span>
-              <span class="meta-size">{{ file.sizeFormatted }}</span>
+          <div class="card-title" :title="file.name">{{ file.name }}</div>
+          <div class="card-footer">
+            <span class="card-category">
+              <template v-if="file.categoryName">
+                <FolderOpen :size="11" /> {{ file.categoryName }}
+              </template>
+              <template v-else>{{ file.typeLabel }} · {{ file.sizeFormatted }}</template>
+            </span>
+            <div class="card-actions" @click.stop>
+              <button type="button" class="icon-btn" title="预览" @click.stop="openPreview(file)">
+                <Eye :size="13" />
+              </button>
+              <button type="button" class="icon-btn" title="下载" @click.stop="handleDownload(file, $event)">
+                <Download :size="13" />
+              </button>
+              <button type="button" class="icon-btn icon-btn--danger" title="删除" @click.stop="handleDelete(file.id, $event)">
+                <Trash2 :size="13" />
+              </button>
             </div>
-            <div class="file-card-cat" @click.stop>
-              <el-select
-                :model-value="file.categoryId"
-                placeholder="未分类"
-                clearable
-                size="small"
-                style="width:120px"
-                @change="(v: number | null) => handleCategoryChange(file, v ?? null)"
-              >
-                <el-option v-for="c in categories" :key="c.id" :label="c.name" :value="c.id" />
-              </el-select>
-            </div>
-          </div>
-          <div class="file-card-actions">
-            <button class="icon-btn" title="预览" @click="openPreview(file)">
-              <Eye :size="14" />
-            </button>
-            <button class="icon-btn" title="下载" @click="handleDownload(file, $event)">
-              <Download :size="14" />
-            </button>
-            <button class="icon-btn icon-btn--danger" title="删除" @click="handleDelete(file.id, $event)">
-              <Trash2 :size="14" />
-            </button>
           </div>
         </div>
         <div
-          v-for="n in Math.max(0, pageSize - list.length)"
+          v-for="n in Math.max(0, PAGE_SIZE - list.length)"
           :key="'pad-' + n"
           class="file-card file-card--pad"
           aria-hidden="true"
@@ -278,7 +256,7 @@ watch(previewOpen, (open) => {
     </div>
 
     <div class="plan-foot">
-      <ListPagination v-if="total > 0" :total="total" :page="query.page ?? 1" :size="pageSize" @update:page="onPageChange" />
+      <ListPagination v-if="total > 0" :total="total" :page="query.page ?? 1" :size="PAGE_SIZE" @update:page="onPageChange" />
     </div>
 
     <FilePreviewDialog v-model="previewOpen" :file="previewFile" />
@@ -328,20 +306,23 @@ watch(previewOpen, (open) => {
   color: var(--text-secondary);
 }
 
+/* 一屏铺满：5×4（PAGE_SIZE=20），卡片随格子拉伸 */
 .file-grid {
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   grid-auto-rows: 1fr;
-  gap: 6px;
-  align-content: stretch;
+  gap: 8px;
+}
+@media (max-width: 1100px) {
+  .file-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 @media (max-width: 720px) {
-  .file-grid { grid-template-columns: 1fr; }
+  .file-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
-.skeleton-file-card {
+.skeleton-card {
   min-height: 0;
   border-radius: var(--radius-md);
   background: var(--bg-hover);
@@ -349,18 +330,20 @@ watch(previewOpen, (open) => {
 }
 
 .file-card {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
   display: flex;
-  align-items: center;
-  gap: var(--sp-3);
-  padding: var(--sp-3);
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  transition: all var(--transition);
-  min-height: 0;
-  min-width: 0;
-  overflow: hidden;
   cursor: pointer;
+  transition: border-color var(--transition), box-shadow var(--transition);
+  overflow: hidden;
 }
 .file-card--pad {
   visibility: hidden;
@@ -373,66 +356,77 @@ watch(previewOpen, (open) => {
   box-shadow: var(--shadow-sm);
   border-color: var(--accent-border);
 }
-.file-card-icon {
-  width: 56px;
-  height: 56px;
+
+.card-preview {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
   border-radius: var(--radius-sm);
-  background: var(--accent-light);
+  overflow: hidden;
+  background: color-mix(in srgb, var(--accent) 8%, var(--bg-hover));
   color: var(--accent);
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  overflow: hidden;
 }
-.file-card-icon--thumb {
-  background: var(--bg-hover);
-  padding: 0;
-}
-.file-thumb {
+.card-preview-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
 }
-.file-card-info { flex: 1; min-width: 0; }
-.file-card-name {
+.card-preview-icon {
+  flex-shrink: 0;
+}
+
+.card-title {
+  flex-shrink: 0;
   font-size: var(--text-sm);
   font-weight: 500;
-  display: block;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 2px;
+  color: var(--text-primary);
+}
+.card-footer {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  padding: 0 2px;
+  min-height: 22px;
+}
+.card-category {
+  display: flex;
+  align-items: center;
+  gap: 2px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
 }
-.file-card-meta {
-  display: flex;
-  gap: var(--sp-2);
-  margin-top: 2px;
-  font-size: var(--text-xs);
-  color: var(--text-tertiary);
-}
-.file-card-cat {
-  margin-top: 4px;
-}
-
-.file-card-actions {
+.card-actions {
   display: flex;
   gap: 2px;
   flex-shrink: 0;
   opacity: 0;
   transition: opacity var(--transition);
 }
-.file-card:hover .file-card-actions { opacity: 1; }
-
+.file-card:hover:not(.file-card--pad) .card-actions { opacity: 1; }
 .icon-btn {
   background: none;
   border: none;
   cursor: pointer;
-  padding: 6px;
+  padding: 4px;
   border-radius: var(--radius-sm);
   color: var(--text-tertiary);
   transition: all var(--transition);
   display: flex;
-  align-items: center;
 }
 .icon-btn:hover { color: var(--accent); background: var(--accent-light); }
 .icon-btn--danger:hover { color: var(--danger); background: var(--danger-light); }
