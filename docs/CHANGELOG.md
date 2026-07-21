@@ -5,6 +5,7 @@
 ## [Unreleased]
 
 ### 2026-07-21
+- **修复**：笔记分屏左侧编辑区可滚动——`NoteVditor` compact 填满栏高，IR `overflow-y: auto`（此前 height:auto 被 pane 裁切只能滚预览）
 - **UI**：笔记编辑器默认三栏分屏（左编辑/中预览/右大纲）；顶栏标题；属性抽屉；模式 split/edit/preview（≤768 默认 edit）
 - **功能**：笔记列表内全屏工作区 Overlay——新建/编辑不离开列表；仅 ✕ 关闭（Esc 不关）；脏关确认；`/notes/new` 与 `/notes/:id/edit` redirect 到深链
 - **功能**：双向链接 v1（实验开关）——`[[标题]]` / `[[标题|别名]]`；编辑器补全；预览跳转；`GET /api/notes/{id}/backlinks`；预览/编辑回链列表

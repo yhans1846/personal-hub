@@ -273,13 +273,22 @@ defineExpose({ getVditor, focus })
   flex: 1;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 .note-vditor-host {
   flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 .note-vditor :deep(.vditor) {
   border: none !important;
   background: transparent !important;
+}
+.note-vditor--compact :deep(.vditor) {
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
 }
 .note-vditor :deep(.vditor-toolbar) {
   display: none !important;
@@ -295,7 +304,16 @@ defineExpose({ getVditor, focus })
   background: transparent !important;
 }
 .note-vditor--compact :deep(.vditor-content) {
+  flex: 1 !important;
+  min-height: 0 !important;
+  height: auto !important;
+  overflow: hidden !important;
+}
+.note-vditor--compact :deep(.vditor-ir) {
   height: 100% !important;
+  overflow-y: auto !important;
+  box-sizing: border-box;
+  padding: 16px 24px !important;
 }
 .note-vditor--readonly :deep(.vditor-ir) {
   opacity: 0.95;

@@ -280,6 +280,7 @@ const readingTimeText = computed(() => estimateReadingTime(form.value.content))
             <NoteVditor
               v-if="mode === 'edit' || mode === 'split'"
               v-model="form.content"
+              compact
               :editor-id="editorId"
               :theme="editorTheme"
               :note-id="noteId"
@@ -379,14 +380,20 @@ const readingTimeText = computed(() => estimateReadingTime(form.value.content))
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  min-height: 0;
 }
-.pane-editor { flex: 0 0 38%; }
+.pane-editor {
+  flex: 0 0 38%;
+  /* 限高栏内滚动；配合 NoteVditor compact 填满高度 */
+  overflow-y: auto;
+}
 .pane-preview { flex: 0 0 42%; }
 .pane-outline { flex: 0 0 20%; }
 .mode-edit .pane-editor { flex: 1; }
 .mode-preview .pane-preview { flex: 1; }
 .mode-preview .pane-outline { flex: 0 0 20%; }
 .editor-instance {
+  flex: 1;
   height: 100%;
   min-height: 0;
 }
