@@ -72,7 +72,7 @@ const {
   restoreDraft,
   clearDraft,
   markReady,
-} = useAutoSave(form, props.initialNoteId ?? (route.params.id ? Number(route.params.id) : undefined))
+} = useAutoSave(form, resolvedNoteId.value)
 
 /** 加载阶段是否因草稿与服务器不一致而需要 dirty */
 const hydrationDirty = ref(false)
