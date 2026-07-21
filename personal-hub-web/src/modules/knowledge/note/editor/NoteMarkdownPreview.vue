@@ -167,7 +167,7 @@ defineExpose({ scrollEl: scrollRef })
   gap: 24px;
   height: 100%;
   overflow-y: auto;
-  padding: 24px 48px 48px;
+  padding: 24px 0 48px;
 }
 .preview-toc-wrap {
   flex-shrink: 0;

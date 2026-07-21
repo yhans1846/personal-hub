@@ -1,12 +1,12 @@
 import { ref, onUnmounted, watch } from 'vue'
 import { useEditorPreferences } from './useEditorPreferences'
 
-export type EditorMode = 'edit' | 'preview' | 'focus'
+export type EditorMode = 'edit' | 'preview'
 
 /**
  * 编辑器模式管理
  *
- * mode: edit / preview / focus
+ * mode: edit / preview
  * isFullscreen: 浏览器全屏状态
  */
 export function useEditorMode() {
@@ -16,20 +16,9 @@ export function useEditorMode() {
   const isFullscreen = ref(prefs.fullscreen)
 
   watch(isFullscreen, (v) => { prefs.fullscreen = v })
-  watch(mode, (m) => {
-    prefs.focusMode = m === 'focus'
-  })
 
   function togglePreview() {
     mode.value = mode.value === 'preview' ? 'edit' : 'preview'
-  }
-
-  function toggleFocus() {
-    mode.value = mode.value === 'focus' ? 'edit' : 'focus'
-  }
-
-  function exitFocus() {
-    if (mode.value === 'focus') mode.value = 'edit'
   }
 
   async function toggleFullscreen() {
@@ -74,11 +63,6 @@ export function useEditorMode() {
       if (document.fullscreenElement) {
         exitFullscreen()
         e.preventDefault()
-        return
-      }
-      if (mode.value === 'focus') {
-        exitFocus()
-        e.preventDefault()
       }
     }
   }
@@ -103,8 +87,6 @@ export function useEditorMode() {
     mode,
     isFullscreen,
     togglePreview,
-    toggleFocus,
-    exitFocus,
     toggleFullscreen,
     exitFullscreen,
   }

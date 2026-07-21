@@ -1,15 +1,12 @@
 import { reactive, watch } from 'vue'
 
 export interface EditorPreferences {
-  /** 是否开启 Focus Mode */
-  focusMode: boolean
   /** 是否全屏 */
   fullscreen: boolean
 }
 
 const STORAGE_KEY = 'editor-preferences'
 const DEFAULTS: EditorPreferences = {
-  focusMode: false,
   fullscreen: false,
 }
 
@@ -17,9 +14,8 @@ function load(): EditorPreferences {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw) {
-      const parsed = JSON.parse(raw)
+      const parsed = JSON.parse(raw) as Record<string, unknown>
       return {
-        focusMode: !!parsed.focusMode,
         fullscreen: !!parsed.fullscreen,
       }
     }
@@ -38,7 +34,7 @@ export function useEditorPreferences() {
     const prefs = reactive<EditorPreferences>(load()) as EditorPreferences
 
     watch(
-      () => [prefs.focusMode, prefs.fullscreen] as const,
+      () => prefs.fullscreen,
       () => save({ ...prefs }),
     )
 
