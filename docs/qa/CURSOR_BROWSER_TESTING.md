@@ -86,14 +86,7 @@ Browser MCP（主路径：路由/深链/交互/截图/Console）
 3. 侧栏点击 · 工作台「查看全部」与 `.list-item`
 4. 可疑深链 `/xxx/new`、`/xxx/:id/edit`
 5. JWT 调 API 取真实 id 验编辑深链
-6. 汇总 `api_errors` / `console_errors` / `summary`
-
-### 4.4 依赖
-
-```bash
-pip show playwright
-cd personal-hub-web && pnpm test   # 前端单测，与浏览器巡检独立
-```
+6. 汇总失败项与日志对照
 
 ---
 
