@@ -1,21 +1,24 @@
 <script setup lang="ts">
 import type { SaveStatus } from './useAutoSave'
 import type { EditorMode } from './useEditorMode'
-import { ArrowLeft, Star, MoreHorizontal, Download, Trash2, Eye, Edit3, Maximize2, Minimize2, Focus as FocusIcon } from 'lucide-vue-next'
+import { ArrowLeft, X, Star, MoreHorizontal, Download, Trash2, Eye, Edit3, Maximize2, Minimize2 } from 'lucide-vue-next'
 
-defineProps<{
-  saveStatus: SaveStatus
-  isFavorite: boolean
-  mode: EditorMode
-  isFullscreen?: boolean
-  isFocusMode?: boolean
-}>()
+withDefaults(
+  defineProps<{
+    saveStatus: SaveStatus
+    isFavorite: boolean
+    mode: EditorMode
+    isFullscreen?: boolean
+    /** back=返回列表；close=关闭 overlay */
+    closeMode?: 'back' | 'close'
+  }>(),
+  { closeMode: 'back' },
+)
 
 const emit = defineEmits<{
   back: []
   toggleFavorite: []
   toggleMode: []
-  toggleFocus: []
   toggleFullscreen: []
   exportNote: []
   remove: []
@@ -25,12 +28,17 @@ const emit = defineEmits<{
 <template>
   <header
     class="editor-header"
-    :class="{ 'is-fullscreen': isFullscreen, 'is-focus': isFocusMode }"
+    :class="{ 'is-fullscreen': isFullscreen }"
   >
     <div class="header-left">
-      <button class="header-btn" @click="emit('back')" title="返回">
-        <ArrowLeft :size="18" />
-        <span>返回</span>
+      <button
+        class="header-btn"
+        @click="emit('back')"
+        :title="closeMode === 'close' ? '关闭' : '返回'"
+      >
+        <X v-if="closeMode === 'close'" :size="18" />
+        <ArrowLeft v-else :size="18" />
+        <span>{{ closeMode === 'close' ? '关闭' : '返回' }}</span>
       </button>
     </div>
 
@@ -49,17 +57,6 @@ const emit = defineEmits<{
       </span>
 
       <button
-        class="header-btn"
-        :class="{ active: mode === 'focus' }"
-        :title="mode === 'focus' ? '退出专注模式' : '专注模式'"
-        @click="emit('toggleFocus')"
-      >
-        <FocusIcon :size="16" />
-        <span>专注</span>
-      </button>
-
-      <button
-        v-if="mode !== 'focus'"
         class="header-btn"
         :title="mode === 'edit' ? '预览' : '编辑'"
         @click="emit('toggleMode')"
@@ -125,13 +122,6 @@ const emit = defineEmits<{
 .editor-header.is-fullscreen {
   background: var(--bg-body);
 }
-/* 专注：常驻矮条，不再隐藏（App 侧栏/顶栏仍由 focus-hidden 处理） */
-.editor-header.is-focus {
-  height: 48px;
-  padding: 0 20px;
-  background: var(--bg-body);
-  border-bottom-color: color-mix(in srgb, var(--border-color) 70%, transparent);
-}
 .header-left,
 .header-right {
   display: flex;
@@ -155,10 +145,6 @@ const emit = defineEmits<{
 .header-btn:hover {
   background: var(--bg-hover);
   color: var(--text-primary);
-}
-.header-btn.active {
-  background: var(--accent-light);
-  color: var(--accent);
 }
 .header-btn.icon-only {
   padding: 6px;
