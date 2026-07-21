@@ -39,3 +39,7 @@ export function updateFileCategory(id: number, categoryId: number | null) {
 export function deleteFile(id: number) {
   return request.delete<Result<void>>(`/files/${id}`)
 }
+/** 清空当前用户全部文件，返回 { deleted } */
+export function clearAllFiles() {
+  return request.delete<Result<{ deleted: number }>>('/files')
+}

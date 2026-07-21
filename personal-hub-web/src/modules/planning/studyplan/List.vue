@@ -264,9 +264,9 @@ const headerSubtitle = computed(() => `共 ${stats.value.total} 个计划`)
         </template>
         <template #actions>
           <el-dropdown trigger="click" :disabled="exporting" @command="(cmd: string) => handleExport(cmd as 'filtered' | 'all')">
-            <el-button :loading="exporting">
+            <button type="button" class="toolbar-btn" :disabled="exporting">
               <Download :size="14" /> 导出
-            </el-button>
+            </button>
             <template #dropdown>
               <el-dropdown-menu>
                 <el-dropdown-item command="filtered">导出当前</el-dropdown-item>

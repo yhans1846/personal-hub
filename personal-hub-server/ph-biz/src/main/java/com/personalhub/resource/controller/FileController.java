@@ -9,6 +9,7 @@ import com.personalhub.resource.dto.FileQueryDTO;
 import com.personalhub.resource.dto.FileCategoryUpdateDTO;
 import com.personalhub.resource.service.FileResourceService;
 import com.personalhub.resource.vo.FileVO;
+import com.personalhub.resource.vo.FileClearVO;
 import com.personalhub.storage.FileAssetService;
 import com.personalhub.storage.StoragePaths;
 import io.swagger.v3.oas.annotations.Operation;
@@ -163,6 +164,14 @@ public class FileController {
             @RequestBody FileCategoryUpdateDTO dto) {
         Long userId = CurrentUser.id(authentication);
         return Result.success(fileResourceService.updateCategory(id, userId, dto.getCategoryId()));
+    }
+
+    @Operation(summary = "清空全部文件", description = "删除当前用户全部文件（磁盘+库），不可恢复；返回删除条数")
+    @DeleteMapping
+    public Result<FileClearVO> clearAll(
+            @Parameter(hidden = true) Authentication authentication) {
+        Long userId = CurrentUser.id(authentication);
+        return Result.success(fileResourceService.clearAll(userId));
     }
 
     @Operation(summary = "删除文件")

@@ -64,9 +64,10 @@ POST：`{title,content,priority,dueDate}`
 
 ## 文件 `/api/files`
 
-分页 · 详情 · upload（可带 `categoryId`）· `PATCH /{id}/category` · download/preview · 删除。  
+分页 · 详情 · upload（可带 `categoryId`）· `PATCH /{id}/category` · download/preview · 删除 · **清空**（`DELETE /api/files` → `{deleted}`）。  
 列表参数：keyword，`type`（扩展名或分组 `image|pdf|doc|archive`），categoryId  
-**边界：** 只管理本页上传写入的 `file_resource`；笔记/日记配图走各自资源包 API，不会出现在本列表。
+**边界：** 只管理本页上传写入的 `file_resource`；笔记/日记配图走各自资源包 API，不会出现在本列表。  
+`DELETE /api/files`：清空当前用户全部现行文件（磁盘+库，不可恢复），不受列表筛选影响。
 
 ## 日记 `/api/diaries`
 

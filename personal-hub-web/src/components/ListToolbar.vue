@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Plus } from 'lucide-vue-next'
+import { useSlots } from 'vue'
 
 defineProps<{
   search: string
@@ -14,6 +15,8 @@ const emit = defineEmits<{
   search: []
   create: []
 }>()
+
+const slots = useSlots()
 </script>
 
 <template>
@@ -34,11 +37,13 @@ const emit = defineEmits<{
       </el-input>
       <slot name="filters" />
     </div>
-    <div class="toolbar-right" v-if="$slots.actions">
+    <div v-if="slots.actions || createLabel" class="toolbar-right">
       <slot name="actions" />
+      <el-button v-if="createLabel" type="primary" class="toolbar-create-btn" @click="emit('create')">
+        <span class="toolbar-create-btn__inner">
+          <Plus :size="14" v-if="createIcon !== false" /> {{ createLabel }}
+        </span>
+      </el-button>
     </div>
-    <el-button v-if="createLabel" type="primary" @click="emit('create')">
-      <span><Plus :size="14" v-if="createIcon !== false" /> {{ createLabel }}</span>
-    </el-button>
   </div>
 </template>

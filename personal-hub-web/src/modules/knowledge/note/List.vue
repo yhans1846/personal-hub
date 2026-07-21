@@ -245,7 +245,7 @@ async function onCardMenuAction(actionId: string) {
         <template #actions>
           <button
             type="button"
-            class="toolbar-import-btn"
+            class="toolbar-btn"
             :class="{ active: selectMode }"
             @click="toggleSelectMode"
           >
@@ -254,13 +254,13 @@ async function onCardMenuAction(actionId: string) {
           <button
             v-if="selectMode"
             type="button"
-            class="toolbar-import-btn"
+            class="toolbar-btn"
             :disabled="selectedCount === 0 || exporting"
             @click="handleBatchExport"
           >
             <Download :size="14" /> 导出 ZIP{{ selectedCount ? ` (${selectedCount})` : '' }}
           </button>
-          <button class="toolbar-import-btn" @click="openImport">
+          <button type="button" class="toolbar-btn" @click="openImport">
             <Upload :size="14" /> 导入
           </button>
         </template>
@@ -527,35 +527,6 @@ async function onCardMenuAction(actionId: string) {
 .delete-btn:hover { color: var(--danger); background: var(--danger-light); }
 .icon-btn { background: none; border: none; color: var(--text-tertiary); cursor: pointer; padding: 4px; border-radius: var(--radius-sm); transition: all var(--transition); display: inline-flex; align-items: center; }
 .icon-btn:hover { color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
-.toolbar-import-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  height: 32px;
-  padding: 0 12px;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
-  background: var(--bg-card);
-  color: var(--text-secondary);
-  font-size: var(--text-sm);
-  cursor: pointer;
-  transition: all var(--transition);
-  white-space: nowrap;
-}
-.toolbar-import-btn:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-  background: var(--accent-light);
-}
-.toolbar-import-btn.active {
-  border-color: var(--accent);
-  color: var(--accent);
-  background: var(--accent-light);
-}
-.toolbar-import-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
 .note-card--selected {
   border-color: var(--accent);
   background: color-mix(in srgb, var(--accent) 6%, var(--bg-card));

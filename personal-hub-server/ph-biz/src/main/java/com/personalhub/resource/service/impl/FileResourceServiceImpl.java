@@ -13,6 +13,7 @@ import com.personalhub.resource.entity.FileResource;
 import com.personalhub.resource.mapper.FileResourceMapper;
 import com.personalhub.resource.service.FileResourceService;
 import com.personalhub.resource.vo.FileVO;
+import com.personalhub.resource.vo.FileClearVO;
 import com.personalhub.storage.FileAssetService;
 import com.personalhub.storage.FileUploadValidator;
 import com.personalhub.storage.MultipartPayloads;
@@ -27,6 +28,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -185,6 +187,22 @@ public class FileResourceServiceImpl implements FileResourceService {
         // 逻辑删除DB记录
         fileResourceMapper.deleteById(id);
         log.info("文件已删除: id={}, name={}", id, file.getName());
+    }
+
+    @Override
+    @Transactional
+    public FileClearVO clearAll(Long userId) {
+        List<FileResource> files = fileResourceMapper.selectList(
+                new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<FileResource>()
+                        .eq("user_id", userId)
+                        .select("id"));
+        int count = 0;
+        for (FileResource file : files) {
+            delete(file.getId(), userId);
+            count++;
+        }
+        log.info("清空文件: userId={}, deleted={}", userId, count);
+        return new FileClearVO(count);
     }
 
     /**

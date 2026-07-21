@@ -3,6 +3,7 @@ package com.personalhub.resource.service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.personalhub.resource.dto.FileQueryDTO;
 import com.personalhub.resource.vo.FileVO;
+import com.personalhub.resource.vo.FileClearVO;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
@@ -64,4 +65,12 @@ public interface FileResourceService {
      * @param userId 用户ID
      */
     void delete(Long id, Long userId);
+
+    /**
+     * 清空当前用户全部文件（磁盘 + 库，不可恢复）
+     *
+     * @param userId 用户ID
+     * @return 删除条数
+     */
+    FileClearVO clearAll(Long userId);
 }

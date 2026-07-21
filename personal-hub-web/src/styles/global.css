@@ -883,6 +883,79 @@ a:hover { color: var(--accent-hover); }
   gap: var(--sp-3);
 }
 .toolbar-left { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* 列表工具栏次要/危险按钮（各模块统一） */
+.toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: 1;
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+.toolbar-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-light);
+}
+.toolbar-btn.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-light);
+}
+.toolbar-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.toolbar-btn--danger {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+.toolbar-btn--danger:hover:not(:disabled) {
+  border-color: var(--danger);
+  color: var(--danger);
+  background: var(--danger-light);
+}
+.toolbar-create-btn.el-button {
+  height: 32px;
+  padding: 0 12px;
+  font-size: var(--text-sm);
+}
+.toolbar-create-btn__inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+/* 下拉触发器与 toolbar-btn 对齐 */
+.toolbar-right .el-button:not(.toolbar-create-btn) {
+  height: 32px;
+  padding: 0 12px;
+  font-size: var(--text-sm);
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+}
+.toolbar-right .el-button:not(.toolbar-create-btn):hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-light);
+}
 
 /* --- 空状态 --- */
 .empty-state {

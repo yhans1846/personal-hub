@@ -157,7 +157,7 @@ function deleteReasonLabel(reason?: string | null): string {
         <template #actions>
           <button
             type="button"
-            class="toolbar-danger-btn"
+            class="toolbar-btn toolbar-btn--danger"
             :disabled="total === 0 && !keyword"
             @click="handleEmptyRecycleBin"
           >
@@ -279,29 +279,6 @@ function deleteReasonLabel(reason?: string | null): string {
 .plan-foot {
   flex-shrink: 0;
   padding-top: 8px;
-}
-
-.toolbar-danger-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  height: 32px;
-  padding: 0 12px;
-  border: 1px solid var(--danger);
-  border-radius: var(--radius-sm);
-  background: var(--bg-card);
-  color: var(--danger);
-  font-size: var(--text-sm);
-  cursor: pointer;
-  transition: all var(--transition);
-  white-space: nowrap;
-}
-.toolbar-danger-btn:hover:not(:disabled) {
-  background: var(--danger-light);
-}
-.toolbar-danger-btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
 }
 
 .list-skeleton {

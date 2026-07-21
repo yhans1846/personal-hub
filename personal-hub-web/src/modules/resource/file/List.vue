@@ -1,6 +1,6 @@
 ﻿<script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch } from 'vue'
-import { getFileList, uploadFile, deleteFile } from '@/modules/resource/api'
+import { getFileList, uploadFile, deleteFile, clearAllFiles } from '@/modules/resource/api'
 import { getCategories } from '@/modules/knowledge/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Upload, FileIcon, ImageIcon, FileText, Archive, Download, Trash2, Eye, FolderOpen } from 'lucide-vue-next'
@@ -119,6 +119,27 @@ async function handleDelete(id: number, e?: Event) {
   }
 }
 
+async function handleClearAll() {
+  if (total.value === 0 && !query.value.keyword && !query.value.type && !query.value.categoryId) {
+    ElMessage.info('暂无文件')
+    return
+  }
+  try {
+    await ElMessageBox.confirm(
+      '将永久删除全部文件（含磁盘文件），且不可恢复。确定清空？',
+      '清空文件',
+      { type: 'error', confirmButtonText: '确定清空', cancelButtonText: '取消' },
+    )
+    const deleted = (await unwrapResult(clearAllFiles())).deleted
+    ElMessage.success(deleted > 0 ? `已清空 ${deleted} 个文件` : '暂无文件')
+    query.value.page = 1
+    fetchList()
+  } catch (e) {
+    if (e === 'cancel' || (e && typeof e === 'object' && 'action' in e)) return
+    handleApiError(e, '清空失败')
+  }
+}
+
 function openPreview(file: FileVO) {
   previewFile.value = file
   previewOpen.value = true
@@ -159,6 +180,16 @@ watch(previewOpen, (open) => {
           <el-select v-model="query.categoryId" placeholder="分类" style="width:140px" clearable @change="onSearch">
             <el-option v-for="c in categories" :key="c.id" :label="c.name" :value="c.id" />
           </el-select>
+        </template>
+        <template #actions>
+          <button
+            type="button"
+            class="toolbar-btn toolbar-btn--danger"
+            :disabled="total === 0 && !query.keyword && !query.type && !query.categoryId"
+            @click="handleClearAll"
+          >
+            <Trash2 :size="14" /> 清空
+          </button>
         </template>
       </ListToolbar>
 
