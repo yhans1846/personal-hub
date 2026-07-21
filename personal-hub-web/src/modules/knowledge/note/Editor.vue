@@ -93,7 +93,12 @@ const {
 
 const propsOpen = ref(false)
 
-const vditorPaneRef = ref<{ getScrollEl: () => HTMLElement | null } | null>(null)
+const outlineActiveId = ref('')
+
+function onOutlineScrollTo(id: string) {
+  outlineActiveId.value = id
+  previewRef.value?.scrollToHeading?.(id)
+}
 const previewRef = ref<{
   scrollToHeading: (id: string) => void
   scrollEl?: { value: HTMLElement | null } | HTMLElement | null
@@ -365,7 +370,8 @@ const readingTimeText = computed(() => estimateReadingTime(form.value.content))
           >
             <EditorOutline
               :content="debouncedContent"
-              @scroll-to="(id) => previewRef?.scrollToHeading?.(id)"
+              :active-id="outlineActiveId"
+              @scroll-to="onOutlineScrollTo"
             />
           </div>
         </template>

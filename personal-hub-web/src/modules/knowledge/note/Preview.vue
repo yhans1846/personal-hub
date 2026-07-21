@@ -14,7 +14,7 @@ import { storeToRefs } from 'pinia'
 import { estimateReadingTime } from '@/utils/readingTime'
 import { formatUpdated } from '@/utils/formatTime'
 import { buildPreviewOptions } from './editor/vditorSetup'
-import { parseTocFromMarkdown } from './editor/parseToc'
+import { parseTocFromMarkdown, assignPreviewHeadingIds, headingIdFromText } from './editor/parseToc'
 import { preparePreviewMarkdown, setupPreviewImageZoom } from './editor/previewEnhancements'
 import NoteBacklinks from './NoteBacklinks.vue'
 import { useFeatureFlagStore } from '@/store/featureFlagStore'
@@ -159,11 +159,11 @@ function setupExternalLinks() {
 function setupHeadingAnchors() {
   const preview = getPreviewRoot()
   if (!preview) return
+  assignPreviewHeadingIds(preview)
   preview.querySelectorAll('h1, h2, h3, h4, h5, h6').forEach((h) => {
     if (h.querySelector('.heading-anchor')) return
-    const id = h.textContent?.trim().replace(/\s+/g, '-') ?? ''
+    const id = h.id || headingIdFromText(h.textContent ?? '')
     if (!id) return
-    h.id = id
     const anchor = document.createElement('a')
     anchor.className = 'heading-anchor'
     anchor.href = `#${id}`

@@ -107,7 +107,7 @@ TOC 宽 220（收起 34，拖 160–400）。主题：`data-preview-theme` → `
 ## 5. Checklist
 
 **列表：** Header+Toolbar+Empty+Pagination · Table/Card 或例外 · 槽位/fill · Dialog+深链 · Token+骨架+深色  
-**笔记：** 列表新建/编辑为**全屏 Overlay 工作区**（`List.vue` 托管 + Teleport → body）；**默认三栏分屏**（左 Markdown 编辑 · 中实时预览 · 右标题大纲，固定比例 v1 不可拖拽；**分屏时编辑/预览按比例联动滚动**）；顶栏可编辑**标题** +「属性」**抽屉**（分类/标签等 meta，Esc 可关抽屉）；模式 `split`（默认）\| `edit` \| `preview`（顶栏切换；Ctrl+Shift+P 在 split↔preview；≤768 默认 edit 全宽）；仅顶栏 ✕ 关闭，**Esc 不关工作区**；脏关闭须确认；深链 `/notes?create=1`、`/notes?edit=<id>`（旧 `/notes/new`、`/notes/:id/edit` redirect）；只读预览仍 `/notes/:id/preview`；右键「归档」→`AUTO_ARCHIVE`；「移入回收站」→`USER_DELETE`；列表多选 →「导出 ZIP」（≤50，仅勾选）；回收站展示删除原因 +「清空回收站」；编辑右键可插入 Mermaid 围栏块与 KaTeX（行内 `$` / 块级 `$$`），IR/预览/文件 md 预览常开渲染；实验开关「双向链接」开启后支持 `[[标题]]` 补全、预览跳转与回链列表；预览配图点开为自定义灯箱（点遮罩/×/Esc 关闭）；**工作区近全宽**（绕过 `--content-max-width`，无专注模式）  
+**笔记：** 列表新建/编辑为**全屏 Overlay 工作区**（`List.vue` 托管 + Teleport → body）；**默认三栏分屏**（左 Markdown 编辑 · 中实时预览 · 右标题大纲，固定比例 v1 不可拖拽；**分屏时编辑/预览按比例联动滚动**；大纲点击定位预览标题，锚点规则与独立预览页一致）；顶栏可编辑**标题** +「属性」**抽屉**（分类/标签等 meta，Esc 可关抽屉）；模式 `split`（默认）\| `edit` \| `preview`（顶栏切换；Ctrl+Shift+P 在 split↔preview；≤768 默认 edit 全宽）；仅顶栏 ✕ 关闭，**Esc 不关工作区**；脏关闭须确认；深链 `/notes?create=1`、`/notes?edit=<id>`（旧 `/notes/new`、`/notes/:id/edit` redirect）；只读预览仍 `/notes/:id/preview`；右键「归档」→`AUTO_ARCHIVE`；「移入回收站」→`USER_DELETE`；列表多选 →「导出 ZIP」（≤50，仅勾选）；回收站展示删除原因 +「清空回收站」；编辑右键可插入 Mermaid 围栏块与 KaTeX（行内 `$` / 块级 `$$`），IR/预览/文件 md 预览常开渲染；实验开关「双向链接」开启后支持 `[[标题]]` 补全、预览跳转与回链列表；预览配图点开为自定义灯箱（点遮罩/×/Esc 关闭）；**工作区近全宽**（绕过 `--content-max-width`，无专注模式）  
 **命令面板：** Ctrl/Cmd+K 支持快捷新建（笔记/日记/阅读/学习/待办/计划）与页面/内容搜索  
 **设置·数据：** 独立 Tab「数据管理」——缓存清理；立即备份（落盘历史+下载）；自动备份频率；历史下载/恢复/删除；导入 `.zip` 全量覆盖  
 **设置·高级：** 通知偏好 · 实验功能（AI「即将推出」· 双向链接可开）  

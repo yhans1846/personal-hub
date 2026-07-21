@@ -3,7 +3,7 @@ import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import Vditor from 'vditor'
 import 'vditor/dist/index.css'
 import PreviewToc from '../preview/PreviewToc.vue'
-import { parseTocFromMarkdown } from './parseToc'
+import { parseTocFromMarkdown, assignPreviewHeadingIds } from './parseToc'
 import { buildPreviewOptions } from './vditorSetup'
 import { preparePreviewMarkdown, setupPreviewImageZoom } from './previewEnhancements'
 import { useFeatureFlagStore } from '@/store/featureFlagStore'
@@ -60,6 +60,7 @@ async function renderPreview() {
   }
   setupCodeCopy()
   setupWikiMissingClicks()
+  assignPreviewHeadingIds(previewRef.value)
   tocItems.value = parseTocFromMarkdown(props.content)
 }
 
@@ -113,9 +114,16 @@ function onScroll() {
 
 function scrollToHeading(id: string) {
   activeHeading.value = id
-  const el = previewRef.value?.querySelector(`#${CSS.escape(id)}`)
-    ?? document.getElementById(id)
-  el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  const root = previewRef.value
+  const container = scrollRef.value
+  if (!root || !container) return
+  const el = root.querySelector(`#${CSS.escape(id)}`) as HTMLElement | null
+  if (!el) return
+  // 在预览滚动容器内定位（避免只滚 window）
+  const containerRect = container.getBoundingClientRect()
+  const elRect = el.getBoundingClientRect()
+  const nextTop = container.scrollTop + (elRect.top - containerRect.top) - 12
+  container.scrollTo({ top: Math.max(0, nextTop), behavior: 'smooth' })
 }
 
 watch(() => [props.content, props.theme] as const, () => {
