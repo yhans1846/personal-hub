@@ -83,9 +83,11 @@ const editorId = computed(() => buildEditorId(noteId.value))
 const {
   mode,
   isFullscreen,
-  togglePreview,
+  setMode,
   toggleFullscreen,
 } = useEditorMode()
+
+const propsOpen = ref(false)
 
 const { handleUpload } = useImageUpload(noteId, forceSave)
 
@@ -254,13 +256,16 @@ const readingTimeText = computed(() => estimateReadingTime(form.value.content))
   >
     <EditorHeader
       :close-mode="embedded ? 'close' : 'back'"
+      :title="form.title"
       :save-status="saveStatus"
       :is-favorite="isFavorite"
       :mode="mode"
       :is-fullscreen="isFullscreen"
       @back="handleBack"
+      @update:title="(v) => (form.title = v)"
+      @update:mode="setMode"
+      @open-props="propsOpen = true"
       @toggle-favorite="handleToggleFavorite"
-      @toggle-mode="togglePreview"
       @toggle-fullscreen="toggleFullscreen"
       @export-note="handleExport"
       @remove="handleDelete"

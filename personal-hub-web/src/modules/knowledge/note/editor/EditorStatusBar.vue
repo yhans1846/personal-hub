@@ -30,6 +30,7 @@ const readingTime = computed(() => estimateReadingTime(props.content))
 const modeLabel = computed(() => {
   switch (props.mode) {
     case 'edit': return '编辑模式'
+    case 'split': return '分屏模式'
     case 'preview': return '预览模式'
     default: return ''
   }

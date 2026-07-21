@@ -1,10 +1,24 @@
 <script setup lang="ts">
 import type { SaveStatus } from './useAutoSave'
 import type { EditorMode } from './useEditorMode'
-import { ArrowLeft, X, Star, MoreHorizontal, Download, Trash2, Eye, Edit3, Maximize2, Minimize2 } from 'lucide-vue-next'
+import {
+  ArrowLeft,
+  X,
+  Star,
+  MoreHorizontal,
+  Download,
+  Trash2,
+  Eye,
+  Edit3,
+  Columns2,
+  Maximize2,
+  Minimize2,
+  SlidersHorizontal,
+} from 'lucide-vue-next'
 
 withDefaults(
   defineProps<{
+    title: string
     saveStatus: SaveStatus
     isFavorite: boolean
     mode: EditorMode
@@ -18,10 +32,12 @@ withDefaults(
 const emit = defineEmits<{
   back: []
   toggleFavorite: []
-  toggleMode: []
   toggleFullscreen: []
   exportNote: []
   remove: []
+  'update:title': [value: string]
+  'update:mode': [mode: EditorMode]
+  openProps: []
 }>()
 </script>
 
@@ -42,6 +58,15 @@ const emit = defineEmits<{
       </button>
     </div>
 
+    <div class="header-center">
+      <input
+        class="header-title"
+        :value="title"
+        placeholder="请输入标题..."
+        @input="emit('update:title', ($event.target as HTMLInputElement).value)"
+      />
+    </div>
+
     <div class="header-right">
       <span v-if="saveStatus === 'saving'" class="save-status saving">
         <span class="status-dot" /> 保存中...
@@ -57,14 +82,39 @@ const emit = defineEmits<{
       </span>
 
       <button
-        class="header-btn"
-        :title="mode === 'edit' ? '预览' : '编辑'"
-        @click="emit('toggleMode')"
+        class="header-btn icon-only"
+        title="笔记属性"
+        @click="emit('openProps')"
       >
-        <Eye v-if="mode === 'edit'" :size="16" />
-        <Edit3 v-else :size="16" />
-        <span>{{ mode === 'edit' ? '预览' : '编辑' }}</span>
+        <SlidersHorizontal :size="16" />
       </button>
+
+      <div class="mode-group">
+        <button
+          class="header-btn icon-only"
+          :class="{ active: mode === 'edit' }"
+          title="仅编辑"
+          @click="emit('update:mode', 'edit')"
+        >
+          <Edit3 :size="16" />
+        </button>
+        <button
+          class="header-btn icon-only"
+          :class="{ active: mode === 'split' }"
+          title="分屏"
+          @click="emit('update:mode', 'split')"
+        >
+          <Columns2 :size="16" />
+        </button>
+        <button
+          class="header-btn icon-only"
+          :class="{ active: mode === 'preview' }"
+          title="仅预览"
+          @click="emit('update:mode', 'preview')"
+        >
+          <Eye :size="16" />
+        </button>
+      </div>
 
       <button
         class="header-btn icon-only"
@@ -128,6 +178,35 @@ const emit = defineEmits<{
   align-items: center;
   gap: 6px;
 }
+.header-center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  min-width: 0;
+}
+.header-title {
+  flex: 1;
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition);
+  min-width: 0;
+}
+.header-title::placeholder {
+  color: var(--text-placeholder);
+  font-weight: 400;
+}
+.header-title:focus {
+  background: var(--bg-hover);
+}
 .header-btn {
   display: flex;
   align-items: center;
@@ -148,6 +227,17 @@ const emit = defineEmits<{
 }
 .header-btn.icon-only {
   padding: 6px;
+}
+.header-btn.active {
+  color: var(--accent);
+  background: var(--bg-hover);
+}
+.mode-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--radius-sm);
 }
 .save-status {
   font-size: var(--text-xs);
@@ -183,6 +273,9 @@ const emit = defineEmits<{
   }
   .header-btn span {
     display: none;
+  }
+  .header-center {
+    padding: 0 8px;
   }
 }
 </style>
