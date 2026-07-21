@@ -75,6 +75,18 @@ function resolveIrRoot() {
   irRoot.value = host.querySelector('.vditor-ir') as HTMLElement | null
 }
 
+/** 实际产生滚动的节点（IR 或内部 reset） */
+function getScrollEl(): HTMLElement | null {
+  const host = containerRef.value
+  const ir = irRoot.value ?? (host?.querySelector('.vditor-ir') as HTMLElement | null)
+  if (!ir) return null
+  if (ir.scrollHeight > ir.clientHeight + 1) return ir
+  const reset = ir.querySelector('.vditor-reset') as HTMLElement | null
+  if (reset && reset.scrollHeight > reset.clientHeight + 1) return reset
+  // 尚未撑开时仍返回 ir，供后续绑定；滚动事件挂在可 overflow 的节点上
+  return ir
+}
+
 /** 重写编辑器内相对路径图片（images/、attachments/）为完整 API URL */
 function rewriteEditorImages() {
   const root = irRoot.value
@@ -239,7 +251,7 @@ onBeforeUnmount(() => {
   vditorRef.value = null
 })
 
-defineExpose({ getVditor, focus, getScrollEl: () => irRoot.value })
+defineExpose({ getVditor, focus, getScrollEl })
 </script>
 
 <template>

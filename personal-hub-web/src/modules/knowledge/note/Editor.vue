@@ -24,7 +24,8 @@ import type { CategoryVO } from '@/types/category'
 import type { TagVO } from '@/types/tag'
 import type { CategoryItem, TagItem } from '@/types/note'
 import { resolveEditorClose, type CloseConfirmChoice } from './editor/requestEditorClose'
-import { bindSyncScroll } from './editor/syncScroll'
+import { bindSyncScroll, scrollContainerToHeading } from './editor/syncScroll'
+import { assignPreviewHeadingIds } from './editor/parseToc'
 
 const props = withDefaults(defineProps<{
   /** 嵌入列表 Overlay 时为 true */
@@ -98,17 +99,22 @@ const outlineActiveId = ref('')
 function onOutlineScrollTo(id: string) {
   outlineActiveId.value = id
   previewRef.value?.scrollToHeading?.(id)
+  const left = vditorPaneRef.value?.getScrollEl?.() ?? null
+  if (left) scrollContainerToHeading(left, id)
 }
 const previewRef = ref<{
   scrollToHeading: (id: string) => void
   scrollEl?: { value: HTMLElement | null } | HTMLElement | null
 } | null>(null)
 
+const vditorPaneRef = ref<InstanceType<typeof NoteVditor> | null>(null)
+
 const rawContent = ref(form.value.content)
 watch(() => form.value.content, (v) => { rawContent.value = v })
 const debouncedContent = useDebouncedRef(rawContent, 150)
 
 let unbindSyncScroll: (() => void) | null = null
+let syncScrollRetryTimer: ReturnType<typeof setTimeout> | null = null
 
 function resolvePreviewScrollEl(): HTMLElement | null {
   const exposed = previewRef.value?.scrollEl as unknown
@@ -120,13 +126,24 @@ function resolvePreviewScrollEl(): HTMLElement | null {
   return null
 }
 
-function setupSplitScrollSync() {
+function setupSplitScrollSync(retries = 12) {
   unbindSyncScroll?.()
   unbindSyncScroll = null
+  if (syncScrollRetryTimer) {
+    clearTimeout(syncScrollRetryTimer)
+    syncScrollRetryTimer = null
+  }
   if (mode.value !== 'split') return
   const left = vditorPaneRef.value?.getScrollEl?.() ?? null
   const right = resolvePreviewScrollEl()
-  if (!left || !right) return
+  if (!left || !right) {
+    if (retries > 0) {
+      syncScrollRetryTimer = setTimeout(() => setupSplitScrollSync(retries - 1), 200)
+    }
+    return
+  }
+  // 确保预览侧标题已有锚点 id（与大纲/独立预览一致）
+  assignPreviewHeadingIds(right)
   unbindSyncScroll = bindSyncScroll(left, right)
 }
 
@@ -146,6 +163,10 @@ watch(debouncedContent, async () => {
 })
 
 onBeforeUnmount(() => {
+  if (syncScrollRetryTimer) {
+    clearTimeout(syncScrollRetryTimer)
+    syncScrollRetryTimer = null
+  }
   unbindSyncScroll?.()
   unbindSyncScroll = null
 })
@@ -441,15 +462,15 @@ const readingTimeText = computed(() => estimateReadingTime(form.value.content))
   min-height: 0;
 }
 .pane-editor {
-  flex: 0 0 38%;
+  flex: 0 0 40%;
   /* 仅 IR 内滚动，便于与预览比例联动 */
   overflow: hidden;
 }
-.pane-preview { flex: 0 0 42%; }
-.pane-outline { flex: 0 0 20%; }
+.pane-preview { flex: 0 0 45%; }
+.pane-outline { flex: 0 0 15%; }
 .mode-edit .pane-editor { flex: 1; }
 .mode-preview .pane-preview { flex: 1; }
-.mode-preview .pane-outline { flex: 0 0 20%; }
+.mode-preview .pane-outline { flex: 0 0 15%; }
 .editor-instance {
   flex: 1;
   height: 100%;
