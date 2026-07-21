@@ -6,6 +6,11 @@ import mediumZoom from 'medium-zoom'
 import PreviewToc from '../preview/PreviewToc.vue'
 import { parseTocFromMarkdown } from './parseToc'
 import { buildPreviewOptions } from './vditorSetup'
+import { transformWikiLinks } from './wikiLinkUtils'
+import { getNoteTitleIdMap } from './noteTitleIndex'
+import { useFeatureFlagStore } from '@/store/featureFlagStore'
+import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 
 const props = withDefaults(defineProps<{
   content: string
@@ -27,6 +32,8 @@ const props = withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{ scroll: [] }>()
+const featureFlags = useFeatureFlagStore()
+const router = useRouter()
 
 const scrollRef = ref<HTMLElement | null>(null)
 const previewRef = ref<HTMLDivElement | null>(null)
@@ -38,11 +45,41 @@ let zoomInstance: ReturnType<typeof mediumZoom> | null = null
 async function renderPreview() {
   if (!previewRef.value) return
   previewRef.value.innerHTML = ''
-  await Vditor.preview(previewRef.value, props.content || '', buildPreviewOptions(props.theme))
+  let md = props.content || ''
+  if (featureFlags.isEnabled('backlink')) {
+    try {
+      const map = await getNoteTitleIdMap()
+      md = transformWikiLinks(md, (t) => map.get(t) ?? null)
+    } catch { /* ignore index errors */ }
+  }
+  await Vditor.preview(previewRef.value, md, buildPreviewOptions(props.theme))
   setupImageProxy()
   setupImageZoom()
   setupCodeCopy()
+  setupWikiMissingClicks()
   tocItems.value = parseTocFromMarkdown(props.content)
+}
+
+function setupWikiMissingClicks() {
+  nextTick(() => {
+    const preview = previewRef.value
+    if (!preview) return
+    preview.querySelectorAll('a[href^="#wiki-missing:"]').forEach((a) => {
+      a.classList.add('wiki-link--missing')
+      a.addEventListener('click', (e) => {
+        e.preventDefault()
+        ElMessage.info('未找到对应笔记')
+      })
+    })
+    preview.querySelectorAll('a[href^="/notes/"]').forEach((a) => {
+      a.addEventListener('click', (e) => {
+        const href = a.getAttribute('href')
+        if (!href?.startsWith('/notes/')) return
+        e.preventDefault()
+        router.push(href)
+      })
+    })
+  })
 }
 
 function setupImageProxy() {

@@ -13,6 +13,7 @@ import com.personalhub.knowledge.imports.ImportReport;
 import com.personalhub.knowledge.imports.ImportService;
 import com.personalhub.knowledge.service.NoteExportService;
 import com.personalhub.knowledge.service.NoteService;
+import com.personalhub.knowledge.vo.NoteBacklinkVO;
 import com.personalhub.knowledge.vo.NoteVO;
 import com.personalhub.knowledge.vo.RecycleEmptyVO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -197,6 +198,15 @@ public class NoteController {
             @PathVariable Long id) {
         Long userId = CurrentUser.id(authentication);
         return Result.success(noteService.getPreview(id, userId));
+    }
+
+    @Operation(summary = "笔记回链", description = "扫描当前用户笔记中 [[本篇标题]] 的引用方（最多 500 篇）")
+    @GetMapping("/{id}/backlinks")
+    public Result<List<NoteBacklinkVO>> backlinks(
+            @Parameter(hidden = true) Authentication authentication,
+            @PathVariable Long id) {
+        Long userId = CurrentUser.id(authentication);
+        return Result.success(noteService.listBacklinks(id, userId));
     }
 
     @Operation(summary = "导出笔记", description = "导出笔记为 ZIP，包含 Markdown 和资源")

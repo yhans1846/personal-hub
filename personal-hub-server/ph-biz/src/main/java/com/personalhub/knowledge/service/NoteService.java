@@ -3,8 +3,11 @@ package com.personalhub.knowledge.service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.personalhub.knowledge.dto.NoteCreateDTO;
 import com.personalhub.knowledge.dto.NoteQueryDTO;
+import com.personalhub.knowledge.vo.NoteBacklinkVO;
 import com.personalhub.knowledge.vo.NoteVO;
 import com.personalhub.knowledge.vo.RecycleEmptyVO;
+
+import java.util.List;
 
 /**
  * 笔记服务接口
@@ -123,4 +126,13 @@ public interface NoteService {
      * @return 笔记详情VO
      */
     NoteVO getPreview(Long id, Long userId);
+
+    /**
+     * 回链列表：哪些未删除笔记通过 [[当前标题]] 引用了本笔记
+     *
+     * @param id     目标笔记 ID
+     * @param userId 用户 ID
+     * @return 回链摘要列表
+     */
+    List<NoteBacklinkVO> listBacklinks(Long id, Long userId);
 }

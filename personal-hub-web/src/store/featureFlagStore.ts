@@ -20,7 +20,12 @@ export type FlagMeta = {
 
 const FLAG_META: FlagMeta[] = [
   { key: 'aiAssistant', label: 'AI 笔记助手', description: '选中文本后触发 AI 总结/润色/翻译（即将推出）', available: false },
-  { key: 'backlink', label: '双向链接 (Backlink)', description: '笔记间 [[引用]] 关系图谱（即将推出）', available: false },
+  {
+    key: 'backlink',
+    label: '双向链接 (Backlink)',
+    description: '[[标题]] 补全、预览跳转与回链列表',
+    available: true,
+  },
 ]
 
 function sanitize(raw: Record<string, unknown>): FeatureFlags {

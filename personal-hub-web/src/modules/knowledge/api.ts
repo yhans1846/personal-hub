@@ -58,6 +58,11 @@ export function emptyRecycleBin() {
   return request.delete<Result<{ deleted: number }>>('/notes/recycle-bin')
 }
 
+/** 笔记回链（引用了本篇的其它笔记） */
+export function getNoteBacklinks(id: number) {
+  return request.get<Result<{ id: number; title: string }[]>>(`/notes/${id}/backlinks`)
+}
+
 /** 导入 Markdown 文件 */
 export function importMarkdownFile(
   file: File,

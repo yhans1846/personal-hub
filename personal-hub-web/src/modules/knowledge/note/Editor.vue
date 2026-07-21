@@ -12,7 +12,9 @@ import EditorHeader from './editor/EditorHeader.vue'
 import EditorStatusBar from './editor/EditorStatusBar.vue'
 import NoteVditor from './editor/NoteVditor.vue'
 import NoteMarkdownPreview from './editor/NoteMarkdownPreview.vue'
+import NoteBacklinks from './NoteBacklinks.vue'
 import { buildEditorId } from './editor/vditorSetup'
+import { useFeatureFlagStore } from '@/store/featureFlagStore'
 import { estimateReadingTime, formatRelativeTime } from '@/utils/readingTime'
 import type { CategoryVO } from '@/types/category'
 import type { TagVO } from '@/types/tag'
@@ -20,6 +22,7 @@ import type { CategoryItem, TagItem } from '@/types/note'
 
 const route = useRoute()
 const router = useRouter()
+const featureFlags = useFeatureFlagStore()
 const isEdit = !!route.params.id
 
 const form = ref({ title: isEdit ? '' : '未命名笔记', content: '', categoryIds: [] as number[], tagIds: [] as number[] })
@@ -296,6 +299,12 @@ const readingTimeText = computed(() => estimateReadingTime(form.value.content))
           :tag-names="getTagNames()"
           :saved-time-text="savedTimeText"
         />
+        <NoteBacklinks
+          v-if="!initialLoading && noteId && featureFlags.isEnabled('backlink')"
+          class="editor-backlinks"
+          :note-id="noteId"
+          :enabled="true"
+        />
       </div>
     </div>
 
@@ -310,6 +319,11 @@ const readingTimeText = computed(() => estimateReadingTime(form.value.content))
 </template>
 
 <style scoped>
+.editor-backlinks {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 24px 32px;
+}
 .editor-page {
   display: flex;
   flex-direction: column;

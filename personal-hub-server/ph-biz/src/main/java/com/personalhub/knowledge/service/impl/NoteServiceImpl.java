@@ -17,6 +17,7 @@ import com.personalhub.knowledge.mapper.CategoryMapper;
 import com.personalhub.knowledge.mapper.NoteMapper;
 import com.personalhub.knowledge.service.NoteService;
 import com.personalhub.knowledge.service.TagService;
+import com.personalhub.knowledge.vo.NoteBacklinkVO;
 import com.personalhub.knowledge.vo.NoteVO;
 import com.personalhub.knowledge.vo.RecycleEmptyVO;
 import com.personalhub.knowledge.vo.TagVO;
@@ -31,9 +32,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -45,6 +49,8 @@ import java.util.stream.Collectors;
 public class NoteServiceImpl implements NoteService {
 
     private static final int EXCERPT_MAX_LEN = 200;
+    /** 回链扫描最多读取的笔记篇数 */
+    private static final int BACKLINK_SCAN_LIMIT = 500;
 
     private final NoteMapper noteMapper;
     private final CategoryMapper categoryMapper;
@@ -234,6 +240,52 @@ public class NoteServiceImpl implements NoteService {
         vo.setCategories(getCategories(id));
         vo.setTags(getTags(id, userId));
         return vo;
+    }
+
+    @Override
+    public List<NoteBacklinkVO> listBacklinks(Long id, Long userId) {
+        Note target = EntityGuard.requireOwned(
+                noteMapper.selectById(id), userId, Note::getUserId, "笔记不存在");
+        if (Integer.valueOf(Flags.YES).equals(target.getIsDeleted())) {
+            throw new NotFoundException("笔记不存在");
+        }
+        String targetTitle = target.getTitle() != null ? target.getTitle().trim() : "";
+        if (targetTitle.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        LambdaQueryWrapper<Note> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Note::getUserId, userId)
+                .eq(Note::getIsDeleted, Flags.NO)
+                .ne(Note::getId, id)
+                .orderByDesc(Note::getUpdatedAt)
+                .last("LIMIT " + BACKLINK_SCAN_LIMIT);
+        List<Note> candidates = noteMapper.selectList(wrapper);
+        if (candidates == null || candidates.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Pattern linkPattern = wikiLinkPattern(targetTitle);
+        List<NoteBacklinkVO> result = new ArrayList<>();
+        for (Note note : candidates) {
+            String content = readContent(note);
+            if (content == null || content.isEmpty()) {
+                continue;
+            }
+            if (linkPattern.matcher(content).find()) {
+                result.add(new NoteBacklinkVO(note.getId(), note.getTitle()));
+            }
+        }
+        result.sort(Comparator.comparing(
+                NoteBacklinkVO::getTitle,
+                Comparator.nullsLast(String::compareToIgnoreCase)));
+        return result;
+    }
+
+    /** 匹配 [[title]] 或 [[title|alias]]（标题精确） */
+    static Pattern wikiLinkPattern(String title) {
+        String quoted = Pattern.quote(title.trim());
+        return Pattern.compile("\\[\\[\\s*" + quoted + "\\s*(?:\\|[^\\]]*)?\\]\\]");
     }
 
     @Override

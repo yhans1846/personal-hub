@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick, watch, onUnmounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import Vditor from 'vditor'
 import 'vditor/dist/index.css'
@@ -16,9 +16,15 @@ import { estimateReadingTime } from '@/utils/readingTime'
 import { formatUpdated } from '@/utils/formatTime'
 import { buildPreviewOptions } from './editor/vditorSetup'
 import { parseTocFromMarkdown } from './editor/parseToc'
+import { transformWikiLinks } from './editor/wikiLinkUtils'
+import { getNoteTitleIdMap } from './editor/noteTitleIndex'
+import NoteBacklinks from './NoteBacklinks.vue'
+import { useFeatureFlagStore } from '@/store/featureFlagStore'
 
 const route = useRoute()
+const router = useRouter()
 const readingStore = useReadingConfigStore()
+const featureFlags = useFeatureFlagStore()
 const { config } = storeToRefs(readingStore)
 const { resolvedTheme } = useReadingTheme()
 
@@ -53,7 +59,14 @@ function getPreviewRoot(): HTMLElement | null {
 async function renderMarkdown() {
   if (!previewRef.value || !note.value?.content) return
   previewRef.value.innerHTML = ''
-  await Vditor.preview(previewRef.value, note.value.content, buildPreviewOptions(previewTheme.value))
+  let md = note.value.content
+  if (featureFlags.isEnabled('backlink')) {
+    try {
+      const map = await getNoteTitleIdMap()
+      md = transformWikiLinks(md, (t) => map.get(t) ?? null)
+    } catch { /* ignore */ }
+  }
+  await Vditor.preview(previewRef.value, md, buildPreviewOptions(previewTheme.value))
   await nextTick()
   setupImageProxy()
   setupObserver()
@@ -61,6 +74,27 @@ async function renderMarkdown() {
   setupCodeCopy()
   setupExternalLinks()
   setupHeadingAnchors()
+  setupWikiLinks()
+}
+
+function setupWikiLinks() {
+  const preview = getPreviewRoot()
+  if (!preview) return
+  preview.querySelectorAll('a[href^="#wiki-missing:"]').forEach((a) => {
+    a.classList.add('wiki-link--missing')
+    ;(a as HTMLAnchorElement).addEventListener('click', (e) => {
+      e.preventDefault()
+      ElMessage.info('未找到对应笔记')
+    })
+  })
+  preview.querySelectorAll('a[href^="/notes/"]').forEach((a) => {
+    a.addEventListener('click', (e) => {
+      const href = a.getAttribute('href')
+      if (!href?.startsWith('/notes/')) return
+      e.preventDefault()
+      router.push(href)
+    })
+  })
 }
 
 function setupObserver() {
@@ -136,6 +170,8 @@ function setupExternalLinks() {
   const preview = getPreviewRoot()
   if (!preview) return
   preview.querySelectorAll('a').forEach((a) => {
+    const href = a.getAttribute('href') || ''
+    if (href.startsWith('/notes/') || href.startsWith('#wiki-missing:')) return
     if (!a.getAttribute('target')) {
       a.setAttribute('target', '_blank')
       a.setAttribute('rel', 'noopener noreferrer')
@@ -293,11 +329,21 @@ onUnmounted(() => {
         <div ref="previewRef" class="vditor-preview-body" />
       </div>
       <div v-else class="empty-content">笔记内容为空</div>
+      <NoteBacklinks
+        v-if="loadedNote.id"
+        :note-id="loadedNote.id"
+        :enabled="featureFlags.isEnabled('backlink')"
+      />
     </div>
   </DocLayout>
 </template>
 
 <style scoped>
+.vditor-preview-body :deep(a.wiki-link--missing) {
+  color: var(--text-tertiary);
+  text-decoration: line-through;
+  cursor: not-allowed;
+}
 .state-message {
   display: flex;
   flex-direction: column;

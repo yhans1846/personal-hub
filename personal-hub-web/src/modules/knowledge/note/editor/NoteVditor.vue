@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { ref, type Ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, type Ref, watch, onMounted, onBeforeUnmount, nextTick, computed } from 'vue'
 import Vditor from 'vditor'
 import 'vditor/dist/index.css'
 import { buildVditorBaseOptions, mapAppThemeToVditor } from './vditorSetup'
 import EditorContextMenu from './context-menu/EditorContextMenu.vue'
 import { insertImageMarkdown } from './context-menu/contextMenuActions'
+import WikiLinkSuggest from './WikiLinkSuggest.vue'
+import { useFeatureFlagStore } from '@/store/featureFlagStore'
 
 const props = withDefaults(defineProps<{
   modelValue: string
@@ -25,7 +27,11 @@ const emit = defineEmits<{
   ready: [vditor: Vditor]
 }>()
 
+const featureFlags = useFeatureFlagStore()
+const wikiEnabled = computed(() => featureFlags.isEnabled('backlink') && !props.readonly)
+
 const containerRef = ref<HTMLElement | null>(null)
+const irRoot = ref<HTMLElement | null>(null)
 const contextMenuRef = ref<InstanceType<typeof EditorContextMenu> | null>(null)
 const vditorRef = ref<Vditor | null>(null) as Ref<Vditor | null>
 const vditorReady = ref(false)
@@ -54,6 +60,32 @@ function onUploadImage(files: File[]) {
   })
 }
 
+function resolveIrRoot() {
+  const host = containerRef.value
+  if (!host) {
+    irRoot.value = null
+    return
+  }
+  irRoot.value = host.querySelector('.vditor-ir') as HTMLElement | null
+}
+
+function onWikiPick(title: string, query: string) {
+  if (!vditor) return
+  const sel = window.getSelection()
+  if (sel?.rangeCount && irRoot.value) {
+    try {
+      const range = sel.getRangeAt(0)
+      if (query.length > 0 && range.startContainer.nodeType === Node.TEXT_NODE
+        && range.startOffset >= query.length) {
+        range.setStart(range.startContainer, range.startOffset - query.length)
+        range.deleteContents()
+      }
+    } catch { /* fall through to insert */ }
+  }
+  vditor.insertValue(`${title}]]`)
+  vditor.focus()
+}
+
 async function initVditor() {
   if (!containerRef.value) return
   suppressInput = true
@@ -72,14 +104,13 @@ async function initVditor() {
         vditor?.setTheme(mapAppThemeToVditor(props.theme))
         if (props.readonly) vditor?.disabled()
         vditorReady.value = true
-        // 初始化期间外部值发生过变化，补同步
+        resolveIrRoot()
         if (pendingExternalValue !== null && vditor && vditor.getValue() !== pendingExternalValue) {
           syncingExternal = true
           vditor.setValue(pendingExternalValue)
           syncingExternal = false
           pendingExternalValue = null
         }
-        // 回写归一化内容后再通知 ready，供父组件建立未保存基线
         nextTick(() => {
           if (vditor) {
             const finalValue = vditor.getValue()
@@ -88,6 +119,7 @@ async function initVditor() {
             }
           }
           suppressInput = false
+          resolveIrRoot()
           emit('ready', vditor!)
         })
       },
@@ -112,7 +144,6 @@ watch(
   () => props.modelValue,
   (val) => {
     if (!vditor || !vditorReady.value) {
-      // Vditor 尚未就绪，暂存值等 after 回调中补同步
       pendingExternalValue = val
       return
     }
@@ -150,6 +181,11 @@ defineExpose({ getVditor, focus })
     @contextmenu="onContextMenu"
   >
     <div :id="editorId" ref="containerRef" class="note-vditor-host" />
+    <WikiLinkSuggest
+      :enabled="wikiEnabled"
+      :root-el="irRoot"
+      @pick="onWikiPick"
+    />
     <EditorContextMenu
       ref="contextMenuRef"
       :vditor="vditorRef"
@@ -160,6 +196,7 @@ defineExpose({ getVditor, focus })
 
 <style scoped>
 .note-vditor {
+  position: relative;
   min-height: 60vh;
 }
 .note-vditor--compact {
