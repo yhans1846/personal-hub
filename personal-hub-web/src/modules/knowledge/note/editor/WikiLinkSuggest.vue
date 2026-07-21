@@ -49,7 +49,7 @@ async function search(q: string) {
     const res = await getNoteList({ page: 1, size: 8, keyword: q || undefined })
     items.value = (res.data?.data?.records ?? []).map((n) => ({ id: n.id, title: n.title }))
     active.value = 0
-    visible.value = true
+    visible.value = items.value.length > 0
   } catch {
     items.value = []
     visible.value = false
@@ -62,24 +62,33 @@ function hide() {
   query.value = ''
 }
 
-function onKeyUp(e: KeyboardEvent) {
-  if (!props.enabled || !props.rootEl) return
+/** 必须在 keydown 拦截 Enter，keyup 时 Vditor 已插入换行 */
+function onKeyDown(e: KeyboardEvent) {
+  if (!props.enabled || !visible.value) return
+  if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp' && e.key !== 'Enter' && e.key !== 'Escape') return
+  e.preventDefault()
+  e.stopPropagation()
+  e.stopImmediatePropagation()
   if (e.key === 'Escape') {
     hide()
     return
   }
-  if (visible.value && (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter')) {
-    e.preventDefault()
-    e.stopPropagation()
-    if (e.key === 'ArrowDown') {
-      active.value = Math.min(active.value + 1, Math.max(0, items.value.length - 1))
-    } else if (e.key === 'ArrowUp') {
-      active.value = Math.max(active.value - 1, 0)
-    } else if (e.key === 'Enter' && items.value[active.value]) {
-      pick(items.value[active.value].title)
-    }
+  if (e.key === 'ArrowDown') {
+    active.value = Math.min(active.value + 1, Math.max(0, items.value.length - 1))
     return
   }
+  if (e.key === 'ArrowUp') {
+    active.value = Math.max(active.value - 1, 0)
+    return
+  }
+  if (e.key === 'Enter' && items.value[active.value]) {
+    pick(items.value[active.value].title)
+  }
+}
+
+function onKeyUp(e: KeyboardEvent) {
+  if (!props.enabled || !props.rootEl) return
+  if (e.key === 'Escape' || e.key === 'Enter' || e.key === 'ArrowDown' || e.key === 'ArrowUp') return
 
   const before = getTextBeforeCaret(props.rootEl)
   if (before == null) {
@@ -97,25 +106,30 @@ function onKeyUp(e: KeyboardEvent) {
 }
 
 function pick(title: string) {
-  emit('pick', title, query.value)
+  // 用光标前实时 query，避免 debounce 态与正文不一致
+  const before = props.rootEl ? getTextBeforeCaret(props.rootEl) : null
+  const liveQuery = before != null ? (extractOpenWikiQuery(before) ?? query.value) : query.value
+  emit('pick', title, liveQuery)
   hide()
 }
 
-function bind() {
-  props.rootEl?.addEventListener('keyup', onKeyUp, true)
+function bind(el: HTMLElement) {
+  el.addEventListener('keydown', onKeyDown, true)
+  el.addEventListener('keyup', onKeyUp, true)
 }
 
-function unbind() {
-  props.rootEl?.removeEventListener('keyup', onKeyUp, true)
+function unbind(el: HTMLElement | null) {
+  el?.removeEventListener('keydown', onKeyDown, true)
+  el?.removeEventListener('keyup', onKeyUp, true)
 }
 
 watch(
   () => [props.enabled, props.rootEl] as const,
   ([enabled, el], _, onCleanup) => {
-    unbind()
+    unbind(el)
     if (enabled && el) {
-      bind()
-      onCleanup(unbind)
+      bind(el)
+      onCleanup(() => unbind(el))
     } else {
       hide()
     }
@@ -124,7 +138,7 @@ watch(
 )
 
 onBeforeUnmount(() => {
-  unbind()
+  unbind(props.rootEl)
   if (debounceTimer) clearTimeout(debounceTimer)
 })
 

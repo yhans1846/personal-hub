@@ -12,7 +12,7 @@ Personal Hub 前端 — Vue 3 + TypeScript + Vite + Element Plus。
 - **HTTP**: Axios
 - **图标**: lucide-vue-next
 - **Markdown**: Vditor（IR 模式）
-- **图片缩放**: medium-zoom
+- **图片预览**: 自定义灯箱（笔记 Markdown 预览）
 - **图表**: ECharts
 - **拖拽**: sortablejs
 

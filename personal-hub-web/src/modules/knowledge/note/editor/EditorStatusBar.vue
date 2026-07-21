@@ -82,24 +82,39 @@ const saveTimeText = computed(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
+  min-height: 32px;
   height: 32px;
   padding: 0 24px;
   border-top: 1px solid var(--border-color);
   flex-shrink: 0;
   background: var(--bg-card);
   z-index: 10;
+  overflow: hidden;
   transition: background var(--transition-duration);
 }
 .editor-statusbar.is-fullscreen {
   background: var(--bg-body);
 }
+.statusbar-left,
+.statusbar-right {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  min-width: 0;
+  overflow: hidden;
+}
+.statusbar-right {
+  flex-shrink: 0;
+}
 .stat-item {
   font-size: var(--text-xs);
   color: var(--text-tertiary);
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 4px;
   white-space: nowrap;
+  line-height: 1;
 }
 .stat-item + .stat-item { margin-left: 16px; }
 .stat-item.separator::before { content: '·'; margin-right: 16px; }
@@ -124,9 +139,9 @@ const saveTimeText = computed(() => {
 @media (max-width: 768px) {
   .editor-statusbar {
     padding: 0 12px;
-    font-size: 11px;
   }
   .stat-item + .stat-item { margin-left: 8px; }
   .stat-item.separator::before { margin-right: 8px; }
+  .save-time { display: none; }
 }
 </style>

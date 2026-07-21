@@ -2,12 +2,10 @@
 import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import Vditor from 'vditor'
 import 'vditor/dist/index.css'
-import mediumZoom from 'medium-zoom'
 import PreviewToc from '../preview/PreviewToc.vue'
 import { parseTocFromMarkdown } from './parseToc'
 import { buildPreviewOptions } from './vditorSetup'
-import { transformWikiLinks } from './wikiLinkUtils'
-import { getNoteTitleIdMap } from './noteTitleIndex'
+import { preparePreviewMarkdown, setupPreviewImageZoom } from './previewEnhancements'
 import { useFeatureFlagStore } from '@/store/featureFlagStore'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
@@ -40,21 +38,26 @@ const previewRef = ref<HTMLDivElement | null>(null)
 const activeHeading = ref('')
 const tocItems = ref(parseTocFromMarkdown(props.content))
 
-let zoomInstance: ReturnType<typeof mediumZoom> | null = null
+let disposeZoom: (() => void) | null = null
+let renderSeq = 0
 
 async function renderPreview() {
   if (!previewRef.value) return
+  const seq = ++renderSeq
+  disposeZoom?.()
+  disposeZoom = null
   previewRef.value.innerHTML = ''
-  let md = props.content || ''
-  if (featureFlags.isEnabled('backlink')) {
-    try {
-      const map = await getNoteTitleIdMap()
-      md = transformWikiLinks(md, (t) => map.get(t) ?? null)
-    } catch { /* ignore index errors */ }
-  }
+  const md = await preparePreviewMarkdown(props.content || '', featureFlags.isEnabled('backlink'))
+  if (seq !== renderSeq || !previewRef.value) return
   await Vditor.preview(previewRef.value, md, buildPreviewOptions(props.theme))
-  setupImageProxy()
-  setupImageZoom()
+  if (seq !== renderSeq || !previewRef.value) return
+  await nextTick()
+  disposeZoom = await setupPreviewImageZoom(previewRef.value, props.noteId)
+  if (seq !== renderSeq) {
+    disposeZoom?.()
+    disposeZoom = null
+    return
+  }
   setupCodeCopy()
   setupWikiMissingClicks()
   tocItems.value = parseTocFromMarkdown(props.content)
@@ -76,36 +79,8 @@ function setupWikiMissingClicks() {
         const href = a.getAttribute('href')
         if (!href?.startsWith('/notes/')) return
         e.preventDefault()
-        router.push(href)
+        window.open(href, '_blank')
       })
-    })
-  })
-}
-
-function setupImageProxy() {
-  nextTick(() => {
-    const preview = previewRef.value
-    if (!preview || !props.noteId) return
-    const token = localStorage.getItem('token')
-    if (!token) return
-    preview.querySelectorAll('img').forEach((img) => {
-      const src = img.getAttribute('src')
-      if (!src) return
-      if (src.startsWith('images/') || src.startsWith('attachments/')) {
-        img.setAttribute('src', `/api/notes/${props.noteId}/${src}?token=${token}`)
-      }
-    })
-  })
-}
-
-function setupImageZoom() {
-  nextTick(() => {
-    const preview = previewRef.value
-    if (!preview) return
-    zoomInstance?.detach()
-    zoomInstance = mediumZoom(preview.querySelectorAll('img'), {
-      background: 'rgba(0, 0, 0, 0.6)',
-      margin: 40,
     })
   })
 }
@@ -152,7 +127,9 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
-  zoomInstance?.detach()
+  renderSeq += 1
+  disposeZoom?.()
+  disposeZoom = null
 })
 
 defineExpose({ scrollEl: scrollRef })
@@ -264,5 +241,10 @@ defineExpose({ scrollEl: scrollRef })
   .preview-title {
     font-size: 28px;
   }
+}
+.note-markdown-preview :deep(a.wiki-link--missing) {
+  color: var(--text-tertiary);
+  text-decoration: line-through;
+  cursor: not-allowed;
 }
 </style>

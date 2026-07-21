@@ -282,6 +282,7 @@ const readingTimeText = computed(() => estimateReadingTime(form.value.content))
           v-model="form.content"
           :editor-id="editorId"
           :theme="editorTheme"
+          :note-id="noteId"
           :on-upload-img="onUploadImg"
           :class="{ 'editor-instance': true, 'focus-editor': mode === 'focus' }"
           @ready="onVditorReady"

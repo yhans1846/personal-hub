@@ -997,3 +997,51 @@ a:hover { color: var(--accent-hover); }
   --preview-quote-bar: var(--accent);
   --preview-code-header: var(--bg-hover);
 }
+
+/* 笔记预览图片灯箱（替代 medium-zoom，避免 isAnimating 卡死） */
+.ph-img-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  box-sizing: border-box;
+}
+.ph-img-lightbox__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  cursor: zoom-out;
+}
+.ph-img-lightbox__img {
+  position: relative;
+  z-index: 1;
+  max-width: min(100%, 1200px);
+  max-height: calc(100vh - 80px);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 4px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+  cursor: default;
+}
+.ph-img-lightbox__close {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  z-index: 2;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+}
+.ph-img-lightbox__close:hover {
+  background: rgba(255, 255, 255, 0.28);
+}

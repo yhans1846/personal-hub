@@ -7,6 +7,7 @@ import EditorContextMenu from './context-menu/EditorContextMenu.vue'
 import { insertImageMarkdown } from './context-menu/contextMenuActions'
 import WikiLinkSuggest from './WikiLinkSuggest.vue'
 import { useFeatureFlagStore } from '@/store/featureFlagStore'
+import { rewriteNoteAssetSrc } from './previewEnhancements'
 
 const props = withDefaults(defineProps<{
   modelValue: string
@@ -16,10 +17,13 @@ const props = withDefaults(defineProps<{
   compact?: boolean
   readonly?: boolean
   onUploadImg?: (files: File[], callback: (urls: string[]) => void) => void
+  /** 用于重写相对路径图片（images/、attachments/）为完整 API URL */
+  noteId?: number | null
 }>(), {
   placeholder: '开始写作...',
   compact: false,
   readonly: false,
+  noteId: null,
 })
 
 const emit = defineEmits<{
@@ -40,6 +44,8 @@ let syncingExternal = false
 let pendingExternalValue: string | null = null
 /** 初始化完成前忽略 input，避免归一化内容误触发父级 dirty */
 let suppressInput = true
+/** 编辑器内图片 src 重写 MutationObserver */
+let imgObserver: MutationObserver | null = null
 
 function getVditor() {
   return vditorRef.value
@@ -69,20 +75,72 @@ function resolveIrRoot() {
   irRoot.value = host.querySelector('.vditor-ir') as HTMLElement | null
 }
 
+/** 重写编辑器内相对路径图片（images/、attachments/）为完整 API URL */
+function rewriteEditorImages() {
+  const root = irRoot.value
+  if (!root) return
+  const token = localStorage.getItem('token')
+  if (!token || !props.noteId) return
+  root.querySelectorAll('img[src^="images/"], img[src^="attachments/"]').forEach((img) => {
+    rewriteNoteAssetSrc(img as HTMLImageElement, props.noteId!, token)
+  })
+}
+
+/** 在编辑器 IR 根节点上监听新 img 元素，自动重写相对路径 */
+function setupEditorImageRewrite() {
+  imgObserver?.disconnect()
+  imgObserver = null
+  const root = irRoot.value
+  if (!root) return
+
+  // 立即重写已有图片
+  rewriteEditorImages()
+
+  imgObserver = new MutationObserver((mutations) => {
+    let needsRewrite = false
+    for (const m of mutations) {
+      if (m.type === 'childList') {
+        for (const node of m.addedNodes) {
+          if (node instanceof HTMLImageElement ||
+              (node instanceof Element && node.querySelector('img'))) {
+            needsRewrite = true
+            break
+          }
+        }
+      }
+      if (needsRewrite) break
+    }
+    if (needsRewrite) rewriteEditorImages()
+  })
+
+  imgObserver.observe(root, { childList: true, subtree: true })
+}
+
 function onWikiPick(title: string, query: string) {
   if (!vditor) return
-  const sel = window.getSelection()
-  if (sel?.rangeCount && irRoot.value) {
-    try {
-      const range = sel.getRangeAt(0)
-      if (query.length > 0 && range.startContainer.nodeType === Node.TEXT_NODE
-        && range.startOffset >= query.length) {
-        range.setStart(range.startContainer, range.startOffset - query.length)
-        range.deleteContents()
-      }
-    } catch { /* fall through to insert */ }
+  const openQuery = query ?? ''
+  const md = vditor.getValue()
+  const open = `[[${openQuery}`
+  // 从后往前找未闭合的 [[query，整段换成 [[title]]，避免 DOM 删不全留下多余 [[
+  let idx = md.lastIndexOf(open)
+  while (idx >= 0) {
+    const rest = md.slice(idx + open.length)
+    const closeAt = rest.indexOf(']]')
+    const nlAt = rest.indexOf('\n')
+    const stillOpen = closeAt < 0 || (nlAt >= 0 && nlAt < closeAt)
+    if (stillOpen) {
+      const next = `${md.slice(0, idx)}[[${title}]]${rest}`
+      syncingExternal = true
+      vditor.setValue(next)
+      syncingExternal = false
+      emit('update:modelValue', next)
+      vditor.focus()
+      return
+    }
+    idx = md.lastIndexOf(open, idx - 1)
   }
-  vditor.insertValue(`${title}]]`)
+  // 回退：光标处直接插入完整 wiki（不先留 [[）
+  vditor.insertValue(`[[${title}]]`)
   vditor.focus()
 }
 
@@ -120,6 +178,7 @@ async function initVditor() {
           }
           suppressInput = false
           resolveIrRoot()
+          setupEditorImageRewrite()
           emit('ready', vditor!)
         })
       },
@@ -161,11 +220,20 @@ watch(
   },
 )
 
+watch(
+  () => props.noteId,
+  (id) => {
+    if (id && vditorReady.value) rewriteEditorImages()
+  },
+)
+
 onMounted(() => {
   nextTick(initVditor)
 })
 
 onBeforeUnmount(() => {
+  imgObserver?.disconnect()
+  imgObserver = null
   vditor?.destroy()
   vditor = null
   vditorRef.value = null

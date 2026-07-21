@@ -4,7 +4,6 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import Vditor from 'vditor'
 import 'vditor/dist/index.css'
-import mediumZoom from 'medium-zoom'
 import type { NoteVO } from '@/types/note'
 import { getNotePreview, restoreNote, exportNote } from '@/modules/knowledge/api'
 import { useReadingConfigStore } from '@/store/readingConfigStore'
@@ -16,8 +15,7 @@ import { estimateReadingTime } from '@/utils/readingTime'
 import { formatUpdated } from '@/utils/formatTime'
 import { buildPreviewOptions } from './editor/vditorSetup'
 import { parseTocFromMarkdown } from './editor/parseToc'
-import { transformWikiLinks } from './editor/wikiLinkUtils'
-import { getNoteTitleIdMap } from './editor/noteTitleIndex'
+import { preparePreviewMarkdown, setupPreviewImageZoom } from './editor/previewEnhancements'
 import NoteBacklinks from './NoteBacklinks.vue'
 import { useFeatureFlagStore } from '@/store/featureFlagStore'
 
@@ -38,7 +36,8 @@ const previewRef = ref<HTMLDivElement | null>(null)
 const loadedNote = computed(() => note.value as NoteVO)
 
 let observer: IntersectionObserver | null = null
-let zoomInstance: ReturnType<typeof mediumZoom> | null = null
+let disposeZoom: (() => void) | null = null
+let renderSeq = 0
 
 const isTrash = computed(() => note.value?.isDeleted === 1)
 
@@ -58,19 +57,22 @@ function getPreviewRoot(): HTMLElement | null {
 
 async function renderMarkdown() {
   if (!previewRef.value || !note.value?.content) return
+  const seq = ++renderSeq
+  disposeZoom?.()
+  disposeZoom = null
   previewRef.value.innerHTML = ''
-  let md = note.value.content
-  if (featureFlags.isEnabled('backlink')) {
-    try {
-      const map = await getNoteTitleIdMap()
-      md = transformWikiLinks(md, (t) => map.get(t) ?? null)
-    } catch { /* ignore */ }
-  }
+  const md = await preparePreviewMarkdown(note.value.content, featureFlags.isEnabled('backlink'))
+  if (seq !== renderSeq || !previewRef.value) return
   await Vditor.preview(previewRef.value, md, buildPreviewOptions(previewTheme.value))
+  if (seq !== renderSeq || !previewRef.value) return
   await nextTick()
-  setupImageProxy()
+  disposeZoom = await setupPreviewImageZoom(previewRef.value, note.value?.id)
+  if (seq !== renderSeq) {
+    disposeZoom?.()
+    disposeZoom = null
+    return
+  }
   setupObserver()
-  setupImageZoom()
   setupCodeCopy()
   setupExternalLinks()
   setupHeadingAnchors()
@@ -92,7 +94,7 @@ function setupWikiLinks() {
       const href = a.getAttribute('href')
       if (!href?.startsWith('/notes/')) return
       e.preventDefault()
-      router.push(href)
+      window.open(href, '_blank')
     })
   })
 }
@@ -115,31 +117,6 @@ function setupObserver() {
     { rootMargin: '-64px 0px -60% 0px', threshold: 0 },
   )
   headingEls.forEach((el) => observer!.observe(el))
-}
-
-function setupImageProxy() {
-  const preview = getPreviewRoot()
-  if (!preview || !note.value) return
-  const noteId = note.value.id
-  const token = localStorage.getItem('token')
-  if (!token) return
-  preview.querySelectorAll('img').forEach((img) => {
-    const src = img.getAttribute('src')
-    if (!src) return
-    if (src.startsWith('images/') || src.startsWith('attachments/')) {
-      img.setAttribute('src', `/api/notes/${noteId}/${src}?token=${token}`)
-    }
-  })
-}
-
-function setupImageZoom() {
-  const preview = getPreviewRoot()
-  if (!preview) return
-  zoomInstance?.detach()
-  zoomInstance = mediumZoom(preview.querySelectorAll('img'), {
-    background: 'rgba(0, 0, 0, 0.6)',
-    margin: 40,
-  })
 }
 
 function setupCodeCopy() {
@@ -257,8 +234,10 @@ function handleClose() {
 }
 
 onUnmounted(() => {
+  renderSeq += 1
   observer?.disconnect()
-  zoomInstance?.detach()
+  disposeZoom?.()
+  disposeZoom = null
 })
 </script>
 

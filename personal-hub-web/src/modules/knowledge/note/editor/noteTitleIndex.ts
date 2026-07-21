@@ -1,5 +1,7 @@
 import { getNoteList } from '@/modules/knowledge/api'
 
+const BACKEND_MAX_SIZE = 100
+
 let cache: Map<string, number> | null = null
 let cacheAt = 0
 const TTL_MS = 60_000
@@ -10,13 +12,27 @@ export async function getNoteTitleIdMap(force = false): Promise<Map<string, numb
     return cache
   }
   const map = new Map<string, number>()
-  const res = await getNoteList({ page: 1, size: 500 })
-  const records = res.data?.data?.records ?? []
-  for (const n of records) {
-    const title = (n.title || '').trim()
-    if (title && !map.has(title)) {
-      map.set(title, n.id)
+  let page = 1
+  let total: number | null = null
+  try {
+    while (total === null || (page - 1) * BACKEND_MAX_SIZE < total) {
+      const res = await getNoteList({ page, size: BACKEND_MAX_SIZE })
+      const pageRes = res.data?.data
+      if (!pageRes) break
+      const records = pageRes.records ?? []
+      for (const n of records) {
+        const title = (n.title || '').trim()
+        if (title && !map.has(title)) {
+          map.set(title, n.id)
+        }
+      }
+      if (total === null) {
+        total = pageRes.total ?? 0
+      }
+      page++
     }
+  } catch {
+    // 失败时返回已有结果，不抛异常
   }
   cache = map
   cacheAt = Date.now()
