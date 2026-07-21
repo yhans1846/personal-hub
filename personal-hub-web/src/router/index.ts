@@ -22,8 +22,8 @@ const router = createRouter({
       children: [
         { path: 'dashboard', name: 'Dashboard', meta: { title: '工作台' }, component: () => import('@/modules/dashboard/Dashboard.vue') },
         { path: 'notes', name: 'NoteList', meta: { title: '笔记列表' }, component: () => import('@/modules/knowledge/note/List.vue') },
-        { path: 'notes/new', name: 'NoteCreate', meta: { title: '新建笔记' }, component: () => import('@/modules/knowledge/note/Editor.vue') },
-        { path: 'notes/:id/edit', name: 'NoteEdit', meta: { title: '编辑笔记' }, component: () => import('@/modules/knowledge/note/Editor.vue') },
+        { path: 'notes/new', name: 'NoteCreate', redirect: { path: '/notes', query: { create: '1' } } },
+        { path: 'notes/:id/edit', name: 'NoteEdit', redirect: (to) => ({ path: '/notes', query: { edit: String(to.params.id) } }) },
         { path: 'categories', name: 'CategoryManage', meta: { title: '分类管理' }, component: () => import('@/modules/knowledge/category/CategoryManage.vue') },
         { path: 'tags', name: 'TagManage', meta: { title: '标签管理' }, component: () => import('@/modules/knowledge/tag/Manage.vue') },
         { path: 'stats', name: 'Stats', meta: { title: '统计' }, component: () => import('@/modules/stats/StatsView.vue') },
