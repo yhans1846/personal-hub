@@ -1,24 +1,38 @@
 import { ref, onUnmounted, watch } from 'vue'
 import { useEditorPreferences } from './useEditorPreferences'
 
-export type EditorMode = 'edit' | 'preview'
+export type EditorMode = 'edit' | 'preview' | 'split'
+
+export function nextPreviewToggle(mode: EditorMode): EditorMode {
+  if (mode === 'preview') return 'split'
+  return 'preview'
+}
+
+export function initialEditorMode(viewportWidth: number): EditorMode {
+  return viewportWidth <= 768 ? 'edit' : 'split'
+}
 
 /**
  * 编辑器模式管理
  *
- * mode: edit / preview
+ * mode: edit / preview / split
  * isFullscreen: 浏览器全屏状态
  */
 export function useEditorMode() {
   const { prefs } = useEditorPreferences()
 
-  const mode = ref<EditorMode>('edit')
+  const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1280
+  const mode = ref<EditorMode>(initialEditorMode(viewportWidth))
   const isFullscreen = ref(prefs.fullscreen)
 
   watch(isFullscreen, (v) => { prefs.fullscreen = v })
 
+  function setMode(m: EditorMode) {
+    mode.value = m
+  }
+
   function togglePreview() {
-    mode.value = mode.value === 'preview' ? 'edit' : 'preview'
+    mode.value = nextPreviewToggle(mode.value)
   }
 
   async function toggleFullscreen() {
@@ -86,6 +100,7 @@ export function useEditorMode() {
   return {
     mode,
     isFullscreen,
+    setMode,
     togglePreview,
     toggleFullscreen,
     exitFullscreen,
