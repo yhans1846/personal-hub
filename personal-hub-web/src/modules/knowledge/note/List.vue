@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
 import { getNoteList, deleteNote, archiveNote, toggleFavorite, exportNotesBatch } from '@/modules/knowledge/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, FileText, Star, Trash2, Clock, Eye, Upload, LayoutList, LayoutGrid, Download, CheckSquare } from 'lucide-vue-next'
@@ -10,6 +9,8 @@ import { estimateReadingTime, formatRelativeTime, isRecentlyEdited } from '@/uti
 import { formatRelativeUpdated } from '@/utils/formatTime'
 import ImportMarkdownDialog from './ImportMarkdownDialog.vue'
 import NoteCardContextMenu, { type CardMenuEntry } from './NoteCardContextMenu.vue'
+import NoteWorkspaceOverlay from './NoteWorkspaceOverlay.vue'
+import { useDeepLinkDialog } from '@/composables/useDeepLinkDialog'
 import { useMainContentFill } from '@/composables/useMainContentFill'
 import { useFillPageSize } from '@/composables/useFillPageSize'
 import { useProductViewMode } from '@/composables/useProductViewMode'
@@ -19,13 +20,18 @@ import { triggerBlobDownload } from '@/utils/file'
 
 const MAX_EXPORT = 50
 
-const router = useRouter()
+type Workspace =
+  | null
+  | { mode: 'create' }
+  | { mode: 'edit'; id: number }
+
 const showImport = ref(false)
 const selectMode = ref(false)
 const selectedIds = ref<number[]>([])
 const exporting = ref(false)
 const cardMenuRef = ref<InstanceType<typeof NoteCardContextMenu> | null>(null)
 const activeNote = ref<NoteVO | null>(null)
+const workspace = ref<Workspace>(null)
 const { viewMode, setViewMode } = useProductViewMode('note-view', 'card')
 const selectedCount = computed(() => selectedIds.value.length)
 
@@ -57,8 +63,26 @@ const cardMenuEntries: CardMenuEntry[] = [
 function openImport() {
   showImport.value = true
 }
-function goCreate() { router.push('/notes/new') }
-function goEdit(id: number) { router.push(`/notes/${id}/edit`) }
+function openCreate() {
+  workspace.value = { mode: 'create' }
+}
+function openEdit(id: number) {
+  workspace.value = { mode: 'edit', id }
+}
+function closeWorkspace() {
+  workspace.value = null
+  fetchList()
+}
+function onWorkspaceNoteId(id: number) {
+  if (workspace.value?.mode === 'create') {
+    workspace.value = { mode: 'edit', id }
+  }
+}
+
+useDeepLinkDialog({ openCreate, openEdit })
+
+function goCreate() { openCreate() }
+function goEdit(id: number) { openEdit(id) }
 function goPreview(id: number) { window.open(`/notes/${id}/preview`, '_blank') }
 
 function toggleSelectMode() {
@@ -390,6 +414,13 @@ async function onCardMenuAction(actionId: string) {
   >
     <ImportMarkdownDialog @done="showImport = false; fetchList()" />
   </el-dialog>
+
+  <NoteWorkspaceOverlay
+    v-if="workspace"
+    :note-id="workspace.mode === 'edit' ? workspace.id : undefined"
+    @close="closeWorkspace"
+    @note-id="onWorkspaceNoteId"
+  />
 </template>
 
 <style scoped>
