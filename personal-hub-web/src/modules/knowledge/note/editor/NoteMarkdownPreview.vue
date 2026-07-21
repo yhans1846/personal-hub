@@ -22,11 +22,17 @@ const props = withDefaults(defineProps<{
   categoryNames?: string
   tagNames?: string
   savedTimeText?: string
+  /**
+   * 分屏：内容撑开，由外层 pane 滚动（自身不再 overflow）。
+   * 独立预览页保持默认 false。
+   */
+  paneScroll?: boolean
 }>(), {
   title: '',
   theme: 'light',
   showToc: true,
   showMeta: true,
+  paneScroll: false,
 })
 
 const emit = defineEmits<{ scroll: [] }>()
@@ -144,7 +150,12 @@ defineExpose({ scrollEl: scrollRef, scrollToHeading })
 </script>
 
 <template>
-  <div ref="scrollRef" class="note-markdown-preview" @scroll="onScroll">
+  <div
+    ref="scrollRef"
+    class="note-markdown-preview"
+    :class="{ 'note-markdown-preview--pane-scroll': paneScroll }"
+    @scroll="onScroll"
+  >
     <aside v-if="showToc && tocItems.length" class="preview-toc-wrap">
       <PreviewToc
         :items="tocItems"
@@ -176,6 +187,11 @@ defineExpose({ scrollEl: scrollRef, scrollToHeading })
   height: 100%;
   overflow-y: auto;
   padding: 24px 0 48px;
+}
+.note-markdown-preview--pane-scroll {
+  height: auto;
+  overflow: visible;
+  padding: 16px 24px 48px;
 }
 .preview-toc-wrap {
   flex-shrink: 0;

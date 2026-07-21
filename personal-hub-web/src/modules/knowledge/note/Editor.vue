@@ -24,8 +24,8 @@ import type { CategoryVO } from '@/types/category'
 import type { TagVO } from '@/types/tag'
 import type { CategoryItem, TagItem } from '@/types/note'
 import { resolveEditorClose, type CloseConfirmChoice } from './editor/requestEditorClose'
-import { bindSyncScroll, scrollContainerToHeading } from './editor/syncScroll'
-import { assignPreviewHeadingIds } from './editor/parseToc'
+import { bindSyncScroll, scrollContainerToHeading, syncScrollByRatio, ScrollSyncSession } from './editor/syncScroll'
+import { assignPreviewHeadingIds, assignEditorHeadingIds } from './editor/parseToc'
 
 const props = withDefaults(defineProps<{
   /** 嵌入列表 Overlay 时为 true */
@@ -96,18 +96,37 @@ const propsOpen = ref(false)
 
 const outlineActiveId = ref('')
 
-function onOutlineScrollTo(id: string) {
-  outlineActiveId.value = id
-  previewRef.value?.scrollToHeading?.(id)
-  const left = vditorPaneRef.value?.getScrollEl?.() ?? null
-  if (left) scrollContainerToHeading(left, id)
-}
+const editorPaneEl = ref<HTMLElement | null>(null)
+const previewPaneEl = ref<HTMLElement | null>(null)
 const previewRef = ref<{
   scrollToHeading: (id: string) => void
   scrollEl?: { value: HTMLElement | null } | HTMLElement | null
 } | null>(null)
-
 const vditorPaneRef = ref<InstanceType<typeof NoteVditor> | null>(null)
+const outlineScrollSession = new ScrollSyncSession()
+
+/** 大纲点击：预览锚点定位 + 编辑侧同 id / 比例兜底，两侧同滚 */
+function onOutlineScrollTo(id: string) {
+  outlineActiveId.value = id
+  const previewPane = previewPaneEl.value
+  const editorPane = editorPaneEl.value
+  if (!previewPane || !editorPane) {
+    previewRef.value?.scrollToHeading?.(id)
+    return
+  }
+
+  assignPreviewHeadingIds(previewPane)
+  const ir = vditorPaneRef.value?.getIrRoot?.() ?? null
+  if (ir) assignEditorHeadingIds(ir)
+
+  outlineScrollSession.lock('preview')
+  const hitPreview = scrollContainerToHeading(previewPane, id)
+  const hitEditor = scrollContainerToHeading(editorPane, id)
+  // 编辑侧找不到同 id 标题时，按预览滚动比例带动左侧
+  if (hitPreview && !hitEditor) {
+    syncScrollByRatio(previewPane, editorPane)
+  }
+}
 
 const rawContent = ref(form.value.content)
 watch(() => form.value.content, (v) => { rawContent.value = v })
@@ -115,16 +134,6 @@ const debouncedContent = useDebouncedRef(rawContent, 150)
 
 let unbindSyncScroll: (() => void) | null = null
 let syncScrollRetryTimer: ReturnType<typeof setTimeout> | null = null
-
-function resolvePreviewScrollEl(): HTMLElement | null {
-  const exposed = previewRef.value?.scrollEl as unknown
-  if (!exposed) return null
-  if (exposed instanceof HTMLElement) return exposed
-  if (typeof exposed === 'object' && exposed !== null && 'value' in exposed) {
-    return (exposed as { value: HTMLElement | null }).value
-  }
-  return null
-}
 
 function setupSplitScrollSync(retries = 12) {
   unbindSyncScroll?.()
@@ -134,16 +143,15 @@ function setupSplitScrollSync(retries = 12) {
     syncScrollRetryTimer = null
   }
   if (mode.value !== 'split') return
-  const left = vditorPaneRef.value?.getScrollEl?.() ?? null
-  const right = resolvePreviewScrollEl()
+  const left = editorPaneEl.value
+  const right = previewPaneEl.value
   if (!left || !right) {
     if (retries > 0) {
       syncScrollRetryTimer = setTimeout(() => setupSplitScrollSync(retries - 1), 200)
     }
     return
   }
-  // 确保预览侧标题已有锚点 id（与大纲/独立预览一致）
-  assignPreviewHeadingIds(right)
+  // 只要两侧 pane 挂载即可绑定；短文一侧不可滚时比例同步自然兜底
   unbindSyncScroll = bindSyncScroll(left, right)
 }
 
@@ -151,15 +159,17 @@ watch(
   () => [mode.value, initialLoading.value] as const,
   async () => {
     await nextTick()
-    // 预览重渲染后高度变化，稍后再绑
     requestAnimationFrame(() => setupSplitScrollSync())
   },
 )
 
+/** 内容变高后只重试绑定一次，避免每次 debounce 都拆掉 listener */
 watch(debouncedContent, async () => {
   if (mode.value !== 'split') return
   await nextTick()
-  requestAnimationFrame(() => setupSplitScrollSync())
+  if (!unbindSyncScroll) {
+    requestAnimationFrame(() => setupSplitScrollSync())
+  }
 })
 
 onBeforeUnmount(() => {
@@ -169,6 +179,7 @@ onBeforeUnmount(() => {
   }
   unbindSyncScroll?.()
   unbindSyncScroll = null
+  outlineScrollSession.dispose()
 })
 
 const { handleUpload } = useImageUpload(noteId, forceSave)
@@ -352,13 +363,16 @@ const readingTimeText = computed(() => estimateReadingTime(form.value.content))
         <template v-else>
           <div
             v-show="mode === 'edit' || mode === 'split'"
+            ref="editorPaneEl"
             class="pane pane-editor"
+            :class="{ 'pane--split-scroll': mode === 'split' }"
           >
             <NoteVditor
               v-if="mode === 'edit' || mode === 'split'"
               ref="vditorPaneRef"
               v-model="form.content"
               compact
+              :pane-scroll="mode === 'split'"
               :editor-id="editorId"
               :theme="editorTheme"
               :note-id="noteId"
@@ -370,15 +384,17 @@ const readingTimeText = computed(() => estimateReadingTime(form.value.content))
 
           <div
             v-show="mode === 'preview' || mode === 'split'"
+            ref="previewPaneEl"
             class="pane pane-preview"
+            :class="{ 'pane--split-scroll': mode === 'split' }"
           >
             <NoteMarkdownPreview
               v-if="mode === 'preview' || mode === 'split'"
               ref="previewRef"
               :content="debouncedContent"
-              :title="form.title"
               :show-toc="false"
               :show-meta="false"
+              :pane-scroll="mode === 'split'"
               :theme="editorTheme"
               :editor-id="`${editorId}-preview`"
               :note-id="noteId"
@@ -461,16 +477,42 @@ const readingTimeText = computed(() => estimateReadingTime(form.value.content))
   flex-direction: column;
   min-height: 0;
 }
-.pane-editor {
-  flex: 0 0 40%;
-  /* 仅 IR 内滚动，便于与预览比例联动 */
-  overflow: hidden;
+/* 分屏：pane 自身滚动，编辑/预览内容撑开，比例联动才可靠 */
+.pane--split-scroll {
+  overflow-x: hidden;
+  overflow-y: auto;
 }
-.pane-preview { flex: 0 0 45%; }
-.pane-outline { flex: 0 0 15%; }
+.pane-editor {
+  flex: 1 1 0;
+}
+.pane-preview {
+  flex: 1 1 0;
+}
+.pane-outline { flex: 0 0 15%; overflow: hidden; }
+/* 分屏：编辑 / 预览 / 大纲用分割线 + 底色区分 */
+.mode-split .pane-editor {
+  background: var(--bg-body);
+}
+.mode-split .pane-preview {
+  border-left: 1px solid var(--border-color);
+  background: var(--bg-card);
+}
+.mode-split .pane-outline,
+.mode-preview .pane-outline {
+  border-left: 1px solid var(--border-color);
+  background: color-mix(in srgb, var(--bg-body) 88%, var(--bg-hover));
+}
+.mode-preview .pane-preview {
+  background: var(--bg-card);
+}
 .mode-edit .pane-editor { flex: 1; }
 .mode-preview .pane-preview { flex: 1; }
 .mode-preview .pane-outline { flex: 0 0 15%; }
+.pane--split-scroll .editor-instance {
+  flex: none;
+  height: auto;
+  min-height: 0;
+}
 .editor-instance {
   flex: 1;
   height: 100%;

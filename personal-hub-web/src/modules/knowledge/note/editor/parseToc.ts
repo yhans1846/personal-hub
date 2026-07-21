@@ -31,3 +31,19 @@ export function assignPreviewHeadingIds(root: HTMLElement): void {
     h.id = id
   })
 }
+
+/**
+ * 给 Vditor IR 标题写入与 parseToc 一致的 id。
+ * 必须去掉 `.vditor-ir__marker`（`#` 等）与预览节点，否则 id 与大纲对不上。
+ */
+export function assignEditorHeadingIds(root: HTMLElement): void {
+  root.querySelectorAll('h1, h2, h3, h4, h5, h6').forEach((h) => {
+    const clone = h.cloneNode(true) as HTMLElement
+    clone
+      .querySelectorAll('.vditor-ir__marker, .vditor-ir__preview, .heading-anchor')
+      .forEach((n) => n.remove())
+    const id = headingIdFromText(clone.textContent ?? '')
+    if (!id) return
+    h.id = id
+  })
+}

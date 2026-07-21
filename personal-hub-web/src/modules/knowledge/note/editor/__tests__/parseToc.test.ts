@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import { headingIdFromText, parseTocFromMarkdown, assignPreviewHeadingIds } from '../parseToc'
+import {
+  headingIdFromText,
+  parseTocFromMarkdown,
+  assignPreviewHeadingIds,
+  assignEditorHeadingIds,
+} from '../parseToc'
 
 describe('parseToc / heading anchors', () => {
   it('headingIdFromText replaces spaces', () => {
@@ -38,5 +43,34 @@ describe('parseToc / heading anchors', () => {
     assignPreviewHeadingIds(root as unknown as HTMLElement)
     expect(h2.id).toBe('Hello-World')
     expect(h3.id).toBe('一、目标')
+  })
+
+  it('assignEditorHeadingIds strips vditor IR markers', () => {
+    const clone: {
+      textContent: string
+      querySelectorAll: (sel: string) => Array<{ remove: () => void }>
+    } = {
+      textContent: '# Hello World',
+      querySelectorAll: (sel: string) => {
+        if (String(sel).includes('vditor-ir__marker')) {
+          return [{
+            remove: () => {
+              clone.textContent = 'Hello World'
+            },
+          }]
+        }
+        return []
+      },
+    }
+    const h2 = {
+      textContent: '# Hello World',
+      id: '',
+      cloneNode: () => clone,
+    }
+    const root = {
+      querySelectorAll: (sel: string) => (sel.startsWith('h') ? [h2] : []),
+    }
+    assignEditorHeadingIds(root as unknown as HTMLElement)
+    expect(h2.id).toBe('Hello-World')
   })
 })

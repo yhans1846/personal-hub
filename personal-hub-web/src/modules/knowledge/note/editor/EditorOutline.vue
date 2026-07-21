@@ -25,8 +25,9 @@ const items = computed(() => parseTocFromMarkdown(props.content))
 .editor-outline {
   height: 100%;
   overflow: auto;
-  border-left: 1px solid var(--border-color);
-  background: var(--bg-body);
+  /* 分割线由 Editor 分栏统一绘制，避免双线 */
+  border-left: none;
+  background: transparent;
   padding: var(--sp-8, 8px);
 }
 .outline-empty {

@@ -1,11 +1,16 @@
-import { headingIdFromText } from './parseToc'
+/**
+ * 分屏滚动同步。
+ *
+ * 深度结论（对照 Guanmo-open + 本项目 Vditor IR）：
+ * - 观墨用 CodeMirror 行号 + data-md-line 锚点；我们 IR 没有稳定行锚点。
+ * - IR 标题 DOM 含 `.vditor-ir__marker`，纯「标题 id 映射」常匹配失败 → 看起来像「完全没联动」。
+ * - 可靠做法：左右用**同一层 pane 滚动**（内容撑开），再做**比例同步 + 短时锁定**（观墨的 ScrollSyncSession）。
+ */
 
 export const SCROLL_SYNC_LOCK_MS = 220
-export const SCROLL_SYNC_TOP_OFFSET = 32
 
 export type ScrollSyncSource = 'editor' | 'preview'
 
-/** 观墨同款：短时锁定驱动源，避免双向回声 */
 export class ScrollSyncSession {
   source: ScrollSyncSource | null = null
   private timer: ReturnType<typeof setTimeout> | null = null
@@ -26,33 +31,18 @@ export class ScrollSyncSession {
   }
 }
 
-function headingNodes(root: HTMLElement): HTMLElement[] {
-  return Array.from(root.querySelectorAll<HTMLElement>('h1, h2, h3, h4, h5, h6'))
-}
-
-function ensureHeadingId(el: HTMLElement): string {
-  if (el.id) return el.id
-  const clone = el.cloneNode(true) as HTMLElement
-  clone.querySelectorAll('.heading-anchor').forEach((a) => a.remove())
-  const id = headingIdFromText(clone.textContent ?? '')
-  if (id) el.id = id
-  return id
-}
-
-/** 视口顶部附近当前标题 id（对齐观墨 getEditorTopLine / getPreviewLineAtTop） */
-export function getHeadingIdAtScrollTop(
-  container: HTMLElement,
-  offsetPx = SCROLL_SYNC_TOP_OFFSET,
-): string | null {
-  const probeY = container.getBoundingClientRect().top + offsetPx
-  let active: HTMLElement | null = null
-  for (const h of headingNodes(container)) {
-    const id = ensureHeadingId(h)
-    if (!id) continue
-    if (h.getBoundingClientRect().top <= probeY + 4) active = h
-    else break
+export function syncScrollByRatio(source: HTMLElement, target: HTMLElement): void {
+  const maxSource = source.scrollHeight - source.clientHeight
+  const maxTarget = target.scrollHeight - target.clientHeight
+  if (maxSource <= 0) {
+    target.scrollTop = 0
+    return
   }
-  return active ? ensureHeadingId(active) : null
+  if (maxTarget <= 0) {
+    target.scrollTop = 0
+    return
+  }
+  target.scrollTop = (source.scrollTop / maxSource) * maxTarget
 }
 
 function cssEscapeId(id: string): string {
@@ -60,82 +50,59 @@ function cssEscapeId(id: string): string {
   return id.replace(/([ !"#$%&'()*+,./:;<=>?@[\\\]^`{|}~])/g, '\\$1')
 }
 
+/** 在滚动容器内滚到标题（用于大纲 → 预览/编辑） */
 export function scrollContainerToHeading(
   container: HTMLElement,
   headingId: string,
-  offsetPx = SCROLL_SYNC_TOP_OFFSET,
+  offsetPx = 24,
+  behavior: ScrollBehavior = 'auto',
 ): boolean {
-  const el =
-    container.querySelector<HTMLElement>(`#${cssEscapeId(headingId)}`)
-    ?? headingNodes(container).find((h) => ensureHeadingId(h) === headingId)
-    ?? null
+  const el = container.querySelector<HTMLElement>(`#${cssEscapeId(headingId)}`)
   if (!el) return false
   const containerRect = container.getBoundingClientRect()
   const elRect = el.getBoundingClientRect()
   const nextTop = container.scrollTop + (elRect.top - containerRect.top) - offsetPx
-  container.scrollTo({ top: Math.max(0, nextTop) })
+  container.scrollTo({ top: Math.max(0, nextTop), behavior })
   return true
 }
 
 /**
- * 分屏标题锚点联动（参考 Guanmo-open EditorArea：锚点映射 + ScrollSyncSession）。
- * 比例滚动在两端内容高度差大时会「对不齐」，标题锚点更稳。
+ * 双向比例联动 + 观墨式短时锁定。
+ * a/b 必须是真正 overflow 滚动的节点（本项目为 `.pane-editor` / `.pane-preview`）。
  */
-export function bindHeadingSyncScroll(
-  editor: HTMLElement,
-  preview: HTMLElement,
-): () => void {
+export function bindSyncScroll(a: HTMLElement, b: HTMLElement): () => void {
   const session = new ScrollSyncSession()
-  let editorFrame: number | null = null
-  let previewFrame: number | null = null
+  let aFrame: number | null = null
+  let bFrame: number | null = null
 
-  const onEditorScroll = () => {
+  const onA = () => {
     if (session.source === 'preview') return
-    if (editorFrame != null) return
-    editorFrame = requestAnimationFrame(() => {
-      editorFrame = null
-      const id = getHeadingIdAtScrollTop(editor)
-      if (!id) return
+    if (aFrame != null) return
+    aFrame = requestAnimationFrame(() => {
+      aFrame = null
       session.lock('editor')
-      scrollContainerToHeading(preview, id)
+      syncScrollByRatio(a, b)
     })
   }
 
-  const onPreviewScroll = () => {
+  const onB = () => {
     if (session.source === 'editor') return
-    if (previewFrame != null) return
-    previewFrame = requestAnimationFrame(() => {
-      previewFrame = null
-      const id = getHeadingIdAtScrollTop(preview)
-      if (!id) return
+    if (bFrame != null) return
+    bFrame = requestAnimationFrame(() => {
+      bFrame = null
       session.lock('preview')
-      scrollContainerToHeading(editor, id)
+      syncScrollByRatio(b, a)
     })
   }
 
-  editor.addEventListener('scroll', onEditorScroll, { passive: true })
-  preview.addEventListener('scroll', onPreviewScroll, { passive: true })
+  a.addEventListener('scroll', onA, { passive: true })
+  b.addEventListener('scroll', onB, { passive: true })
 
   return () => {
-    editor.removeEventListener('scroll', onEditorScroll)
-    preview.removeEventListener('scroll', onPreviewScroll)
-    if (editorFrame != null) cancelAnimationFrame(editorFrame)
-    if (previewFrame != null) cancelAnimationFrame(previewFrame)
+    a.removeEventListener('scroll', onA)
+    b.removeEventListener('scroll', onB)
+    if (aFrame != null) cancelAnimationFrame(aFrame)
+    if (bFrame != null) cancelAnimationFrame(bFrame)
     session.dispose()
   }
-}
-
-/** @deprecated 保留比例算法供单测；分屏请用 bindHeadingSyncScroll */
-export function syncScrollByRatio(source: HTMLElement, target: HTMLElement): void {
-  const maxSource = source.scrollHeight - source.clientHeight
-  const maxTarget = target.scrollHeight - target.clientHeight
-  if (maxSource <= 0 || maxTarget <= 0) {
-    target.scrollTop = 0
-    return
-  }
-  target.scrollTop = (source.scrollTop / maxSource) * maxTarget
-}
-
-export function bindSyncScroll(a: HTMLElement, b: HTMLElement): () => void {
-  return bindHeadingSyncScroll(a, b)
 }

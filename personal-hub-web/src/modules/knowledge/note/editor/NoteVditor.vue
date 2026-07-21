@@ -15,6 +15,11 @@ const props = withDefaults(defineProps<{
   theme: 'light' | 'dark'
   placeholder?: string
   compact?: boolean
+  /**
+   * 分屏联动：内容撑开、由外层 pane 滚动（IR 不再自滚动）。
+   * 需同时设 compact。
+   */
+  paneScroll?: boolean
   readonly?: boolean
   onUploadImg?: (files: File[], callback: (urls: string[]) => void) => void
   /** 用于重写相对路径图片（images/、attachments/）为完整 API URL */
@@ -22,6 +27,7 @@ const props = withDefaults(defineProps<{
 }>(), {
   placeholder: '开始写作...',
   compact: false,
+  paneScroll: false,
   readonly: false,
   noteId: null,
 })
@@ -75,15 +81,23 @@ function resolveIrRoot() {
   irRoot.value = host.querySelector('.vditor-ir') as HTMLElement | null
 }
 
-/** 实际产生滚动的节点（IR 或内部 reset） */
-function getScrollEl(): HTMLElement | null {
+/** IR 根节点（供大纲锚点赋值） */
+function getIrRoot(): HTMLElement | null {
   const host = containerRef.value
-  const ir = irRoot.value ?? (host?.querySelector('.vditor-ir') as HTMLElement | null)
+  return irRoot.value ?? (host?.querySelector('.vditor-ir') as HTMLElement | null)
+}
+
+/**
+ * @deprecated 分屏联动已改为外层 pane 滚动；保留供兼容。
+ * paneScroll 时返回 null（滚动在 Editor 的 pane 上）。
+ */
+function getScrollEl(): HTMLElement | null {
+  if (props.paneScroll) return null
+  const ir = getIrRoot()
   if (!ir) return null
   if (ir.scrollHeight > ir.clientHeight + 1) return ir
   const reset = ir.querySelector('.vditor-reset') as HTMLElement | null
   if (reset && reset.scrollHeight > reset.clientHeight + 1) return reset
-  // 尚未撑开时仍返回 ir，供后续绑定；滚动事件挂在可 overflow 的节点上
   return ir
 }
 
@@ -161,7 +175,8 @@ async function initVditor() {
   suppressInput = true
   vditor = new Vditor(containerRef.value, {
     ...buildVditorBaseOptions({
-      height: props.compact ? '100%' : 'auto',
+      // paneScroll：内容撑开由外层 pane 滚；compact 填满栏高由 IR 自滚
+      height: props.paneScroll ? 'auto' : (props.compact ? '100%' : 'auto'),
       minHeight: props.compact ? 200 : 400,
       placeholder: props.placeholder,
       value: props.modelValue,
@@ -251,13 +266,17 @@ onBeforeUnmount(() => {
   vditorRef.value = null
 })
 
-defineExpose({ getVditor, focus, getScrollEl })
+defineExpose({ getVditor, focus, getScrollEl, getIrRoot })
 </script>
 
 <template>
   <div
     class="note-vditor"
-    :class="{ 'note-vditor--compact': compact, 'note-vditor--readonly': readonly }"
+    :class="{
+      'note-vditor--compact': compact,
+      'note-vditor--pane-scroll': paneScroll,
+      'note-vditor--readonly': readonly,
+    }"
     @contextmenu="onContextMenu"
   >
     <div :id="editorId" ref="containerRef" class="note-vditor-host" />
@@ -325,6 +344,25 @@ defineExpose({ getVditor, focus, getScrollEl })
   height: 100% !important;
   overflow-y: auto !important;
   box-sizing: border-box;
+  padding: 16px 24px !important;
+}
+/* 分屏：内容自然增高，滚动交给外层 .pane-editor */
+.note-vditor--pane-scroll {
+  height: auto !important;
+  overflow: visible !important;
+}
+.note-vditor--pane-scroll :deep(.vditor) {
+  height: auto !important;
+}
+.note-vditor--pane-scroll :deep(.vditor-content) {
+  height: auto !important;
+  overflow: visible !important;
+  flex: none !important;
+  min-height: 0 !important;
+}
+.note-vditor--pane-scroll :deep(.vditor-ir) {
+  height: auto !important;
+  overflow: visible !important;
   padding: 16px 24px !important;
 }
 .note-vditor--readonly :deep(.vditor-ir) {
