@@ -70,7 +70,7 @@ Playwright 批量脚本（路由/深链/API≥400）
 | 「查看全部」 | `/todos`、`/notes` 等 | 列表页 |
 | 深链弹窗 | `/study-plans?edit=1` | 编辑弹窗 |
 | 旧路径 | `/study-plans/1/edit` | redirect + 弹窗 |
-| 笔记编辑 | `/notes/{id}/edit` | 骨架后正文 |
+| 笔记工作区 | `/notes?create=1`、`/notes?edit={id}` | 全屏 Overlay；旧 `/notes/new`、`/notes/{id}/edit` redirect |
 | 通知 | 点铃铛 | 面板可开、跳转不空白 |
 
 ---
@@ -144,12 +144,12 @@ Dialog/Drawer 模块**不得**依赖未注册独立编辑页。正确形态：
 | 动作 | URL |
 |------|-----|
 | 编辑 | `/todos?edit=10`、`/study-plans?edit=2` |
-| 新建 | `/study-records?create=1`、`/diaries?create=1` |
-| 旧路径 | `/todos/10/edit` → redirect |
+| 新建 | `/study-records?create=1`、`/diaries?create=1`、`/notes?create=1` |
+| 旧路径 | `/todos/10/edit` → redirect；`/notes/new`、`/notes/:id/edit` → redirect |
 
 实现：`src/utils/deepLink.ts` · `useDeepLinkDialog.ts` · `router/index.ts` · `docs/STYLE_GUIDE.md`
 
-笔记独立页：`/notes/:id/edit`、`/notes/:id/preview`。
+笔记列表新建/编辑：`/notes?create=1`、`/notes?edit=<id>`（全屏 Overlay，非 Dialog）；只读预览仍 `/notes/:id/preview`。
 
 ---
 

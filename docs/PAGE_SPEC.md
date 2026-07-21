@@ -15,7 +15,7 @@
 | 都要 | Table/Card + `useProductViewMode` |
 | 时间线 | 学习记录例外（§2.4） |
 | Markdown 只读 | DocLayout + `markdown-prose`（§3） |
-| 编辑 | 默认 Dialog；仅笔记等 Full Page |
+| 编辑 | 默认 Dialog；笔记列表新建/编辑为**全屏 Overlay 工作区**（Teleport，非独立路由页）；只读预览仍独立页 |
 
 禁：灰底密表、行内一堆 Primary、无必要独立编辑页。
 
@@ -107,7 +107,7 @@ TOC 宽 220（收起 34，拖 160–400）。主题：`data-preview-theme` → `
 ## 5. Checklist
 
 **列表：** Header+Toolbar+Empty+Pagination · Table/Card 或例外 · 槽位/fill · Dialog+深链 · Token+骨架+深色  
-**笔记：** 右键「归档」→`AUTO_ARCHIVE`；「移入回收站」→`USER_DELETE`；列表多选 →「导出 ZIP」（≤50，仅勾选）；回收站展示删除原因 +「清空回收站」；编辑右键可插入 Mermaid 围栏块与 KaTeX（行内 `$` / 块级 `$$`），IR/预览/文件 md 预览常开渲染；实验开关「双向链接」开启后支持 `[[标题]]` 补全、预览跳转与回链列表；预览配图点开为自定义灯箱（点遮罩/×/Esc 关闭）；**编辑页内容栏约 1280px**；专注藏 App chrome、**常驻细工具头**  
+**笔记：** 列表新建/编辑为**全屏 Overlay 工作区**（`List.vue` 托管 + Teleport → body）；仅顶栏 ✕ 关闭，**Esc 不关工作区**；脏关闭须确认；深链 `/notes?create=1`、`/notes?edit=<id>`（旧 `/notes/new`、`/notes/:id/edit` redirect）；只读预览仍 `/notes/:id/preview`；右键「归档」→`AUTO_ARCHIVE`；「移入回收站」→`USER_DELETE`；列表多选 →「导出 ZIP」（≤50，仅勾选）；回收站展示删除原因 +「清空回收站」；编辑右键可插入 Mermaid 围栏块与 KaTeX（行内 `$` / 块级 `$$`），IR/预览/文件 md 预览常开渲染；实验开关「双向链接」开启后支持 `[[标题]]` 补全、预览跳转与回链列表；预览配图点开为自定义灯箱（点遮罩/×/Esc 关闭）；**编辑区近全宽**（绕过 `--content-max-width`，无专注模式）  
 **命令面板：** Ctrl/Cmd+K 支持快捷新建（笔记/日记/阅读/学习/待办/计划）与页面/内容搜索  
 **设置·数据：** 独立 Tab「数据管理」——缓存清理；立即备份（落盘历史+下载）；自动备份频率；历史下载/恢复/删除；导入 `.zip` 全量覆盖  
 **设置·高级：** 通知偏好 · 实验功能（AI「即将推出」· 双向链接可开）  
