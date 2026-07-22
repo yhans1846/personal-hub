@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref, watch, computed, onUnmounted, nextTick } from 'vue'
-import { uploadDiaryImage, deleteDiaryImage, updateDiary } from '@/modules/knowledge/api'
+import { uploadDiaryImage, uploadDiaryImageFromUrl, deleteDiaryImage, updateDiary } from '@/modules/knowledge/api'
 import { getDiaryImagePreviewUrl, revokePreviewUrl } from '@/utils/file'
-import { ElMessage } from 'element-plus'
-import { ImagePlus, X } from 'lucide-vue-next'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { ImagePlus, Link, X } from 'lucide-vue-next'
 import Sortable from 'sortablejs'
 import ImageLightbox from '@/components/ImageLightbox.vue'
 import UiTooltip from '@/components/UiTooltip.vue'
@@ -67,6 +67,44 @@ async function handleImageUpload(files: FileList | File[]) {
       const url = await getDiaryImagePreviewUrl(diaryId, name)
       previewImages.value.push({ name, url })
     }
+  } finally {
+    uploading.value = false
+  }
+}
+
+async function handleAddFromUrl() {
+  if (!props.diaryId) {
+    ElMessage.warning('请先保存日记，再添加配图')
+    return
+  }
+  let url = ''
+  try {
+    const { value } = await ElMessageBox.prompt('请输入图片链接（http/https）', '从链接添加', {
+      confirmButtonText: '添加',
+      cancelButtonText: '取消',
+      inputPlaceholder: 'https://example.com/image.png',
+      inputValidator: (v) => {
+        const s = (v ?? '').trim()
+        if (!s) return '请输入链接'
+        if (!/^https?:\/\//i.test(s)) return '仅支持 http/https'
+        return true
+      },
+    })
+    url = (value ?? '').trim()
+  } catch {
+    return
+  }
+  const diaryId = props.diaryId
+  uploading.value = true
+  try {
+    const res = await uploadDiaryImageFromUrl(diaryId, url)
+    const name = res.data.data.name
+    imageFiles.value = [...imageFiles.value, name]
+    const preview = await getDiaryImagePreviewUrl(diaryId, name)
+    previewImages.value.push({ name, url: preview })
+    ElMessage.success('已添加配图')
+  } catch {
+    /* request 拦截器已提示 */
   } finally {
     uploading.value = false
   }
@@ -222,6 +260,15 @@ onUnmounted(() => {
         @change="onFileChange"
       >
     </div>
+    <button
+      type="button"
+      class="link-add-btn"
+      :disabled="!canUpload || uploading"
+      @click="handleAddFromUrl"
+    >
+      <Link :size="16" />
+      从链接添加
+    </button>
   </div>
 </template>
 
@@ -320,4 +367,28 @@ onUnmounted(() => {
   color: var(--text-tertiary);
 }
 .dropzone-input { display: none; }
+.link-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: var(--sp-3);
+  height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: border-color var(--transition), color var(--transition), background var(--transition);
+}
+.link-add-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-light);
+}
+.link-add-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 </style>

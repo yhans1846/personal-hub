@@ -76,4 +76,10 @@ public interface BackupDataMapper {
 
     @Delete("DELETE FROM user_layout WHERE user_id = #{userId}")
     int deleteLayouts(@Param("userId") Long userId);
+
+    @Delete("DELETE FROM sys_notification WHERE user_id = #{userId}")
+    int deleteNotifications(@Param("userId") Long userId);
+
+    @Delete("DELETE FROM audit_log WHERE operator_id = #{userId}")
+    int deleteAuditLogs(@Param("userId") Long userId);
 }

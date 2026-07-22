@@ -17,6 +17,13 @@ public interface DiaryFileService {
      */
     Map<String, String> uploadImage(Long diaryId, Long userId, MultipartFile file);
 
+    /**
+     * 从 http(s) URL 下载配图并写入，语义同 {@link #uploadImage}
+     *
+     * @return name=文件名
+     */
+    Map<String, String> uploadImageFromUrl(Long diaryId, Long userId, String url);
+
     /** 加载配图 */
     Resource loadImage(Long diaryId, Long userId, String filename);
 

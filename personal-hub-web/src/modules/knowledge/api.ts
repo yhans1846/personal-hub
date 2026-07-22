@@ -152,6 +152,9 @@ export function uploadDiaryImage(diaryId: number, file: File) {
   form.append('file', file)
   return request.post<Result<{ name: string }>>(`/diaries/${diaryId}/images`, form)
 }
+export function uploadDiaryImageFromUrl(diaryId: number, url: string) {
+  return request.post<Result<{ name: string }>>(`/diaries/${diaryId}/images/from-url`, { url })
+}
 export function deleteDiaryImage(diaryId: number, filename: string) {
   return request.delete<Result<void>>(`/diaries/${diaryId}/images/${encodeURIComponent(filename)}`)
 }

@@ -11,6 +11,8 @@ import {
   downloadBackup,
   restoreBackup,
   deleteBackup,
+  getImageCaptcha,
+  purgeAllData,
   type BackupFrequency,
   type UserBackupItem,
 } from '@/modules/system/api'
@@ -202,6 +204,64 @@ onMounted(() => {
   loadSettings()
   loadHistory()
 })
+
+// ===== 清空数据 =====
+const purgeOpen = ref(false)
+const purging = ref(false)
+const captchaId = ref('')
+const captchaImage = ref('')
+const captchaCode = ref('')
+const captchaLoading = ref(false)
+
+async function refreshCaptcha() {
+  captchaLoading.value = true
+  captchaCode.value = ''
+  try {
+    const vo = await unwrapResult(getImageCaptcha())
+    captchaId.value = vo.captchaId
+    captchaImage.value = `data:image/png;base64,${vo.imageBase64}`
+  } catch (e) {
+    captchaId.value = ''
+    captchaImage.value = ''
+    handleApiError(e, '加载验证码失败')
+  } finally {
+    captchaLoading.value = false
+  }
+}
+
+async function openPurgeDialog() {
+  purgeOpen.value = true
+  await refreshCaptcha()
+}
+
+async function handlePurge() {
+  if (!captchaId.value || !captchaCode.value.trim()) {
+    ElMessage.warning('请输入验证码')
+    return
+  }
+  purging.value = true
+  try {
+    const result = await unwrapResult(purgeAllData({
+      captchaId: captchaId.value,
+      captchaCode: captchaCode.value.trim(),
+    }))
+    try {
+      const res = await downloadBackup(result.backupId)
+      const blob = new Blob([res.data], { type: 'application/zip' })
+      triggerBlobDownload(blob, `personal-hub-purge-backup-${result.backupId}.zip`)
+    } catch (e) {
+      handleApiError(e, '备份已生成但下载失败，请在历史中手动下载')
+    }
+    ElMessage.success('已清空业务数据，备份已保留并开始下载')
+    purgeOpen.value = false
+    await loadHistory()
+  } catch (e) {
+    handleApiError(e, '清空失败')
+    await refreshCaptcha()
+  } finally {
+    purging.value = false
+  }
+}
 </script>
 
 <template>
@@ -313,6 +373,57 @@ onMounted(() => {
       <p class="import-warning">警告：恢复操作将覆盖当前数据，不可撤销。</p>
     </div>
   </UiCard>
+
+  <UiCard class="settings-card">
+    <h3 class="card-title">危险操作</h3>
+    <p class="cache-hint" style="margin-bottom: var(--sp-3)">
+      清空全部业务数据（笔记、日记、待办、收藏、学习、阅读、文件、标签、分类、通知、审计与旧备份）。
+      保留登录账号、密码、用户资料与界面配置。验证通过后会先备份再清空，历史仅保留该份备份并自动下载。
+    </p>
+    <button class="action-btn danger" type="button" @click="openPurgeDialog">
+      <Trash2 :size="14" />
+      清空数据
+    </button>
+  </UiCard>
+
+  <el-dialog
+    v-model="purgeOpen"
+    title="清空数据"
+    width="440px"
+    :close-on-click-modal="false"
+    @closed="captchaCode = ''"
+  >
+    <p class="purge-warn">
+      此操作不可撤销。通过验证后将：先生成备份 → 清空业务数据 → 仅保留刚生成的备份并下载到本地。
+    </p>
+    <div class="captcha-row">
+      <img
+        v-if="captchaImage"
+        :src="captchaImage"
+        alt="验证码"
+        class="captcha-img"
+        @click="refreshCaptcha"
+      >
+      <span v-else class="cache-hint">{{ captchaLoading ? '加载中…' : '点击刷新' }}</span>
+      <button type="button" class="action-btn" :disabled="captchaLoading || purging" @click="refreshCaptcha">
+        刷新
+      </button>
+    </div>
+    <el-input
+      v-model="captchaCode"
+      placeholder="请输入图中字符（不区分大小写）"
+      maxlength="8"
+      :disabled="purging"
+      @keyup.enter="handlePurge"
+    />
+    <template #footer>
+      <button type="button" class="action-btn" :disabled="purging" @click="purgeOpen = false">取消</button>
+      <button type="button" class="action-btn danger" :disabled="purging || !captchaCode.trim()" @click="handlePurge">
+        <Loader2 v-if="purging" :size="14" class="spin" />
+        {{ purging ? '处理中…' : '确认清空' }}
+      </button>
+    </template>
+  </el-dialog>
 </template>
 
 <style scoped>
@@ -415,4 +526,23 @@ onMounted(() => {
 
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 .spin { animation: spin 1s linear infinite; }
+
+.purge-warn {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--text-sm);
+  color: var(--danger);
+  line-height: 1.5;
+}
+.captcha-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-3);
+}
+.captcha-img {
+  height: 40px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+}
 </style>

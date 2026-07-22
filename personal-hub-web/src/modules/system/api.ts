@@ -116,3 +116,22 @@ export function deleteBackup(id: number) {
   return request.delete<Result<void>>(`/backup/${id}`)
 }
 
+export interface ImageCaptcha {
+  captchaId: string
+  imageBase64: string
+}
+
+export function getImageCaptcha() {
+  return request.get<Result<ImageCaptcha>>('/security/image-captcha')
+}
+
+export interface DataPurgeResult {
+  backupId: number
+  fileSize: number
+  createdAt: string
+}
+
+export function purgeAllData(data: { captchaId: string; captchaCode: string }) {
+  return request.post<Result<DataPurgeResult>>('/data/purge', data, { timeout: 180000 })
+}
+

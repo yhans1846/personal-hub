@@ -4,6 +4,11 @@
 
 ## [Unreleased]
 
+### 2026-07-23
+- **功能**：日记配图支持「从链接添加」——`POST /api/diaries/{id}/images/from-url`，服务端下载 http(s) 图片（禁内网）
+- **功能**：设置·数据「清空数据」——字符图验证码（`GET /api/security/image-captcha`）通过后先备份再清空业务数据；保留账号/资料/`user_layout`；备份历史只留该快照并触发下载（`POST /api/data/purge`）
+- **文档**：规格 `2026-07-23-diary-image-url-and-data-purge-design`
+
 ### 2026-07-22
 - **功能**：笔记导入 Markdown 支持多选 `.md`——每个文件一篇笔记；归属当前选中文件夹（与新建一致；首页/全部/未分类 → 未分类）；共用分类/标签/资源目录；单文件仍可改标题；结果汇总笔记与资源；结果弹窗加宽，路径/原因单行省略、悬停看全文；资源失败项标注所属笔记
 - **功能**：导入 API 支持 `folderId`（`POST /notes/import`、`/import-content`）

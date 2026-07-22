@@ -5,6 +5,7 @@ import com.personalhub.common.result.PageResult;
 import com.personalhub.common.result.Result;
 import com.personalhub.common.util.CurrentUser;
 import com.personalhub.knowledge.dto.DiaryCreateDTO;
+import com.personalhub.knowledge.dto.DiaryImageFromUrlDTO;
 import com.personalhub.knowledge.dto.DiaryQueryDTO;
 import com.personalhub.knowledge.service.DiaryEntryService;
 import com.personalhub.knowledge.service.DiaryFileService;
@@ -103,6 +104,16 @@ public class DiaryEntryController {
             @RequestParam("file") MultipartFile file) {
         Long userId = CurrentUser.id(authentication);
         return Result.success(diaryFileService.uploadImage(id, userId, file));
+    }
+
+    @Operation(summary = "从链接添加日记配图", description = "服务端下载 http(s) 图片并写入配图目录")
+    @PostMapping("/{id}/images/from-url")
+    public Result<Map<String, String>> uploadImageFromUrl(
+            @Parameter(hidden = true) Authentication authentication,
+            @PathVariable Long id,
+            @Valid @RequestBody DiaryImageFromUrlDTO dto) {
+        Long userId = CurrentUser.id(authentication);
+        return Result.success(diaryFileService.uploadImageFromUrl(id, userId, dto.getUrl()));
     }
 
     @Operation(summary = "获取日记配图")

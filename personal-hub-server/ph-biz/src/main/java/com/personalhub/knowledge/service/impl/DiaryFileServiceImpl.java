@@ -8,6 +8,8 @@ import com.personalhub.common.util.FilenameGuard;
 import com.personalhub.knowledge.entity.DiaryEntry;
 import com.personalhub.knowledge.mapper.DiaryEntryMapper;
 import com.personalhub.knowledge.service.DiaryFileService;
+import com.personalhub.knowledge.imports.ResourceResolver;
+import com.personalhub.knowledge.imports.ResourceResolver.ResolveResult;
 import com.personalhub.storage.FileAssetService;
 import com.personalhub.storage.FileUploadValidator;
 import com.personalhub.storage.MultipartPayloads;
@@ -22,7 +24,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -34,10 +38,12 @@ import java.util.UUID;
 public class DiaryFileServiceImpl implements DiaryFileService {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final Set<String> IMAGE_EXTS = Set.of("png", "jpg", "jpeg", "gif", "webp");
 
     private final FileAssetService fileAssetService;
     private final DiaryEntryMapper diaryEntryMapper;
     private final StorageProperties storageProperties;
+    private final ResourceResolver resourceResolver;
 
     private DiaryEntry requireDiary(Long diaryId, Long userId) {
         return EntityGuard.requireOwned(
@@ -87,6 +93,35 @@ public class DiaryFileServiceImpl implements DiaryFileService {
         names.add(filename);
         persistImageFiles(diaryId, names);
         log.info("日记配图上传成功: diaryId={}, filename={}", diaryId, filename);
+        return Map.of("name", filename);
+    }
+
+    @Override
+    @Transactional
+    public Map<String, String> uploadImageFromUrl(Long diaryId, Long userId, String url) {
+        DiaryEntry entry = requireDiary(diaryId, userId);
+        if (url == null || url.isBlank()) {
+            throw new BusinessException("图片链接不能为空");
+        }
+        ResolveResult resolved = resourceResolver.resolve(url.trim(), null);
+        if (!resolved.isSuccess() || resolved.getData() == null) {
+            throw new BusinessException(resolved.getMessage() != null ? resolved.getMessage() : "下载失败");
+        }
+        String ext = resolved.getExtension() != null
+                ? resolved.getExtension().toLowerCase(Locale.ROOT) : "png";
+        if ("jpeg".equals(ext)) {
+            ext = "jpg";
+        }
+        if (!IMAGE_EXTS.contains(ext)) {
+            throw new BusinessException("仅支持图片链接（PNG/JPG/GIF/WEBP）");
+        }
+        FileUploadValidator.requireWithinMax(resolved.getData().length, storageProperties.getMaxSize());
+        String filename = UUID.randomUUID().toString().replace("-", "") + "." + ext;
+        fileAssetService.storeBytes(resolved.getData(), StoragePaths.diaryImage(diaryId, filename));
+        List<String> names = new ArrayList<>(entry.parseImageFiles());
+        names.add(filename);
+        persistImageFiles(diaryId, names);
+        log.info("日记配图链接下载成功: diaryId={}, filename={}, url={}", diaryId, filename, url);
         return Map.of("name", filename);
     }
 

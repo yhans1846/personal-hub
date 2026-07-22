@@ -86,7 +86,7 @@ POST：`{title,content,priority,dueDate}`
 
 CRUD + `GET /month?month=YYYY-MM`。列表：keyword,startDate,endDate,mood,month  
 创建/更新可含 `location`、`latitude`、`longitude`、`imageFiles`（文件名字符串数组）  
-配图：`POST|GET|DELETE /{id}/images[/{filename}]` → `diaries/{id}/images/`（须先有 diaryId；不进 `file_resource`）
+配图：`POST|GET|DELETE /{id}/images[/{filename}]`；`POST /{id}/images/from-url` body `{url}` → `{name}`（服务端下载，禁内网）→ `diaries/{id}/images/`（须先有 diaryId；不进 `file_resource`）
 
 ## 收藏 `/api/bookmarks`
 
@@ -140,3 +140,17 @@ GET 全部或 `/{type}` · PUT 保存 · POST import · DELETE 恢复默认
 
 定时：每日 02:00 按频率自动备份；成功保留 7、失败保留 3。磁盘：`backups/{userId}/{id}.zip`（不打入 ZIP 包内）。
 不含：密码、用户名、通知、审计。含：回收站笔记、`note_folders.json`、`user_layout`、`profile.json`、头像。包格式见 `2026-07-19-data-backup-restore-design`；历史见 `2026-07-20-auto-backup-history-design`。
+
+## 安全 `/api/security`
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/image-captcha` | 需登录；`{ captchaId, imageBase64 }`（PNG，TTL 120s，一次性） |
+
+## 数据清空 `/api/data`
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | `/purge` | body `{ captchaId, captchaCode }` → 验码 → 先 `MANUAL` 备份 → 清业务（笔记/日记/待办/收藏/学习/阅读/文件/标签/分类/通知/审计）与磁盘；**保留**账号密码资料与全部 `user_layout`；删其它备份只留该快照 → `{ backupId, fileSize, createdAt }` |
+
+日记配图另：`POST /api/diaries/{id}/images/from-url` body `{ url }` → `{ name }`（复用导入侧 HTTP 拉取，禁内网）。
