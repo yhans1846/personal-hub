@@ -167,7 +167,7 @@ public class NoteController {
         return Result.success(noteService.emptyRecycleBin(userId));
     }
 
-    @Operation(summary = "导入 Markdown 文件", description = "上传 .md 文件，自动本地化资源。可选 baseDir 用于解析相对路径")
+    @Operation(summary = "导入 Markdown 文件", description = "上传 .md 文件，自动本地化资源。可选 baseDir 用于解析相对路径；可选 folderId 归属文件夹（空=未分类）")
     @PostMapping("/import")
     public Result<ImportReport> importMarkdown(
             @Parameter(hidden = true) Authentication authentication,
@@ -175,13 +175,15 @@ public class NoteController {
             @RequestParam(value = "title", required = false) String title,
             @RequestParam(value = "categoryIds", required = false) List<Long> categoryIds,
             @RequestParam(value = "tagIds", required = false) List<Long> tagIds,
-            @RequestParam(value = "baseDir", required = false) String baseDir) {
+            @RequestParam(value = "baseDir", required = false) String baseDir,
+            @RequestParam(value = "folderId", required = false) Long folderId) {
         Long userId = CurrentUser.id(authentication);
-        ImportReport report = importService.importFromFile(userId, title, categoryIds, tagIds, file, baseDir);
+        ImportReport report = importService.importFromFile(
+                userId, title, categoryIds, tagIds, file, baseDir, folderId);
         return Result.success(report);
     }
 
-    @Operation(summary = "粘贴 Markdown 内容导入", description = "粘贴 Markdown 文本导入笔记，自动下载网络图片和 Base64 图片")
+    @Operation(summary = "粘贴 Markdown 内容导入", description = "粘贴 Markdown 文本导入笔记，自动下载网络图片和 Base64 图片；可选 folderId 归属文件夹（空=未分类）")
     @PostMapping("/import-content")
     public Result<ImportReport> importContent(
             @Parameter(hidden = true) Authentication authentication,
@@ -189,7 +191,7 @@ public class NoteController {
         Long userId = CurrentUser.id(authentication);
         ImportReport report = importService.importFromContent(
                 userId, dto.getTitle(), dto.getContent(),
-                dto.getCategoryIds(), dto.getTagIds());
+                dto.getCategoryIds(), dto.getTagIds(), dto.getFolderId());
         return Result.success(report);
     }
 

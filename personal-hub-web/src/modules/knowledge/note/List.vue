@@ -583,10 +583,11 @@ async function onCardMenuAction(actionId: string) {
 
   <el-dialog
     v-model="showImport"
-    width="520px"
+    width="800px"
     :close-on-click-modal="false"
+    class="note-import-dialog"
   >
-    <ImportMarkdownDialog @done="onImportDone" />
+    <ImportMarkdownDialog :folder-id="createFolderId" @done="onImportDone" />
   </el-dialog>
 
   <NoteWorkspaceOverlay
@@ -889,5 +890,12 @@ async function onCardMenuAction(actionId: string) {
 .icon-action--danger:hover {
   color: var(--danger);
   background: var(--danger-light);
+}
+</style>
+
+<style>
+/* el-dialog 挂到 body，需非 scoped */
+.note-import-dialog.el-dialog {
+  max-width: calc(100vw - 32px);
 }
 </style>

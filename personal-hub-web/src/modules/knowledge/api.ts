@@ -99,6 +99,7 @@ export function importMarkdownFile(
   categoryIds?: number[],
   tagIds?: number[],
   baseDir?: string,
+  folderId?: number | null,
 ) {
   const form = new FormData()
   form.append('file', file)
@@ -106,6 +107,7 @@ export function importMarkdownFile(
   if (categoryIds?.length) categoryIds.forEach(id => form.append('categoryIds', String(id)))
   if (tagIds?.length) tagIds.forEach(id => form.append('tagIds', String(id)))
   if (baseDir) form.append('baseDir', baseDir)
+  if (folderId != null) form.append('folderId', String(folderId))
   return request.post<Result<ImportReport>>('/notes/import', form)
 }
 
@@ -115,6 +117,7 @@ export function importMarkdownContent(data: {
   title?: string
   categoryIds?: number[]
   tagIds?: number[]
+  folderId?: number | null
 }) {
   return request.post<Result<ImportReport>>('/notes/import-content', data)
 }

@@ -47,7 +47,8 @@ public class ImportService {
      */
     @Transactional
     public ImportReport importFromFile(Long userId, String title, List<Long> categoryIds,
-                                       List<Long> tagIds, MultipartFile file, String baseDir) {
+                                       List<Long> tagIds, MultipartFile file, String baseDir,
+                                       Long folderId) {
         // 1. 读取文件内容
         String content = readFileContent(file);
         if (title == null || title.isBlank()) {
@@ -58,7 +59,7 @@ public class ImportService {
         }
 
         // 2. 创建笔记（noteService.create 会写入初始内容到 storage）
-        NoteVO createdNote = createNote(userId, title, content, categoryIds, tagIds);
+        NoteVO createdNote = createNote(userId, title, content, categoryIds, tagIds, folderId);
         Long noteId = createdNote.getId();
         String noteDir = "notes/" + noteId;
 
@@ -88,12 +89,13 @@ public class ImportService {
      */
     @Transactional
     public ImportReport importFromContent(Long userId, String title, String content,
-                                          List<Long> categoryIds, List<Long> tagIds) {
+                                          List<Long> categoryIds, List<Long> tagIds,
+                                          Long folderId) {
         // 1. 检测相对路径
         boolean hasRelativePath = resourceScanner.hasRelativePathRefs(content);
 
         // 2. 创建笔记
-        NoteVO createdNote = createNote(userId, title, content, categoryIds, tagIds);
+        NoteVO createdNote = createNote(userId, title, content, categoryIds, tagIds, folderId);
         Long noteId = createdNote.getId();
         String noteDir = "notes/" + noteId;
 
@@ -124,12 +126,13 @@ public class ImportService {
 
     /** 创建笔记并设置初始关联 */
     private NoteVO createNote(Long userId, String title, String content,
-                              List<Long> categoryIds, List<Long> tagIds) {
+                              List<Long> categoryIds, List<Long> tagIds, Long folderId) {
         NoteCreateDTO dto = new NoteCreateDTO();
         dto.setTitle(title != null ? title : "未命名笔记");
         dto.setContent(content);
         dto.setCategoryIds(categoryIds);
         dto.setTagIds(tagIds);
+        dto.setFolderId(folderId);
         return noteService.create(userId, dto);
     }
 

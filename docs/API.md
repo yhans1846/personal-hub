@@ -47,7 +47,9 @@ login → `{token,user:{id,username,nickname,avatar}}`
 
 列表参数：page,size,keyword,categoryId,tagId,isFavorite,isDeleted,`folderId`（缺省/`all`=全部；`none`/`uncategorized`=未分类；数字=该夹**直属**笔记）  
 新建：`{title,content,categoryIds,tagIds,folderId?}`（`folderId` 可空=未分类）  
-`PATCH /{id}/folder`：body `{folderId: number|null}`，移动归属
+`PATCH /{id}/folder`：body `{folderId: number|null}`，移动归属  
+`POST /import`：multipart `file` + 可选 `title/categoryIds/tagIds/baseDir/folderId`  
+`POST /import-content`：`{content,title?,categoryIds?,tagIds?,folderId?}`
 
 ## 笔记文件夹 `/api/note-folders`
 

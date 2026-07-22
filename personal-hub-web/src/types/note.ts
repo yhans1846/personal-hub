@@ -57,6 +57,8 @@ export interface ImportResourceResult {
   success: boolean
   skipped: boolean
   message: string
+  /** 前端多文件聚合时标记所属笔记 */
+  noteLabel?: string
 }
 
 /** 笔记查询参数 */

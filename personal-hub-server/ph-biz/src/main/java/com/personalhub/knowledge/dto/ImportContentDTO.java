@@ -25,4 +25,7 @@ public class ImportContentDTO {
 
     @Schema(description = "标签ID列表", example = "[1, 3]")
     private List<Long> tagIds;
+
+    @Schema(description = "文件夹ID（可选，空=未分类）")
+    private Long folderId;
 }
