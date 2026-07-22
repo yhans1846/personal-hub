@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import { getNoteList, deleteNote, archiveNote, toggleFavorite, exportNotesBatch } from '@/modules/knowledge/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, FileText, Star, Trash2, Clock, Eye, Upload, LayoutList, LayoutGrid, Download, CheckSquare, FolderTree } from 'lucide-vue-next'
+import { Plus, FileText, Star, Trash2, Clock, Eye, Upload, LayoutList, LayoutGrid, Download, CheckSquare, FolderTree, PanelLeft } from 'lucide-vue-next'
 import { EmptyState, PageHeader, ListToolbar, ListPagination } from '@/components'
 import type { NoteVO, NoteQuery, NoteFolderSelection, NoteFolderTreeVO } from '@/types/note'
 import { estimateReadingTime, formatRelativeTime, isRecentlyEdited } from '@/utils/readingTime'
@@ -39,10 +39,26 @@ const workspace = ref<Workspace>(null)
 const workspaceSessionKey = ref(0)
 const folderSelection = ref<NoteFolderSelection>('home')
 const folderDrawerOpen = ref(false)
+const FOLDER_PANE_KEY = 'note-folder-pane-collapsed'
+const folderPaneCollapsed = ref(localStorage.getItem(FOLDER_PANE_KEY) === '1')
 const folderTreeData = ref<NoteFolderTreeVO | null>(null)
 const isHome = computed(() => folderSelection.value === 'home')
 const { viewMode, setViewMode } = useProductViewMode('note-view', 'card')
 const selectedCount = computed(() => selectedIds.value.length)
+
+function setFolderPaneCollapsed(v: boolean) {
+  folderPaneCollapsed.value = v
+  localStorage.setItem(FOLDER_PANE_KEY, v ? '1' : '0')
+}
+
+function toggleFolderPane() {
+  // 移动端：抽屉；桌面：收起/展开窄条
+  if (window.matchMedia('(max-width: 768px)').matches) {
+    folderDrawerOpen.value = !folderDrawerOpen.value
+    return
+  }
+  setFolderPaneCollapsed(!folderPaneCollapsed.value)
+}
 
 const createFolderId = computed((): number | null => {
   const sel = folderSelection.value
@@ -312,11 +328,12 @@ async function onCardMenuAction(actionId: string) {
         @create="goCreate"
       >
         <template #filters>
-          <UiTooltip content="文件夹" placement="bottom">
+          <UiTooltip :content="folderPaneCollapsed ? '展开文件夹' : '文件夹'" placement="bottom">
             <button
               type="button"
               class="toolbar-btn folder-toggle-btn"
-              @click="folderDrawerOpen = !folderDrawerOpen"
+              :class="{ active: !folderPaneCollapsed }"
+              @click="toggleFolderPane"
             >
               <FolderTree :size="14" /> 文件夹
             </button>
@@ -359,11 +376,12 @@ async function onCardMenuAction(actionId: string) {
       </ListToolbar>
 
       <div v-else class="note-home-toolbar">
-        <UiTooltip content="文件夹" placement="bottom">
+        <UiTooltip :content="folderPaneCollapsed ? '展开文件夹' : '文件夹'" placement="bottom">
           <button
             type="button"
             class="toolbar-btn folder-toggle-btn"
-            @click="folderDrawerOpen = !folderDrawerOpen"
+            :class="{ active: !folderPaneCollapsed }"
+            @click="toggleFolderPane"
           >
             <FolderTree :size="14" /> 文件夹
           </button>
@@ -380,14 +398,26 @@ async function onCardMenuAction(actionId: string) {
         :class="{ open: folderDrawerOpen }"
         @click="folderDrawerOpen = false"
       />
-      <div class="folder-pane" :class="{ open: folderDrawerOpen }">
+      <div
+        class="folder-pane"
+        :class="{ open: folderDrawerOpen, collapsed: folderPaneCollapsed }"
+      >
         <NoteFolderTree
+          v-show="!folderPaneCollapsed"
           ref="folderTreeRef"
           v-model="folderSelection"
           @changed="onFolderChanged"
           @loaded="onFolderTreeLoaded"
           @open-note="openEdit"
+          @collapse="setFolderPaneCollapsed(true)"
         />
+        <div v-if="folderPaneCollapsed" class="folder-pane-rail">
+          <UiTooltip content="展开文件夹" placement="right">
+            <button type="button" class="folder-pane-expand" @click="setFolderPaneCollapsed(false)">
+              <PanelLeft :size="16" />
+            </button>
+          </UiTooltip>
+        </div>
       </div>
 
       <div class="note-list-pane">
@@ -609,6 +639,40 @@ async function onCardMenuAction(actionId: string) {
   flex-shrink: 0;
   height: 100%;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
+  transition: width var(--transition-duration) ease;
+}
+.folder-pane.collapsed {
+  width: 36px;
+}
+.folder-pane-rail {
+  width: 36px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 8px 0;
+  border-right: 1px solid var(--border-color);
+  background: color-mix(in srgb, var(--bg-card) 70%, var(--bg-body));
+}
+.folder-pane-expand {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: color var(--transition-duration) ease, background var(--transition-duration) ease;
+}
+.folder-pane-expand:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
 }
 .note-list-pane {
   flex: 1;
@@ -622,11 +686,14 @@ async function onCardMenuAction(actionId: string) {
   display: none;
 }
 .folder-toggle-btn {
-  display: none;
+  display: inline-flex;
 }
 @media (max-width: 768px) {
-  .folder-toggle-btn {
-    display: inline-flex;
+  .folder-pane.collapsed {
+    width: auto;
+  }
+  .folder-pane-rail {
+    display: none;
   }
   .folder-pane {
     position: absolute;

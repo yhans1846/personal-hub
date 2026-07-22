@@ -145,7 +145,10 @@ async function onRenameFolder(e: Event, folder: NoteFolderVO) {
   flex: 1;
   min-height: 0;
   overflow: auto;
-  padding: 8px 4px 24px;
+  padding: 8px 16px 24px;
+}
+.note-home-toc {
+  padding-left: 4px;
 }
 .note-home-hero {
   display: flex;

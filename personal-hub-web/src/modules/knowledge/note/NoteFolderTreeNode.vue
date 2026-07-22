@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { ChevronDown, ChevronRight, FileText, Folder, FolderPlus, MoreHorizontal, Pencil, Trash2 } from 'lucide-vue-next'
+import { ChevronDown, ChevronRight, ChevronsDownUp, ChevronsUpDown, FileText, Folder, FolderPlus, MoreHorizontal, Pencil, Trash2 } from 'lucide-vue-next'
 import type { NoteFolderSelection, NoteFolderVO } from '@/types/note'
 import type { FolderDropHint, FolderDropPlace } from './folderDragState'
 import NoteFolderTreeNode from './NoteFolderTreeNode.vue'
@@ -18,6 +18,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   select: [value: NoteFolderSelection]
   toggle: [id: number]
+  'toggle-subtree': [node: NoteFolderVO]
   'drag-start': [e: DragEvent, id: number]
   'zone-over': [e: DragEvent, id: number, place: FolderDropPlace]
   'zone-drop': [e: DragEvent, id: number, place: FolderDropPlace]
@@ -34,6 +35,26 @@ const hasChildren = computed(() => hasSubfolders.value || hasNotes.value)
 const open = computed(() => props.expanded.has(props.node.id))
 const active = computed(() => props.selected === props.node.id)
 const menuOpen = computed(() => props.menuOpenId === props.node.id)
+
+/** 本夹及子孙中可展开 id（有子夹或笔记） */
+function collectSubtreeIds(n: NoteFolderVO): number[] {
+  const ids: number[] = []
+  const walk = (list: NoteFolderVO[]) => {
+    for (const item of list) {
+      const kids = (item.children?.length ?? 0) > 0 || (item.notes?.length ?? 0) > 0
+      if (kids) ids.push(item.id)
+      if (item.children?.length) walk(item.children)
+    }
+  }
+  walk([n])
+  return ids
+}
+
+const subtreeIds = computed(() => collectSubtreeIds(props.node))
+const canToggleSubtree = computed(() => subtreeIds.value.length > 0)
+const subtreeFullyExpanded = computed(() =>
+  canToggleSubtree.value && subtreeIds.value.every((id) => props.expanded.has(id)),
+)
 
 const place = computed((): FolderDropPlace | null => {
   const h = props.dropHint
@@ -112,6 +133,21 @@ function noteTitle(title?: string) {
       <span class="folder-row-label">{{ node.name }}</span>
       <span class="folder-count">{{ node.noteCount ?? 0 }}</span>
       <div class="folder-row-actions" @click.stop>
+        <UiTooltip
+          v-if="canToggleSubtree"
+          :content="subtreeFullyExpanded ? '全部收起' : '全部展开'"
+          placement="bottom"
+          :show-after="300"
+        >
+          <button
+            type="button"
+            class="folder-icon-btn"
+            @click="emit('toggle-subtree', node)"
+          >
+            <ChevronsDownUp v-if="subtreeFullyExpanded" :size="14" />
+            <ChevronsUpDown v-else :size="14" />
+          </button>
+        </UiTooltip>
         <UiTooltip content="更多" placement="bottom" :show-after="400">
           <button
             type="button"
@@ -159,6 +195,7 @@ function noteTitle(title?: string) {
         :menu-open-id="menuOpenId"
         @select="emit('select', $event)"
         @toggle="emit('toggle', $event)"
+        @toggle-subtree="emit('toggle-subtree', $event)"
         @drag-start="(e, id) => emit('drag-start', e, id)"
         @zone-over="(e, id, p) => emit('zone-over', e, id, p)"
         @zone-drop="(e, id, p) => emit('zone-drop', e, id, p)"

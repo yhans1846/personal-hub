@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Folder, FolderOpen, FolderPlus, Home, FileText, ChevronDown, ChevronRight } from 'lucide-vue-next'
+import { Folder, FolderOpen, FolderPlus, Home, FileText, ChevronDown, ChevronRight, ChevronsDownUp, ChevronsUpDown, PanelLeftClose } from 'lucide-vue-next'
 import {
   createNoteFolder,
   deleteNoteFolder,
@@ -21,6 +21,7 @@ import {
 import UiTooltip from '@/components/UiTooltip.vue'
 
 const EXPAND_KEY = 'note-folder-expanded'
+const UNCAT_EXPAND_KEY = 'note-folder-uncategorized-expanded'
 
 const props = defineProps<{
   modelValue: NoteFolderSelection
@@ -31,6 +32,7 @@ const emit = defineEmits<{
   changed: []
   loaded: [data: NoteFolderTreeVO]
   'open-note': [id: number]
+  collapse: []
 }>()
 
 const tree = ref<NoteFolderVO[]>([])
@@ -72,6 +74,39 @@ function toggleExpand(id: number) {
   const next = new Set(expanded.value)
   if (next.has(id)) next.delete(id)
   else next.add(id)
+  expanded.value = next
+  persistExpanded()
+}
+
+/** 可展开节点：有子夹或直属笔记 */
+function collectExpandableIds(nodes: NoteFolderVO[]): number[] {
+  const ids: number[] = []
+  const walk = (list: NoteFolderVO[]) => {
+    for (const n of list) {
+      const hasKids = (n.children?.length ?? 0) > 0 || (n.notes?.length ?? 0) > 0
+      if (hasKids) ids.push(n.id)
+      if (n.children?.length) walk(n.children)
+    }
+  }
+  walk(nodes)
+  return ids
+}
+
+/** 某夹及其子孙中可展开的 id */
+function collectSubtreeExpandableIds(node: NoteFolderVO): number[] {
+  return collectExpandableIds([node])
+}
+
+/** 单按钮：子树已全开则整枝收起，否则整枝展开 */
+function toggleSubtree(node: NoteFolderVO) {
+  const ids = collectSubtreeExpandableIds(node)
+  if (!ids.length) return
+  const next = new Set(expanded.value)
+  if (ids.every((id) => next.has(id))) {
+    for (const id of ids) next.delete(id)
+  } else {
+    for (const id of ids) next.add(id)
+  }
   expanded.value = next
   persistExpanded()
 }
@@ -142,10 +177,25 @@ function createParentId(): number | null {
   return null
 }
 
-const uncategorizedExpanded = ref(true)
+const uncategorizedExpanded = ref(loadUncatExpanded())
+
+function loadUncatExpanded(): boolean {
+  try {
+    const v = localStorage.getItem(UNCAT_EXPAND_KEY)
+    if (v === null) return false
+    return v === '1'
+  } catch {
+    return false
+  }
+}
+
+function persistUncatExpanded() {
+  localStorage.setItem(UNCAT_EXPAND_KEY, uncategorizedExpanded.value ? '1' : '0')
+}
 
 function toggleUncategorized() {
   uncategorizedExpanded.value = !uncategorizedExpanded.value
+  persistUncatExpanded()
 }
 
 async function onCreate(parentOverride?: number | null) {
@@ -442,12 +492,13 @@ defineExpose({ reload: loadTree })
       </button>
 
       <div
+        v-if="uncategorizedNotes.length > 0"
         class="folder-uncat"
       >
         <div
           role="button"
           tabindex="0"
-          class="folder-row folder-row--drop"
+          class="folder-row folder-row--node folder-row--drop"
           :class="{ active: selected === 'none', 'drop-inside': dropHint?.kind === 'none' }"
           @click="select('none')"
           @keydown.enter="select('none')"
@@ -466,6 +517,22 @@ defineExpose({ reload: loadTree })
           <Folder :size="14" class="folder-row-icon" />
           <span class="folder-row-label">未分类</span>
           <span class="folder-count">{{ uncategorizedCount }}</span>
+          <div v-if="uncategorizedNotes.length" class="folder-row-actions" @click.stop>
+            <UiTooltip
+              :content="uncategorizedExpanded ? '全部收起' : '全部展开'"
+              placement="bottom"
+              :show-after="300"
+            >
+              <button
+                type="button"
+                class="folder-icon-btn"
+                @click="toggleUncategorized"
+              >
+                <ChevronsDownUp v-if="uncategorizedExpanded" :size="14" />
+                <ChevronsUpDown v-else :size="14" />
+              </button>
+            </UiTooltip>
+          </div>
         </div>
         <template v-if="uncategorizedExpanded">
           <button
@@ -498,6 +565,7 @@ defineExpose({ reload: loadTree })
           :menu-open-id="menuOpenId"
           @select="select"
           @toggle="toggleExpand"
+          @toggle-subtree="toggleSubtree"
           @drag-start="onFolderDragStart"
           @zone-over="onZoneDragOver"
           @zone-drop="handleDrop"
@@ -517,6 +585,18 @@ defineExpose({ reload: loadTree })
       >
         拖到此处放到根级末尾
       </div>
+    </div>
+
+    <div class="folder-tree-footer">
+      <UiTooltip content="收起侧栏" placement="top">
+        <button
+          type="button"
+          class="folder-collapse-btn"
+          @click="emit('collapse')"
+        >
+          <PanelLeftClose :size="16" />
+        </button>
+      </UiTooltip>
     </div>
   </aside>
 </template>
@@ -549,6 +629,36 @@ defineExpose({ reload: loadTree })
   min-height: 0;
   overflow: auto;
   padding: 0 6px 12px;
+}
+.folder-tree-footer {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 8px 10px;
+  border-top: 1px solid color-mix(in srgb, var(--border-color) 25%, transparent);
+}
+.folder-collapse-btn {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: color var(--transition-duration) ease, background var(--transition-duration) ease;
+}
+.folder-collapse-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+@media (max-width: 768px) {
+  .folder-tree-footer {
+    display: none;
+  }
 }
 .folder-empty {
   margin: 8px 8px 0;
