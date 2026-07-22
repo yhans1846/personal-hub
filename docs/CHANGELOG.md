@@ -5,8 +5,10 @@
 ## [Unreleased]
 
 ### 2026-07-22
+- **UI**：笔记文件夹树——夹/未分类整枝展开收起；未分类默认收起且空则隐藏；桌面可收起为窄条（底栏按钮）；首页目录左边距
 - **UI**：统一悬停提示——`UiTooltip` + 全局 `.ph-tooltip` / `[role=tooltip]` 样式；壳层与各列表/设置/编辑器等去掉原生 `title` 气泡（对话框标题与 iframe 无障碍 title 保留）
 - **功能**：应用侧栏桌面可收成图标窄栏（底栏切换，localStorage 记忆；移动端仍抽屉）
+- **功能**：笔记语雀式首页壳——`/notes` 默认首页；树挂笔记；点夹仍进列表
 - **UI**：笔记首页目录重新设计——去掉点线分隔与点线填充，改为文件夹图标+笔记计数 Chip+圆角行悬停底色，对齐 Notion 简洁风格
 - **功能**：笔记文件夹树——`note_folder` + `note_note.folder_id`；`/api/note-folders` CRUD/树/移动；列表左栏筛选（直属）+ 拖拽归属/调层级（缘=平级、中=子级）；删夹笔记归未分类；备份含 `note_folders.json`；树展示全部/未分类/直属笔记数
 - **修复**：文件夹向上/平级移动到根级失败——MP `updateById` 默认忽略 null 字段，改用 `LambdaUpdateWrapper` 显式 set `parentId`；补充 STYLE_GUIDE 踩坑记录
