@@ -6,12 +6,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.personalhub.knowledge.entity.Category;
 import com.personalhub.knowledge.entity.DiaryEntry;
 import com.personalhub.knowledge.entity.Note;
+import com.personalhub.knowledge.entity.NoteFolder;
 import com.personalhub.knowledge.entity.ReadingRecord;
 import com.personalhub.knowledge.entity.StudyRecord;
 import com.personalhub.knowledge.entity.Tag;
 import com.personalhub.knowledge.entity.TagRel;
 import com.personalhub.knowledge.mapper.CategoryMapper;
 import com.personalhub.knowledge.mapper.DiaryEntryMapper;
+import com.personalhub.knowledge.mapper.NoteFolderMapper;
 import com.personalhub.knowledge.mapper.NoteMapper;
 import com.personalhub.knowledge.mapper.ReadingRecordMapper;
 import com.personalhub.knowledge.mapper.StudyRecordMapper;
@@ -47,6 +49,7 @@ public class BackupDatabaseWriter {
     private final ObjectMapper objectMapper;
     private final BackupDataMapper backupDataMapper;
     private final NoteMapper noteMapper;
+    private final NoteFolderMapper noteFolderMapper;
     private final CategoryMapper categoryMapper;
     private final TagMapper tagMapper;
     private final TagRelMapper tagRelMapper;
@@ -65,6 +68,7 @@ public class BackupDatabaseWriter {
         backupDataMapper.deleteTagRelsByUser(userId);
         backupDataMapper.deleteNoteCategoryRelsByUser(userId);
         backupDataMapper.deleteNotes(userId);
+        backupDataMapper.deleteNoteFolders(userId);
         backupDataMapper.deleteDiaries(userId);
         backupDataMapper.deleteTodos(userId);
         backupDataMapper.deleteBookmarks(userId);
@@ -88,6 +92,13 @@ public class BackupDatabaseWriter {
             for (Tag t : list) {
                 t.setUserId(userId);
                 tagMapper.insert(t);
+            }
+        });
+        insertAll(dataJson, "note_folders.json", new TypeReference<List<NoteFolder>>() {
+        }, list -> {
+            for (NoteFolder f : list) {
+                f.setUserId(userId);
+                noteFolderMapper.insert(f);
             }
         });
         insertAll(dataJson, "notes.json", new TypeReference<List<Note>>() {

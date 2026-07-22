@@ -45,8 +45,19 @@ login → `{token,user:{id,username,nickname,avatar}}`
 `POST /export`：body `{ids}`（1–50），打包 ZIP（每篇目录含 `note.md` + images/attachments）。  
 `DELETE /recycle-bin`：清空回收站，返回 `{deleted}`。
 
-列表参数：page,size,keyword,categoryId,tagId,isFavorite,isDeleted  
-新建：`{title,content,categoryIds,tagIds}`
+列表参数：page,size,keyword,categoryId,tagId,isFavorite,isDeleted,`folderId`（缺省/`all`=全部；`none`/`uncategorized`=未分类；数字=该夹**直属**笔记）  
+新建：`{title,content,categoryIds,tagIds,folderId?}`（`folderId` 可空=未分类）  
+`PATCH /{id}/folder`：body `{folderId: number|null}`，移动归属
+
+## 笔记文件夹 `/api/note-folders`
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/tree` | `{ folders, totalCount, uncategorizedCount }`；节点含 `noteCount`（直属未删除笔记数） |
+| POST | `/` | `{name,parentId?}` 创建（深度≤5） |
+| PUT | `/{id}` | `{name}` 重命名 |
+| PATCH | `/{id}/move` | `{parentId,sortOrder}`；防成环、超深 |
+| DELETE | `/{id}` | 删子树；笔记 `folder_id` 置空（不进回收站） |
 
 ## 分类 `/api/categories`
 
@@ -125,5 +136,5 @@ GET 全部或 `/{type}` · PUT 保存 · POST import · DELETE 恢复默认
 | GET/PUT | `/settings` | `{ frequency: off\|daily\|weekly }`，默认 daily |
 | POST | `/import` | 上传 `.zip` 全量覆盖（username/password 不变） |
 
-定时：每日 02:00 按频率自动备份；成功保留 7、失败保留 3。磁盘：`backups/{userId}/{id}.zip`（不打入 ZIP 包内）。  
-不含：密码、用户名、通知、审计。含：回收站笔记、`user_layout`、`profile.json`、头像。包格式见 `2026-07-19-data-backup-restore-design`；历史见 `2026-07-20-auto-backup-history-design`。
+定时：每日 02:00 按频率自动备份；成功保留 7、失败保留 3。磁盘：`backups/{userId}/{id}.zip`（不打入 ZIP 包内）。
+不含：密码、用户名、通知、审计。含：回收站笔记、`note_folders.json`、`user_layout`、`profile.json`、头像。包格式见 `2026-07-19-data-backup-restore-design`；历史见 `2026-07-20-auto-backup-history-design`。

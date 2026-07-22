@@ -34,6 +34,9 @@ public class Note {
     /** 列表摘要（纯文本截断，避免列表读全文） */
     private String excerpt;
 
+    /** 所属文件夹，空=未分类 */
+    private Long folderId;
+
     /** 是否收藏 0-否 1-是 */
     private Integer isFavorite;
 

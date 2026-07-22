@@ -6,6 +6,7 @@ import com.personalhub.common.result.PageResult;
 import com.personalhub.common.result.Result;
 import com.personalhub.common.util.CurrentUser;
 import com.personalhub.knowledge.dto.ImportContentDTO;
+import com.personalhub.knowledge.dto.NoteFolderAssignDTO;
 import com.personalhub.knowledge.dto.NoteBatchExportDTO;
 import com.personalhub.knowledge.dto.NoteCreateDTO;
 import com.personalhub.knowledge.dto.NoteQueryDTO;
@@ -125,6 +126,17 @@ public class NoteController {
         Long userId = CurrentUser.id(authentication);
         IPage<NoteVO> result = noteService.getRecent(userId, pageParam.getPage(), pageParam.getSize());
         return Result.success(PageResult.of(result));
+    }
+
+    @Operation(summary = "更新笔记所属文件夹")
+    @PatchMapping("/{id}/folder")
+    public Result<Void> updateFolder(
+            @Parameter(hidden = true) Authentication authentication,
+            @PathVariable Long id,
+            @RequestBody NoteFolderAssignDTO dto) {
+        Long userId = CurrentUser.id(authentication);
+        noteService.updateFolder(id, userId, dto.getFolderId());
+        return Result.success();
     }
 
     @Operation(summary = "恢复笔记")

@@ -65,7 +65,7 @@
 ```
 manifest.json
 data/
-  notes.json, categories.json, tags.json, tag_rels.json,
+  notes.json, note_folders.json, categories.json, tags.json, tag_rels.json,
   note_category_rels.json, diaries.json, todos.json,
   bookmarks.json, study_records.json, study_plans.json,
   readings.json, files.json, layouts.json, profile.json

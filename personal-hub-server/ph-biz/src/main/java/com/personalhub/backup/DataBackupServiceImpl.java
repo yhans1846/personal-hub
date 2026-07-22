@@ -6,12 +6,14 @@ import com.personalhub.common.exception.BusinessException;
 import com.personalhub.knowledge.entity.Category;
 import com.personalhub.knowledge.entity.DiaryEntry;
 import com.personalhub.knowledge.entity.Note;
+import com.personalhub.knowledge.entity.NoteFolder;
 import com.personalhub.knowledge.entity.ReadingRecord;
 import com.personalhub.knowledge.entity.StudyRecord;
 import com.personalhub.knowledge.entity.Tag;
 import com.personalhub.knowledge.entity.TagRel;
 import com.personalhub.knowledge.mapper.CategoryMapper;
 import com.personalhub.knowledge.mapper.DiaryEntryMapper;
+import com.personalhub.knowledge.mapper.NoteFolderMapper;
 import com.personalhub.knowledge.mapper.NoteMapper;
 import com.personalhub.knowledge.mapper.ReadingRecordMapper;
 import com.personalhub.knowledge.mapper.StudyRecordMapper;
@@ -78,6 +80,7 @@ public class DataBackupServiceImpl implements DataBackupService {
     private final BackupDataMapper backupDataMapper;
     private final BackupDatabaseWriter backupDatabaseWriter;
     private final NoteMapper noteMapper;
+    private final NoteFolderMapper noteFolderMapper;
     private final CategoryMapper categoryMapper;
     private final TagMapper tagMapper;
     private final TagRelMapper tagRelMapper;
@@ -99,6 +102,12 @@ public class DataBackupServiceImpl implements DataBackupService {
         List<String> warnings = new ArrayList<>();
         List<String> modules = new ArrayList<>();
         Map<String, Object> dataFiles = new LinkedHashMap<>();
+
+        List<NoteFolder> noteFolders = noteFolderMapper.selectList(
+                new LambdaQueryWrapper<NoteFolder>().eq(NoteFolder::getUserId, userId)
+                        .orderByAsc(NoteFolder::getId));
+        dataFiles.put("note_folders.json", noteFolders);
+        modules.add("note_folders");
 
         List<Note> notes = noteMapper.selectList(new LambdaQueryWrapper<Note>().eq(Note::getUserId, userId));
         dataFiles.put("notes.json", notes);

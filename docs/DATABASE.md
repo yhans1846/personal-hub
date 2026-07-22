@@ -14,8 +14,12 @@
 username UK · password · nickname · avatar（URL，文件在 `avatars/`）· email · gender(0/1/2) · birthday · phone · country/province/city/district · website/github · bio · created_at/updated_at · is_deleted
 
 ### `note_note`
-user_id · title · md_path · excerpt · is_favorite · is_deleted · deleted_at · delete_reason（`USER_DELETE`|`AUTO_ARCHIVE`）· 时间  
-正文在文件系统；分类 `note_category_rel`；标签 `tag_rel`。索引：user_id · updated_at · (user_id,is_deleted,updated_at)
+user_id · title · md_path · excerpt · **folder_id**（可空=未分类）· is_favorite · is_deleted · deleted_at · delete_reason（`USER_DELETE`|`AUTO_ARCHIVE`）· 时间  
+正文在文件系统；分类 `note_category_rel`；标签 `tag_rel`；文件夹 `note_folder`。索引：user_id · updated_at · (user_id,is_deleted,updated_at) · (user_id,folder_id)
+
+### `note_folder`
+user_id · parent_id（可空=根）· name · sort_order · 时间  
+UK `(user_id,parent_id,name)`（根级 parent_id 为 NULL 时 uniqueness 由应用层加强）；索引 `(user_id,parent_id,sort_order)`。删夹：子树删除，笔记 `folder_id` 置空（不进回收站）。
 
 ### `category`
 user_id · name · type(note|bookmark|file) · sort_order · 时间  
@@ -103,9 +107,10 @@ module（含 NOTE/…/USER/BACKUP；业务侧写 AUTH）· business_id · action
 
 ```
 sys_user ── note_note ── note_category_rel ── category(type=note)
+                ├── note_folder（folder_id）
                 └── tag_rel ── tag
      ├── study_record / todo_task / file_resource / diary_entry
      ├── bookmark_url / study_plan / reading_record ── tag_rel
      ├── category(file|bookmark)
-     └── sys_notification / user_layout / audit_log
+     └── sys_notification / user_layout / audit_log / user_backup
 ```

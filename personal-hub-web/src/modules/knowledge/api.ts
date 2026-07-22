@@ -1,6 +1,13 @@
 import request from '@/api/request'
 import type { Result, PageResult } from '@/types/common'
-import type { NoteVO, NoteCreateDTO, NoteQuery, ImportReport } from '@/types/note'
+import type {
+  NoteVO,
+  NoteCreateDTO,
+  NoteQuery,
+  ImportReport,
+  NoteFolderVO,
+  NoteFolderTreeVO,
+} from '@/types/note'
 import type { DiaryVO, DiaryCreateDTO, DiaryQuery } from '@/types/diary'
 import type { StudyRecordVO, StudyRecordCreateDTO, StudyRecordQuery } from '@/types/study'
 import type { ReadingVO, ReadingCreateDTO, ReadingQuery } from '@/types/reading'
@@ -61,6 +68,28 @@ export function emptyRecycleBin() {
 /** 笔记回链（引用了本篇的其它笔记） */
 export function getNoteBacklinks(id: number) {
   return request.get<Result<{ id: number; title: string }[]>>(`/notes/${id}/backlinks`)
+}
+
+/** 移动笔记到文件夹（null = 未分类） */
+export function updateNoteFolder(id: number, folderId: number | null) {
+  return request.patch<Result<void>>(`/notes/${id}/folder`, { folderId })
+}
+
+// ====== 笔记文件夹 ======
+export function getNoteFolderTree() {
+  return request.get<Result<NoteFolderTreeVO>>('/note-folders/tree')
+}
+export function createNoteFolder(data: { name: string; parentId?: number | null }) {
+  return request.post<Result<NoteFolderVO>>('/note-folders', data)
+}
+export function renameNoteFolder(id: number, name: string) {
+  return request.put<Result<NoteFolderVO>>(`/note-folders/${id}`, { name })
+}
+export function moveNoteFolder(id: number, data: { parentId: number | null; sortOrder: number }) {
+  return request.patch<Result<NoteFolderVO>>(`/note-folders/${id}/move`, data)
+}
+export function deleteNoteFolder(id: number) {
+  return request.delete<Result<void>>(`/note-folders/${id}`)
 }
 
 /** 导入 Markdown 文件 */

@@ -15,6 +15,7 @@ import com.personalhub.knowledge.entity.Note;
 import com.personalhub.knowledge.enums.NoteDeleteReason;
 import com.personalhub.knowledge.mapper.CategoryMapper;
 import com.personalhub.knowledge.mapper.NoteMapper;
+import com.personalhub.knowledge.service.NoteFolderService;
 import com.personalhub.knowledge.service.NoteService;
 import com.personalhub.knowledge.service.TagService;
 import com.personalhub.knowledge.vo.NoteBacklinkVO;
@@ -55,6 +56,7 @@ public class NoteServiceImpl implements NoteService {
     private final NoteMapper noteMapper;
     private final CategoryMapper categoryMapper;
     private final TagService tagService;
+    private final NoteFolderService noteFolderService;
     private final StorageService storageService;
     private final AuditLogService auditLogService;
 
@@ -84,10 +86,12 @@ public class NoteServiceImpl implements NoteService {
     @Transactional
     @CacheEvict(cacheNames = "categories", allEntries = true)
     public NoteVO create(Long userId, NoteCreateDTO dto) {
+        noteFolderService.requireOwnedFolder(userId, dto.getFolderId());
         var note = Note.builder()
                 .userId(userId)
                 .title(dto.getTitle())
                 .excerpt(buildExcerpt(dto.getContent()))
+                .folderId(dto.getFolderId())
                 .build();
         noteMapper.insert(note);
         log.info("新建笔记: id={}, userId={}, title={}", note.getId(), userId, dto.getTitle());
@@ -132,6 +136,22 @@ public class NoteServiceImpl implements NoteService {
         tagService.bindTags(userId, id, EntityType.NOTE, dto.getTagIds());
 
         return getById(id, userId);
+    }
+
+    @Override
+    @Transactional
+    public void updateFolder(Long id, Long userId, Long folderId) {
+        Note note = EntityGuard.requireOwned(
+                noteMapper.selectById(id), userId, Note::getUserId, "笔记不存在");
+        if (Integer.valueOf(Flags.YES).equals(note.getIsDeleted())) {
+            throw new NotFoundException("笔记不存在");
+        }
+        noteFolderService.requireOwnedFolder(userId, folderId);
+        noteMapper.update(null, new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<Note>()
+                .eq(Note::getId, id)
+                .eq(Note::getUserId, userId)
+                .set(Note::getFolderId, folderId));
+        log.info("更新笔记文件夹: noteId={}, folderId={}, userId={}", id, folderId, userId);
     }
 
     @Override

@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import Editor from './Editor.vue'
 
-defineProps<{
+const props = defineProps<{
   noteId?: number
+  /** 新建时落入的文件夹；null = 未分类 */
+  folderId?: number | null
 }>()
 
 const emit = defineEmits<{
@@ -21,7 +23,8 @@ const emit = defineEmits<{
     >
       <Editor
         embedded
-        :initial-note-id="noteId"
+        :initial-note-id="props.noteId"
+        :initial-folder-id="props.folderId ?? null"
         @close="emit('close')"
         @note-id="emit('note-id', $event)"
       />

@@ -44,6 +44,9 @@ public interface BackupDataMapper {
     @Delete("DELETE FROM note_note WHERE user_id = #{userId}")
     int deleteNotes(@Param("userId") Long userId);
 
+    @Delete("DELETE FROM note_folder WHERE user_id = #{userId}")
+    int deleteNoteFolders(@Param("userId") Long userId);
+
     @Delete("DELETE FROM diary_entry WHERE user_id = #{userId}")
     int deleteDiaries(@Param("userId") Long userId);
 

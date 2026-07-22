@@ -51,6 +51,7 @@
 | 验证码把答案字段下发客户端 | 书架验证码不下发 `emptyIndex`，由 `shelfBooks` 空串推导；答案只存 Redis |
 | Service 内 `JdbcTemplate` / 字符串 SQL | 迁入对应 `Mapper` + `mapper.xml`（`#{}`）；禁在 Service 拼 SQL |
 | 实体字段 `isDeleted` 等 | **存量保留**（改名成本高）；新字段勿用 `is` 前缀，用 `@TableField("is_xxx")` 映射列名 |
+| `updateById` 更新含 null 字段 | MP 默认 `NOT_NULL` 策略，null 字段不生成 SET 子句。需要将字段更新为 null 时（如 `parentId`/`folderId` 置空），必须用 `LambdaUpdateWrapper` 显式 `.set(Entity::getField, null)`，禁止依赖 `updateById` |
 
 完整手册正文见 `docs/alibaba-java-specification.md`（参考，非日常 SSOT）。
 

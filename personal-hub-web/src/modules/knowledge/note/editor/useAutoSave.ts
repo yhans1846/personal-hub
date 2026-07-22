@@ -30,7 +30,12 @@ function formSnapshot(form: FormData): string {
  *
  * 初始加载通过 markReady() 建立基线，避免「打开已有笔记未改动却提示保存」。
  */
-export function useAutoSave(form: Ref<FormData>, initialNoteId?: number) {
+export function useAutoSave(
+  form: Ref<FormData>,
+  initialNoteId?: number,
+  /** 新建落库时写入的文件夹；null/undefined = 未分类 */
+  initialFolderId?: number | null,
+) {
   const status = ref<SaveStatus>('idle')
   const lastSavedAt = ref<number | null>(null)
   const noteId = ref<number | null>(initialNoteId ?? null)
@@ -87,7 +92,13 @@ export function useAutoSave(form: Ref<FormData>, initialNoteId?: number) {
     status.value = 'saving'
 
     try {
-      const data = {
+      const data: {
+        title: string
+        content: string
+        categoryIds: number[]
+        tagIds: number[]
+        folderId?: number | null
+      } = {
         title: form.value.title,
         content: form.value.content,
         categoryIds: form.value.categoryIds,
@@ -97,6 +108,7 @@ export function useAutoSave(form: Ref<FormData>, initialNoteId?: number) {
       if (noteId.value) {
         await updateNote(noteId.value, data)
       } else {
+        data.folderId = initialFolderId ?? null
         const res = await createNote(data)
         noteId.value = res.data.data.id
       }

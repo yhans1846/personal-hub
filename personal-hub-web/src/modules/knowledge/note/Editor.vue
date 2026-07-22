@@ -32,6 +32,8 @@ const props = withDefaults(defineProps<{
   embedded?: boolean
   /** 编辑已有笔记；缺省/undefined = 新建 */
   initialNoteId?: number
+  /** 新建时默认文件夹；null = 未分类 */
+  initialFolderId?: number | null
 }>(), {
   embedded: false,
 })
@@ -58,6 +60,12 @@ const resolvedNoteId = computed(() => {
 })
 const isEdit = computed(() => resolvedNoteId.value != null)
 
+/** 新建落库用：挂载时锁定，避免 prop 默认值覆盖 */
+const lockedFolderId: number | null =
+  props.initialFolderId != null && Number.isFinite(Number(props.initialFolderId))
+    ? Number(props.initialFolderId)
+    : null
+
 const form = ref({ title: isEdit.value ? '' : '未命名笔记', content: '', categoryIds: [] as number[], tagIds: [] as number[] })
 const categories = ref<CategoryVO[]>([])
 const tags = ref<TagVO[]>([])
@@ -77,7 +85,7 @@ const {
   restoreDraft,
   clearDraft,
   markReady,
-} = useAutoSave(form, resolvedNoteId.value)
+} = useAutoSave(form, resolvedNoteId.value, lockedFolderId)
 
 /** 加载阶段是否因草稿与服务器不一致而需要 dirty */
 const hydrationDirty = ref(false)

@@ -1,15 +1,16 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { getNoteList, deleteNote, archiveNote, toggleFavorite, exportNotesBatch } from '@/modules/knowledge/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, FileText, Star, Trash2, Clock, Eye, Upload, LayoutList, LayoutGrid, Download, CheckSquare } from 'lucide-vue-next'
+import { Plus, FileText, Star, Trash2, Clock, Eye, Upload, LayoutList, LayoutGrid, Download, CheckSquare, FolderTree } from 'lucide-vue-next'
 import { EmptyState, PageHeader, ListToolbar, ListPagination } from '@/components'
-import type { NoteVO, NoteQuery } from '@/types/note'
+import type { NoteVO, NoteQuery, NoteFolderSelection } from '@/types/note'
 import { estimateReadingTime, formatRelativeTime, isRecentlyEdited } from '@/utils/readingTime'
 import { formatRelativeUpdated } from '@/utils/formatTime'
 import ImportMarkdownDialog from './ImportMarkdownDialog.vue'
 import NoteCardContextMenu, { type CardMenuEntry } from './NoteCardContextMenu.vue'
 import NoteWorkspaceOverlay from './NoteWorkspaceOverlay.vue'
+import NoteFolderTree from './NoteFolderTree.vue'
 import { useDeepLinkDialog } from '@/composables/useDeepLinkDialog'
 import { useMainContentFill } from '@/composables/useMainContentFill'
 import { useFillPageSize } from '@/composables/useFillPageSize'
@@ -17,12 +18,13 @@ import { useProductViewMode } from '@/composables/useProductViewMode'
 import { usePaginatedList } from '@/composables/usePaginatedList'
 import { handleApiError, unwrapPage } from '@/utils/apiResult'
 import { triggerBlobDownload } from '@/utils/file'
+import { noteFolderDraggingKind } from './folderDragState'
 
 const MAX_EXPORT = 50
 
 type Workspace =
   | null
-  | { mode: 'create' }
+  | { mode: 'create'; folderId: number | null }
   | { mode: 'edit'; id: number }
 
 const showImport = ref(false)
@@ -32,13 +34,35 @@ const exporting = ref(false)
 const cardMenuRef = ref<InstanceType<typeof NoteCardContextMenu> | null>(null)
 const activeNote = ref<NoteVO | null>(null)
 const workspace = ref<Workspace>(null)
+const workspaceSessionKey = ref(0)
+const folderSelection = ref<NoteFolderSelection>('all')
+const folderDrawerOpen = ref(false)
 const { viewMode, setViewMode } = useProductViewMode('note-view', 'card')
 const selectedCount = computed(() => selectedIds.value.length)
+
+const createFolderId = computed((): number | null => {
+  const sel = folderSelection.value
+  if (typeof sel === 'number' && Number.isFinite(sel)) return sel
+  return null
+})
+
+function folderQueryParam(sel: NoteFolderSelection): string | undefined {
+  if (sel === 'all') return undefined
+  if (sel === 'none') return 'none'
+  return String(sel)
+}
 
 const { list, total, loading, query, fetchList, onSearch, onPageChange } = usePaginatedList<NoteVO, NoteQuery & { page: number; size: number }>({
   initialQuery: { page: 1, size: 10, keyword: '' },
   fetchPage: (q) => unwrapPage(getNoteList(q)),
   errorMessage: '加载笔记失败',
+})
+
+watch(folderSelection, (sel) => {
+  query.value.folderId = folderQueryParam(sel)
+  query.value.page = 1
+  fetchList()
+  folderDrawerOpen.value = false
 })
 
 useMainContentFill()
@@ -64,13 +88,18 @@ function openImport() {
   showImport.value = true
 }
 function openCreate() {
-  workspace.value = { mode: 'create' }
+  workspaceSessionKey.value += 1
+  workspace.value = { mode: 'create', folderId: createFolderId.value }
 }
 function openEdit(id: number) {
+  workspaceSessionKey.value += 1
   workspace.value = { mode: 'edit', id }
 }
+const folderTreeRef = ref<{ reload: () => Promise<void> } | null>(null)
+
 function closeWorkspace() {
   workspace.value = null
+  folderTreeRef.value?.reload()
   fetchList()
 }
 function onWorkspaceNoteId(id: number) {
@@ -84,6 +113,28 @@ useDeepLinkDialog({ openCreate, openEdit })
 function goCreate() { openCreate() }
 function goEdit(id: number) { openEdit(id) }
 function goPreview(id: number) { window.open(`/notes/${id}/preview`, '_blank') }
+
+const workspaceCreateFolderId = computed(() =>
+  workspace.value?.mode === 'create' ? workspace.value.folderId : null,
+)
+
+function onFolderChanged() {
+  folderTreeRef.value?.reload()
+  fetchList()
+}
+
+function onNoteDragStart(e: DragEvent, noteId: number) {
+  noteFolderDraggingKind.value = 'note'
+  const payload = JSON.stringify({ type: 'note', id: noteId })
+  e.dataTransfer?.setData('application/x-ph-note', payload)
+  e.dataTransfer?.setData('application/x-ph-folder-drag', payload)
+  e.dataTransfer?.setData('text/plain', payload)
+  e.dataTransfer!.effectAllowed = 'move'
+}
+
+function onNoteDragEnd() {
+  noteFolderDraggingKind.value = null
+}
 
 function toggleSelectMode() {
   selectMode.value = !selectMode.value
@@ -233,6 +284,14 @@ async function onCardMenuAction(actionId: string) {
 
       <ListToolbar :search="query.keyword ?? ''" search-placeholder="搜索笔记标题或摘要..." search-width="240px" create-label="新建笔记" @update:search="query.keyword = $event" @search="onSearch" @create="goCreate">
         <template #filters>
+          <button
+            type="button"
+            class="toolbar-btn folder-toggle-btn"
+            title="文件夹"
+            @click="folderDrawerOpen = !folderDrawerOpen"
+          >
+            <FolderTree :size="14" /> 文件夹
+          </button>
           <div class="view-toggle">
             <button type="button" class="view-btn" :class="{ active: viewMode === 'table' }" title="列表" @click="setViewMode('table')">
               <LayoutList :size="15" />
@@ -267,7 +326,17 @@ async function onCardMenuAction(actionId: string) {
       </ListToolbar>
     </div>
 
-    <div class="plan-middle">
+    <div class="plan-middle note-middle">
+      <div
+        class="folder-drawer-mask"
+        :class="{ open: folderDrawerOpen }"
+        @click="folderDrawerOpen = false"
+      />
+      <div class="folder-pane" :class="{ open: folderDrawerOpen }">
+        <NoteFolderTree ref="folderTreeRef" v-model="folderSelection" @changed="onFolderChanged" />
+      </div>
+
+      <div class="note-list-pane">
       <div v-if="loading && viewMode === 'card'" class="card-grid-skeleton">
         <div v-for="i in pageSize" :key="i" class="skeleton-note-card" />
       </div>
@@ -293,6 +362,9 @@ async function onCardMenuAction(actionId: string) {
             :key="note.id"
             class="pt-row"
             :class="{ 'pt-row--selected': selectMode && isSelected(note.id) }"
+            draggable="true"
+            @dragstart="onNoteDragStart($event, note.id)"
+            @dragend="onNoteDragEnd"
             @click="onRowClick(note)"
           >
             <div v-if="selectMode" class="col-check" @click.stop>
@@ -348,6 +420,9 @@ async function onCardMenuAction(actionId: string) {
           :key="note.id"
           class="note-card"
           :class="{ 'note-card--selected': selectMode && isSelected(note.id) }"
+          draggable="true"
+          @dragstart="onNoteDragStart($event, note.id)"
+          @dragend="onNoteDragEnd"
           @click="onRowClick(note)"
           @contextmenu="onCardContextMenu($event, note)"
         >
@@ -394,6 +469,7 @@ async function onCardMenuAction(actionId: string) {
           aria-hidden="true"
         />
       </div>
+      </div>
     </div>
 
     <div class="plan-foot">
@@ -417,7 +493,9 @@ async function onCardMenuAction(actionId: string) {
 
   <NoteWorkspaceOverlay
     v-if="workspace"
+    :key="workspaceSessionKey"
     :note-id="workspace.mode === 'edit' ? workspace.id : undefined"
+    :folder-id="workspaceCreateFolderId"
     @close="closeWorkspace"
     @note-id="onWorkspaceNoteId"
   />
@@ -439,6 +517,61 @@ async function onCardMenuAction(actionId: string) {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+}
+.note-middle {
+  flex-direction: row;
+  position: relative;
+}
+.folder-pane {
+  flex-shrink: 0;
+  height: 100%;
+  min-height: 0;
+}
+.note-list-pane {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.folder-drawer-mask {
+  display: none;
+}
+.folder-toggle-btn {
+  display: none;
+}
+@media (max-width: 768px) {
+  .folder-toggle-btn {
+    display: inline-flex;
+  }
+  .folder-pane {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 20;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+    box-shadow: var(--shadow-md);
+  }
+  .folder-pane.open {
+    transform: translateX(0);
+  }
+  .folder-drawer-mask {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: 15;
+    background: rgba(0, 0, 0, 0.35);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+  .folder-drawer-mask.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
 }
 .plan-foot {
   flex-shrink: 0;

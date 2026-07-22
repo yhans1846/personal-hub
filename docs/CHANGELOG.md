@@ -4,6 +4,11 @@
 
 ## [Unreleased]
 
+### 2026-07-22
+- **功能**：笔记文件夹树——`note_folder` + `note_note.folder_id`；`/api/note-folders` CRUD/树/移动；列表左栏筛选（直属）+ 拖拽归属/调层级（缘=平级、中=子级）；删夹笔记归未分类；备份含 `note_folders.json`；树展示全部/未分类/直属笔记数
+- **修复**：文件夹向上/平级移动到根级失败——MP `updateById` 默认忽略 null 字段，改用 `LambdaUpdateWrapper` 显式 set `parentId`；补充 STYLE_GUIDE 踩坑记录
+- **文档**：同步 DATABASE / API / PAGE_SPEC / PROJECT 与规格 `2026-07-22-note-folder-tree-design`
+
 ### 2026-07-21
 - **治理**：移除过时脚本与已并入 `sql/init.sql` 的增量 SQL（QA Playwright、演示种子、`sync_init_sql_from_db`、`alter-20260720-*`）；巡检文档改以 Browser MCP 为准；移除 Qodana Action
 - **功能**：文件管理一键清空（`DELETE /api/files` → `{deleted}`）；列表工具栏次要/危险按钮统一 `.toolbar-btn`，与主按钮并排

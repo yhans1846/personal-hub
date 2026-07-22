@@ -24,6 +24,16 @@
             <if test="query.tagId != null">
                 AND EXISTS (SELECT 1 FROM tag_rel WHERE entity_id = n.id AND entity_type = 'note' AND tag_id = #{query.tagId})
             </if>
+            <if test="query.folderId != null and query.folderId != '' and query.folderId != 'all'">
+                <choose>
+                    <when test="query.folderId == 'none' or query.folderId == 'uncategorized'">
+                        AND n.folder_id IS NULL
+                    </when>
+                    <otherwise>
+                        AND n.folder_id = #{query.folderId}
+                    </otherwise>
+                </choose>
+            </if>
         </where>
         ORDER BY n.updated_at DESC
     </select>

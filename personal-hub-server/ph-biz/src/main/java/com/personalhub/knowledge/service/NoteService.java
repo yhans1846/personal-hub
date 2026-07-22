@@ -135,4 +135,9 @@ public interface NoteService {
      * @return 回链摘要列表
      */
     List<NoteBacklinkVO> listBacklinks(Long id, Long userId);
+
+    /**
+     * 更新笔记所属文件夹（null = 未分类）
+     */
+    void updateFolder(Long id, Long userId, Long folderId);
 }

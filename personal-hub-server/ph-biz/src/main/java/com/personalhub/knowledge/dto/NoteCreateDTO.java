@@ -27,4 +27,7 @@ public class NoteCreateDTO {
 
     @Schema(description = "关联标签ID列表", example = "[1, 3]")
     private List<Long> tagIds;
+
+    @Schema(description = "所属文件夹ID，空或不传=未分类")
+    private Long folderId;
 }
