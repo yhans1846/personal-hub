@@ -5,11 +5,12 @@ import { useLayoutStore } from '@/store/layoutStore'
 import { useThemeStore } from '@/store/themeStore'
 import { useRoute } from 'vue-router'
 import type { AppearanceConfig } from '@/types/layout'
-import { LayoutDashboard, FileText, BookOpen, CheckSquare, PenLine, Bookmark, Target, BookMarked, FolderOpen, Grid3X3, Tags, Settings, Trash2, Search, BarChart3, Sun, Moon, Menu, X, ChevronDown, LogOut } from 'lucide-vue-next'
-import { ref, computed, onMounted } from 'vue'
+import { LayoutDashboard, FileText, BookOpen, CheckSquare, PenLine, Bookmark, Target, BookMarked, FolderOpen, Grid3X3, Tags, Settings, Trash2, Search, BarChart3, Sun, Moon, Menu, X, ChevronDown, LogOut, PanelLeftClose, PanelLeftOpen } from 'lucide-vue-next'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import CommandPalette from './CommandPalette.vue'
 import NotificationBell from './NotificationBell.vue'
 import ProfileDrawer from './ProfileDrawer.vue'
+import UiTooltip from './UiTooltip.vue'
 import type { MenuItem } from '@/types/layout'
 
 const authStore = useAuthStore()
@@ -86,6 +87,20 @@ const breadcrumbItems = computed(() => {
 const hideBreadcrumb = computed(() => route.meta.hideBreadcrumb === true || breadcrumbItems.value.length === 0)
 function closeSidebar() { sidebarOpen.value = false }
 
+// 桌面侧栏：展开 / 图标窄栏（移动端忽略）
+const RAIL_KEY = 'sidebar-rail-collapsed'
+const sidebarRailPref = ref(localStorage.getItem(RAIL_KEY) === '1')
+const isDesktopNav = ref(typeof window !== 'undefined' ? window.matchMedia('(min-width: 769px)').matches : true)
+let desktopNavMql: MediaQueryList | null = null
+function onDesktopNavChange(e: MediaQueryListEvent) {
+  isDesktopNav.value = e.matches
+}
+const sidebarRail = computed(() => sidebarRailPref.value && isDesktopNav.value)
+function toggleSidebarRail() {
+  sidebarRailPref.value = !sidebarRailPref.value
+  localStorage.setItem(RAIL_KEY, sidebarRailPref.value ? '1' : '0')
+}
+
 // 菜单分组折叠
 const COLLAPSE_KEY = 'sidebar-collapsed-sections'
 const collapsedSections = ref<Set<string>>(new Set(loadCollapsed()))
@@ -99,6 +114,10 @@ function toggleSection(key: string) {
   if (collapsedSections.value.has(key)) collapsedSections.value.delete(key)
   else collapsedSections.value.add(key)
   saveCollapsed()
+}
+
+function sectionItemsVisible(key: string) {
+  return sidebarRail.value || !collapsedSections.value.has(key)
 }
 
 // 主题切换
@@ -134,6 +153,13 @@ onMounted(() => {
   const saved = localStorage.getItem('accent-preference')
   if (saved) setAccent(saved)
   if (!layoutStore.loaded) layoutStore.fetchLayout()
+  desktopNavMql = window.matchMedia('(min-width: 769px)')
+  isDesktopNav.value = desktopNavMql.matches
+  desktopNavMql.addEventListener('change', onDesktopNavChange)
+})
+
+onUnmounted(() => {
+  desktopNavMql?.removeEventListener('change', onDesktopNavChange)
 })
 </script>
 
@@ -150,11 +176,13 @@ onMounted(() => {
         </router-link>
       </div>
       <div class="topbar-center">
-        <div class="search-trigger" @click="openCommandPalette" title="Ctrl+K 打开命令面板">
-          <Search :size="14" />
-          <span class="search-hint">搜索所有内容...</span>
-          <kbd class="search-kbd">Ctrl+K</kbd>
-        </div>
+        <UiTooltip content="Ctrl+K 打开命令面板" placement="bottom" :show-after="400">
+          <div class="search-trigger" @click="openCommandPalette">
+            <Search :size="14" />
+            <span class="search-hint">搜索所有内容...</span>
+            <kbd class="search-kbd">Ctrl+K</kbd>
+          </div>
+        </UiTooltip>
       </div>
 
       <div class="topbar-actions">
@@ -162,19 +190,23 @@ onMounted(() => {
         <span class="topbar-date">{{ todayStr }}</span>
 
         <!-- 主题切换 -->
-        <button class="topbar-icon-btn" :title="isDark ? '浅色模式' : '深色模式'" @click="toggleTheme">
-          <Sun v-if="isDark" :size="18" />
-          <Moon v-else :size="18" />
-        </button>
+        <UiTooltip :content="isDark ? '浅色模式' : '深色模式'" placement="bottom">
+          <button class="topbar-icon-btn" @click="toggleTheme">
+            <Sun v-if="isDark" :size="18" />
+            <Moon v-else :size="18" />
+          </button>
+        </UiTooltip>
 
         <!-- 通知 -->
         <NotificationBell />
 
         <!-- 用户头像 -->
-        <button class="topbar-avatar-btn" :title="userName" @click="profileDrawerOpen = true">
-          <img v-if="authStore.user?.avatar" :src="authStore.user.avatar" class="avatar-btn-img" alt="" />
-          <span v-else class="avatar-btn-text">{{ avatarInitial }}</span>
-        </button>
+        <UiTooltip :content="userName || '个人资料'" placement="bottom">
+          <button class="topbar-avatar-btn" @click="profileDrawerOpen = true">
+            <img v-if="authStore.user?.avatar" :src="authStore.user.avatar" class="avatar-btn-img" alt="" />
+            <span v-else class="avatar-btn-text">{{ avatarInitial }}</span>
+          </button>
+        </UiTooltip>
       </div>
 
     </header>
@@ -192,42 +224,75 @@ onMounted(() => {
       <div class="sidebar-overlay" :class="{ open: sidebarOpen }" @click="closeSidebar" />
 
       <!-- 侧边栏 -->
-      <aside class="sidebar" :class="{ open: sidebarOpen }">
+      <aside class="sidebar" :class="{ open: sidebarOpen, rail: sidebarRail }">
         <div class="sidebar-header">
           <span class="sidebar-title">导航</span>
           <button class="sidebar-close" @click="closeSidebar"><X :size="18" /></button>
         </div>
         <nav class="sidebar-nav">
           <div class="sidebar-section" v-for="section in layoutStore.visibleMenuSections" :key="section.key">
-            <div class="section-header" :class="{ collapsed: collapsedSections.has(section.key) }" @click="toggleSection(section.key)">
+            <div
+              v-if="!sidebarRail"
+              class="section-header"
+              :class="{ collapsed: collapsedSections.has(section.key) }"
+              @click="toggleSection(section.key)"
+            >
               <span class="section-title">{{ section.title }}</span>
               <ChevronDown :size="14" class="section-chevron" />
             </div>
             <Transition name="section-collapse">
-              <div v-if="!collapsedSections.has(section.key)" class="section-items">
-                <router-link
-                  v-for="item in section.items" :key="item.code"
-                  :to="item.route || '/'"
-                  class="nav-item"
-                  :class="{ active: isActiveRoute(item), 'nav-item--secondary': section.key !== 'workspace', 'nav-item--primary': section.key === 'workspace' }"
+              <div v-if="sectionItemsVisible(section.key)" class="section-items">
+                <UiTooltip
+                  v-for="item in section.items"
+                  :key="item.code"
+                  :content="item.title"
+                  placement="right"
+                  :disabled="!sidebarRail"
+                  :show-after="200"
                 >
-                  <component :is="iconMap[item.code] || LayoutDashboard" :size="18" />
-                  <span>{{ item.title }}</span>
-                </router-link>
+                  <router-link
+                    :to="item.route || '/'"
+                    class="nav-item"
+                    :class="{ active: isActiveRoute(item), 'nav-item--secondary': section.key !== 'workspace', 'nav-item--primary': section.key === 'workspace' }"
+                  >
+                    <component :is="iconMap[item.code] || LayoutDashboard" :size="18" />
+                    <span class="nav-item-label">{{ item.title }}</span>
+                  </router-link>
+                </UiTooltip>
               </div>
             </Transition>
           </div>
         </nav>
         <div class="sidebar-footer">
-          <div class="sidebar-user">
-            <div class="sidebar-avatar">
-              {{ (authStore.user?.nickname || authStore.user?.username || '?')[0] }}
+          <UiTooltip
+            :content="authStore.user?.nickname || authStore.user?.username || ''"
+            placement="right"
+            :disabled="!sidebarRail"
+          >
+            <div class="sidebar-user">
+              <div class="sidebar-avatar">
+                {{ (authStore.user?.nickname || authStore.user?.username || '?')[0] }}
+              </div>
+              <span class="sidebar-user-name">{{ authStore.user?.nickname || authStore.user?.username }}</span>
             </div>
-            <span class="sidebar-user-name">{{ authStore.user?.nickname || authStore.user?.username }}</span>
+          </UiTooltip>
+          <div class="sidebar-footer-actions">
+            <UiTooltip :content="sidebarRailPref ? '展开侧栏' : '收起侧栏'" :placement="sidebarRail ? 'right' : 'top'">
+              <button
+                type="button"
+                class="sidebar-rail-toggle"
+                @click="toggleSidebarRail"
+              >
+                <PanelLeftOpen v-if="sidebarRailPref" :size="16" />
+                <PanelLeftClose v-else :size="16" />
+              </button>
+            </UiTooltip>
+            <UiTooltip content="退出登录" :placement="sidebarRail ? 'right' : 'top'">
+              <button class="sidebar-logout" @click="authStore.logout()">
+                <LogOut :size="16" />
+              </button>
+            </UiTooltip>
           </div>
-          <button class="sidebar-logout" title="退出登录" @click="authStore.logout()">
-            <LogOut :size="16" />
-          </button>
         </div>
       </aside>
 
@@ -352,11 +417,19 @@ onMounted(() => {
   border-right: 1px solid color-mix(in srgb, var(--border-color) 30%, transparent);
   flex-shrink: 0;
   display: flex; flex-direction: column;
+  transition: width var(--transition-duration) ease;
+}
+.sidebar.rail {
+  width: var(--sidebar-rail-width, 56px);
 }
 .sidebar-header { display: none; }
 .sidebar-nav {
   display: flex; flex-direction: column;
   flex: 1; overflow-y: auto; padding: var(--sp-4) 0;
+}
+.sidebar.rail .sidebar-nav {
+  padding: var(--sp-3) 0;
+  align-items: stretch;
 }
 
 .sidebar-section { margin-bottom: var(--sp-3); }
@@ -365,6 +438,13 @@ onMounted(() => {
   margin-top: var(--sp-2);
   padding-top: var(--sp-2);
   border-top: 1px solid color-mix(in srgb, var(--border-color) 35%, transparent);
+}
+.sidebar.rail .sidebar-section {
+  margin-bottom: var(--sp-1);
+}
+.sidebar.rail .sidebar-section + .sidebar-section {
+  margin-top: var(--sp-1);
+  padding-top: var(--sp-1);
 }
 .section-header {
   display: flex;
@@ -402,6 +482,40 @@ onMounted(() => {
   border-radius: var(--radius-md);
   font-size: 14px; font-weight: 500; color: var(--text-secondary); text-decoration: none;
   transition: background var(--transition-duration) ease, color var(--transition-duration) ease;
+}
+.sidebar.rail .section-items {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 0 6px;
+}
+.sidebar.rail .section-items > *,
+.sidebar.rail .section-items :deep(.el-tooltip__trigger),
+.sidebar.rail .section-items :deep(.el-only-child__content) {
+  display: flex !important;
+  justify-content: center;
+  align-items: center;
+  width: 100% !important;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.sidebar.rail .nav-item {
+  justify-content: center;
+  align-items: center;
+  gap: 0;
+  width: 40px;
+  height: 40px;
+  margin: 0;
+  padding: 0 !important;
+  border-radius: var(--radius-md);
+}
+.sidebar.rail .section-items > * .nav-item {
+  width: 40px;
+  margin: 0;
+}
+.sidebar.rail .nav-item-label {
+  display: none;
 }
 .nav-item:hover { background: var(--bg-hover); color: var(--text-primary); }
 .nav-item:hover :deep(svg) { color: var(--text-primary); }
@@ -441,16 +555,44 @@ onMounted(() => {
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
   opacity: 0.5;
 }
+.sidebar.rail .nav-item.active::before {
+  left: 0;
+  transform: translateY(-50%);
+  height: 18px;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+.sidebar.rail .nav-item--secondary :deep(svg) {
+  width: 18px;
+  height: 18px;
+}
 
 /* 侧边栏底部用户信息 */
 .sidebar-footer {
   display: flex; align-items: center; justify-content: space-between;
+  gap: 4px;
   padding: var(--sp-3) var(--sp-4);
   border-top: 1px solid color-mix(in srgb, var(--border-color) 25%, transparent);
+}
+.sidebar.rail .sidebar-footer {
+  flex-direction: column;
+  align-items: center;
+  padding: var(--sp-2) 6px;
+  gap: 6px;
 }
 .sidebar-user {
   display: flex; align-items: center; gap: var(--sp-2);
   overflow: hidden;
+  min-width: 0;
+}
+.sidebar.rail .sidebar-user,
+.sidebar.rail .sidebar-footer > :deep(.el-tooltip__trigger),
+.sidebar.rail .sidebar-footer > :deep(.el-only-child__content) {
+  display: flex !important;
+  justify-content: center;
+  width: 100%;
+}
+.sidebar.rail .sidebar-user-name {
+  display: none;
 }
 .sidebar-avatar {
   width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
@@ -462,6 +604,26 @@ onMounted(() => {
   font-size: var(--text-sm); color: var(--text-secondary);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
+.sidebar-footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.sidebar.rail .sidebar-footer-actions {
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  gap: 4px;
+}
+.sidebar.rail .sidebar-footer-actions > *,
+.sidebar.rail .sidebar-footer-actions :deep(.el-tooltip__trigger),
+.sidebar.rail .sidebar-footer-actions :deep(.el-only-child__content) {
+  display: flex !important;
+  justify-content: center;
+  width: 100%;
+}
+.sidebar-rail-toggle,
 .sidebar-logout {
   width: 28px; height: 28px; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
@@ -469,7 +631,15 @@ onMounted(() => {
   cursor: pointer; border-radius: var(--radius-sm);
   transition: all var(--transition);
 }
-.sidebar-logout:hover { background: var(--bg-hover); color: var(--danger); }
+.sidebar-rail-toggle:hover,
+.sidebar-logout:hover { background: var(--bg-hover); color: var(--text-primary); }
+.sidebar-logout:hover { color: var(--danger); }
+.sidebar.rail .sidebar-rail-toggle,
+.sidebar.rail .sidebar-logout {
+  width: 40px;
+  height: 36px;
+  margin: 0 auto;
+}
 .section-collapse-enter-active,
 .section-collapse-leave-active {
   transition: max-height var(--transition-duration) ease, opacity var(--transition-duration) ease;
@@ -552,6 +722,33 @@ onMounted(() => {
     position: fixed; top: 0; left: 0; bottom: 0; z-index: 95;
     transform: translateX(-100%); transition: transform var(--transition-duration) ease;
     padding-top: 0;
+    width: var(--sidebar-width) !important;
+  }
+  .sidebar.rail {
+    width: var(--sidebar-width) !important;
+  }
+  .sidebar.rail .nav-item {
+    justify-content: flex-start;
+    gap: var(--sp-3);
+    width: auto;
+    height: 38px;
+    padding: 0 var(--sp-4) !important;
+    margin: 0 var(--sp-2) 1px;
+  }
+  .sidebar.rail .nav-item-label,
+  .sidebar.rail .sidebar-user-name {
+    display: initial;
+  }
+  .sidebar.rail .sidebar-footer {
+    flex-direction: row;
+    padding: var(--sp-3) var(--sp-4);
+  }
+  .sidebar.rail .sidebar-footer-actions {
+    flex-direction: row;
+    width: auto;
+  }
+  .sidebar.rail .sidebar-rail-toggle {
+    display: none;
   }
   .sidebar.open { transform: translateX(0); }
   .sidebar-header {

@@ -14,6 +14,7 @@ import { useMainContentFill } from '@/composables/useMainContentFill'
 import { useDeepLinkDialog } from '@/composables/useDeepLinkDialog'
 import { useEntityDialogHost, usePaginatedList, type PageQuery } from '@/composables/usePaginatedList'
 import { handleApiError, unwrapPage, unwrapResult } from '@/utils/apiResult'
+import UiTooltip from '@/components/UiTooltip.vue'
 
 /** 一屏 5×4 铺满（与文件列表一致） */
 const PAGE_SIZE = 20
@@ -161,17 +162,20 @@ function onFaviconError(e: Event) {
               @error="onFaviconError"
             />
             <Bookmark :size="28" class="card-preview-fallback" />
-            <button
-              type="button"
-              class="home-toggle"
-              :class="{ active: item.showOnDashboard === 1 }"
-              :title="item.showOnDashboard === 1 ? '取消首页展示' : '展示到首页'"
-              @click.stop="toggleDashboard(item)"
-            >
-              <House :size="14" />
-            </button>
+            <UiTooltip :content="item.showOnDashboard === 1 ? '取消首页展示' : '展示到首页'">
+              <button
+                type="button"
+                class="home-toggle"
+                :class="{ active: item.showOnDashboard === 1 }"
+                @click.stop="toggleDashboard(item)"
+              >
+                <House :size="14" />
+              </button>
+            </UiTooltip>
           </div>
-          <div class="card-title" :title="item.title">{{ item.title }}</div>
+          <UiTooltip :content="item.title">
+            <div class="card-title">{{ item.title }}</div>
+          </UiTooltip>
           <div class="card-footer">
             <span v-if="item.categoryName" class="card-category">
               <FolderOpen :size="11" /> {{ item.categoryName }}
@@ -184,12 +188,16 @@ function onFaviconError(e: Event) {
               </span>
             </div>
             <div class="card-actions" @click.stop>
-              <button type="button" class="icon-btn" title="编辑" @click.stop="goEdit(item.id)">
-                <Pencil :size="13" />
-              </button>
-              <button type="button" class="icon-btn icon-btn--danger" title="删除" @click.stop="handleDelete(item.id)">
-                <Trash2 :size="13" />
-              </button>
+              <UiTooltip content="编辑">
+                <button type="button" class="icon-btn" @click.stop="goEdit(item.id)">
+                  <Pencil :size="13" />
+                </button>
+              </UiTooltip>
+              <UiTooltip content="删除">
+                <button type="button" class="icon-btn icon-btn--danger" @click.stop="handleDelete(item.id)">
+                  <Trash2 :size="13" />
+                </button>
+              </UiTooltip>
             </div>
           </div>
         </div>

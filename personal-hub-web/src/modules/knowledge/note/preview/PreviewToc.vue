@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { PanelLeftClose, PanelLeft } from 'lucide-vue-next'
+import UiTooltip from '@/components/UiTooltip.vue'
 
 export interface TocItem {
   text: string
@@ -69,9 +70,11 @@ function scrollTo(id: string) {
       <aside v-if="items.length > 0" class="preview-toc">
         <div class="toc-header">
           <span class="toc-title">目录</span>
-          <button class="toc-collapse-btn" title="收起目录" @click="toggle">
-            <PanelLeftClose :size="14" />
-          </button>
+          <UiTooltip content="收起目录" placement="bottom">
+            <button class="toc-collapse-btn" @click="toggle">
+              <PanelLeftClose :size="14" />
+            </button>
+          </UiTooltip>
         </div>
         <nav class="toc-list">
           <button
@@ -87,9 +90,11 @@ function scrollTo(id: string) {
       <aside v-else class="preview-toc preview-toc--empty">
         <div class="toc-header">
           <span class="toc-title">目录</span>
-          <button class="toc-collapse-btn" title="收起目录" @click="toggle">
-            <PanelLeftClose :size="14" />
-          </button>
+          <UiTooltip content="收起目录" placement="bottom">
+            <button class="toc-collapse-btn" @click="toggle">
+              <PanelLeftClose :size="14" />
+            </button>
+          </UiTooltip>
         </div>
         <p class="toc-empty">暂无目录</p>
       </aside>
@@ -104,9 +109,11 @@ function scrollTo(id: string) {
 
     <!-- 折叠后的展开按钮 -->
     <div v-else class="toc-collapsed-bar">
-      <button class="toc-expand-btn" title="展开目录" @click="toggle">
-        <PanelLeft :size="14" />
-      </button>
+      <UiTooltip content="展开目录" placement="right">
+        <button class="toc-expand-btn" @click="toggle">
+          <PanelLeft :size="14" />
+        </button>
+      </UiTooltip>
     </div>
   </div>
 </template>

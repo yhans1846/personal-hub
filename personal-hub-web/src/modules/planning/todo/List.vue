@@ -12,6 +12,7 @@ import { useMainContentFill } from '@/composables/useMainContentFill'
 import { useFillPageSize } from '@/composables/useFillPageSize'
 import { useEntityDialogHost, usePaginatedList, type PageQuery } from '@/composables/usePaginatedList'
 import { handleApiError, unwrapPage } from '@/utils/apiResult'
+import UiTooltip from '@/components/UiTooltip.vue'
 
 type TabKey = 'all' | 'overdue' | 'today' | 'week' | 'later' | 'done'
 type TodoListQuery = TodoQuery & PageQuery
@@ -188,7 +189,9 @@ const priorityOptions = [
           :class="{ 'todo-card--done': todo.isDone === 1 }"
         >
           <div class="todo-card-left">
-            <div class="drag-handle" title="仅当前页可排序"><GripVertical :size="13" /></div>
+            <UiTooltip content="仅当前页可排序">
+              <div class="drag-handle"><GripVertical :size="13" /></div>
+            </UiTooltip>
             <label class="todo-checkbox" @click="handleToggleDone(todo.id)">
               <div class="todo-check" :class="{ checked: todo.isDone === 1 }">
                 <Check v-if="todo.isDone === 1" :size="12" stroke="#fff" stroke-width="3" />
@@ -225,8 +228,12 @@ const priorityOptions = [
             <span v-if="todo.isDone === 1 && todo.completedAt" class="completed-time">
               {{ todo.completedAt.slice(0, 16) }}
             </span>
-            <button class="icon-btn" title="编辑" @click.stop="goEdit(todo.id)"><Pencil :size="13" /></button>
-            <button class="icon-btn icon-btn--danger" title="删除" @click.stop="handleDelete(todo.id)"><Trash2 :size="13" /></button>
+            <UiTooltip content="编辑">
+              <button class="icon-btn" @click.stop="goEdit(todo.id)"><Pencil :size="13" /></button>
+            </UiTooltip>
+            <UiTooltip content="删除">
+              <button class="icon-btn icon-btn--danger" @click.stop="handleDelete(todo.id)"><Trash2 :size="13" /></button>
+            </UiTooltip>
           </div>
         </div>
         <div

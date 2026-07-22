@@ -4,13 +4,14 @@ import { getNoteList, deleteNote, archiveNote, toggleFavorite, exportNotesBatch 
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, FileText, Star, Trash2, Clock, Eye, Upload, LayoutList, LayoutGrid, Download, CheckSquare, FolderTree } from 'lucide-vue-next'
 import { EmptyState, PageHeader, ListToolbar, ListPagination } from '@/components'
-import type { NoteVO, NoteQuery, NoteFolderSelection } from '@/types/note'
+import type { NoteVO, NoteQuery, NoteFolderSelection, NoteFolderTreeVO } from '@/types/note'
 import { estimateReadingTime, formatRelativeTime, isRecentlyEdited } from '@/utils/readingTime'
 import { formatRelativeUpdated } from '@/utils/formatTime'
 import ImportMarkdownDialog from './ImportMarkdownDialog.vue'
 import NoteCardContextMenu, { type CardMenuEntry } from './NoteCardContextMenu.vue'
 import NoteWorkspaceOverlay from './NoteWorkspaceOverlay.vue'
 import NoteFolderTree from './NoteFolderTree.vue'
+import NoteHome from './NoteHome.vue'
 import { useDeepLinkDialog } from '@/composables/useDeepLinkDialog'
 import { useMainContentFill } from '@/composables/useMainContentFill'
 import { useFillPageSize } from '@/composables/useFillPageSize'
@@ -19,6 +20,7 @@ import { usePaginatedList } from '@/composables/usePaginatedList'
 import { handleApiError, unwrapPage } from '@/utils/apiResult'
 import { triggerBlobDownload } from '@/utils/file'
 import { noteFolderDraggingKind } from './folderDragState'
+import UiTooltip from '@/components/UiTooltip.vue'
 
 const MAX_EXPORT = 50
 
@@ -35,8 +37,10 @@ const cardMenuRef = ref<InstanceType<typeof NoteCardContextMenu> | null>(null)
 const activeNote = ref<NoteVO | null>(null)
 const workspace = ref<Workspace>(null)
 const workspaceSessionKey = ref(0)
-const folderSelection = ref<NoteFolderSelection>('all')
+const folderSelection = ref<NoteFolderSelection>('home')
 const folderDrawerOpen = ref(false)
+const folderTreeData = ref<NoteFolderTreeVO | null>(null)
+const isHome = computed(() => folderSelection.value === 'home')
 const { viewMode, setViewMode } = useProductViewMode('note-view', 'card')
 const selectedCount = computed(() => selectedIds.value.length)
 
@@ -47,7 +51,7 @@ const createFolderId = computed((): number | null => {
 })
 
 function folderQueryParam(sel: NoteFolderSelection): string | undefined {
-  if (sel === 'all') return undefined
+  if (sel === 'home' || sel === 'all') return undefined
   if (sel === 'none') return 'none'
   return String(sel)
 }
@@ -59,19 +63,38 @@ const { list, total, loading, query, fetchList, onSearch, onPageChange } = usePa
 })
 
 watch(folderSelection, (sel) => {
+  folderDrawerOpen.value = false
+  if (sel === 'home') return
   query.value.folderId = folderQueryParam(sel)
   query.value.page = 1
   fetchList()
-  folderDrawerOpen.value = false
 })
 
 useMainContentFill()
 
 const { pageSize } = useFillPageSize((size) => {
   query.value.size = size
+  if (isHome.value) return
   query.value.page = 1
   fetchList()
 })
+
+const folderTreeRef = ref<{ reload: () => Promise<void> } | null>(null)
+
+function onFolderTreeLoaded(data: NoteFolderTreeVO) {
+  folderTreeData.value = data
+}
+
+function onFolderChanged() {
+  folderTreeRef.value?.reload()
+  if (!isHome.value) fetchList()
+}
+
+function onImportDone() {
+  showImport.value = false
+  folderTreeRef.value?.reload()
+  if (!isHome.value) fetchList()
+}
 
 const cardMenuEntries: CardMenuEntry[] = [
   { type: 'item', id: 'edit', label: '编辑' },
@@ -95,12 +118,11 @@ function openEdit(id: number) {
   workspaceSessionKey.value += 1
   workspace.value = { mode: 'edit', id }
 }
-const folderTreeRef = ref<{ reload: () => Promise<void> } | null>(null)
 
 function closeWorkspace() {
   workspace.value = null
   folderTreeRef.value?.reload()
-  fetchList()
+  if (!isHome.value) fetchList()
 }
 function onWorkspaceNoteId(id: number) {
   if (workspace.value?.mode === 'create') {
@@ -117,11 +139,6 @@ function goPreview(id: number) { window.open(`/notes/${id}/preview`, '_blank') }
 const workspaceCreateFolderId = computed(() =>
   workspace.value?.mode === 'create' ? workspace.value.folderId : null,
 )
-
-function onFolderChanged() {
-  folderTreeRef.value?.reload()
-  fetchList()
-}
 
 function onNoteDragStart(e: DragEvent, noteId: number) {
   noteFolderDraggingKind.value = 'note'
@@ -212,7 +229,8 @@ async function handleDelete(id: number) {
   try {
     await deleteNote(id)
     ElMessage.success('已移入回收站')
-    fetchList()
+    folderTreeRef.value?.reload()
+    if (!isHome.value) fetchList()
   } catch (e) {
     handleApiError(e, '移入回收站失败')
   }
@@ -223,7 +241,8 @@ async function handleArchive(id: number) {
   try {
     await archiveNote(id)
     ElMessage.success('已归档')
-    fetchList()
+    folderTreeRef.value?.reload()
+    if (!isHome.value) fetchList()
   } catch (e) {
     handleApiError(e, '归档失败')
   }
@@ -282,23 +301,37 @@ async function onCardMenuAction(actionId: string) {
     <div class="plan-top">
       <PageHeader title="笔记" />
 
-      <ListToolbar :search="query.keyword ?? ''" search-placeholder="搜索笔记标题或摘要..." search-width="240px" create-label="新建笔记" @update:search="query.keyword = $event" @search="onSearch" @create="goCreate">
+      <ListToolbar
+        v-if="!isHome"
+        :search="query.keyword ?? ''"
+        search-placeholder="搜索笔记标题或摘要..."
+        search-width="240px"
+        create-label="新建笔记"
+        @update:search="query.keyword = $event"
+        @search="onSearch"
+        @create="goCreate"
+      >
         <template #filters>
-          <button
-            type="button"
-            class="toolbar-btn folder-toggle-btn"
-            title="文件夹"
-            @click="folderDrawerOpen = !folderDrawerOpen"
-          >
-            <FolderTree :size="14" /> 文件夹
-          </button>
+          <UiTooltip content="文件夹" placement="bottom">
+            <button
+              type="button"
+              class="toolbar-btn folder-toggle-btn"
+              @click="folderDrawerOpen = !folderDrawerOpen"
+            >
+              <FolderTree :size="14" /> 文件夹
+            </button>
+          </UiTooltip>
           <div class="view-toggle">
-            <button type="button" class="view-btn" :class="{ active: viewMode === 'table' }" title="列表" @click="setViewMode('table')">
-              <LayoutList :size="15" />
-            </button>
-            <button type="button" class="view-btn" :class="{ active: viewMode === 'card' }" title="卡片" @click="setViewMode('card')">
-              <LayoutGrid :size="15" />
-            </button>
+            <UiTooltip content="列表">
+              <button type="button" class="view-btn" :class="{ active: viewMode === 'table' }" @click="setViewMode('table')">
+                <LayoutList :size="15" />
+              </button>
+            </UiTooltip>
+            <UiTooltip content="卡片">
+              <button type="button" class="view-btn" :class="{ active: viewMode === 'card' }" @click="setViewMode('card')">
+                <LayoutGrid :size="15" />
+              </button>
+            </UiTooltip>
           </div>
         </template>
         <template #actions>
@@ -324,6 +357,21 @@ async function onCardMenuAction(actionId: string) {
           </button>
         </template>
       </ListToolbar>
+
+      <div v-else class="note-home-toolbar">
+        <UiTooltip content="文件夹" placement="bottom">
+          <button
+            type="button"
+            class="toolbar-btn folder-toggle-btn"
+            @click="folderDrawerOpen = !folderDrawerOpen"
+          >
+            <FolderTree :size="14" /> 文件夹
+          </button>
+        </UiTooltip>
+        <button type="button" class="toolbar-btn toolbar-btn--primary" @click="goCreate">
+          <Plus :size="14" /> 新建笔记
+        </button>
+      </div>
     </div>
 
     <div class="plan-middle note-middle">
@@ -333,10 +381,25 @@ async function onCardMenuAction(actionId: string) {
         @click="folderDrawerOpen = false"
       />
       <div class="folder-pane" :class="{ open: folderDrawerOpen }">
-        <NoteFolderTree ref="folderTreeRef" v-model="folderSelection" @changed="onFolderChanged" />
+        <NoteFolderTree
+          ref="folderTreeRef"
+          v-model="folderSelection"
+          @changed="onFolderChanged"
+          @loaded="onFolderTreeLoaded"
+          @open-note="openEdit"
+        />
       </div>
 
       <div class="note-list-pane">
+      <NoteHome
+        v-if="isHome"
+        :tree="folderTreeData"
+        @open-note="openEdit"
+        @select-folder="folderSelection = $event"
+        @changed="folderTreeRef?.reload()"
+      />
+
+      <template v-else>
       <div v-if="loading && viewMode === 'card'" class="card-grid-skeleton">
         <div v-for="i in pageSize" :key="i" class="skeleton-note-card" />
       </div>
@@ -393,16 +456,16 @@ async function onCardMenuAction(actionId: string) {
             </div>
             <div class="col-updated cell-date">{{ formatRelativeUpdated(note.updatedAt) }}</div>
             <div class="col-actions" @click.stop>
-              <el-tooltip content="预览">
+              <UiTooltip content="预览">
                 <button type="button" class="icon-action" @click="goPreview(note.id)">
                   <Eye :size="15" />
                 </button>
-              </el-tooltip>
-              <el-tooltip content="移入回收站">
+              </UiTooltip>
+              <UiTooltip content="移入回收站">
                 <button type="button" class="icon-action icon-action--danger" @click="handleDelete(note.id)">
                   <Trash2 :size="15" />
                 </button>
-              </el-tooltip>
+              </UiTooltip>
             </div>
           </div>
           <div
@@ -451,11 +514,15 @@ async function onCardMenuAction(actionId: string) {
               <span v-if="note.tags.length > 3" class="meta-tag meta-tag--more">+{{ note.tags.length - 3 }}</span>
             </div>
             <div class="note-card-footer-right">
-              <span v-if="isRecentlyEdited(note.updatedAt)" class="edited-dot" title="最近编辑" />
+              <UiTooltip v-if="isRecentlyEdited(note.updatedAt)" content="最近编辑">
+                <span class="edited-dot" />
+              </UiTooltip>
               <span class="edited-time">{{ formatRelativeTime(note.updatedAt) }}</span>
-              <button class="icon-btn" title="预览" @click.stop="goPreview(note.id)">
-                <Eye :size="14" />
-              </button>
+              <UiTooltip content="预览">
+                <button class="icon-btn" @click.stop="goPreview(note.id)">
+                  <Eye :size="14" />
+                </button>
+              </UiTooltip>
               <button class="delete-btn" @click.stop="handleDelete(note.id)">
                 <Trash2 :size="14" />
               </button>
@@ -469,11 +536,12 @@ async function onCardMenuAction(actionId: string) {
           aria-hidden="true"
         />
       </div>
+      </template>
       </div>
     </div>
 
     <div class="plan-foot">
-      <ListPagination v-if="total > 0" :total="total" :page="query.page ?? 1" :size="pageSize" @update:page="onPageChange" />
+      <ListPagination v-if="!isHome && total > 0" :total="total" :page="query.page ?? 1" :size="pageSize" @update:page="onPageChange" />
     </div>
 
     <NoteCardContextMenu
@@ -488,7 +556,7 @@ async function onCardMenuAction(actionId: string) {
     width="520px"
     :close-on-click-modal="false"
   >
-    <ImportMarkdownDialog @done="showImport = false; fetchList()" />
+    <ImportMarkdownDialog @done="onImportDone" />
   </el-dialog>
 
   <NoteWorkspaceOverlay
@@ -521,6 +589,21 @@ async function onCardMenuAction(actionId: string) {
 .note-middle {
   flex-direction: row;
   position: relative;
+}
+.note-home-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 0 0 8px;
+}
+.note-home-toolbar .toolbar-btn--primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: transparent;
+}
+.note-home-toolbar .toolbar-btn--primary:hover {
+  filter: brightness(1.05);
 }
 .folder-pane {
   flex-shrink: 0;

@@ -2,6 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { RefreshCw, Check } from 'lucide-vue-next'
 import { getCaptcha, checkCaptcha } from '@/modules/system/api'
+import UiTooltip from '@/components/UiTooltip.vue'
 
 const emit = defineEmits<{
   change: [payload: { captchaId: string; sliderX: number; ready: boolean }]
@@ -144,9 +145,11 @@ defineExpose({ refresh: load })
   <div class="shelf-captcha" :class="{ loading: loading || checking, ready }">
     <div class="shelf-head">
       <span class="shelf-title">请把知识放回书架</span>
-      <button type="button" class="refresh-btn" title="换一题" :disabled="loading || checking || ready" @click="load">
-        <RefreshCw :size="14" stroke-width="1.5" :class="{ spin: loading }" />
-      </button>
+      <UiTooltip content="换一题">
+        <button type="button" class="refresh-btn" :disabled="loading || checking || ready" @click="load">
+          <RefreshCw :size="14" stroke-width="1.5" :class="{ spin: loading }" />
+        </button>
+      </UiTooltip>
     </div>
 
     <div class="board">

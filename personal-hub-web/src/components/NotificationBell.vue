@@ -9,6 +9,7 @@ import { checkNotifications } from '@/api/notificationApi'
 import { formatRelativeTime } from '@/utils/readingTime'
 import { playNotificationSoundIfAllowed } from '@/utils/notificationSound'
 import VirtualList from '@/components/VirtualList.vue'
+import UiTooltip from '@/components/UiTooltip.vue'
 import type { NotificationVO } from '@/types/notification'
 
 /** 通知行近似等高（标题+摘要截断+时间），供窗口化滚动 */
@@ -88,9 +89,11 @@ function getTypeIcon(type: string): string {
   >
     <template #reference>
       <el-badge :value="store.unreadCount" :hidden="store.unreadCount === 0" class="notif-badge">
-        <button class="notif-btn" title="通知">
-          <Bell :size="18" />
-        </button>
+        <UiTooltip content="通知" placement="bottom">
+          <button class="notif-btn">
+            <Bell :size="18" />
+          </button>
+        </UiTooltip>
       </el-badge>
     </template>
 
@@ -138,14 +141,14 @@ function getTypeIcon(type: string): string {
               <div v-if="n.content" class="notif-item-desc">{{ n.content }}</div>
               <div class="notif-item-time">{{ formatRelativeTime(n.createdAt) }}</div>
             </div>
-            <button
-              v-if="!n.isRead"
-              class="notif-item-check"
-              title="标记已读"
-              @click="handleMarkRead($event, n)"
-            >
-              <Check :size="14" />
-            </button>
+            <UiTooltip v-if="!n.isRead" content="标记已读" placement="left">
+              <button
+                class="notif-item-check"
+                @click="handleMarkRead($event, n)"
+              >
+                <Check :size="14" />
+              </button>
+            </UiTooltip>
           </div>
         </template>
       </VirtualList>

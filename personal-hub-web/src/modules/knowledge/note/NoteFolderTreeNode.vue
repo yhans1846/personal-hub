@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { ChevronDown, ChevronRight, Folder, MoreHorizontal, Pencil, Trash2 } from 'lucide-vue-next'
+import { ChevronDown, ChevronRight, FileText, Folder, FolderPlus, MoreHorizontal, Pencil, Trash2 } from 'lucide-vue-next'
 import type { NoteFolderSelection, NoteFolderVO } from '@/types/note'
 import type { FolderDropHint, FolderDropPlace } from './folderDragState'
 import NoteFolderTreeNode from './NoteFolderTreeNode.vue'
+import UiTooltip from '@/components/UiTooltip.vue'
 
 const props = defineProps<{
   node: NoteFolderVO
@@ -21,11 +22,15 @@ const emit = defineEmits<{
   'zone-over': [e: DragEvent, id: number, place: FolderDropPlace]
   'zone-drop': [e: DragEvent, id: number, place: FolderDropPlace]
   menu: [id: number | null]
+  'create-child': [node: NoteFolderVO]
   rename: [node: NoteFolderVO]
   delete: [node: NoteFolderVO]
+  'open-note': [id: number]
 }>()
 
-const hasChildren = computed(() => (props.node.children?.length ?? 0) > 0)
+const hasSubfolders = computed(() => (props.node.children?.length ?? 0) > 0)
+const hasNotes = computed(() => (props.node.notes?.length ?? 0) > 0)
+const hasChildren = computed(() => hasSubfolders.value || hasNotes.value)
 const open = computed(() => props.expanded.has(props.node.id))
 const active = computed(() => props.selected === props.node.id)
 const menuOpen = computed(() => props.menuOpenId === props.node.id)
@@ -58,6 +63,10 @@ function onRowDrop(e: DragEvent) {
   e.preventDefault()
   e.stopPropagation()
   emit('zone-drop', e, props.node.id, 'inside')
+}
+
+function noteTitle(title?: string) {
+  return title?.trim() || '无标题笔记'
 }
 </script>
 
@@ -103,15 +112,19 @@ function onRowDrop(e: DragEvent) {
       <span class="folder-row-label">{{ node.name }}</span>
       <span class="folder-count">{{ node.noteCount ?? 0 }}</span>
       <div class="folder-row-actions" @click.stop>
-        <button
-          type="button"
-          class="folder-icon-btn"
-          title="更多"
-          @click="emit('menu', menuOpen ? null : node.id)"
-        >
-          <MoreHorizontal :size="14" />
-        </button>
+        <UiTooltip content="更多" placement="bottom" :show-after="400">
+          <button
+            type="button"
+            class="folder-icon-btn"
+            @click="emit('menu', menuOpen ? null : node.id)"
+          >
+            <MoreHorizontal :size="14" />
+          </button>
+        </UiTooltip>
         <div v-if="menuOpen" class="folder-menu">
+          <button type="button" class="folder-menu-item" @click="emit('create-child', node)">
+            <FolderPlus :size="13" /> 新建文件夹
+          </button>
           <button type="button" class="folder-menu-item" @click="emit('rename', node)">
             <Pencil :size="13" /> 重命名
           </button>
@@ -123,6 +136,18 @@ function onRowDrop(e: DragEvent) {
     </div>
 
     <template v-if="hasChildren && open">
+      <button
+        v-for="note in node.notes ?? []"
+        :key="'n-' + note.id"
+        type="button"
+        class="folder-row folder-row--note"
+        :style="{ paddingLeft: `${24 + depth * 14}px` }"
+        @click="emit('open-note', note.id)"
+      >
+        <span class="folder-expand-spacer" />
+        <FileText :size="14" class="folder-row-icon" />
+        <span class="folder-row-label">{{ noteTitle(note.title) }}</span>
+      </button>
       <NoteFolderTreeNode
         v-for="child in node.children"
         :key="child.id"
@@ -138,8 +163,10 @@ function onRowDrop(e: DragEvent) {
         @zone-over="(e, id, p) => emit('zone-over', e, id, p)"
         @zone-drop="(e, id, p) => emit('zone-drop', e, id, p)"
         @menu="emit('menu', $event)"
+        @create-child="emit('create-child', $event)"
         @rename="emit('rename', $event)"
         @delete="emit('delete', $event)"
+        @open-note="emit('open-note', $event)"
       />
     </template>
   </div>

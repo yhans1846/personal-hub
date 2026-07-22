@@ -15,6 +15,7 @@ import {
   Minimize2,
   SlidersHorizontal,
 } from 'lucide-vue-next'
+import UiTooltip from '@/components/UiTooltip.vue'
 
 withDefaults(
   defineProps<{
@@ -47,15 +48,16 @@ const emit = defineEmits<{
     :class="{ 'is-fullscreen': isFullscreen }"
   >
     <div class="header-left">
-      <button
-        class="header-btn"
-        @click="emit('back')"
-        :title="closeMode === 'close' ? '关闭' : '返回'"
-      >
-        <X v-if="closeMode === 'close'" :size="18" />
-        <ArrowLeft v-else :size="18" />
-        <span>{{ closeMode === 'close' ? '关闭' : '返回' }}</span>
-      </button>
+      <UiTooltip :content="closeMode === 'close' ? '关闭' : '返回'" placement="bottom">
+        <button
+          class="header-btn"
+          @click="emit('back')"
+        >
+          <X v-if="closeMode === 'close'" :size="18" />
+          <ArrowLeft v-else :size="18" />
+          <span>{{ closeMode === 'close' ? '关闭' : '返回' }}</span>
+        </button>
+      </UiTooltip>
     </div>
 
     <div class="header-center">
@@ -81,61 +83,67 @@ const emit = defineEmits<{
         <span class="status-dot" /> 未保存
       </span>
 
-      <button
-        class="header-btn icon-only"
-        title="笔记属性"
-        @click="emit('openProps')"
-      >
-        <SlidersHorizontal :size="16" />
-      </button>
+      <UiTooltip content="笔记属性" placement="bottom">
+        <button
+          class="header-btn icon-only"
+          @click="emit('openProps')"
+        >
+          <SlidersHorizontal :size="16" />
+        </button>
+      </UiTooltip>
 
       <div class="mode-group">
-        <button
-          class="header-btn icon-only"
-          :class="{ active: mode === 'edit' }"
-          title="仅编辑"
-          @click="emit('update:mode', 'edit')"
-        >
-          <Edit3 :size="16" />
-        </button>
-        <button
-          class="header-btn icon-only"
-          :class="{ active: mode === 'split' }"
-          title="分屏"
-          @click="emit('update:mode', 'split')"
-        >
-          <Columns2 :size="16" />
-        </button>
-        <button
-          class="header-btn icon-only"
-          :class="{ active: mode === 'preview' }"
-          title="仅预览"
-          @click="emit('update:mode', 'preview')"
-        >
-          <Eye :size="16" />
-        </button>
+        <UiTooltip content="仅编辑" placement="bottom">
+          <button
+            class="header-btn icon-only"
+            :class="{ active: mode === 'edit' }"
+            @click="emit('update:mode', 'edit')"
+          >
+            <Edit3 :size="16" />
+          </button>
+        </UiTooltip>
+        <UiTooltip content="分屏" placement="bottom">
+          <button
+            class="header-btn icon-only"
+            :class="{ active: mode === 'split' }"
+            @click="emit('update:mode', 'split')"
+          >
+            <Columns2 :size="16" />
+          </button>
+        </UiTooltip>
+        <UiTooltip content="仅预览" placement="bottom">
+          <button
+            class="header-btn icon-only"
+            :class="{ active: mode === 'preview' }"
+            @click="emit('update:mode', 'preview')"
+          >
+            <Eye :size="16" />
+          </button>
+        </UiTooltip>
       </div>
 
-      <button
-        class="header-btn icon-only"
-        :title="isFavorite ? '取消收藏' : '收藏'"
-        @click="emit('toggleFavorite')"
-      >
-        <Star
-          :size="16"
-          :fill="isFavorite ? 'var(--warning)' : 'none'"
-          :stroke="isFavorite ? 'var(--warning)' : 'var(--text-tertiary)'"
-        />
-      </button>
+      <UiTooltip :content="isFavorite ? '取消收藏' : '收藏'" placement="bottom">
+        <button
+          class="header-btn icon-only"
+          @click="emit('toggleFavorite')"
+        >
+          <Star
+            :size="16"
+            :fill="isFavorite ? 'var(--warning)' : 'none'"
+            :stroke="isFavorite ? 'var(--warning)' : 'var(--text-tertiary)'"
+          />
+        </button>
+      </UiTooltip>
 
-      <button
-        class="header-btn icon-only"
-        :title="isFullscreen ? '退出全屏 (Esc)' : '全屏 (Ctrl+Shift+F)'"
-        @click="emit('toggleFullscreen')"
-      >
-        <Maximize2 v-if="!isFullscreen" :size="16" />
-        <Minimize2 v-else :size="16" />
-      </button>
+      <UiTooltip :content="isFullscreen ? '退出全屏 (Esc)' : '全屏 (Ctrl+Shift+F)'" placement="bottom">
+        <button
+          class="header-btn icon-only"
+          @click="emit('toggleFullscreen')"
+        >
+          <Maximize2 v-if="!isFullscreen" :size="16" />
+          <Minimize2 v-else :size="16" />
+        </button>
+      </UiTooltip>
 
       <el-dropdown trigger="click" placement="bottom-end">
         <button class="header-btn icon-only" @click.prevent>

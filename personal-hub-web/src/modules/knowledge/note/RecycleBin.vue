@@ -13,6 +13,7 @@ import { useMainContentFill } from '@/composables/useMainContentFill'
 import { useFillPageSize } from '@/composables/useFillPageSize'
 import { formatUpdated } from '@/utils/formatTime'
 import { handleApiError, unwrapResult } from '@/utils/apiResult'
+import UiTooltip from '@/components/UiTooltip.vue'
 
 const loading = ref(false)
 const total = ref(0)
@@ -215,21 +216,21 @@ function deleteReasonLabel(reason?: string | null): string {
             </div>
           </div>
           <div class="recycle-card__actions">
-            <el-tooltip content="预览">
+            <UiTooltip content="预览">
               <button type="button" class="icon-action" @click="handlePreview(note.id)">
                 <Eye :size="15" />
               </button>
-            </el-tooltip>
-            <el-tooltip content="恢复">
+            </UiTooltip>
+            <UiTooltip content="恢复">
               <button type="button" class="icon-action" @click="handleRestore(note.id)">
                 <RotateCcw :size="15" />
               </button>
-            </el-tooltip>
-            <el-tooltip content="永久删除">
+            </UiTooltip>
+            <UiTooltip content="永久删除">
               <button type="button" class="icon-action icon-action--danger" @click="handlePermanentDelete(note.id)">
                 <AlertTriangle :size="15" />
               </button>
-            </el-tooltip>
+            </UiTooltip>
           </div>
         </div>
         <div

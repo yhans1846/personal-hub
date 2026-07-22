@@ -9,6 +9,7 @@ import { PageHeader, EmptyState, ListToolbar } from '@/components'
 import { UiDialog, UiInput, DialogPropCard, DialogPropGrid, DialogFooterActions } from '@/components/ui'
 import TagStatsCards from './TagStatsCards.vue'
 import { formatDate } from '@/utils/formatTime'
+import UiTooltip from '@/components/UiTooltip.vue'
 
 // ============ 状态 ============
 const list = ref<TagVO[]>([])
@@ -163,9 +164,11 @@ function toggleSortDir() {
           <el-option value="name" label="名称" />
           <el-option value="createdAt" label="创建时间" />
         </el-select>
-        <button class="sort-dir-btn" @click="toggleSortDir" :title="sortDir === 'asc' ? '正序' : '倒序'">
-          <ArrowUpDown :size="15" class="sort-icon" :class="{ reversed: sortDir === 'desc' }" />
-        </button>
+        <UiTooltip :content="sortDir === 'asc' ? '正序' : '倒序'">
+          <button class="sort-dir-btn" @click="toggleSortDir">
+            <ArrowUpDown :size="15" class="sort-icon" :class="{ reversed: sortDir === 'desc' }" />
+          </button>
+        </UiTooltip>
       </template>
     </ListToolbar>
 
@@ -207,8 +210,12 @@ function toggleSortDir() {
 
         <!-- 操作 -->
         <div class="tag-card-actions">
-          <button class="icon-btn" title="编辑" @click="openEdit(item)"><Pencil :size="14" /></button>
-          <button class="icon-btn icon-btn--danger" title="删除" @click="handleDelete(item.id)"><Trash2 :size="14" /></button>
+          <UiTooltip content="编辑">
+            <button class="icon-btn" @click="openEdit(item)"><Pencil :size="14" /></button>
+          </UiTooltip>
+          <UiTooltip content="删除">
+            <button class="icon-btn icon-btn--danger" @click="handleDelete(item.id)"><Trash2 :size="14" /></button>
+          </UiTooltip>
         </div>
       </div>
     </div>
@@ -230,19 +237,20 @@ function toggleSortDir() {
               :style="{ background: c }"
               @click="form.color = c"
             />
-            <label
-              class="color-btn color-btn--custom"
-              :style="{ background: form.color }"
-              title="自定义颜色"
-            >
-              自定义
-              <input
+            <UiTooltip content="自定义颜色">
+              <label
+                class="color-btn color-btn--custom"
+                :style="{ background: form.color }"
+              >
+                自定义
+                <input
                 type="color"
                 class="color-input-abs"
                 :value="form.color"
                 @input="onColorInput"
               />
             </label>
+            </UiTooltip>
           </div>
         </DialogPropCard>
       </DialogPropGrid>

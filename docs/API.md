@@ -53,7 +53,7 @@ login → `{token,user:{id,username,nickname,avatar}}`
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| GET | `/tree` | `{ folders, totalCount, uncategorizedCount }`；节点含 `noteCount`（直属未删除笔记数） |
+| GET | `/tree` | `{ folders, totalCount, uncategorizedCount, uncategorizedNotes }`；节点含 `noteCount`、`notes[]`（直属未删除笔记摘要：`id/title/folderId/updatedAt`） |
 | POST | `/` | `{name,parentId?}` 创建（深度≤5） |
 | PUT | `/{id}` | `{name}` 重命名 |
 | PATCH | `/{id}/move` | `{parentId,sortOrder}`；防成环、超深 |

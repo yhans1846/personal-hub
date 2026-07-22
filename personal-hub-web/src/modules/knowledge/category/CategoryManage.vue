@@ -10,6 +10,7 @@ import { UiDialog, UiInput, DialogPropCard, DialogFooterActions } from '@/compon
 import type { CategoryVO } from '@/types/category'
 import CategoryStatsCards from './CategoryStatsCards.vue'
 import { formatDate } from '@/utils/formatTime'
+import UiTooltip from '@/components/UiTooltip.vue'
 
 // ============ 状态 ============
 const activeType = ref<'note' | 'bookmark' | 'file'>('note')
@@ -209,9 +210,11 @@ function getTypeIcon(type: string) {
           <el-option value="name" label="名称" />
           <el-option value="count" label="使用次数" />
         </el-select>
-        <button class="sort-dir-btn" @click="toggleSortDir" :title="sortDir === 'asc' ? '正序' : '倒序'">
-          <ArrowUpDown :size="15" class="sort-icon" :class="{ reversed: sortDir === 'desc' }" />
-        </button>
+        <UiTooltip :content="sortDir === 'asc' ? '正序' : '倒序'">
+          <button class="sort-dir-btn" @click="toggleSortDir">
+            <ArrowUpDown :size="15" class="sort-icon" :class="{ reversed: sortDir === 'desc' }" />
+          </button>
+        </UiTooltip>
       </template>
     </ListToolbar>
 
@@ -243,9 +246,11 @@ function getTypeIcon(type: string) {
         class="category-card"
       >
         <!-- 拖拽手柄 -->
-        <div class="drag-handle" title="拖拽排序">
-          <GripVertical :size="16" />
-        </div>
+        <UiTooltip content="拖拽排序">
+          <div class="drag-handle">
+            <GripVertical :size="16" />
+          </div>
+        </UiTooltip>
 
         <!-- 图标 -->
         <div class="card-icon" :class="`card-icon--${activeType}`">
@@ -265,8 +270,12 @@ function getTypeIcon(type: string) {
 
         <!-- 操作 -->
         <div class="card-actions">
-          <button class="icon-btn" title="编辑" @click="openEdit(item)"><Pencil :size="15" /></button>
-          <button class="icon-btn icon-btn--danger" title="删除" @click="handleDelete(item.id)"><Trash2 :size="15" /></button>
+          <UiTooltip content="编辑">
+            <button class="icon-btn" @click="openEdit(item)"><Pencil :size="15" /></button>
+          </UiTooltip>
+          <UiTooltip content="删除">
+            <button class="icon-btn icon-btn--danger" @click="handleDelete(item.id)"><Trash2 :size="15" /></button>
+          </UiTooltip>
         </div>
       </div>
     </div>

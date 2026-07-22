@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Folder, FolderOpen, FolderPlus } from 'lucide-vue-next'
+import { Folder, FolderOpen, FolderPlus, Home, FileText, ChevronDown, ChevronRight } from 'lucide-vue-next'
 import {
   createNoteFolder,
   deleteNoteFolder,
@@ -10,7 +10,7 @@ import {
   renameNoteFolder,
   updateNoteFolder,
 } from '@/modules/knowledge/api'
-import type { NoteFolderSelection, NoteFolderVO } from '@/types/note'
+import type { NoteFolderNoteItem, NoteFolderSelection, NoteFolderTreeVO, NoteFolderVO } from '@/types/note'
 import { handleApiError, unwrapResult } from '@/utils/apiResult'
 import NoteFolderTreeNode from './NoteFolderTreeNode.vue'
 import {
@@ -18,6 +18,7 @@ import {
   type FolderDropHint,
   type FolderDropPlace,
 } from './folderDragState'
+import UiTooltip from '@/components/UiTooltip.vue'
 
 const EXPAND_KEY = 'note-folder-expanded'
 
@@ -28,11 +29,20 @@ const props = defineProps<{
 const emit = defineEmits<{
   'update:modelValue': [value: NoteFolderSelection]
   changed: []
+  loaded: [data: NoteFolderTreeVO]
+  'open-note': [id: number]
 }>()
 
 const tree = ref<NoteFolderVO[]>([])
+const treeMeta = ref<NoteFolderTreeVO>({
+  folders: [],
+  totalCount: 0,
+  uncategorizedCount: 0,
+  uncategorizedNotes: [],
+})
 const totalCount = ref(0)
 const uncategorizedCount = ref(0)
+const uncategorizedNotes = ref<NoteFolderNoteItem[]>([])
 const loading = ref(false)
 const expanded = ref<Set<number>>(loadExpanded())
 const dropHint = ref<FolderDropHint | null>(null)
@@ -78,10 +88,14 @@ async function loadTree() {
       folders: [],
       totalCount: 0,
       uncategorizedCount: 0,
+      uncategorizedNotes: [],
     }
     tree.value = data.folders ?? []
     totalCount.value = data.totalCount ?? 0
     uncategorizedCount.value = data.uncategorizedCount ?? 0
+    uncategorizedNotes.value = data.uncategorizedNotes ?? []
+    treeMeta.value = data
+    emit('loaded', data)
   } catch (e) {
     handleApiError(e, '加载文件夹失败')
   } finally {
@@ -128,7 +142,14 @@ function createParentId(): number | null {
   return null
 }
 
-async function onCreate() {
+const uncategorizedExpanded = ref(true)
+
+function toggleUncategorized() {
+  uncategorizedExpanded.value = !uncategorizedExpanded.value
+}
+
+async function onCreate(parentOverride?: number | null) {
+  menuOpenId.value = null
   try {
     const { value } = await ElMessageBox.prompt('文件夹名称', '新建文件夹', {
       confirmButtonText: '创建',
@@ -137,7 +158,7 @@ async function onCreate() {
       inputErrorMessage: '名称不能为空',
     })
     const name = String(value).trim()
-    const parentId = createParentId()
+    const parentId = parentOverride !== undefined ? parentOverride : createParentId()
     const created = await unwrapResult(createNoteFolder({ name, parentId }))
     if (parentId != null) {
       const next = new Set(expanded.value)
@@ -153,6 +174,14 @@ async function onCreate() {
     if (e === 'cancel' || e === 'close') return
     handleApiError(e, '创建文件夹失败')
   }
+}
+
+function onCreateRoot() {
+  void onCreate()
+}
+
+function onCreateChild(node: NoteFolderVO) {
+  void onCreate(node.id)
 }
 
 async function onRename(node: NoteFolderVO) {
@@ -379,9 +408,11 @@ defineExpose({ reload: loadTree })
   <aside class="folder-tree" aria-label="笔记文件夹">
     <div class="folder-tree-head">
       <span class="folder-tree-title">文件夹</span>
-      <button type="button" class="folder-icon-btn" title="新建文件夹" @click="onCreate">
-        <FolderPlus :size="15" />
-      </button>
+      <UiTooltip content="新建文件夹" placement="bottom">
+        <button type="button" class="folder-icon-btn" @click="onCreateRoot">
+          <FolderPlus :size="15" />
+        </button>
+      </UiTooltip>
     </div>
 
     <div
@@ -389,6 +420,16 @@ defineExpose({ reload: loadTree })
       @dragleave="onTreeBodyDragLeave"
       @dragend="clearDragState"
     >
+      <button
+        type="button"
+        class="folder-row"
+        :class="{ active: selected === 'home' }"
+        @click="select('home')"
+      >
+        <Home :size="14" class="folder-row-icon" />
+        <span class="folder-row-label">首页</span>
+      </button>
+
       <button
         type="button"
         class="folder-row"
@@ -401,18 +442,44 @@ defineExpose({ reload: loadTree })
       </button>
 
       <div
-        role="button"
-        tabindex="0"
-        class="folder-row folder-row--drop"
-        :class="{ active: selected === 'none', 'drop-inside': dropHint?.kind === 'none' }"
-        @click="select('none')"
-        @keydown.enter="select('none')"
-        @dragover="onZoneDragOver($event, 'none')"
-        @drop="handleDrop($event, 'none')"
+        class="folder-uncat"
       >
-        <Folder :size="14" class="folder-row-icon" />
-        <span class="folder-row-label">未分类</span>
-        <span class="folder-count">{{ uncategorizedCount }}</span>
+        <div
+          role="button"
+          tabindex="0"
+          class="folder-row folder-row--drop"
+          :class="{ active: selected === 'none', 'drop-inside': dropHint?.kind === 'none' }"
+          @click="select('none')"
+          @keydown.enter="select('none')"
+          @dragover="onZoneDragOver($event, 'none')"
+          @drop="handleDrop($event, 'none')"
+        >
+          <button
+            type="button"
+            class="folder-expand"
+            @click.stop="toggleUncategorized"
+          >
+            <ChevronDown v-if="uncategorizedExpanded && uncategorizedNotes.length" :size="14" />
+            <ChevronRight v-else-if="uncategorizedNotes.length" :size="14" />
+            <span v-else class="folder-expand-spacer" />
+          </button>
+          <Folder :size="14" class="folder-row-icon" />
+          <span class="folder-row-label">未分类</span>
+          <span class="folder-count">{{ uncategorizedCount }}</span>
+        </div>
+        <template v-if="uncategorizedExpanded">
+          <button
+            v-for="note in uncategorizedNotes"
+            :key="'u-' + note.id"
+            type="button"
+            class="folder-row folder-row--note"
+            @click="emit('open-note', note.id)"
+          >
+            <span class="folder-expand-spacer" />
+            <FileText :size="14" class="folder-row-icon" />
+            <span class="folder-row-label">{{ note.title || '无标题笔记' }}</span>
+          </button>
+        </template>
       </div>
 
       <p v-if="!loading && tree.length === 0" class="folder-empty">暂无文件夹，点击右上角新建</p>
@@ -435,8 +502,10 @@ defineExpose({ reload: loadTree })
           @zone-over="onZoneDragOver"
           @zone-drop="handleDrop"
           @menu="menuOpenId = $event"
+          @create-child="onCreateChild"
           @rename="onRename"
           @delete="onDelete"
+          @open-note="emit('open-note', $event)"
         />
       </div>
 
@@ -744,5 +813,21 @@ defineExpose({ reload: loadTree })
 }
 :deep(.folder-menu-item--danger) {
   color: var(--danger);
+}
+:deep(.folder-row--note) {
+  padding-left: 24px;
+  color: var(--text-secondary);
+}
+:deep(.folder-row--note .folder-row-icon) {
+  opacity: 0.5;
+}
+.folder-row--note {
+  padding-left: 28px;
+  color: var(--text-secondary);
+}
+.folder-expand-spacer {
+  display: inline-block;
+  width: 18px;
+  flex-shrink: 0;
 }
 </style>

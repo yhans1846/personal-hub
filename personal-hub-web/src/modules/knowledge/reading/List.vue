@@ -18,6 +18,7 @@ import { useEntityDialogHost, usePaginatedList, type PageQuery } from '@/composa
 import { formatDate, formatRelativeUpdated, formatUpdated } from '@/utils/formatTime'
 import { handleApiError, unwrapPage } from '@/utils/apiResult'
 import { triggerBlobDownload } from '@/utils/file'
+import UiTooltip from '@/components/UiTooltip.vue'
 
 type ReadingListQuery = ReadingQuery & PageQuery
 const coverLoadFailed = ref<Set<number>>(new Set())
@@ -199,12 +200,16 @@ const headerSubtitle = computed(() => `共 ${total.value} 本`)
             <el-option v-for="s in sortOptions" :key="s.value" :value="s.value" :label="s.label" />
           </el-select>
           <div class="view-toggle">
-            <button type="button" class="view-btn" :class="{ active: viewMode === 'table' }" title="列表" @click="setViewMode('table')">
-              <LayoutList :size="15" />
-            </button>
-            <button type="button" class="view-btn" :class="{ active: viewMode === 'card' }" title="卡片" @click="setViewMode('card')">
-              <LayoutGrid :size="15" />
-            </button>
+            <UiTooltip content="列表">
+              <button type="button" class="view-btn" :class="{ active: viewMode === 'table' }" @click="setViewMode('table')">
+                <LayoutList :size="15" />
+              </button>
+            </UiTooltip>
+            <UiTooltip content="卡片">
+              <button type="button" class="view-btn" :class="{ active: viewMode === 'card' }" @click="setViewMode('card')">
+                <LayoutGrid :size="15" />
+              </button>
+            </UiTooltip>
           </div>
         </template>
         <template #actions>
@@ -263,13 +268,11 @@ const headerSubtitle = computed(() => `共 ${total.value} 本`)
                 <div v-if="showCoverImg(book)" class="thumb">
                   <img :src="book.coverUrl" alt="" loading="lazy" decoding="async" @error="onCoverError(book.id)" />
                 </div>
-                <div
-                  v-else-if="book.coverUrl"
-                  class="thumb thumb--broken"
-                  title="封面加载失败"
-                >
-                  <Book :size="14" />
-                </div>
+                <UiTooltip v-else-if="book.coverUrl" content="封面加载失败">
+                  <div class="thumb thumb--broken">
+                    <Book :size="14" />
+                  </div>
+                </UiTooltip>
                 <div v-else class="thumb thumb--placeholder" :style="coverPlaceholderStyle(book.bookTitle)">
                   {{ coverInitial(book.bookTitle) }}
                 </div>
@@ -337,13 +340,11 @@ const headerSubtitle = computed(() => `共 ${total.value} 本`)
               <div v-if="showCoverImg(book)" class="cover">
                 <img :src="book.coverUrl" alt="" loading="lazy" decoding="async" @error="onCoverError(book.id)" />
               </div>
-              <div
-                v-else-if="book.coverUrl"
-                class="cover cover--broken"
-                title="封面加载失败"
-              >
-                <Book :size="32" />
-              </div>
+              <UiTooltip v-else-if="book.coverUrl" content="封面加载失败">
+                <div class="cover cover--broken">
+                  <Book :size="32" />
+                </div>
+              </UiTooltip>
               <div v-else class="cover cover--placeholder" :style="coverPlaceholderStyle(book.bookTitle)">
                 {{ coverInitial(book.bookTitle) }}
               </div>

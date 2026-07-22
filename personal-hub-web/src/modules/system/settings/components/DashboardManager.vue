@@ -5,6 +5,7 @@ import { ElMessage } from 'element-plus'
 import { GripVertical } from 'lucide-vue-next'
 import Sortable from 'sortablejs'
 import type { CardItem } from '@/types/layout'
+import UiTooltip from '@/components/UiTooltip.vue'
 
 const layoutStore = useLayoutStore()
 const listRef = ref<HTMLElement | null>(null)
@@ -55,20 +56,25 @@ async function handleReset() {
       <el-button size="small" text @click="handleReset">恢复默认</el-button>
     </div>
     <div ref="listRef" class="chip-row">
-      <button
+      <UiTooltip
         v-for="card in layoutStore.dashboardCards"
         :key="card.code"
-        type="button"
-        class="card-chip"
-        :class="{ 'card-chip--hidden': !card.visible }"
-        :title="card.visible ? '点击隐藏' : '点击显示'"
-        @click="toggleVisibility(card)"
+        :content="card.visible ? '点击隐藏' : '点击显示'"
       >
-        <span class="chip-handle" title="拖拽排序" @click.stop>
-          <GripVertical :size="12" />
-        </span>
-        <span class="chip-title">{{ card.title }}</span>
-      </button>
+        <button
+          type="button"
+          class="card-chip"
+          :class="{ 'card-chip--hidden': !card.visible }"
+          @click="toggleVisibility(card)"
+        >
+          <UiTooltip content="拖拽排序">
+            <span class="chip-handle" @click.stop>
+              <GripVertical :size="12" />
+            </span>
+          </UiTooltip>
+          <span class="chip-title">{{ card.title }}</span>
+        </button>
+      </UiTooltip>
     </div>
   </div>
 </template>

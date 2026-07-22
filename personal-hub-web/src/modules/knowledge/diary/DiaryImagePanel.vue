@@ -6,6 +6,7 @@ import { ElMessage } from 'element-plus'
 import { ImagePlus, X } from 'lucide-vue-next'
 import Sortable from 'sortablejs'
 import ImageLightbox from '@/components/ImageLightbox.vue'
+import UiTooltip from '@/components/UiTooltip.vue'
 
 const props = defineProps<{
   diaryId?: number
@@ -167,28 +168,30 @@ onUnmounted(() => {
   <div class="diary-image-panel">
     <p v-if="!canUpload" class="image-need-save">请先保存日记，再添加配图</p>
     <div v-if="previewImages.length" ref="imageGridRef" class="image-grid">
-      <div
+      <UiTooltip
         v-for="(img, idx) in previewImages"
         :key="img.name"
-        class="image-item"
-        :title="previewImages.length > 1 ? '拖拽调整顺序' : undefined"
+        content="拖拽调整顺序"
+        :disabled="previewImages.length <= 1"
       >
-        <img
-          :src="img.url"
-          class="preview-img"
-          alt=""
-          draggable="false"
-          @click="openLightbox(idx)"
-        >
-        <button
-          type="button"
-          class="image-remove-btn"
-          :disabled="uploading"
-          @click.stop="handleRemoveImage(img)"
-        >
-          <X :size="16" />
-        </button>
-      </div>
+        <div class="image-item">
+          <img
+            :src="img.url"
+            class="preview-img"
+            alt=""
+            draggable="false"
+            @click="openLightbox(idx)"
+          >
+          <button
+            type="button"
+            class="image-remove-btn"
+            :disabled="uploading"
+            @click.stop="handleRemoveImage(img)"
+          >
+            <X :size="16" />
+          </button>
+        </div>
+      </UiTooltip>
     </div>
     <p v-if="previewImages.length > 1" class="image-sort-hint">拖拽缩略图可调整顺序，首张将作为封面</p>
 

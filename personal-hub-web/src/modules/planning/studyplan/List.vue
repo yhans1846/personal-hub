@@ -22,6 +22,7 @@ import { useEntityDialogHost, usePaginatedList, type PageQuery } from '@/composa
 import { formatDateDot, formatRelativeUpdated } from '@/utils/formatTime'
 import { handleApiError, unwrapPage, unwrapResult } from '@/utils/apiResult'
 import { triggerBlobDownload } from '@/utils/file'
+import UiTooltip from '@/components/UiTooltip.vue'
 
 type StudyPlanListQuery = StudyPlanQuery & PageQuery
 const tags = ref<TagVO[]>([])
@@ -254,12 +255,16 @@ const headerSubtitle = computed(() => `共 ${stats.value.total} 个计划`)
             <el-option v-for="s in sortOptions" :key="s.value" :value="s.value" :label="s.label" />
           </el-select>
           <div class="view-toggle">
-            <button type="button" class="view-btn" :class="{ active: viewMode === 'table' }" title="列表" @click="setViewMode('table')">
-              <LayoutList :size="15" />
-            </button>
-            <button type="button" class="view-btn" :class="{ active: viewMode === 'card' }" title="卡片" @click="setViewMode('card')">
-              <LayoutGrid :size="15" />
-            </button>
+            <UiTooltip content="列表">
+              <button type="button" class="view-btn" :class="{ active: viewMode === 'table' }" @click="setViewMode('table')">
+                <LayoutList :size="15" />
+              </button>
+            </UiTooltip>
+            <UiTooltip content="卡片">
+              <button type="button" class="view-btn" :class="{ active: viewMode === 'card' }" @click="setViewMode('card')">
+                <LayoutGrid :size="15" />
+              </button>
+            </UiTooltip>
           </div>
         </template>
         <template #actions>
@@ -341,9 +346,9 @@ const headerSubtitle = computed(() => `共 ${stats.value.total} 个计划`)
             class="card-progress"
           />
           <div class="card-dates">{{ formatDateRange(plan.startDate, plan.endDate) }}</div>
-          <el-tooltip v-if="plan.remark" :content="plan.remark" placement="top" :show-after="300">
+          <UiTooltip v-if="plan.remark" :content="plan.remark" placement="top" :show-after="300">
             <div class="card-remark">{{ plan.remark }}</div>
-          </el-tooltip>
+          </UiTooltip>
           <div v-else class="card-remark card-remark--empty" />
           <div class="card-footer" @click.stop>
             <span class="card-updated">{{ formatRelativeUpdated(plan.updatedAt) }}</span>

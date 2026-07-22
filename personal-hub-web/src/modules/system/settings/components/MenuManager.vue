@@ -5,6 +5,7 @@ import { ElMessage } from 'element-plus'
 import { GripVertical } from 'lucide-vue-next'
 import Sortable from 'sortablejs'
 import type { MenuItem } from '@/types/layout'
+import UiTooltip from '@/components/UiTooltip.vue'
 
 const layoutStore = useLayoutStore()
 
@@ -109,24 +110,29 @@ async function handleReset() {
           :ref="(el: any) => groupEls[group.key] = el as HTMLElement"
           class="matrix-chips"
         >
-          <button
+          <UiTooltip
             v-for="item in group.items"
             :key="item.code"
-            type="button"
-            class="menu-chip"
-            :class="{
-              'menu-chip--hidden': !item.visible,
-              'menu-chip--fixed': item.fixed,
-            }"
-            :data-code="item.code"
-            :title="item.fixed ? fixedHint(item) : (item.visible ? '点击隐藏' : '点击显示')"
-            @click="toggleVisibility(item)"
+            :content="item.fixed ? fixedHint(item) : (item.visible ? '点击隐藏' : '点击显示')"
           >
-            <span class="chip-handle" title="拖拽排序" @click.stop>
-              <GripVertical :size="12" />
-            </span>
-            <span class="chip-title">{{ item.title }}</span>
-          </button>
+            <button
+              type="button"
+              class="menu-chip"
+              :class="{
+                'menu-chip--hidden': !item.visible,
+                'menu-chip--fixed': item.fixed,
+              }"
+              :data-code="item.code"
+              @click="toggleVisibility(item)"
+            >
+              <UiTooltip content="拖拽排序">
+                <span class="chip-handle" @click.stop>
+                  <GripVertical :size="12" />
+                </span>
+              </UiTooltip>
+              <span class="chip-title">{{ item.title }}</span>
+            </button>
+          </UiTooltip>
         </div>
       </div>
     </div>

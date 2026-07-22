@@ -49,6 +49,7 @@
 
   /* ---- 布局 ---- */
   --sidebar-width: 240px;
+  --sidebar-rail-width: 56px;
   --topbar-height: 48px;
   --content-max-width: 80%;
   --reading-max-width: 1200px;
@@ -1118,3 +1119,36 @@ a:hover { color: var(--accent-hover); }
 .ph-img-lightbox__close:hover {
   background: rgba(255, 255, 255, 0.28);
 }
+
+/* --- 统一悬停提示（替代原生 title；UiTooltip / el-tooltip） --- */
+.ph-tooltip.el-popper,
+.el-popper[role='tooltip'] {
+  --ph-tip-bg: color-mix(in srgb, var(--text-primary) 92%, var(--bg-card));
+  padding: 6px 10px !important;
+  border: none !important;
+  border-radius: var(--radius-md) !important;
+  background: var(--ph-tip-bg) !important;
+  color: var(--bg-card) !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  line-height: 1.35 !important;
+  box-shadow: var(--shadow-md) !important;
+  max-width: 240px;
+  word-break: break-word;
+}
+.ph-tooltip.el-popper .el-popper__arrow::before,
+.el-popper[role='tooltip'] .el-popper__arrow::before {
+  background: var(--ph-tip-bg) !important;
+  border: none !important;
+}
+[data-theme='dark'] .ph-tooltip.el-popper,
+[data-theme='dark'] .el-popper[role='tooltip'] {
+  --ph-tip-bg: color-mix(in srgb, var(--bg-elevated) 88%, #000);
+  color: var(--text-primary) !important;
+}
+[data-theme='sepia'] .ph-tooltip.el-popper,
+[data-theme='sepia'] .el-popper[role='tooltip'] {
+  --ph-tip-bg: color-mix(in srgb, var(--text-primary) 88%, var(--bg-card));
+  color: var(--bg-card) !important;
+}
+

@@ -2,6 +2,7 @@
 import { ExternalLink } from 'lucide-vue-next'
 import type { BookmarkVO } from '@/types/bookmark'
 import DashCard from './DashCard.vue'
+import UiTooltip from '@/components/UiTooltip.vue'
 import './dash-list.css'
 
 defineProps<{
@@ -24,18 +25,17 @@ function nameIcon(title: string) {
       <router-link to="/bookmarks" class="empty-link">去配置 →</router-link>
     </div>
     <div v-else class="icon-grid">
-      <a
-        v-for="item in links"
-        :key="item.id"
-        class="icon-btn"
-        :href="item.url"
-        :title="item.title"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        <span class="name-icon">{{ nameIcon(item.title) }}</span>
-        <span class="icon-label">{{ item.title }}</span>
-      </a>
+      <UiTooltip v-for="item in links" :key="item.id" :content="item.title">
+        <a
+          class="icon-btn"
+          :href="item.url"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <span class="name-icon">{{ nameIcon(item.title) }}</span>
+          <span class="icon-label">{{ item.title }}</span>
+        </a>
+      </UiTooltip>
     </div>
   </DashCard>
 </template>

@@ -18,6 +18,7 @@ import { triggerBlobDownload } from '@/utils/file'
 import { handleApiError, unwrapResult } from '@/utils/apiResult'
 import { formatUpdated } from '@/utils/formatTime'
 import UiCard from '@/components/ui/UiCard.vue'
+import UiTooltip from '@/components/UiTooltip.vue'
 
 // ===== 缓存 =====
 const cacheSize = ref('计算中...')
@@ -259,30 +260,36 @@ onMounted(() => {
             <span class="history-time">{{ formatUpdated(item.createdAt, '-') }}</span>
             <span class="history-meta">{{ triggerLabel(item.triggerType) }} · {{ formatSize(item.fileSize) }}</span>
             <span class="history-status" :class="{ fail: item.status !== 'OK' }">{{ statusLabel(item.status) }}</span>
-            <span v-if="item.errorMessage" class="history-err" :title="item.errorMessage">{{ item.errorMessage }}</span>
+            <UiTooltip v-if="item.errorMessage" :content="item.errorMessage">
+              <span class="history-err">{{ item.errorMessage }}</span>
+            </UiTooltip>
           </div>
           <div class="history-actions">
-            <button
-              type="button"
-              class="icon-action"
-              title="下载"
-              :disabled="item.status !== 'OK'"
-              @click="handleDownload(item)"
-            >
-              <Download :size="14" />
-            </button>
-            <button
-              type="button"
-              class="icon-action"
-              title="恢复"
-              :disabled="item.status !== 'OK'"
-              @click="handleRestore(item)"
-            >
-              <RotateCcw :size="14" />
-            </button>
-            <button type="button" class="icon-action danger" title="删除" @click="handleDelete(item)">
-              <Trash2 :size="14" />
-            </button>
+            <UiTooltip content="下载">
+              <button
+                type="button"
+                class="icon-action"
+                :disabled="item.status !== 'OK'"
+                @click="handleDownload(item)"
+              >
+                <Download :size="14" />
+              </button>
+            </UiTooltip>
+            <UiTooltip content="恢复">
+              <button
+                type="button"
+                class="icon-action"
+                :disabled="item.status !== 'OK'"
+                @click="handleRestore(item)"
+              >
+                <RotateCcw :size="14" />
+              </button>
+            </UiTooltip>
+            <UiTooltip content="删除">
+              <button type="button" class="icon-action danger" @click="handleDelete(item)">
+                <Trash2 :size="14" />
+              </button>
+            </UiTooltip>
           </div>
         </div>
       </div>

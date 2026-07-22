@@ -12,6 +12,7 @@ import { useMainContentFill } from '@/composables/useMainContentFill'
 import { usePaginatedList, type PageQuery } from '@/composables/usePaginatedList'
 import { downloadFileBlob, getFilePreviewUrl, revokePreviewUrl, getFilePreviewKind } from '@/utils/file'
 import { handleApiError, unwrapPage, unwrapResult } from '@/utils/apiResult'
+import UiTooltip from '@/components/UiTooltip.vue'
 
 /** 一屏 5×4 铺满 */
 const PAGE_SIZE = 20
@@ -256,7 +257,9 @@ watch(previewOpen, (open) => {
               class="card-preview-icon"
             />
           </div>
-          <div class="card-title" :title="file.name">{{ file.name }}</div>
+          <UiTooltip :content="file.name">
+            <div class="card-title">{{ file.name }}</div>
+          </UiTooltip>
           <div class="card-footer">
             <span class="card-category">
               <template v-if="file.categoryName">
@@ -265,15 +268,21 @@ watch(previewOpen, (open) => {
               <template v-else>{{ file.typeLabel }} · {{ file.sizeFormatted }}</template>
             </span>
             <div class="card-actions" @click.stop>
-              <button type="button" class="icon-btn" title="预览" @click.stop="openPreview(file)">
-                <Eye :size="13" />
-              </button>
-              <button type="button" class="icon-btn" title="下载" @click.stop="handleDownload(file, $event)">
-                <Download :size="13" />
-              </button>
-              <button type="button" class="icon-btn icon-btn--danger" title="删除" @click.stop="handleDelete(file.id, $event)">
-                <Trash2 :size="13" />
-              </button>
+              <UiTooltip content="预览">
+                <button type="button" class="icon-btn" @click.stop="openPreview(file)">
+                  <Eye :size="13" />
+                </button>
+              </UiTooltip>
+              <UiTooltip content="下载">
+                <button type="button" class="icon-btn" @click.stop="handleDownload(file, $event)">
+                  <Download :size="13" />
+                </button>
+              </UiTooltip>
+              <UiTooltip content="删除">
+                <button type="button" class="icon-btn icon-btn--danger" @click.stop="handleDelete(file.id, $event)">
+                  <Trash2 :size="13" />
+                </button>
+              </UiTooltip>
             </div>
           </div>
         </div>

@@ -18,6 +18,7 @@ import { parseTocFromMarkdown, assignPreviewHeadingIds, headingIdFromText } from
 import { preparePreviewMarkdown, setupPreviewImageZoom } from './editor/previewEnhancements'
 import NoteBacklinks from './NoteBacklinks.vue'
 import { useFeatureFlagStore } from '@/store/featureFlagStore'
+import UiTooltip from '@/components/UiTooltip.vue'
 
 const route = useRoute()
 const readingStore = useReadingConfigStore()
@@ -266,9 +267,11 @@ onUnmounted(() => {
   >
     <template #header-actions>
       <el-dropdown trigger="click" placement="bottom-end">
-        <button class="header-action-btn" title="更多">
-          <span style="letter-spacing: 2px">⋯</span>
-        </button>
+        <UiTooltip content="更多" placement="bottom">
+          <button class="header-action-btn">
+            <span style="letter-spacing: 2px">⋯</span>
+          </button>
+        </UiTooltip>
         <template #dropdown>
           <el-dropdown-menu>
             <el-dropdown-item @click="handleExport">导出笔记</el-dropdown-item>

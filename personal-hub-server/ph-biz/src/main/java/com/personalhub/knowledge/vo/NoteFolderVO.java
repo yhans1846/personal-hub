@@ -26,6 +26,9 @@ public class NoteFolderVO {
     @Schema(description = "直属笔记数（不含子夹、不含回收站）")
     private long noteCount;
 
+    @Schema(description = "直属笔记摘要（侧栏/首页目录）")
+    private List<NoteFolderNoteItem> notes = new ArrayList<>();
+
     @Schema(description = "子节点")
     private List<NoteFolderVO> children = new ArrayList<>();
 

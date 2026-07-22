@@ -18,4 +18,7 @@ public class NoteFolderTreeVO {
 
     @Schema(description = "未分类笔记数（folder_id 为空）")
     private long uncategorizedCount;
+
+    @Schema(description = "未分类笔记摘要")
+    private List<NoteFolderNoteItem> uncategorizedNotes = new ArrayList<>();
 }

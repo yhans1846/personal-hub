@@ -74,6 +74,14 @@ export interface NoteQuery {
   folderId?: string | number
 }
 
+/** 文件夹树中的笔记摘要 */
+export interface NoteFolderNoteItem {
+  id: number
+  title: string
+  folderId?: number | null
+  updatedAt: string
+}
+
 /** 笔记文件夹树节点 */
 export interface NoteFolderVO {
   id: number
@@ -82,6 +90,7 @@ export interface NoteFolderVO {
   sortOrder: number
   /** 直属笔记数（不含子夹） */
   noteCount?: number
+  notes?: NoteFolderNoteItem[]
   children?: NoteFolderVO[]
 }
 
@@ -90,7 +99,8 @@ export interface NoteFolderTreeVO {
   folders: NoteFolderVO[]
   totalCount: number
   uncategorizedCount: number
+  uncategorizedNotes?: NoteFolderNoteItem[]
 }
 
-/** 列表树选中：全部 / 未分类 / 用户文件夹 id */
-export type NoteFolderSelection = 'all' | 'none' | number
+/** 列表树选中：首页 / 全部 / 未分类 / 用户文件夹 id */
+export type NoteFolderSelection = 'home' | 'all' | 'none' | number

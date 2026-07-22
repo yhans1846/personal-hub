@@ -15,6 +15,7 @@ import { useFillPageSize } from '@/composables/useFillPageSize'
 import { useProductViewMode } from '@/composables/useProductViewMode'
 import { usePaginatedList, type PageQuery } from '@/composables/usePaginatedList'
 import { handleApiError, unwrapPage } from '@/utils/apiResult'
+import UiTooltip from '@/components/UiTooltip.vue'
 
 type DiaryListQuery = DiaryQuery & PageQuery
 
@@ -211,12 +212,16 @@ const moodOptions = [
             <CalendarDays :size="14" /> {{ showCalendar ? '列表' : '月历' }}
           </el-button>
           <div class="view-toggle">
-            <button type="button" class="view-btn" :class="{ active: viewMode === 'table' }" title="列表" @click="setViewMode('table')">
-              <LayoutList :size="15" />
-            </button>
-            <button type="button" class="view-btn" :class="{ active: viewMode === 'card' }" title="卡片" @click="setViewMode('card')">
-              <LayoutGrid :size="15" />
-            </button>
+            <UiTooltip content="列表">
+              <button type="button" class="view-btn" :class="{ active: viewMode === 'table' }" @click="setViewMode('table')">
+                <LayoutList :size="15" />
+              </button>
+            </UiTooltip>
+            <UiTooltip content="卡片">
+              <button type="button" class="view-btn" :class="{ active: viewMode === 'card' }" @click="setViewMode('card')">
+                <LayoutGrid :size="15" />
+              </button>
+            </UiTooltip>
           </div>
         </template>
       </ListToolbar>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ArrowLeft, Download, RotateCcw, Clock, BookOpen } from 'lucide-vue-next'
+import UiTooltip from '@/components/UiTooltip.vue'
 
 export interface DocMeta {
   updatedAt?: string
@@ -51,9 +52,11 @@ const emit = defineEmits<{
       <slot name="actions">
         <!-- 更多 -->
         <el-dropdown trigger="click" placement="bottom-end">
-          <button class="header-btn" title="更多">
-            <span style="letter-spacing: 2px">⋯</span>
-          </button>
+          <UiTooltip content="更多" placement="bottom">
+            <button class="header-btn">
+              <span style="letter-spacing: 2px">⋯</span>
+            </button>
+          </UiTooltip>
           <template #dropdown>
             <el-dropdown-menu>
               <el-dropdown-item @click="emit('export')">

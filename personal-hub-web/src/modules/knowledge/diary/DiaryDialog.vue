@@ -18,6 +18,7 @@ import {
 } from '@/components/ui'
 import { useEntityDialog, useEntityFormSave, type EntityDialogEmit } from '@/composables/useEntityDialog'
 import DiaryImagePanel from './DiaryImagePanel.vue'
+import UiTooltip from '@/components/UiTooltip.vue'
 
 const props = withDefaults(defineProps<{
   modelValue: boolean
@@ -205,17 +206,16 @@ function locateHere() {
       <DialogPropCard label="天气 · 地点">
         <div class="meta-row">
           <div class="weather-group">
-            <button
-              v-for="w in weatherOptions"
-              :key="w.label"
-              type="button"
-              class="weather-btn"
-              :class="{ active: form.weather === w.emoji }"
-              :title="w.label"
-              @click="form.weather = form.weather === w.emoji ? '' : w.emoji"
-            >
-              {{ w.emoji }}
-            </button>
+            <UiTooltip v-for="w in weatherOptions" :key="w.label" :content="w.label">
+              <button
+                type="button"
+                class="weather-btn"
+                :class="{ active: form.weather === w.emoji }"
+                @click="form.weather = form.weather === w.emoji ? '' : w.emoji"
+              >
+                {{ w.emoji }}
+              </button>
+            </UiTooltip>
           </div>
           <div class="location-block">
             <div class="location-input-wrapper">
@@ -227,17 +227,18 @@ function locateHere() {
                 maxlength="200"
               >
             </div>
-            <button
-              type="button"
-              class="locate-btn"
-              :disabled="locating"
-              :title="hasCoords ? '重新定位' : '使用当前位置'"
-              @click="locateHere"
-            >
-              <Loader2 v-if="locating" :size="14" class="spin" />
-              <LocateFixed v-else :size="14" />
-              <span>{{ locating ? '定位中' : '定位' }}</span>
-            </button>
+            <UiTooltip :content="hasCoords ? '重新定位' : '使用当前位置'">
+              <button
+                type="button"
+                class="locate-btn"
+                :disabled="locating"
+                @click="locateHere"
+              >
+                <Loader2 v-if="locating" :size="14" class="spin" />
+                <LocateFixed v-else :size="14" />
+                <span>{{ locating ? '定位中' : '定位' }}</span>
+              </button>
+            </UiTooltip>
           </div>
           <div v-if="hasCoords" class="coords-row">
             <span class="coords-pill">已定位 · {{ coordsLabel }}</span>

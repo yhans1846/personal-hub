@@ -29,6 +29,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.personalhub.knowledge.vo.NoteFolderNoteItem;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -47,26 +49,51 @@ public class NoteFolderServiceImpl implements NoteFolderService {
         List<Note> notes = noteMapper.selectList(new LambdaQueryWrapper<Note>()
                 .eq(Note::getUserId, userId)
                 .eq(Note::getIsDeleted, Flags.NO)
-                .select(Note::getId, Note::getFolderId));
+                .select(Note::getId, Note::getTitle, Note::getFolderId, Note::getUpdatedAt)
+                .orderByDesc(Note::getUpdatedAt));
 
         Map<Long, Long> countByFolder = new HashMap<>();
-        long uncategorized = 0;
+        Map<Long, List<NoteFolderNoteItem>> notesByFolder = new HashMap<>();
+        List<NoteFolderNoteItem> uncategorizedNotes = new ArrayList<>();
         for (Note n : notes) {
+            NoteFolderNoteItem item = toNoteItem(n);
             if (n.getFolderId() == null) {
-                uncategorized++;
+                uncategorizedNotes.add(item);
             } else {
                 countByFolder.merge(n.getFolderId(), 1L, Long::sum);
+                notesByFolder.computeIfAbsent(n.getFolderId(), k -> new ArrayList<>()).add(item);
             }
         }
 
         List<NoteFolderVO> folders = buildTree(all);
         applyNoteCounts(folders, countByFolder);
+        attachNotes(folders, notesByFolder);
 
         NoteFolderTreeVO vo = new NoteFolderTreeVO();
         vo.setFolders(folders);
         vo.setTotalCount(notes.size());
-        vo.setUncategorizedCount(uncategorized);
+        vo.setUncategorizedCount(uncategorizedNotes.size());
+        vo.setUncategorizedNotes(uncategorizedNotes);
         return vo;
+    }
+
+    private static NoteFolderNoteItem toNoteItem(Note n) {
+        NoteFolderNoteItem item = new NoteFolderNoteItem();
+        item.setId(n.getId());
+        item.setTitle(n.getTitle() != null && !n.getTitle().isBlank() ? n.getTitle() : "无标题笔记");
+        item.setFolderId(n.getFolderId());
+        item.setUpdatedAt(n.getUpdatedAt());
+        return item;
+    }
+
+    private void attachNotes(List<NoteFolderVO> nodes, Map<Long, List<NoteFolderNoteItem>> notesByFolder) {
+        for (NoteFolderVO node : nodes) {
+            List<NoteFolderNoteItem> list = notesByFolder.getOrDefault(node.getId(), List.of());
+            node.setNotes(new ArrayList<>(list));
+            if (node.getChildren() != null && !node.getChildren().isEmpty()) {
+                attachNotes(node.getChildren(), notesByFolder);
+            }
+        }
     }
 
     private void applyNoteCounts(List<NoteFolderVO> nodes, Map<Long, Long> countByFolder) {

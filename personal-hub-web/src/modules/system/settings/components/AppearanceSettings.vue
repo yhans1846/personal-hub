@@ -4,6 +4,7 @@ import { ElMessage } from 'element-plus'
 import { storeToRefs } from 'pinia'
 import { Sun, Moon, Leaf, RotateCcw, Maximize2, Minimize2, Wind, Minus, Plus } from 'lucide-vue-next'
 import type { ExtendedAppearanceConfig } from '@/types/layout'
+import UiTooltip from '@/components/UiTooltip.vue'
 
 const themeStore = useThemeStore()
 const { appearanceConfig } = storeToRefs(themeStore)
@@ -191,15 +192,16 @@ async function handleReset() {
     <section class="setting-section">
       <h3 class="section-title">内容区宽度</h3>
       <div class="width-control">
-        <button
-          type="button"
-          class="width-nudge"
-          title="减小"
-          :disabled="appearanceConfig.contentWidth <= 50"
-          @click="nudgeContentWidth(-1)"
-        >
-          <Minus :size="14" />
-        </button>
+        <UiTooltip content="减小">
+          <button
+            type="button"
+            class="width-nudge"
+            :disabled="appearanceConfig.contentWidth <= 50"
+            @click="nudgeContentWidth(-1)"
+          >
+            <Minus :size="14" />
+          </button>
+        </UiTooltip>
         <input
           type="range"
           class="width-slider"
@@ -210,15 +212,16 @@ async function handleReset() {
           @input="onContentWidthInput"
           @change="onContentWidthCommit"
         />
-        <button
-          type="button"
-          class="width-nudge"
-          title="增大"
-          :disabled="appearanceConfig.contentWidth >= 100"
-          @click="nudgeContentWidth(1)"
-        >
-          <Plus :size="14" />
-        </button>
+        <UiTooltip content="增大">
+          <button
+            type="button"
+            class="width-nudge"
+            :disabled="appearanceConfig.contentWidth >= 100"
+            @click="nudgeContentWidth(1)"
+          >
+            <Plus :size="14" />
+          </button>
+        </UiTooltip>
         <span class="width-value">{{ appearanceConfig.contentWidth }}%</span>
       </div>
     </section>

@@ -2,6 +2,7 @@
 import { Link2, MoreHorizontal } from 'lucide-vue-next'
 import type { StudyPlanVO } from '@/types/studyplan'
 import { formatDate, formatUpdated } from '@/utils/formatTime'
+import UiTooltip from '@/components/UiTooltip.vue'
 
 defineProps<{
   list: StudyPlanVO[]
@@ -77,17 +78,17 @@ defineProps<{
         <div class="col-author cell-text">{{ plan.author || '—' }}</div>
         <div class="col-updated cell-date">{{ formatUpdated(plan.updatedAt) }}</div>
         <div class="col-remark">
-          <el-tooltip v-if="plan.remark" :content="plan.remark" placement="top" :show-after="300">
+          <UiTooltip v-if="plan.remark" :content="plan.remark" placement="top" :show-after="300">
             <span class="remark-text">{{ plan.remark }}</span>
-          </el-tooltip>
+          </UiTooltip>
           <span v-else class="muted">—</span>
         </div>
         <div class="col-actions" @click.stop>
-          <el-tooltip v-if="plan.url" content="打开课程" placement="top">
+          <UiTooltip v-if="plan.url" content="打开课程" placement="top">
             <a :href="plan.url" class="icon-action" target="_blank" rel="noopener noreferrer" @click.stop>
               <Link2 :size="15" />
             </a>
-          </el-tooltip>
+          </UiTooltip>
           <el-dropdown trigger="click" @command="(cmd: string) => onRowAction(cmd, plan)">
             <button type="button" class="icon-action more-btn" @click.stop>
               <MoreHorizontal :size="16" />
