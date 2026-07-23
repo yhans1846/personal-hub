@@ -473,6 +473,17 @@ onUnmounted(() => {
 .section-header:hover .section-chevron { opacity: 1; color: var(--text-tertiary); }
 .section-header.collapsed .section-chevron { transform: rotate(-90deg); }
 .section-items { overflow: hidden; }
+/* UiTooltip 根为 inline-flex，不占满宽时会在侧栏内并排换行成双列 */
+.section-items > :deep(*) {
+  display: flex;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.section-items > :deep(*) .nav-item {
+  flex: 1;
+  min-width: 0;
+}
 
 /* 菜单项基础 */
 .nav-item {

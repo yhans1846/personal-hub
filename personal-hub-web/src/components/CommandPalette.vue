@@ -8,6 +8,7 @@ import {
 } from 'lucide-vue-next'
 import type { SearchGroup, SearchItem } from '@/modules/dashboard/api'
 import { buildCreatePath } from '@/utils/deepLink'
+import { isNoteEditorPath } from '@/utils/noteRoutes'
 
 const router = useRouter()
 const visible = ref(false)
@@ -166,7 +167,8 @@ function onKeydown(e: KeyboardEvent) {
     const hit = allResults.value[activeIndex.value]
     if (hit?.path) {
       if (kw) saveSearchHistory(kw)
-      router.push(hit.path)
+      if (isNoteEditorPath(hit.path)) window.open(hit.path, '_blank', 'noopener,noreferrer')
+      else router.push(hit.path)
       visible.value = false
     } else if (kw) {
       submitGlobalSearch(kw)
@@ -180,7 +182,10 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
 function selectItem(item: { path?: string }) {
   const kw = keyword.value.trim()
   if (kw) saveSearchHistory(kw)
-  if (item.path) router.push(item.path)
+  if (item.path) {
+    if (isNoteEditorPath(item.path)) window.open(item.path, '_blank', 'noopener,noreferrer')
+    else router.push(item.path)
+  }
   visible.value = false
 }
 

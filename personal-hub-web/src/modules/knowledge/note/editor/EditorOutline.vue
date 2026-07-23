@@ -11,9 +11,8 @@ const items = computed(() => parseTocFromMarkdown(props.content))
 
 <template>
   <aside class="editor-outline" aria-label="大纲">
-    <p v-if="items.length === 0" class="outline-empty">暂无标题</p>
     <PreviewToc
-      v-else
+      side="right"
       :items="items"
       :active-id="activeId ?? ''"
       @scroll-to="emit('scroll-to', $event)"
@@ -24,18 +23,15 @@ const items = computed(() => parseTocFromMarkdown(props.content))
 <style scoped>
 .editor-outline {
   height: 100%;
-  overflow: auto;
-  /* 分割线由 Editor 分栏统一绘制，避免双线 */
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  /* 宽度随 PreviewToc 展开/收起，勿强制 100% 否则收起后展开钮错位且难找 */
   border-left: none;
   background: transparent;
-  padding: var(--sp-8, 8px);
-}
-.outline-empty {
-  font-size: var(--text-sm);
-  color: var(--text-tertiary);
-  margin: var(--sp-12, 12px);
+  padding: 0;
 }
 .editor-outline :deep(.toc-wrapper) {
-  width: 100% !important;
+  height: 100%;
 }
 </style>

@@ -54,4 +54,29 @@ describe('usePaginatedList', () => {
     expect(total.value).toBe(0)
     expect(errorSpy).toHaveBeenCalledWith('加载失败了')
   })
+
+  it('does not keep loading true while onFetched side-effects run', async () => {
+    let resolveFetched!: () => void
+    const fetchedDone = new Promise<void>((r) => {
+      resolveFetched = r
+    })
+    const fetchPage = vi.fn().mockResolvedValue({
+      records: [{ id: 1 }],
+      total: 1,
+    })
+    const onFetched = vi.fn().mockImplementation(() => fetchedDone)
+    const { list, loading, fetchList } = usePaginatedList({
+      initialQuery: { page: 1, size: 10 },
+      fetchPage,
+      onFetched,
+    })
+
+    await fetchList()
+    expect(list.value).toEqual([{ id: 1 }])
+    expect(loading.value).toBe(false)
+    expect(onFetched).toHaveBeenCalled()
+    // onFetched 仍可挂起；列表已可用
+    resolveFetched()
+    await fetchedDone
+  })
 })

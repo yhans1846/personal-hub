@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { FolderTree } from 'lucide-vue-next'
 import Editor from './Editor.vue'
 import NoteFolderShell from './NoteFolderShell.vue'
@@ -15,6 +15,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   close: []
   'note-id': [id: number]
+  /** 树内切换笔记（父级 replace 路由） */
+  'navigate-note': [id: number]
 }>()
 
 const editorRef = ref<InstanceType<typeof Editor> | null>(null)
@@ -24,6 +26,24 @@ const currentNoteId = ref<number | undefined>(props.noteId)
 const createFolderId = ref<number | null>(props.folderId ?? null)
 const editorKey = ref(0)
 
+watch(
+  () => props.noteId,
+  (id) => {
+    if (id === currentNoteId.value) return
+    currentNoteId.value = id
+    createFolderId.value = null
+    editorKey.value += 1
+  },
+)
+
+watch(
+  () => props.folderId,
+  (fid) => {
+    if (currentNoteId.value != null) return
+    createFolderId.value = fid ?? null
+  },
+)
+
 async function onOpenNote(id: number) {
   if (id === currentNoteId.value) return
   const ok = (await editorRef.value?.requestLeave?.()) ?? true
@@ -31,6 +51,7 @@ async function onOpenNote(id: number) {
   currentNoteId.value = id
   createFolderId.value = null
   editorKey.value += 1
+  emit('navigate-note', id)
 }
 
 function onNoteId(id: number) {
@@ -41,6 +62,12 @@ function onNoteId(id: number) {
 function toggleFolderDrawer() {
   folderDrawerOpen.value = !folderDrawerOpen.value
 }
+
+async function requestLeave(): Promise<boolean> {
+  return (await editorRef.value?.requestLeave?.()) ?? true
+}
+
+defineExpose({ requestLeave })
 </script>
 
 <template>

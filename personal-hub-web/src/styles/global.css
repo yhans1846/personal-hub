@@ -285,6 +285,14 @@
   --el-mask-color: rgba(0, 0, 0, 0.6);
 }
 
+/*
+ * --el-mask-color 专供 Dialog/Drawer 幕布（深色半透明）。
+ * v-loading 默认也读该变量，会导致内容区被压成「暗一秒」；loading 单独用浅遮罩。
+ */
+.el-loading-mask {
+  background-color: color-mix(in srgb, var(--bg-card) 78%, transparent);
+}
+
 /* ---------- 基础重置 ---------- */
 *, *::before, *::after {
   box-sizing: border-box;
@@ -1120,9 +1128,10 @@ a:hover { color: var(--accent-hover); }
   background: rgba(255, 255, 255, 0.28);
 }
 
-/* --- 统一悬停提示（替代原生 title；UiTooltip / el-tooltip） --- */
-.ph-tooltip.el-popper,
-.el-popper[role='tooltip'] {
+/* --- 统一悬停提示（替代原生 title；仅 UiTooltip 的 ph-tooltip） ---
+ * 勿用 .el-popper[role='tooltip']：el-popover 默认也是该 role，会把通知面板等整块染成深色 tip。
+ */
+.ph-tooltip.el-popper {
   --ph-tip-bg: color-mix(in srgb, var(--text-primary) 92%, var(--bg-card));
   padding: 6px 10px !important;
   border: none !important;
@@ -1136,18 +1145,15 @@ a:hover { color: var(--accent-hover); }
   max-width: 240px;
   word-break: break-word;
 }
-.ph-tooltip.el-popper .el-popper__arrow::before,
-.el-popper[role='tooltip'] .el-popper__arrow::before {
+.ph-tooltip.el-popper .el-popper__arrow::before {
   background: var(--ph-tip-bg) !important;
   border: none !important;
 }
-[data-theme='dark'] .ph-tooltip.el-popper,
-[data-theme='dark'] .el-popper[role='tooltip'] {
+[data-theme='dark'] .ph-tooltip.el-popper {
   --ph-tip-bg: color-mix(in srgb, var(--bg-elevated) 88%, #000);
   color: var(--text-primary) !important;
 }
-[data-theme='sepia'] .ph-tooltip.el-popper,
-[data-theme='sepia'] .el-popper[role='tooltip'] {
+[data-theme='sepia'] .ph-tooltip.el-popper {
   --ph-tip-bg: color-mix(in srgb, var(--text-primary) 88%, var(--bg-card));
   color: var(--bg-card) !important;
 }

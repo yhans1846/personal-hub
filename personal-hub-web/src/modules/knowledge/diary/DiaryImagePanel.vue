@@ -32,15 +32,31 @@ let suppressLightboxClick = false
 const canUpload = computed(() => !!props.diaryId)
 
 watch(
-  () => props.diaryId,
-  async (id) => {
+  () => [props.diaryId, [...imageFiles.value].sort().join('\0')] as const,
+  async ([id]) => {
     previewImages.value.forEach(img => revokePreviewUrl(img.url))
     previewImages.value = []
     if (!id || !imageFiles.value.length) return
-    for (const name of imageFiles.value) {
-      const url = await getDiaryImagePreviewUrl(id, name)
-      previewImages.value.push({ name, url })
+    const names = [...imageFiles.value]
+    const loaded = await Promise.all(
+      names.map(async (name) => {
+        try {
+          const url = await getDiaryImagePreviewUrl(id, name)
+          return { name, url } as ImageItem
+        } catch {
+          return null
+        }
+      }),
+    )
+    if (props.diaryId !== id) {
+      loaded.forEach(item => item && revokePreviewUrl(item.url))
+      return
     }
+    // 集合未变（仅排序）时以当前 imageFiles 顺序展示
+    const byName = new Map(loaded.filter((x): x is ImageItem => !!x).map(i => [i.name, i]))
+    previewImages.value = imageFiles.value
+      .map(name => byName.get(name))
+      .filter((x): x is ImageItem => !!x)
   },
   { immediate: true },
 )

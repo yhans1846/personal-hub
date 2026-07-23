@@ -151,22 +151,22 @@ function scrollTo(id: string) {
   border-left: none;
 }
 
-/* 折叠后的展开条 */
+/* 折叠后的展开条：占满窄轨，按钮在顶部（与「收起」同侧） */
 .toc-collapsed-bar {
   position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: 32px;
+  inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   padding-top: 12px;
+  box-sizing: border-box;
+  background: var(--preview-bg, var(--bg-card));
+  border-right: 1px solid var(--preview-border, var(--border-color));
 }
 
 .toc-wrapper--right .toc-collapsed-bar {
-  left: auto;
-  right: 0;
+  border-right: none;
+  border-left: 1px solid var(--preview-border, var(--border-color));
 }
 
 .toc-expand-btn {
@@ -179,7 +179,7 @@ function scrollTo(id: string) {
   background: none;
   border-radius: var(--radius-sm);
   color: var(--preview-text, var(--text-tertiary));
-  opacity: 0.5;
+  opacity: 0.75;
   cursor: pointer;
   transition: color var(--transition-duration) ease, background var(--transition-duration) ease, opacity var(--transition-duration) ease;
 }

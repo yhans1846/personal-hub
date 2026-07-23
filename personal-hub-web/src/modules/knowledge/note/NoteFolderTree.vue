@@ -539,6 +539,33 @@ defineExpose({ reload: loadTree, createRoot: onCreateRoot })
       <template v-else>
         <div v-if="!embeddedInSpace" class="folder-section-label">我的文件夹</div>
 
+        <div class="folder-list">
+          <NoteFolderTreeNode
+            v-for="node in displayTree"
+            :key="node.id"
+            :node="node"
+            :depth="0"
+            :selected="selected"
+            :expanded="expanded"
+            :drop-hint="readonly ? null : dropHint"
+            :menu-open-id="readonly ? null : menuOpenId"
+            :active-note-id="activeNoteId ?? null"
+            :readonly="readonly"
+            @select="select"
+            @toggle="toggleExpand"
+            @toggle-subtree="toggleSubtree"
+            @drag-start="onFolderDragStart"
+            @zone-over="onZoneDragOver"
+            @zone-drop="handleDrop"
+            @menu="menuOpenId = $event"
+            @create-child="onCreateChild"
+            @rename="onRename"
+            @delete="onDelete"
+            @open-note="emit('open-note', $event)"
+          />
+        </div>
+
+        <!-- 未分类固定在用户文件夹之下 -->
         <div
           v-if="displayUncategorizedNotes.length > 0"
           class="folder-uncat"
@@ -602,32 +629,6 @@ defineExpose({ reload: loadTree, createRoot: onCreateRoot })
               </button>
             </div>
           </Transition>
-        </div>
-
-        <div class="folder-list">
-          <NoteFolderTreeNode
-            v-for="node in displayTree"
-            :key="node.id"
-            :node="node"
-            :depth="0"
-            :selected="selected"
-            :expanded="expanded"
-            :drop-hint="readonly ? null : dropHint"
-            :menu-open-id="readonly ? null : menuOpenId"
-            :active-note-id="activeNoteId ?? null"
-            :readonly="readonly"
-            @select="select"
-            @toggle="toggleExpand"
-            @toggle-subtree="toggleSubtree"
-            @drag-start="onFolderDragStart"
-            @zone-over="onZoneDragOver"
-            @zone-drop="handleDrop"
-            @menu="menuOpenId = $event"
-            @create-child="onCreateChild"
-            @rename="onRename"
-            @delete="onDelete"
-            @open-note="emit('open-note', $event)"
-          />
         </div>
       </template>
 

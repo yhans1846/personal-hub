@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { getNoteList, deleteNote, archiveNote, toggleFavorite, exportNotesBatch } from '@/modules/knowledge/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, FileText, Star, Trash2, Clock, Eye, Upload, LayoutList, LayoutGrid, Download, CheckSquare, FolderTree, PanelLeft } from 'lucide-vue-next'
@@ -12,13 +13,14 @@ import NoteCardContextMenu, { type CardMenuEntry } from './NoteCardContextMenu.v
 import NoteWorkspaceOverlay from './NoteWorkspaceOverlay.vue'
 import KnowledgeSpaceNav from './KnowledgeSpaceNav.vue'
 import NoteHome from './NoteHome.vue'
-import { useDeepLinkDialog } from '@/composables/useDeepLinkDialog'
 import { useMainContentFill } from '@/composables/useMainContentFill'
 import { useFillPageSize } from '@/composables/useFillPageSize'
 import { useProductViewMode } from '@/composables/useProductViewMode'
 import { usePaginatedList } from '@/composables/usePaginatedList'
 import { handleApiError, unwrapPage } from '@/utils/apiResult'
 import { triggerBlobDownload } from '@/utils/file'
+import { parseDeepLinkQuery } from '@/utils/deepLink'
+import { openNoteCreateInNewTab, openNoteEditInNewTab } from '@/utils/noteRoutes'
 import { noteFolderDraggingKind } from './folderDragState'
 import UiTooltip from '@/components/UiTooltip.vue'
 
@@ -29,6 +31,9 @@ type Workspace =
   | { mode: 'create'; folderId: number | null }
   | { mode: 'edit'; id: number }
 
+const route = useRoute()
+const router = useRouter()
+
 const showImport = ref(false)
 const selectMode = ref(false)
 const selectedIds = ref<number[]>([])
@@ -37,6 +42,7 @@ const cardMenuRef = ref<InstanceType<typeof NoteCardContextMenu> | null>(null)
 const activeNote = ref<NoteVO | null>(null)
 const workspace = ref<Workspace>(null)
 const workspaceSessionKey = ref(0)
+const overlayRef = ref<InstanceType<typeof NoteWorkspaceOverlay> | null>(null)
 const folderSelection = ref<NoteFolderSelection>('home')
 const folderDrawerOpen = ref(false)
 const FOLDER_PANE_KEY = 'note-folder-pane-collapsed'
@@ -126,27 +132,110 @@ const cardMenuEntries: CardMenuEntry[] = [
 function openImport() {
   showImport.value = true
 }
-function openCreate() {
-  workspaceSessionKey.value += 1
-  workspace.value = { mode: 'create', folderId: createFolderId.value }
-}
-function openEdit(id: number) {
-  workspaceSessionKey.value += 1
-  workspace.value = { mode: 'edit', id }
+
+function parseCreateFolderId(): number | null {
+  const raw = route.query.folderId
+  const s = Array.isArray(raw) ? raw[0] : raw
+  if (s == null || s === '') return createFolderId.value
+  const n = Number(s)
+  return Number.isFinite(n) && n > 0 ? n : null
 }
 
-function closeWorkspace() {
+function openCreate() {
+  openNoteCreateInNewTab(createFolderId.value)
+}
+
+function openEdit(id: number) {
+  openNoteEditInNewTab(id)
+}
+
+/** 树内切换 / 新建落库：不堆历史（已在编辑标签页内） */
+function replaceEdit(id: number) {
+  router.replace({ name: 'NoteEdit', params: { id: String(id) } })
+}
+
+function applyRouteToWorkspace() {
+  const name = route.name
+  if (name === 'NoteCreate') {
+    const folderId = parseCreateFolderId()
+    if (workspace.value?.mode === 'create') {
+      workspace.value = { mode: 'create', folderId }
+      return
+    }
+    workspaceSessionKey.value += 1
+    workspace.value = { mode: 'create', folderId }
+    return
+  }
+  if (name === 'NoteEdit') {
+    const id = Number(route.params.id)
+    if (!Number.isFinite(id) || id <= 0) {
+      router.replace({ name: 'NoteList' })
+      return
+    }
+    if (workspace.value?.mode === 'edit' && workspace.value.id === id) return
+    if (workspace.value?.mode === 'create' || workspace.value?.mode === 'edit') {
+      // 新建落库或树内切换：不 remount Overlay 壳
+      workspace.value = { mode: 'edit', id }
+      return
+    }
+    workspaceSessionKey.value += 1
+    workspace.value = { mode: 'edit', id }
+    return
+  }
+  if (workspace.value) workspace.value = null
+}
+
+function migrateLegacyNoteQuery() {
+  if (route.name !== 'NoteList') return false
+  const { editId, create } = parseDeepLinkQuery(route.query as Record<string, unknown>)
+  if (editId != null) {
+    router.replace({ name: 'NoteEdit', params: { id: String(editId) } })
+    return true
+  }
+  if (create) {
+    router.replace({ name: 'NoteCreate' })
+    return true
+  }
+  return false
+}
+
+watch(
+  () => [route.name, route.params.id, route.query.create, route.query.edit, route.query.folderId] as const,
+  () => {
+    if (migrateLegacyNoteQuery()) return
+    applyRouteToWorkspace()
+  },
+  { immediate: true },
+)
+
+async function closeWorkspace() {
   workspace.value = null
   folderTreeRef.value?.reload()
   if (!isHome.value) fetchList()
-}
-function onWorkspaceNoteId(id: number) {
-  if (workspace.value?.mode === 'create') {
-    workspace.value = { mode: 'edit', id }
+  if (route.name === 'NoteCreate' || route.name === 'NoteEdit') {
+    await router.push({ name: 'NoteList' })
   }
 }
 
-useDeepLinkDialog({ openCreate, openEdit })
+function onWorkspaceNoteId(id: number) {
+  replaceEdit(id)
+}
+
+onBeforeRouteLeave(async (to, _from, next) => {
+  const stayingInEditor =
+    to.name === 'NoteCreate' || to.name === 'NoteEdit'
+  if (stayingInEditor || !workspace.value) {
+    next()
+    return
+  }
+  const ok = (await overlayRef.value?.requestLeave?.()) ?? true
+  if (ok) {
+    workspace.value = null
+    next()
+  } else {
+    next(false)
+  }
+})
 
 function goCreate() { openCreate() }
 function goEdit(id: number) { openEdit(id) }
@@ -592,11 +681,13 @@ async function onCardMenuAction(actionId: string) {
 
   <NoteWorkspaceOverlay
     v-if="workspace"
+    ref="overlayRef"
     :key="workspaceSessionKey"
     :note-id="workspace.mode === 'edit' ? workspace.id : undefined"
     :folder-id="workspaceCreateFolderId"
     @close="closeWorkspace"
     @note-id="onWorkspaceNoteId"
+    @navigate-note="replaceEdit"
   />
 </template>
 
@@ -653,8 +744,8 @@ async function onCardMenuAction(actionId: string) {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-end;
-  padding: 8px 0;
+  justify-content: flex-start;
+  padding: 10px 0 8px;
   border-right: 1px solid var(--border-color);
   background: color-mix(in srgb, var(--bg-card) 70%, var(--bg-body));
 }

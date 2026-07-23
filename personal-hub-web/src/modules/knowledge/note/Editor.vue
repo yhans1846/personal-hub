@@ -509,7 +509,11 @@ const readingTimeText = computed(() => estimateReadingTime(form.value.content))
 .pane-preview {
   flex: 1 1 0;
 }
-.pane-outline { flex: 0 0 15%; overflow: hidden; }
+.pane-outline {
+  flex: 0 0 auto;
+  overflow: hidden;
+  min-width: 0;
+}
 /* 分屏：编辑 / 预览 / 大纲用分割线 + 底色区分 */
 .mode-split .pane-editor {
   background: var(--bg-body);
@@ -528,7 +532,7 @@ const readingTimeText = computed(() => estimateReadingTime(form.value.content))
 }
 .mode-edit .pane-editor { flex: 1; }
 .mode-preview .pane-preview { flex: 1; }
-.mode-preview .pane-outline { flex: 0 0 15%; }
+.mode-preview .pane-outline { flex: 0 0 auto; }
 .pane--split-scroll .editor-instance {
   flex: none;
   height: auto;

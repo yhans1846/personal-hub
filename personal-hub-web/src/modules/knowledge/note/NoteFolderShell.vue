@@ -96,8 +96,8 @@ function closeDrawer() {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-end;
-  padding: 8px 0;
+  justify-content: flex-start;
+  padding: 10px 0 8px;
   border-right: 1px solid var(--border-color);
   background: color-mix(in srgb, var(--bg-card) 70%, var(--bg-body));
 }

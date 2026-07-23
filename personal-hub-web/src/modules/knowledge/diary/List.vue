@@ -32,6 +32,8 @@ const cardImages = ref<Map<number, string[]>>(new Map())
 const lightboxOpen = ref(false)
 const lightboxUrls = ref<string[]>([])
 const lightboxIndex = ref(0)
+/** 防止翻页时旧批次缩略图回写 */
+let imageLoadGen = 0
 
 function openLightbox(urls: string[], index: number) {
   if (!urls.length) return
@@ -41,22 +43,38 @@ function openLightbox(urls: string[], index: number) {
 }
 
 async function loadCardImages(entries: DiaryVO[]) {
-  const map = new Map<number, string[]>()
-  const promises: Promise<void>[] = []
-  for (const entry of entries) {
-    const names = entry.imageFiles?.slice(0, 4) || []
-    if (!names.length) continue
-    promises.push(
-      (async () => {
-        const urls = await Promise.all(names.map(name => getDiaryImagePreviewUrl(entry.id, name)))
-        map.set(entry.id, urls)
-      })()
-    )
-  }
-  await Promise.all(promises)
-  // 释放旧 blob URL
-  cardImages.value.forEach(urls => urls.forEach(u => revokePreviewUrl(u)))
-  cardImages.value = map
+  const gen = ++imageLoadGen
+  const thumbLimit = viewMode.value === 'card' ? 1 : 3
+  const previous = cardImages.value
+  cardImages.value = new Map()
+  previous.forEach(urls => urls.forEach(u => revokePreviewUrl(u)))
+
+  await Promise.all(
+    entries.map(async (entry) => {
+      const names = entry.imageFiles?.slice(0, thumbLimit) || []
+      if (!names.length) return
+      const urls: string[] = []
+      try {
+        for (const name of names) {
+          if (gen !== imageLoadGen) {
+            urls.forEach(revokePreviewUrl)
+            return
+          }
+          urls.push(await getDiaryImagePreviewUrl(entry.id, name))
+          if (gen !== imageLoadGen) {
+            urls.forEach(revokePreviewUrl)
+            return
+          }
+          // 每张到位即刷新，避免等齐才出图
+          const next = new Map(cardImages.value)
+          next.set(entry.id, [...urls])
+          cardImages.value = next
+        }
+      } catch {
+        urls.forEach(revokePreviewUrl)
+      }
+    }),
+  )
 }
 
 function revokeCardImages() {

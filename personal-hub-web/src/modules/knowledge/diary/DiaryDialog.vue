@@ -72,7 +72,6 @@ const dateModel = computed({
 })
 
 async function loadEntity(id: number) {
-  workingId.value = id
   const res = await getDiaryById(id)
   const r = res.data.data
   form.value = {
@@ -86,6 +85,7 @@ async function loadEntity(id: number) {
     longitude: r.longitude ?? null,
     imageFiles: r.imageFiles || [],
   }
+  workingId.value = id
 }
 
 watch(() => props.modelValue, (val) => {

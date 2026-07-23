@@ -15,6 +15,7 @@ import type { ReadingVO } from '@/types/reading'
 import type { StudyPlanVO } from '@/types/studyplan'
 import type { BookmarkVO } from '@/types/bookmark'
 import { buildCreatePath } from '@/utils/deepLink'
+import { openNoteCreateInNewTab } from '@/utils/noteRoutes'
 import { DASHBOARD_CARD_SPAN, REMOVED_DASHBOARD_CODES } from './defaultLayouts'
 import { formatDuration } from './format'
 import { useMainContentFill } from '@/composables/useMainContentFill'
@@ -102,7 +103,7 @@ async function handleToggleDone(id: number) {
 
 function quickCreate(type: string) {
   switch (type) {
-    case 'note': router.push('/notes/new'); break
+    case 'note': openNoteCreateInNewTab(); break
     case 'todo': router.push(buildCreatePath('/todos')); break
     case 'diary': router.push(buildCreatePath('/diaries')); break
     case 'study': router.push(buildCreatePath('/study-records')); break
