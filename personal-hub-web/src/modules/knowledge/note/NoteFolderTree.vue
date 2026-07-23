@@ -586,20 +586,22 @@ defineExpose({ reload: loadTree, createRoot: onCreateRoot })
               </UiTooltip>
             </div>
           </div>
-          <template v-if="uncategorizedExpanded">
-            <button
-              v-for="note in displayUncategorizedNotes"
-              :key="'u-' + note.id"
-              type="button"
-              class="folder-row folder-row--note"
-              :class="{ active: activeNoteId === note.id }"
-              @click="emit('open-note', note.id)"
-            >
-              <span class="folder-expand-spacer" />
-              <FileText :size="14" class="folder-row-icon" />
-              <span class="folder-row-label">{{ note.title || '无标题笔记' }}</span>
-            </button>
-          </template>
+          <Transition name="ks-fold">
+            <div v-show="uncategorizedExpanded" class="folder-children">
+              <button
+                v-for="note in displayUncategorizedNotes"
+                :key="'u-' + note.id"
+                type="button"
+                class="folder-row folder-row--note"
+                :class="{ active: activeNoteId === note.id }"
+                @click="emit('open-note', note.id)"
+              >
+                <span class="folder-expand-spacer" />
+                <FileText :size="14" class="folder-row-icon" />
+                <span class="folder-row-label">{{ note.title || '无标题笔记' }}</span>
+              </button>
+            </div>
+          </Transition>
         </div>
 
         <div class="folder-list">
@@ -756,7 +758,7 @@ defineExpose({ reload: loadTree, createRoot: onCreateRoot })
   color: var(--text-primary);
   text-align: left;
   padding: 8px 10px;
-  border-radius: var(--radius-sm);
+  border-radius: 6px;
   cursor: pointer;
   font-size: var(--text-sm);
   box-sizing: border-box;
@@ -796,6 +798,11 @@ defineExpose({ reload: loadTree, createRoot: onCreateRoot })
   font-variant-numeric: tabular-nums;
   color: var(--text-tertiary);
   text-align: right;
+  opacity: 0.25;
+  transition: opacity 0.15s ease;
+}
+.folder-row:hover .folder-count {
+  opacity: 0.55;
 }
 .folder-icon-btn {
   display: inline-flex;
@@ -804,7 +811,7 @@ defineExpose({ reload: loadTree, createRoot: onCreateRoot })
   width: 26px;
   height: 26px;
   border: none;
-  border-radius: var(--radius-sm);
+  border-radius: 6px;
   background: transparent;
   color: var(--text-tertiary);
   cursor: pointer;
@@ -825,7 +832,7 @@ defineExpose({ reload: loadTree, createRoot: onCreateRoot })
   color: var(--text-primary);
   text-align: left;
   padding: 8px 10px;
-  border-radius: var(--radius-sm);
+  border-radius: 6px;
   cursor: pointer;
   font-size: var(--text-sm);
   position: relative;
@@ -897,6 +904,11 @@ defineExpose({ reload: loadTree, createRoot: onCreateRoot })
   font-variant-numeric: tabular-nums;
   color: var(--text-tertiary);
   text-align: right;
+  opacity: 0.25;
+  transition: opacity 0.15s ease;
+}
+:deep(.folder-row:hover .folder-count) {
+  opacity: 0.55;
 }
 :deep(.folder-expand) {
   width: 18px;
@@ -919,11 +931,13 @@ defineExpose({ reload: loadTree, createRoot: onCreateRoot })
   position: relative;
   flex-shrink: 0;
   opacity: 0;
-  pointer-events: auto;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
 }
 :deep(.folder-row--node:hover .folder-row-actions),
-:deep(.folder-row--node.active .folder-row-actions) {
+:deep(.folder-row--node.menu-open .folder-row-actions) {
   opacity: 1;
+  pointer-events: auto;
 }
 :deep(.folder-icon-btn) {
   display: inline-flex;
@@ -932,7 +946,7 @@ defineExpose({ reload: loadTree, createRoot: onCreateRoot })
   width: 26px;
   height: 26px;
   border: none;
-  border-radius: var(--radius-sm);
+  border-radius: 6px;
   background: transparent;
   color: var(--text-tertiary);
   cursor: pointer;
@@ -961,7 +975,7 @@ defineExpose({ reload: loadTree, createRoot: onCreateRoot })
   border: none;
   background: transparent;
   padding: 6px 8px;
-  border-radius: var(--radius-sm);
+  border-radius: 6px;
   font-size: 12px;
   color: var(--text-primary);
   cursor: pointer;
@@ -995,5 +1009,31 @@ defineExpose({ reload: loadTree, createRoot: onCreateRoot })
   display: inline-block;
   width: 18px;
   flex-shrink: 0;
+}
+.folder-row-actions {
+  position: relative;
+  flex-shrink: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+.folder-row--node:hover .folder-row-actions,
+.folder-row--node.menu-open .folder-row-actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+.folder-children {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ks-fold-enter-active,
+.ks-fold-leave-active {
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+.ks-fold-enter-from,
+.ks-fold-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
 }
 </style>

@@ -99,6 +99,7 @@ function noteTitle(title?: string) {
       class="folder-row folder-row--node"
       :class="{
         active,
+        'menu-open': menuOpen,
         'folder-row--drop': !readonly,
         'drop-inside': !readonly && place === 'inside',
         'drop-before': !readonly && place === 'before',
@@ -178,43 +179,64 @@ function noteTitle(title?: string) {
       </div>
     </div>
 
-    <template v-if="hasChildren && open">
-      <button
-        v-for="note in node.notes ?? []"
-        :key="'n-' + note.id"
-        type="button"
-        class="folder-row folder-row--note"
-        :class="{ active: activeNoteId === note.id }"
-        :style="{ paddingLeft: `${24 + depth * 14}px` }"
-        @click="emit('open-note', note.id)"
-      >
-        <span class="folder-expand-spacer" />
-        <FileText :size="14" class="folder-row-icon" />
-        <span class="folder-row-label">{{ noteTitle(note.title) }}</span>
-      </button>
-      <NoteFolderTreeNode
-        v-for="child in node.children"
-        :key="child.id"
-        :node="child"
-        :depth="depth + 1"
-        :selected="selected"
-        :expanded="expanded"
-        :drop-hint="dropHint"
-        :menu-open-id="menuOpenId"
-        :active-note-id="activeNoteId ?? null"
-        :readonly="readonly"
-        @select="emit('select', $event)"
-        @toggle="emit('toggle', $event)"
-        @toggle-subtree="emit('toggle-subtree', $event)"
-        @drag-start="(e, id) => emit('drag-start', e, id)"
-        @zone-over="(e, id, p) => emit('zone-over', e, id, p)"
-        @zone-drop="(e, id, p) => emit('zone-drop', e, id, p)"
-        @menu="emit('menu', $event)"
-        @create-child="emit('create-child', $event)"
-        @rename="emit('rename', $event)"
-        @delete="emit('delete', $event)"
-        @open-note="emit('open-note', $event)"
-      />
-    </template>
+    <Transition name="ks-fold">
+      <div v-show="hasChildren && open" class="folder-children">
+        <button
+          v-for="note in node.notes ?? []"
+          :key="'n-' + note.id"
+          type="button"
+          class="folder-row folder-row--note"
+          :class="{ active: activeNoteId === note.id }"
+          :style="{ paddingLeft: `${24 + depth * 14}px` }"
+          @click="emit('open-note', note.id)"
+        >
+          <span class="folder-expand-spacer" />
+          <FileText :size="14" class="folder-row-icon" />
+          <span class="folder-row-label">{{ noteTitle(note.title) }}</span>
+        </button>
+        <NoteFolderTreeNode
+          v-for="child in node.children"
+          :key="child.id"
+          :node="child"
+          :depth="depth + 1"
+          :selected="selected"
+          :expanded="expanded"
+          :drop-hint="dropHint"
+          :menu-open-id="menuOpenId"
+          :active-note-id="activeNoteId ?? null"
+          :readonly="readonly"
+          @select="emit('select', $event)"
+          @toggle="emit('toggle', $event)"
+          @toggle-subtree="emit('toggle-subtree', $event)"
+          @drag-start="(e, id) => emit('drag-start', e, id)"
+          @zone-over="(e, id, p) => emit('zone-over', e, id, p)"
+          @zone-drop="(e, id, p) => emit('zone-drop', e, id, p)"
+          @menu="emit('menu', $event)"
+          @create-child="emit('create-child', $event)"
+          @rename="emit('rename', $event)"
+          @delete="emit('delete', $event)"
+          @open-note="emit('open-note', $event)"
+        />
+      </div>
+    </Transition>
   </div>
 </template>
+
+<style scoped>
+.folder-children {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ks-fold-enter-active,
+.ks-fold-leave-active {
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.ks-fold-enter-from,
+.ks-fold-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+</style>

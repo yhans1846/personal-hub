@@ -388,12 +388,14 @@ onUnmounted(() => {
   color: var(--preview-text);
 }
 
-/* 左树 / 窄轨 / 移动端栏：与阅读主题同一套 --preview-* */
-.preview-shell :deep(.folder-tree) {
+/* 左树 / 知识空间 / 窄轨 / 移动端栏：与阅读主题同一套 --preview-* */
+.preview-shell :deep(.folder-tree),
+.preview-shell :deep(.ks-nav) {
   background: var(--preview-bg);
   border-right-color: var(--preview-border);
 }
-.preview-shell :deep(.folder-tree-head) {
+.preview-shell :deep(.folder-tree-head),
+.preview-shell :deep(.ks-head) {
   height: 56px;
   box-sizing: border-box;
   padding: 0 12px;
@@ -401,24 +403,37 @@ onUnmounted(() => {
 }
 .preview-shell :deep(.folder-tree-title),
 .preview-shell :deep(.folder-section-label),
-.preview-shell :deep(.folder-count),
-.preview-shell :deep(.folder-empty) {
+.preview-shell :deep(.folder-empty),
+.preview-shell :deep(.ks-title),
+.preview-shell :deep(.ks-section-label),
+.preview-shell :deep(.ks-empty-hint) {
   color: var(--preview-text);
   opacity: 0.55;
 }
-.preview-shell :deep(.folder-row) {
+.preview-shell :deep(.folder-count) {
+  color: var(--preview-text);
+  opacity: 0.25;
+}
+.preview-shell :deep(.folder-row:hover .folder-count) {
+  opacity: 0.55;
+}
+.preview-shell :deep(.folder-row),
+.preview-shell :deep(.ks-row) {
   color: var(--preview-text);
   opacity: 0.88;
 }
-.preview-shell :deep(.folder-row .folder-row-icon) {
+.preview-shell :deep(.folder-row .folder-row-icon),
+.preview-shell :deep(.ks-row .ks-row-icon) {
   opacity: 0.55;
   color: var(--preview-text);
 }
-.preview-shell :deep(.folder-row:hover) {
+.preview-shell :deep(.folder-row:hover),
+.preview-shell :deep(.ks-row:hover) {
   background: color-mix(in srgb, var(--preview-text) 6%, var(--preview-bg));
   opacity: 1;
 }
-.preview-shell :deep(.folder-row.active) {
+.preview-shell :deep(.folder-row.active),
+.preview-shell :deep(.ks-row.active) {
   background: color-mix(in srgb, var(--accent) 12%, var(--preview-bg));
   color: var(--accent);
   opacity: 1;
@@ -432,17 +447,35 @@ onUnmounted(() => {
 .preview-shell :deep(.folder-icon-btn),
 .preview-shell :deep(.folder-collapse-btn),
 .preview-shell :deep(.folder-pane-expand),
-.preview-shell :deep(.folder-expand) {
+.preview-shell :deep(.folder-expand),
+.preview-shell :deep(.ks-icon-btn) {
   color: var(--preview-text);
   opacity: 0.5;
 }
 .preview-shell :deep(.folder-icon-btn:hover),
 .preview-shell :deep(.folder-collapse-btn:hover),
 .preview-shell :deep(.folder-pane-expand:hover),
-.preview-shell :deep(.folder-expand:hover) {
+.preview-shell :deep(.folder-expand:hover),
+.preview-shell :deep(.ks-icon-btn:hover) {
   color: var(--preview-heading);
   opacity: 1;
   background: color-mix(in srgb, var(--preview-text) 6%, var(--preview-bg));
+}
+.preview-shell :deep(.ks-search-input) {
+  background: color-mix(in srgb, var(--preview-bg) 88%, var(--preview-text));
+  border-color: var(--preview-border);
+  color: var(--preview-text);
+}
+.preview-shell :deep(.ks-search-input::placeholder) {
+  color: var(--preview-text);
+  opacity: 0.45;
+}
+.preview-shell :deep(.ks-search-input:focus) {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--preview-border));
+}
+.preview-shell :deep(.ks-search-icon) {
+  color: var(--preview-text);
+  opacity: 0.45;
 }
 .preview-shell :deep(.folder-pane-rail) {
   background: var(--preview-bg);
