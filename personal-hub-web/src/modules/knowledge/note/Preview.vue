@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick, watch, onUnmounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { FolderTree } from 'lucide-vue-next'
 import Vditor from 'vditor'
 import 'vditor/dist/index.css'
-import type { NoteVO } from '@/types/note'
+import type { NoteVO, NoteFolderSelection } from '@/types/note'
 import { getNotePreview, restoreNote, exportNote } from '@/modules/knowledge/api'
 import { useReadingConfigStore } from '@/store/readingConfigStore'
 import { useReadingTheme } from './preview/useReadingTheme'
@@ -17,10 +18,12 @@ import { buildPreviewOptions } from './editor/vditorSetup'
 import { parseTocFromMarkdown, assignPreviewHeadingIds, headingIdFromText } from './editor/parseToc'
 import { preparePreviewMarkdown, setupPreviewImageZoom } from './editor/previewEnhancements'
 import NoteBacklinks from './NoteBacklinks.vue'
+import NoteFolderShell from './NoteFolderShell.vue'
 import { useFeatureFlagStore } from '@/store/featureFlagStore'
 import UiTooltip from '@/components/UiTooltip.vue'
 
 const route = useRoute()
+const router = useRouter()
 const readingStore = useReadingConfigStore()
 const featureFlags = useFeatureFlagStore()
 const { config } = storeToRefs(readingStore)
@@ -32,8 +35,14 @@ const error = ref('')
 const activeHeading = ref('')
 const toc = ref<TocItem[]>([])
 const previewRef = ref<HTMLDivElement | null>(null)
+const folderSelection = ref<NoteFolderSelection>('home')
+const folderDrawerOpen = ref(false)
 
 const loadedNote = computed(() => note.value as NoteVO)
+const activeNoteId = computed(() => {
+  const id = note.value?.id ?? Number(route.params.id)
+  return Number.isFinite(id) && id > 0 ? id : null
+})
 
 let observer: IntersectionObserver | null = null
 let disposeZoom: (() => void) | null = null
@@ -173,9 +182,17 @@ function setupHeadingAnchors() {
   })
 }
 
-onMounted(async () => {
-  readingStore.fetchFromBackend()
-  const id = Number(route.params.id)
+async function loadNote(id: number) {
+  loading.value = true
+  error.value = ''
+  note.value = null
+  toc.value = []
+  activeHeading.value = ''
+  observer?.disconnect()
+  disposeZoom?.()
+  disposeZoom = null
+  if (previewRef.value) previewRef.value.innerHTML = ''
+
   if (!id) {
     error.value = '笔记ID无效'
     loading.value = false
@@ -191,7 +208,26 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
+}
+
+function onOpenNote(id: number) {
+  if (id === activeNoteId.value) return
+  router.push(`/notes/${id}/preview`)
+}
+
+onMounted(() => {
+  readingStore.fetchFromBackend()
+  loadNote(Number(route.params.id))
 })
+
+watch(
+  () => Number(route.params.id),
+  (id) => {
+    if (!Number.isFinite(id) || id <= 0) return
+    if (note.value?.id === id) return
+    loadNote(id)
+  },
+)
 
 watch(() => note.value?.content, () => {
   if (note.value?.content) {
@@ -242,86 +278,241 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div v-if="loading" class="state-message">
-    <div class="loading-spinner" />
-    <span>加载中...</span>
-  </div>
-
-  <div v-else-if="error" class="state-message state-error">
-    <p>{{ error }}</p>
-    <button class="back-btn" @click="handleClose">关闭页面</button>
-  </div>
-
-  <DocLayout
-    v-else-if="note"
-    :title="loadedNote.title"
-    :toc-items="toc"
-    :active-heading="activeHeading"
-    :is-trash="isTrash"
-    :meta="{
-      updatedAt: formatUpdated(loadedNote.updatedAt, ''),
-      readingTime: estimateReadingTime(loadedNote.content),
-    }"
-    @back="handleClose"
-    @scroll-to-heading="scrollToHeading"
-  >
-    <template #header-actions>
-      <el-dropdown trigger="click" placement="bottom-end">
-        <UiTooltip content="更多" placement="bottom">
-          <button class="header-action-btn">
-            <span style="letter-spacing: 2px">⋯</span>
+  <div class="preview-shell">
+    <NoteFolderShell
+      v-model="folderSelection"
+      v-model:drawer-open="folderDrawerOpen"
+      :active-note-id="activeNoteId"
+      readonly
+      @open-note="onOpenNote"
+    />
+    <div class="preview-main">
+      <div class="preview-mobile-bar">
+        <UiTooltip content="文件夹" placement="bottom">
+          <button
+            type="button"
+            class="preview-folder-toggle"
+            @click="folderDrawerOpen = !folderDrawerOpen"
+          >
+            <FolderTree :size="16" />
           </button>
         </UiTooltip>
-        <template #dropdown>
-          <el-dropdown-menu>
-            <el-dropdown-item @click="handleExport">导出笔记</el-dropdown-item>
-            <el-dropdown-item v-if="isTrash" @click="handleRestore">恢复笔记</el-dropdown-item>
-          </el-dropdown-menu>
+      </div>
+
+      <div v-if="loading" class="state-message">
+        <div class="loading-spinner" />
+        <span>加载中...</span>
+      </div>
+
+      <div v-else-if="error" class="state-message state-error">
+        <p>{{ error }}</p>
+        <button class="back-btn" @click="handleClose">关闭页面</button>
+      </div>
+
+      <DocLayout
+        v-else-if="note"
+        :title="loadedNote.title"
+        :toc-items="toc"
+        :active-heading="activeHeading"
+        :is-trash="isTrash"
+        :meta="{
+          updatedAt: formatUpdated(loadedNote.updatedAt, ''),
+          readingTime: estimateReadingTime(loadedNote.content),
+        }"
+        @back="handleClose"
+        @scroll-to-heading="scrollToHeading"
+      >
+        <template #header-actions>
+          <el-dropdown trigger="click" placement="bottom-end">
+            <UiTooltip content="更多" placement="bottom">
+              <button class="header-action-btn">
+                <span style="letter-spacing: 2px">⋯</span>
+              </button>
+            </UiTooltip>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item @click="handleExport">导出笔记</el-dropdown-item>
+                <el-dropdown-item v-if="isTrash" @click="handleRestore">恢复笔记</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
         </template>
-      </el-dropdown>
-    </template>
 
-    <div
-      class="preview-content-wrap"
-      :style="{
-        maxWidth: config.readingWidth + 'px',
-        fontSize: config.fontSize + 'px',
-        lineHeight: config.lineHeight,
-        '--prose-font-size': config.fontSize + 'px',
-        '--prose-line-height': config.lineHeight,
-        '--image-max-width': config.imageMaxWidth + '%',
-      }"
-    >
-      <div class="preview-taxonomies">
-        <span v-if="loadedNote.categories?.length" class="taxonomy-block">
-          <span v-for="c in loadedNote.categories" :key="c.id" class="taxonomy-tag">{{ c.name }}</span>
-        </span>
-        <span v-if="loadedNote.tags?.length" class="taxonomy-block">
-          <span
-            v-for="t in loadedNote.tags"
-            :key="t.id"
-            class="taxonomy-tag"
-            :style="t.color ? { '--tag-color': t.color } : undefined"
-          >{{ t.name }}</span>
-        </span>
-      </div>
+        <div
+          class="preview-content-wrap"
+          :style="{
+            maxWidth: config.readingWidth + 'px',
+            fontSize: config.fontSize + 'px',
+            lineHeight: config.lineHeight,
+            '--prose-font-size': config.fontSize + 'px',
+            '--prose-line-height': config.lineHeight,
+            '--image-max-width': config.imageMaxWidth + '%',
+          }"
+        >
+          <div class="preview-taxonomies">
+            <span v-if="loadedNote.categories?.length" class="taxonomy-block">
+              <span v-for="c in loadedNote.categories" :key="c.id" class="taxonomy-tag">{{ c.name }}</span>
+            </span>
+            <span v-if="loadedNote.tags?.length" class="taxonomy-block">
+              <span
+                v-for="t in loadedNote.tags"
+                :key="t.id"
+                class="taxonomy-tag"
+                :style="t.color ? { '--tag-color': t.color } : undefined"
+              >{{ t.name }}</span>
+            </span>
+          </div>
 
-      <div v-if="loadedNote.content" class="preview-content markdown-prose">
-        <div ref="previewRef" class="vditor-preview-body" />
-      </div>
-      <div v-else class="empty-content">笔记内容为空</div>
-      <NoteBacklinks
-        v-if="loadedNote.id"
-        :note-id="loadedNote.id"
-        :enabled="featureFlags.isEnabled('backlink')"
-      />
+          <div v-if="loadedNote.content" class="preview-content markdown-prose">
+            <div ref="previewRef" class="vditor-preview-body" />
+          </div>
+          <div v-else class="empty-content">笔记内容为空</div>
+          <NoteBacklinks
+            v-if="loadedNote.id"
+            :note-id="loadedNote.id"
+            :enabled="featureFlags.isEnabled('backlink')"
+          />
+        </div>
+      </DocLayout>
     </div>
-  </DocLayout>
+  </div>
 </template>
 
 <style scoped>
+.preview-shell {
+  display: flex;
+  height: 100vh;
+  min-height: 0;
+  position: relative;
+  background: var(--preview-bg);
+  color: var(--preview-text);
+}
+
+/* 左树 / 窄轨 / 移动端栏：与阅读主题同一套 --preview-* */
+.preview-shell :deep(.folder-tree) {
+  background: var(--preview-bg);
+  border-right-color: var(--preview-border);
+}
+.preview-shell :deep(.folder-tree-head) {
+  height: 56px;
+  box-sizing: border-box;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--preview-border);
+}
+.preview-shell :deep(.folder-tree-title),
+.preview-shell :deep(.folder-section-label),
+.preview-shell :deep(.folder-count),
+.preview-shell :deep(.folder-empty) {
+  color: var(--preview-text);
+  opacity: 0.55;
+}
+.preview-shell :deep(.folder-row) {
+  color: var(--preview-text);
+  opacity: 0.88;
+}
+.preview-shell :deep(.folder-row .folder-row-icon) {
+  opacity: 0.55;
+  color: var(--preview-text);
+}
+.preview-shell :deep(.folder-row:hover) {
+  background: color-mix(in srgb, var(--preview-text) 6%, var(--preview-bg));
+  opacity: 1;
+}
+.preview-shell :deep(.folder-row.active) {
+  background: color-mix(in srgb, var(--accent) 12%, var(--preview-bg));
+  color: var(--accent);
+  opacity: 1;
+}
+.preview-shell :deep(.folder-row--note) {
+  opacity: 0.78;
+}
+.preview-shell :deep(.folder-row--note.active) {
+  opacity: 1;
+}
+.preview-shell :deep(.folder-icon-btn),
+.preview-shell :deep(.folder-collapse-btn),
+.preview-shell :deep(.folder-pane-expand),
+.preview-shell :deep(.folder-expand) {
+  color: var(--preview-text);
+  opacity: 0.5;
+}
+.preview-shell :deep(.folder-icon-btn:hover),
+.preview-shell :deep(.folder-collapse-btn:hover),
+.preview-shell :deep(.folder-pane-expand:hover),
+.preview-shell :deep(.folder-expand:hover) {
+  color: var(--preview-heading);
+  opacity: 1;
+  background: color-mix(in srgb, var(--preview-text) 6%, var(--preview-bg));
+}
+.preview-shell :deep(.folder-pane-rail) {
+  background: var(--preview-bg);
+  border-right-color: var(--preview-border);
+}
+.preview-shell :deep(.folder-pane.open),
+.preview-shell :deep(.folder-pane) {
+  background: transparent;
+}
+
+.preview-main {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background: var(--preview-bg);
+}
+.preview-mobile-bar {
+  display: none;
+}
+.preview-folder-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--preview-text);
+  opacity: 0.55;
+  cursor: pointer;
+}
+.preview-folder-toggle:hover {
+  color: var(--preview-heading);
+  opacity: 1;
+  background: color-mix(in srgb, var(--preview-text) 6%, var(--preview-bg));
+}
+@media (max-width: 768px) {
+  .preview-mobile-bar {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--preview-border);
+    background: var(--preview-bg);
+  }
+  .preview-shell :deep(.folder-pane) {
+    background: var(--preview-bg);
+  }
+}
+.preview-main :deep(.doc-layout) {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+}
+.preview-main :deep(.header-action-btn) {
+  color: var(--preview-text);
+  opacity: 0.55;
+}
+.preview-main :deep(.header-action-btn:hover) {
+  color: var(--preview-heading);
+  opacity: 1;
+  background: color-mix(in srgb, var(--preview-text) 6%, var(--preview-bg));
+}
 .vditor-preview-body :deep(a.wiki-link--missing) {
-  color: var(--text-tertiary);
+  color: var(--preview-text);
+  opacity: 0.45;
   text-decoration: line-through;
   cursor: not-allowed;
 }
@@ -332,8 +523,9 @@ onUnmounted(() => {
   justify-content: center;
   gap: var(--sp-3);
   flex: 1;
-  height: 100vh;
-  color: var(--text-tertiary);
+  height: 100%;
+  color: var(--preview-text);
+  opacity: 0.55;
   font-size: var(--text-sm);
   background: var(--preview-bg);
 }
@@ -341,8 +533,9 @@ onUnmounted(() => {
 .back-btn {
   padding: 6px 16px;
   font-size: var(--text-sm);
-  color: var(--text-secondary);
-  border: 1px solid var(--border-color);
+  color: var(--preview-text);
+  opacity: 0.72;
+  border: 1px solid var(--preview-border);
   background: transparent;
   border-radius: var(--radius-sm);
   cursor: pointer;
@@ -372,7 +565,7 @@ onUnmounted(() => {
   padding: 1px 8px;
   font-size: 12px;
   line-height: 1.6;
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--preview-bg, transparent));
   color: var(--accent);
   border-radius: var(--radius-sm);
 }
@@ -383,7 +576,8 @@ onUnmounted(() => {
 .empty-content {
   text-align: center;
   padding: 48px 0;
-  color: var(--text-tertiary);
+  color: var(--preview-text);
+  opacity: 0.45;
 }
 .header-action-btn {
   display: inline-flex;
@@ -394,7 +588,8 @@ onUnmounted(() => {
   border: none;
   background: none;
   border-radius: var(--radius-sm);
-  color: var(--text-tertiary);
+  color: var(--preview-text);
+  opacity: 0.55;
   cursor: pointer;
 }
 :deep(.vditor-reset) {

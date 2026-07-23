@@ -25,6 +25,10 @@ const UNCAT_EXPAND_KEY = 'note-folder-uncategorized-expanded'
 
 const props = defineProps<{
   modelValue: NoteFolderSelection
+  /** 当前正在编辑/预览的笔记，树内高亮 */
+  activeNoteId?: number | null
+  /** 只读：仅导航（展开/点笔记），无新建/拖拽/菜单 */
+  readonly?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -458,126 +462,151 @@ defineExpose({ reload: loadTree })
   <aside class="folder-tree" aria-label="笔记文件夹">
     <div class="folder-tree-head">
       <span class="folder-tree-title">文件夹</span>
-      <UiTooltip content="新建文件夹" placement="bottom">
-        <button type="button" class="folder-icon-btn" @click="onCreateRoot">
-          <FolderPlus :size="15" />
-        </button>
-      </UiTooltip>
+      <div class="folder-tree-head-actions">
+        <UiTooltip v-if="!readonly" content="新建文件夹" placement="bottom">
+          <button type="button" class="folder-icon-btn" @click="onCreateRoot">
+            <FolderPlus :size="15" />
+          </button>
+        </UiTooltip>
+        <UiTooltip content="收起侧栏" placement="bottom">
+          <button
+            type="button"
+            class="folder-collapse-btn"
+            @click="emit('collapse')"
+          >
+            <PanelLeftClose :size="14" />
+          </button>
+        </UiTooltip>
+      </div>
     </div>
 
     <div
       class="folder-tree-body"
-      @dragleave="onTreeBodyDragLeave"
-      @dragend="clearDragState"
+      @dragleave="!readonly && onTreeBodyDragLeave($event)"
+      @dragend="!readonly && clearDragState()"
     >
-      <button
-        type="button"
-        class="folder-row"
-        :class="{ active: selected === 'home' }"
-        @click="select('home')"
-      >
-        <Home :size="14" class="folder-row-icon" />
-        <span class="folder-row-label">首页</span>
-      </button>
-
-      <button
-        type="button"
-        class="folder-row"
-        :class="{ active: selected === 'all' }"
-        @click="select('all')"
-      >
-        <FolderOpen :size="14" class="folder-row-icon" />
-        <span class="folder-row-label">全部</span>
-        <span class="folder-count">{{ totalCount }}</span>
-      </button>
-
-      <div
-        v-if="uncategorizedNotes.length > 0"
-        class="folder-uncat"
-      >
-        <div
-          role="button"
-          tabindex="0"
-          class="folder-row folder-row--node folder-row--drop"
-          :class="{ active: selected === 'none', 'drop-inside': dropHint?.kind === 'none' }"
-          @click="select('none')"
-          @keydown.enter="select('none')"
-          @dragover="onZoneDragOver($event, 'none')"
-          @drop="handleDrop($event, 'none')"
+      <template v-if="!readonly">
+        <button
+          type="button"
+          class="folder-row"
+          :class="{ active: selected === 'home' }"
+          @click="select('home')"
         >
-          <button
-            type="button"
-            class="folder-expand"
-            @click.stop="toggleUncategorized"
+          <Home :size="14" class="folder-row-icon" />
+          <span class="folder-row-label">首页</span>
+        </button>
+
+        <button
+          type="button"
+          class="folder-row"
+          :class="{ active: selected === 'all' }"
+          @click="select('all')"
+        >
+          <FolderOpen :size="14" class="folder-row-icon" />
+          <span class="folder-row-label">全部</span>
+          <span class="folder-count">{{ totalCount }}</span>
+        </button>
+      </template>
+
+      <p v-if="!loading && tree.length === 0 && uncategorizedNotes.length === 0" class="folder-empty">
+        {{ readonly ? '暂无文件夹' : '暂无文件夹，点击右上角新建' }}
+      </p>
+
+      <template v-else>
+        <div class="folder-section-label">我的文件夹</div>
+
+        <div
+          v-if="uncategorizedNotes.length > 0"
+          class="folder-uncat"
+        >
+          <div
+            role="button"
+            tabindex="0"
+            class="folder-row folder-row--node"
+            :class="{
+              active: selected === 'none',
+              'folder-row--drop': !readonly,
+              'drop-inside': !readonly && dropHint?.kind === 'none',
+            }"
+            @click="select('none')"
+            @keydown.enter="select('none')"
+            @dragover="!readonly && onZoneDragOver($event, 'none')"
+            @drop="!readonly && handleDrop($event, 'none')"
           >
-            <ChevronDown v-if="uncategorizedExpanded && uncategorizedNotes.length" :size="14" />
-            <ChevronRight v-else-if="uncategorizedNotes.length" :size="14" />
-            <span v-else class="folder-expand-spacer" />
-          </button>
-          <Folder :size="14" class="folder-row-icon" />
-          <span class="folder-row-label">未分类</span>
-          <span class="folder-count">{{ uncategorizedCount }}</span>
-          <div v-if="uncategorizedNotes.length" class="folder-row-actions" @click.stop>
-            <UiTooltip
-              :content="uncategorizedExpanded ? '全部收起' : '全部展开'"
-              placement="bottom"
-              :show-after="300"
+            <button
+              type="button"
+              class="folder-expand"
+              @click.stop="toggleUncategorized"
             >
-              <button
-                type="button"
-                class="folder-icon-btn"
-                @click="toggleUncategorized"
+              <ChevronDown v-if="uncategorizedExpanded && uncategorizedNotes.length" :size="14" />
+              <ChevronRight v-else-if="uncategorizedNotes.length" :size="14" />
+              <span v-else class="folder-expand-spacer" />
+            </button>
+            <Folder :size="14" class="folder-row-icon" />
+            <span class="folder-row-label">未分类</span>
+            <span class="folder-count">{{ uncategorizedCount }}</span>
+            <div v-if="uncategorizedNotes.length" class="folder-row-actions" @click.stop>
+              <UiTooltip
+                :content="uncategorizedExpanded ? '全部收起' : '全部展开'"
+                placement="bottom"
+                :show-after="300"
               >
-                <ChevronsDownUp v-if="uncategorizedExpanded" :size="14" />
-                <ChevronsUpDown v-else :size="14" />
-              </button>
-            </UiTooltip>
+                <button
+                  type="button"
+                  class="folder-icon-btn"
+                  @click="toggleUncategorized"
+                >
+                  <ChevronsDownUp v-if="uncategorizedExpanded" :size="14" />
+                  <ChevronsUpDown v-else :size="14" />
+                </button>
+              </UiTooltip>
+            </div>
           </div>
+          <template v-if="uncategorizedExpanded">
+            <button
+              v-for="note in uncategorizedNotes"
+              :key="'u-' + note.id"
+              type="button"
+              class="folder-row folder-row--note"
+              :class="{ active: activeNoteId === note.id }"
+              @click="emit('open-note', note.id)"
+            >
+              <span class="folder-expand-spacer" />
+              <FileText :size="14" class="folder-row-icon" />
+              <span class="folder-row-label">{{ note.title || '无标题笔记' }}</span>
+            </button>
+          </template>
         </div>
-        <template v-if="uncategorizedExpanded">
-          <button
-            v-for="note in uncategorizedNotes"
-            :key="'u-' + note.id"
-            type="button"
-            class="folder-row folder-row--note"
-            @click="emit('open-note', note.id)"
-          >
-            <span class="folder-expand-spacer" />
-            <FileText :size="14" class="folder-row-icon" />
-            <span class="folder-row-label">{{ note.title || '无标题笔记' }}</span>
-          </button>
-        </template>
-      </div>
 
-      <p v-if="!loading && tree.length === 0" class="folder-empty">暂无文件夹，点击右上角新建</p>
-
-      <div v-else class="folder-section-label">我的文件夹</div>
-
-      <div class="folder-list">
-        <NoteFolderTreeNode
-          v-for="node in tree"
-          :key="node.id"
-          :node="node"
-          :depth="0"
-          :selected="selected"
-          :expanded="expanded"
-          :drop-hint="dropHint"
-          :menu-open-id="menuOpenId"
-          @select="select"
-          @toggle="toggleExpand"
-          @toggle-subtree="toggleSubtree"
-          @drag-start="onFolderDragStart"
-          @zone-over="onZoneDragOver"
-          @zone-drop="handleDrop"
-          @menu="menuOpenId = $event"
-          @create-child="onCreateChild"
-          @rename="onRename"
-          @delete="onDelete"
-          @open-note="emit('open-note', $event)"
-        />
-      </div>
+        <div class="folder-list">
+          <NoteFolderTreeNode
+            v-for="node in tree"
+            :key="node.id"
+            :node="node"
+            :depth="0"
+            :selected="selected"
+            :expanded="expanded"
+            :drop-hint="readonly ? null : dropHint"
+            :menu-open-id="readonly ? null : menuOpenId"
+            :active-note-id="activeNoteId ?? null"
+            :readonly="readonly"
+            @select="select"
+            @toggle="toggleExpand"
+            @toggle-subtree="toggleSubtree"
+            @drag-start="onFolderDragStart"
+            @zone-over="onZoneDragOver"
+            @zone-drop="handleDrop"
+            @menu="menuOpenId = $event"
+            @create-child="onCreateChild"
+            @rename="onRename"
+            @delete="onDelete"
+            @open-note="emit('open-note', $event)"
+          />
+        </div>
+      </template>
 
       <div
+        v-if="!readonly"
         class="folder-root-drop"
         :class="{ 'drop-over': dropHint?.kind === 'root' }"
         @dragover="onZoneDragOver($event, 'root')"
@@ -585,18 +614,6 @@ defineExpose({ reload: loadTree })
       >
         拖到此处放到根级末尾
       </div>
-    </div>
-
-    <div class="folder-tree-footer">
-      <UiTooltip content="收起侧栏" placement="top">
-        <button
-          type="button"
-          class="folder-collapse-btn"
-          @click="emit('collapse')"
-        >
-          <PanelLeftClose :size="16" />
-        </button>
-      </UiTooltip>
     </div>
   </aside>
 </template>
@@ -619,6 +636,11 @@ defineExpose({ reload: loadTree })
   padding: 10px 12px 8px;
   flex-shrink: 0;
 }
+.folder-tree-head-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
 .folder-tree-title {
   font-size: var(--text-sm);
   font-weight: 600;
@@ -630,17 +652,9 @@ defineExpose({ reload: loadTree })
   overflow: auto;
   padding: 0 6px 12px;
 }
-.folder-tree-footer {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  padding: 8px 10px;
-  border-top: 1px solid color-mix(in srgb, var(--border-color) 25%, transparent);
-}
 .folder-collapse-btn {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -656,7 +670,7 @@ defineExpose({ reload: loadTree })
   color: var(--text-primary);
 }
 @media (max-width: 768px) {
-  .folder-tree-footer {
+  .folder-collapse-btn {
     display: none;
   }
 }
@@ -931,9 +945,17 @@ defineExpose({ reload: loadTree })
 :deep(.folder-row--note .folder-row-icon) {
   opacity: 0.5;
 }
+:deep(.folder-row--note.active) {
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  color: var(--primary);
+}
 .folder-row--note {
   padding-left: 28px;
   color: var(--text-secondary);
+}
+.folder-row--note.active {
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  color: var(--primary);
 }
 .folder-expand-spacer {
   display: inline-block;

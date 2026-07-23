@@ -5,10 +5,15 @@
 ## [Unreleased]
 
 ### 2026-07-23
+- **UI**：文件夹树「收起侧栏」改到标题栏右侧，与目录「收起」位置统一
+- **UI**：文件夹树「未分类」并入「我的文件夹」分组（与用户夹同列）
+- **UI**：笔记预览页统一阅读主题——左树/顶栏/正文/右目录均用 `--preview-*`（随 sepia/light/dark/follow），顶栏与两侧头对齐 56px
+- **修复**：`UiTooltip` 用原生元素作根并阻断错误 `role` 透传，消除预览页 Dropdown/Tooltip 相关 Vue 警告
+- **功能**：笔记编辑 Overlay / 独立预览页左侧展示文件夹树（与列表共用 `NoteFolderShell`）；点笔记切换（编辑脏则先确认）；点夹/首页仅更新选中；当前笔记高亮；**预览页树只读**（无首页/全部、无新建/拖拽/菜单）；**预览页目录改右侧**
 - **功能**：日记配图支持「从链接添加」——`POST /api/diaries/{id}/images/from-url`，服务端下载 http(s) 图片（禁内网）
 - **功能**：设置·数据「清空数据」——字符图验证码（`GET /api/security/image-captcha`）通过后先备份再清空业务数据；保留账号/资料/`user_layout`；备份历史只留该快照并触发下载（`POST /api/data/purge`）
 - **修复**：外链资源下载遵循系统代理（`java.net.useSystemProxies`）——直连 CDN 超时时经 Clash 等本地代理可拉取（如 iStock）
-- **文档**：规格 `2026-07-23-diary-image-url-and-data-purge-design`
+- **文档**：规格 `2026-07-23-diary-image-url-and-data-purge-design`；修订 `2026-07-22-note-folder-tree-design` / `note-home-shell-design` / PAGE_SPEC（Overlay/预览加库树）
 
 ### 2026-07-22
 - **功能**：笔记导入 Markdown 支持多选 `.md`——每个文件一篇笔记；归属当前选中文件夹（与新建一致；首页/全部/未分类 → 未分类）；共用分类/标签/资源目录；单文件仍可改标题；结果汇总笔记与资源；结果弹窗加宽，路径/原因单行省略、悬停看全文；资源失败项标注所属笔记

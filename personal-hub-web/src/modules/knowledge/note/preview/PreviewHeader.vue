@@ -79,10 +79,10 @@ const emit = defineEmits<{
   align-items: center;
   height: 56px;
   padding: 0 var(--sp-5);
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--preview-border, var(--border-color));
   flex-shrink: 0;
   gap: var(--sp-4);
-  background: var(--bg-body);
+  background: var(--preview-bg, var(--bg-body));
 }
 
 .header-left {
@@ -98,17 +98,19 @@ const emit = defineEmits<{
   gap: 4px;
   padding: 4px 8px;
   font-size: var(--text-sm);
-  color: var(--text-secondary);
+  color: var(--preview-text, var(--text-secondary));
+  opacity: 0.72;
   border: none;
   background: none;
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: color var(--transition), background var(--transition);
+  transition: color var(--transition), background var(--transition), opacity var(--transition);
 }
 
 .header-back:hover {
-  color: var(--text-primary);
-  background: var(--bg-hover);
+  color: var(--preview-heading, var(--text-primary));
+  opacity: 1;
+  background: color-mix(in srgb, var(--preview-text, var(--text-primary)) 6%, transparent);
 }
 
 .header-badge {
@@ -142,7 +144,7 @@ const emit = defineEmits<{
 .header-title {
   font-size: var(--text-sm);
   font-weight: 500;
-  color: var(--text-primary);
+  color: var(--preview-heading, var(--text-primary));
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -161,7 +163,8 @@ const emit = defineEmits<{
   align-items: center;
   gap: 3px;
   font-size: 11px;
-  color: var(--text-tertiary);
+  color: var(--preview-text, var(--text-tertiary));
+  opacity: 0.55;
   white-space: nowrap;
 }
 
@@ -181,15 +184,17 @@ const emit = defineEmits<{
   border: none;
   background: none;
   border-radius: var(--radius-sm);
-  color: var(--text-tertiary);
+  color: var(--preview-text, var(--text-tertiary));
+  opacity: 0.55;
   cursor: pointer;
   font-size: var(--text-sm);
-  transition: color var(--transition), background var(--transition);
+  transition: color var(--transition), background var(--transition), opacity var(--transition);
 }
 
 .header-btn:hover {
-  color: var(--text-primary);
-  background: var(--bg-hover);
+  color: var(--preview-heading, var(--text-primary));
+  opacity: 1;
+  background: color-mix(in srgb, var(--preview-text, var(--text-primary)) 6%, transparent);
 }
 
 .header-btn.active {

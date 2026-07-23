@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { PanelLeftClose, PanelLeft } from 'lucide-vue-next'
+import { PanelLeftClose, PanelLeft, PanelRightClose, PanelRight } from 'lucide-vue-next'
 import UiTooltip from '@/components/UiTooltip.vue'
 
 export interface TocItem {
@@ -9,10 +9,14 @@ export interface TocItem {
   id: string
 }
 
-defineProps<{
+const props = withDefaults(defineProps<{
   items: TocItem[]
   activeId: string
-}>()
+  /** 预览页右侧；编辑器内嵌默认左侧 */
+  side?: 'left' | 'right'
+}>(), {
+  side: 'left',
+})
 
 const emit = defineEmits<{
   (e: 'scroll-to', id: string): void
@@ -38,9 +42,10 @@ function startResize(e: MouseEvent) {
   document.body.style.userSelect = 'none'
   const startX = e.clientX
   const startW = currentWidth.value
+  const right = props.side === 'right'
 
   const onMove = (ev: MouseEvent) => {
-    const delta = ev.clientX - startX
+    const delta = right ? startX - ev.clientX : ev.clientX - startX
     currentWidth.value = Math.min(TOC_MAX, Math.max(TOC_MIN, startW + delta))
     emit('resize', currentWidth.value)
   }
@@ -63,7 +68,7 @@ function scrollTo(id: string) {
 <template>
   <div
     class="toc-wrapper"
-    :class="{ collapsed: !isExpanded }"
+    :class="{ collapsed: !isExpanded, 'toc-wrapper--right': side === 'right' }"
     :style="{ width: isExpanded ? currentWidth + 'px' : COLLAPSED_WIDTH + 'px' }"
   >
     <template v-if="isExpanded">
@@ -72,7 +77,8 @@ function scrollTo(id: string) {
           <span class="toc-title">目录</span>
           <UiTooltip content="收起目录" placement="bottom">
             <button class="toc-collapse-btn" @click="toggle">
-              <PanelLeftClose :size="14" />
+              <PanelRightClose v-if="side === 'right'" :size="14" />
+              <PanelLeftClose v-else :size="14" />
             </button>
           </UiTooltip>
         </div>
@@ -92,7 +98,8 @@ function scrollTo(id: string) {
           <span class="toc-title">目录</span>
           <UiTooltip content="收起目录" placement="bottom">
             <button class="toc-collapse-btn" @click="toggle">
-              <PanelLeftClose :size="14" />
+              <PanelRightClose v-if="side === 'right'" :size="14" />
+              <PanelLeftClose v-else :size="14" />
             </button>
           </UiTooltip>
         </div>
@@ -109,9 +116,10 @@ function scrollTo(id: string) {
 
     <!-- 折叠后的展开按钮 -->
     <div v-else class="toc-collapsed-bar">
-      <UiTooltip content="展开目录" placement="right">
+      <UiTooltip content="展开目录" :placement="side === 'right' ? 'left' : 'right'">
         <button class="toc-expand-btn" @click="toggle">
-          <PanelLeft :size="14" />
+          <PanelRight v-if="side === 'right'" :size="14" />
+          <PanelLeft v-else :size="14" />
         </button>
       </UiTooltip>
     </div>
@@ -125,12 +133,22 @@ function scrollTo(id: string) {
   flex-shrink: 0;
   overflow: hidden;
   transition: width var(--transition-duration) ease;
-  border-right: 1px solid var(--border-color);
+  border-right: 1px solid var(--preview-border, var(--border-color));
+  background: var(--preview-bg, transparent);
   z-index: 10;
+}
+
+.toc-wrapper--right {
+  border-right: none;
+  border-left: 1px solid var(--preview-border, var(--border-color));
 }
 
 .toc-wrapper.collapsed {
   border-right: none;
+}
+
+.toc-wrapper--right.collapsed {
+  border-left: none;
 }
 
 /* 折叠后的展开条 */
@@ -146,6 +164,11 @@ function scrollTo(id: string) {
   padding-top: 12px;
 }
 
+.toc-wrapper--right .toc-collapsed-bar {
+  left: auto;
+  right: 0;
+}
+
 .toc-expand-btn {
   display: inline-flex;
   align-items: center;
@@ -155,28 +178,31 @@ function scrollTo(id: string) {
   border: none;
   background: none;
   border-radius: var(--radius-sm);
-  color: var(--text-tertiary);
+  color: var(--preview-text, var(--text-tertiary));
+  opacity: 0.5;
   cursor: pointer;
-  transition: color var(--transition-duration) ease, background var(--transition-duration) ease;
+  transition: color var(--transition-duration) ease, background var(--transition-duration) ease, opacity var(--transition-duration) ease;
 }
 
 .toc-expand-btn:hover {
-  color: var(--text-primary);
-  background: var(--bg-hover);
+  color: var(--preview-heading, var(--text-primary));
+  opacity: 1;
+  background: color-mix(in srgb, var(--preview-text, var(--text-primary)) 6%, transparent);
 }
 
-/* 目录头部 */
+/* 目录头部（位于顶栏下方右栏，勿做成第二顶栏高度） */
 .toc-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 10px 8px;
+  padding: 12px 10px 8px;
 }
 
 .toc-title {
   font-size: 12px;
   font-weight: 600;
-  color: var(--text-tertiary);
+  color: var(--preview-text, var(--text-tertiary));
+  opacity: 0.55;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -190,21 +216,23 @@ function scrollTo(id: string) {
   border: none;
   background: none;
   border-radius: var(--radius-sm);
-  color: var(--text-tertiary);
+  color: var(--preview-text, var(--text-tertiary));
+  opacity: 0.5;
   cursor: pointer;
-  transition: color var(--transition-duration) ease, background var(--transition-duration) ease;
+  transition: color var(--transition-duration) ease, background var(--transition-duration) ease, opacity var(--transition-duration) ease;
 }
 
 .toc-collapse-btn:hover {
-  color: var(--text-primary);
-  background: var(--bg-hover);
+  color: var(--preview-heading, var(--text-primary));
+  opacity: 1;
+  background: color-mix(in srgb, var(--preview-text, var(--text-primary)) 6%, transparent);
 }
 
 /* 展开后的目录 */
 .preview-toc {
   flex: 1;
   overflow-y: auto;
-  padding: var(--sp-5) var(--sp-3);
+  padding: 0 var(--sp-3) var(--sp-5);
   scrollbar-width: none;
 }
 
@@ -252,23 +280,26 @@ function scrollTo(id: string) {
   padding: 4px 10px;
   font-size: 13px;
   line-height: 1.5;
-  color: var(--text-tertiary);
+  color: var(--preview-text, var(--text-tertiary));
+  opacity: 0.72;
   border: none;
   background: none;
   border-radius: var(--radius-sm);
   cursor: pointer;
   text-align: left;
   width: 100%;
-  transition: color var(--transition-duration) ease, background var(--transition-duration) ease;
+  transition: color var(--transition-duration) ease, background var(--transition-duration) ease, opacity var(--transition-duration) ease;
 }
 
 .toc-item:hover {
-  color: var(--text-secondary);
-  background: var(--bg-hover);
+  color: var(--preview-heading, var(--text-secondary));
+  opacity: 1;
+  background: color-mix(in srgb, var(--preview-text, var(--text-primary)) 6%, transparent);
 }
 
 .toc-item.active {
   color: var(--accent);
+  opacity: 1;
   background: color-mix(in srgb, var(--accent) 8%, transparent);
   font-weight: 500;
 }
@@ -291,7 +322,8 @@ function scrollTo(id: string) {
 
 .toc-level-1 .toc-text {
   font-weight: 500;
-  color: var(--text-secondary);
+  color: var(--preview-heading, var(--text-secondary));
+  opacity: 1;
 }
 
 /* 拖拽条 */
@@ -306,6 +338,11 @@ function scrollTo(id: string) {
   background: transparent;
   transition: background var(--transition-duration);
   z-index: 2;
+}
+
+.toc-wrapper--right .toc-resize-handle {
+  right: auto;
+  left: 0;
 }
 
 .toc-resize-handle:hover,

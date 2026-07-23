@@ -32,17 +32,18 @@ const emit = defineEmits<{
     </PreviewHeader>
 
     <div class="doc-body">
-      <PreviewToc
-        :items="tocItems ?? []"
-        :active-id="activeHeading ?? ''"
-        @scroll-to="emit('scroll-to-heading', $event)"
-      />
-
       <main class="doc-content">
         <article class="doc-article markdown-prose">
           <slot />
         </article>
       </main>
+
+      <PreviewToc
+        side="right"
+        :items="tocItems ?? []"
+        :active-id="activeHeading ?? ''"
+        @scroll-to="emit('scroll-to-heading', $event)"
+      />
     </div>
   </div>
 </template>

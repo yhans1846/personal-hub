@@ -312,16 +312,23 @@ async function confirmEditorClose(): Promise<CloseConfirmChoice> {
   }
 }
 
-async function handleBack() {
+async function requestLeave(): Promise<boolean> {
   const result = await resolveEditorClose({
     dirty: saveStatus.value === 'dirty',
     confirm: confirmEditorClose,
     forceSave,
   })
-  if (result === 'abort') return
+  return result !== 'abort'
+}
+
+async function handleBack() {
+  const ok = await requestLeave()
+  if (!ok) return
   if (props.embedded) emit('close')
   else router.push('/notes')
 }
+
+defineExpose({ requestLeave })
 
 watch(noteId, (id) => {
   if (id != null) emit('note-id', id)
@@ -339,6 +346,7 @@ const readingTimeText = computed(() => estimateReadingTime(form.value.content))
     class="editor-page"
     :class="{
       'is-fullscreen': isFullscreen,
+      'is-embedded': embedded,
     }"
   >
     <EditorHeader
@@ -463,6 +471,11 @@ const readingTimeText = computed(() => estimateReadingTime(form.value.content))
   overflow: hidden;
   background: var(--bg-body);
   transition: background var(--transition-duration);
+}
+.editor-page.is-embedded {
+  height: 100%;
+  flex: 1;
+  min-height: 0;
 }
 .editor-body {
   flex: 1;

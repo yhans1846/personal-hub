@@ -13,6 +13,8 @@ const props = defineProps<{
   expanded: Set<number>
   dropHint: FolderDropHint | null
   menuOpenId: number | null
+  activeNoteId?: number | null
+  readonly?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -94,31 +96,34 @@ function noteTitle(title?: string) {
 <template>
   <div class="folder-node">
     <div
-      class="folder-row folder-row--node folder-row--drop"
+      class="folder-row folder-row--node"
       :class="{
         active,
-        'drop-inside': place === 'inside',
-        'drop-before': place === 'before',
-        'drop-after': place === 'after',
+        'folder-row--drop': !readonly,
+        'drop-inside': !readonly && place === 'inside',
+        'drop-before': !readonly && place === 'before',
+        'drop-after': !readonly && place === 'after',
       }"
       :style="{ paddingLeft: `${10 + depth * 14}px` }"
-      draggable="true"
+      :draggable="!readonly"
       @click="emit('select', node.id)"
-      @dragstart="emit('drag-start', $event, node.id)"
-      @dragover="onRowOver"
-      @drop="onRowDrop"
+      @dragstart="!readonly && emit('drag-start', $event, node.id)"
+      @dragover="!readonly && onRowOver($event)"
+      @drop="!readonly && onRowDrop($event)"
     >
-      <!-- 上/下缘：平级插入；中间行：成为子文件夹 -->
-      <div
-        class="folder-drop-edge folder-drop-edge--before"
-        @dragover="onEdgeOver($event, 'before')"
-        @drop="onEdgeDrop($event, 'before')"
-      />
-      <div
-        class="folder-drop-edge folder-drop-edge--after"
-        @dragover="onEdgeOver($event, 'after')"
-        @drop="onEdgeDrop($event, 'after')"
-      />
+      <template v-if="!readonly">
+        <!-- 上/下缘：平级插入；中间行：成为子文件夹 -->
+        <div
+          class="folder-drop-edge folder-drop-edge--before"
+          @dragover="onEdgeOver($event, 'before')"
+          @drop="onEdgeDrop($event, 'before')"
+        />
+        <div
+          class="folder-drop-edge folder-drop-edge--after"
+          @dragover="onEdgeOver($event, 'after')"
+          @drop="onEdgeDrop($event, 'after')"
+        />
+      </template>
 
       <button
         type="button"
@@ -148,26 +153,28 @@ function noteTitle(title?: string) {
             <ChevronsUpDown v-else :size="14" />
           </button>
         </UiTooltip>
-        <UiTooltip content="更多" placement="bottom" :show-after="400">
-          <button
-            type="button"
-            class="folder-icon-btn"
-            @click="emit('menu', menuOpen ? null : node.id)"
-          >
-            <MoreHorizontal :size="14" />
-          </button>
-        </UiTooltip>
-        <div v-if="menuOpen" class="folder-menu">
-          <button type="button" class="folder-menu-item" @click="emit('create-child', node)">
-            <FolderPlus :size="13" /> 新建文件夹
-          </button>
-          <button type="button" class="folder-menu-item" @click="emit('rename', node)">
-            <Pencil :size="13" /> 重命名
-          </button>
-          <button type="button" class="folder-menu-item folder-menu-item--danger" @click="emit('delete', node)">
-            <Trash2 :size="13" /> 删除
-          </button>
-        </div>
+        <template v-if="!readonly">
+          <UiTooltip content="更多" placement="bottom" :show-after="400">
+            <button
+              type="button"
+              class="folder-icon-btn"
+              @click="emit('menu', menuOpen ? null : node.id)"
+            >
+              <MoreHorizontal :size="14" />
+            </button>
+          </UiTooltip>
+          <div v-if="menuOpen" class="folder-menu">
+            <button type="button" class="folder-menu-item" @click="emit('create-child', node)">
+              <FolderPlus :size="13" /> 新建文件夹
+            </button>
+            <button type="button" class="folder-menu-item" @click="emit('rename', node)">
+              <Pencil :size="13" /> 重命名
+            </button>
+            <button type="button" class="folder-menu-item folder-menu-item--danger" @click="emit('delete', node)">
+              <Trash2 :size="13" /> 删除
+            </button>
+          </div>
+        </template>
       </div>
     </div>
 
@@ -177,6 +184,7 @@ function noteTitle(title?: string) {
         :key="'n-' + note.id"
         type="button"
         class="folder-row folder-row--note"
+        :class="{ active: activeNoteId === note.id }"
         :style="{ paddingLeft: `${24 + depth * 14}px` }"
         @click="emit('open-note', note.id)"
       >
@@ -193,6 +201,8 @@ function noteTitle(title?: string) {
         :expanded="expanded"
         :drop-hint="dropHint"
         :menu-open-id="menuOpenId"
+        :active-note-id="activeNoteId ?? null"
+        :readonly="readonly"
         @select="emit('select', $event)"
         @toggle="emit('toggle', $event)"
         @toggle-subtree="emit('toggle-subtree', $event)"
