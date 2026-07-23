@@ -18,6 +18,7 @@ import {
   type FolderDropHint,
   type FolderDropPlace,
 } from './folderDragState'
+import { filterFolderTree, filterUncategorizedNotes } from './knowledgeSpaceFilter'
 import UiTooltip from '@/components/UiTooltip.vue'
 
 const EXPAND_KEY = 'note-folder-expanded'
@@ -29,6 +30,10 @@ const props = defineProps<{
   activeNoteId?: number | null
   /** 只读：仅导航（展开/点笔记），无新建/拖拽/菜单 */
   readonly?: boolean
+  /** 由 KnowledgeSpaceNav 托管标题/首页时：不渲染首页/全部/旧「文件夹」头 */
+  embeddedInSpace?: boolean
+  /** 外部搜索词：过滤未分类笔记与文件夹树（不改写原始数据） */
+  filterQuery?: string
 }>()
 
 const emit = defineEmits<{
@@ -58,6 +63,19 @@ const selected = computed({
   get: () => props.modelValue,
   set: (v: NoteFolderSelection) => emit('update:modelValue', v),
 })
+
+const displayTree = computed(() => filterFolderTree(tree.value, props.filterQuery ?? ''))
+const displayUncategorizedNotes = computed(() =>
+  filterUncategorizedNotes(uncategorizedNotes.value, props.filterQuery ?? ''),
+)
+const displayUncategorizedCount = computed(() =>
+  (props.filterQuery ?? '').trim()
+    ? displayUncategorizedNotes.value.length
+    : uncategorizedCount.value,
+)
+const displayEmpty = computed(
+  () => !loading.value && displayTree.value.length === 0 && displayUncategorizedNotes.value.length === 0,
+)
 
 function loadExpanded(): Set<number> {
   try {
@@ -455,12 +473,12 @@ watch(
   () => { menuOpenId.value = null },
 )
 
-defineExpose({ reload: loadTree })
+defineExpose({ reload: loadTree, createRoot: onCreateRoot })
 </script>
 
 <template>
-  <aside class="folder-tree" aria-label="笔记文件夹">
-    <div class="folder-tree-head">
+  <aside class="folder-tree" :class="{ 'folder-tree--embedded': embeddedInSpace }" aria-label="笔记文件夹">
+    <div v-if="!embeddedInSpace" class="folder-tree-head">
       <span class="folder-tree-title">文件夹</span>
       <div class="folder-tree-head-actions">
         <UiTooltip v-if="!readonly" content="新建文件夹" placement="bottom">
@@ -485,7 +503,7 @@ defineExpose({ reload: loadTree })
       @dragleave="!readonly && onTreeBodyDragLeave($event)"
       @dragend="!readonly && clearDragState()"
     >
-      <template v-if="!readonly">
+      <template v-if="!readonly && !embeddedInSpace">
         <button
           type="button"
           class="folder-row"
@@ -508,15 +526,21 @@ defineExpose({ reload: loadTree })
         </button>
       </template>
 
-      <p v-if="!loading && tree.length === 0 && uncategorizedNotes.length === 0" class="folder-empty">
-        {{ readonly ? '暂无文件夹' : '暂无文件夹，点击右上角新建' }}
+      <p v-if="displayEmpty" class="folder-empty">
+        {{
+          (filterQuery ?? '').trim()
+            ? '无匹配'
+            : readonly || embeddedInSpace
+              ? '暂无文件夹'
+              : '暂无文件夹，点击右上角新建'
+        }}
       </p>
 
       <template v-else>
-        <div class="folder-section-label">我的文件夹</div>
+        <div v-if="!embeddedInSpace" class="folder-section-label">我的文件夹</div>
 
         <div
-          v-if="uncategorizedNotes.length > 0"
+          v-if="displayUncategorizedNotes.length > 0"
           class="folder-uncat"
         >
           <div
@@ -538,14 +562,14 @@ defineExpose({ reload: loadTree })
               class="folder-expand"
               @click.stop="toggleUncategorized"
             >
-              <ChevronDown v-if="uncategorizedExpanded && uncategorizedNotes.length" :size="14" />
-              <ChevronRight v-else-if="uncategorizedNotes.length" :size="14" />
+              <ChevronDown v-if="uncategorizedExpanded && displayUncategorizedNotes.length" :size="14" />
+              <ChevronRight v-else-if="displayUncategorizedNotes.length" :size="14" />
               <span v-else class="folder-expand-spacer" />
             </button>
             <Folder :size="14" class="folder-row-icon" />
             <span class="folder-row-label">未分类</span>
-            <span class="folder-count">{{ uncategorizedCount }}</span>
-            <div v-if="uncategorizedNotes.length" class="folder-row-actions" @click.stop>
+            <span class="folder-count">{{ displayUncategorizedCount }}</span>
+            <div v-if="displayUncategorizedNotes.length" class="folder-row-actions" @click.stop>
               <UiTooltip
                 :content="uncategorizedExpanded ? '全部收起' : '全部展开'"
                 placement="bottom"
@@ -564,7 +588,7 @@ defineExpose({ reload: loadTree })
           </div>
           <template v-if="uncategorizedExpanded">
             <button
-              v-for="note in uncategorizedNotes"
+              v-for="note in displayUncategorizedNotes"
               :key="'u-' + note.id"
               type="button"
               class="folder-row folder-row--note"
@@ -580,7 +604,7 @@ defineExpose({ reload: loadTree })
 
         <div class="folder-list">
           <NoteFolderTreeNode
-            v-for="node in tree"
+            v-for="node in displayTree"
             :key="node.id"
             :node="node"
             :depth="0"
@@ -628,6 +652,16 @@ defineExpose({ reload: loadTree })
   flex-shrink: 0;
   border-right: 1px solid var(--border-color);
   background: color-mix(in srgb, var(--bg-card) 70%, var(--bg-body));
+}
+.folder-tree--embedded {
+  width: 100%;
+  border-right: none;
+  background: transparent;
+  height: auto;
+}
+.folder-tree--embedded .folder-tree-body {
+  overflow: visible;
+  padding: 0;
 }
 .folder-tree-head {
   display: flex;

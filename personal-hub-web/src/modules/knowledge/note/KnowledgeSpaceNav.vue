@@ -25,6 +25,7 @@ const emit = defineEmits<{
 const query = ref('')
 const recent = ref<NoteVO[]>([])
 const favorites = ref<NoteVO[]>([])
+const treeRef = ref<{ reload: () => Promise<void>; createRoot: () => void } | null>(null)
 
 const filteredRecent = computed(() => filterNoteSummaries(recent.value, query.value))
 const filteredFavorites = computed(() => filterNoteSummaries(favorites.value, query.value))
@@ -47,9 +48,20 @@ function selectHome() {
   emit('update:modelValue', 'home')
 }
 
+function onTreeChanged() {
+  emit('changed')
+  void loadSideLists()
+}
+
+function reload() {
+  return treeRef.value?.reload() ?? Promise.resolve()
+}
+
 onMounted(() => {
   void loadSideLists()
 })
+
+defineExpose({ reload, createRoot: () => treeRef.value?.createRoot?.() })
 </script>
 
 <template>
@@ -105,7 +117,7 @@ onMounted(() => {
         </button>
       </div>
 
-      <div v-if="filteredFavorites.length > 0" class="ks-section">
+      <div v-if="favorites.length > 0" class="ks-section">
         <div class="ks-section-label">收藏</div>
         <button
           v-for="note in filteredFavorites"
@@ -118,6 +130,7 @@ onMounted(() => {
           <Star :size="14" class="ks-row-icon" />
           <span class="ks-row-label">{{ note.title || '无标题笔记' }}</span>
         </button>
+        <p v-if="filteredFavorites.length === 0" class="ks-empty-hint">无匹配</p>
       </div>
 
       <div class="ks-section ks-section--space">
@@ -127,22 +140,24 @@ onMounted(() => {
             <button
               type="button"
               class="ks-icon-btn"
-              disabled
               aria-label="新建文件夹"
+              @click="treeRef?.createRoot?.()"
             >
               <Plus :size="14" />
             </button>
           </UiTooltip>
         </div>
 
-        <!-- 完整树占位；任务 3 改为 embedded / hide-chrome -->
         <div class="ks-tree">
           <NoteFolderTree
+            ref="treeRef"
+            embedded-in-space
+            :filter-query="query"
             :model-value="modelValue"
             :active-note-id="activeNoteId ?? null"
             :readonly="readonly"
             @update:model-value="emit('update:modelValue', $event)"
-            @changed="emit('changed')"
+            @changed="onTreeChanged"
             @loaded="emit('loaded', $event)"
             @open-note="emit('open-note', $event)"
             @collapse="emit('collapse')"
@@ -193,14 +208,9 @@ onMounted(() => {
   transition: color var(--transition-duration) ease, background var(--transition-duration) ease;
 }
 
-.ks-icon-btn:hover:not(:disabled) {
+.ks-icon-btn:hover {
   background: var(--bg-hover);
   color: var(--text-primary);
-}
-
-.ks-icon-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
 }
 
 @media (max-width: 768px) {
@@ -281,6 +291,12 @@ onMounted(() => {
   margin: 0;
 }
 
+.ks-empty-hint {
+  margin: 0 10px;
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
 .ks-row {
   display: flex;
   align-items: center;
@@ -323,13 +339,5 @@ onMounted(() => {
 .ks-tree {
   flex: 1;
   min-height: 0;
-}
-
-/* 内嵌完整树时去掉外层边框/固定宽，避免双层壳；「文件夹」头留到任务 3 再藏 */
-.ks-tree :deep(.folder-tree) {
-  width: 100%;
-  border-right: none;
-  background: transparent;
-  height: auto;
 }
 </style>

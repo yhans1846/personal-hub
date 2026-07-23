@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { PanelLeft } from 'lucide-vue-next'
-import NoteFolderTree from './NoteFolderTree.vue'
-import type { NoteFolderSelection } from '@/types/note'
+import KnowledgeSpaceNav from './KnowledgeSpaceNav.vue'
+import type { NoteFolderSelection, NoteFolderTreeVO } from '@/types/note'
 import UiTooltip from '@/components/UiTooltip.vue'
 
 const FOLDER_PANE_KEY = 'note-folder-pane-collapsed'
@@ -20,6 +20,7 @@ const emit = defineEmits<{
   'update:drawerOpen': [value: boolean]
   'open-note': [id: number]
   changed: []
+  loaded: [data: NoteFolderTreeVO]
 }>()
 
 const collapsed = ref(localStorage.getItem(FOLDER_PANE_KEY) === '1')
@@ -52,18 +53,19 @@ function closeDrawer() {
       class="folder-pane"
       :class="{ open: drawerOpen, collapsed }"
     >
-      <NoteFolderTree
+      <KnowledgeSpaceNav
         v-show="!collapsed"
         :model-value="modelValue"
         :active-note-id="activeNoteId ?? null"
         :readonly="readonly"
         @update:model-value="emit('update:modelValue', $event)"
         @changed="emit('changed')"
+        @loaded="emit('loaded', $event)"
         @open-note="emit('open-note', $event); closeDrawer()"
         @collapse="setCollapsed(true)"
       />
       <div v-if="collapsed" class="folder-pane-rail">
-        <UiTooltip content="展开文件夹" placement="right">
+        <UiTooltip content="展开知识空间" placement="right">
           <button type="button" class="folder-pane-expand" @click="setCollapsed(false)">
             <PanelLeft :size="16" />
           </button>

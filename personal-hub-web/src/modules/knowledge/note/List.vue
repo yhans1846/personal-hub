@@ -10,7 +10,7 @@ import { formatRelativeUpdated } from '@/utils/formatTime'
 import ImportMarkdownDialog from './ImportMarkdownDialog.vue'
 import NoteCardContextMenu, { type CardMenuEntry } from './NoteCardContextMenu.vue'
 import NoteWorkspaceOverlay from './NoteWorkspaceOverlay.vue'
-import NoteFolderTree from './NoteFolderTree.vue'
+import KnowledgeSpaceNav from './KnowledgeSpaceNav.vue'
 import NoteHome from './NoteHome.vue'
 import { useDeepLinkDialog } from '@/composables/useDeepLinkDialog'
 import { useMainContentFill } from '@/composables/useMainContentFill'
@@ -328,14 +328,14 @@ async function onCardMenuAction(actionId: string) {
         @create="goCreate"
       >
         <template #filters>
-          <UiTooltip :content="folderPaneCollapsed ? '展开文件夹' : '文件夹'" placement="bottom">
+          <UiTooltip :content="folderPaneCollapsed ? '展开知识空间' : '知识空间'" placement="bottom">
             <button
               type="button"
               class="toolbar-btn folder-toggle-btn"
               :class="{ active: !folderPaneCollapsed }"
               @click="toggleFolderPane"
             >
-              <FolderTree :size="14" /> 文件夹
+              <FolderTree :size="14" /> 知识空间
             </button>
           </UiTooltip>
           <div class="view-toggle">
@@ -376,14 +376,14 @@ async function onCardMenuAction(actionId: string) {
       </ListToolbar>
 
       <div v-else class="note-home-toolbar">
-        <UiTooltip :content="folderPaneCollapsed ? '展开文件夹' : '文件夹'" placement="bottom">
+        <UiTooltip :content="folderPaneCollapsed ? '展开知识空间' : '知识空间'" placement="bottom">
           <button
             type="button"
             class="toolbar-btn folder-toggle-btn"
             :class="{ active: !folderPaneCollapsed }"
             @click="toggleFolderPane"
           >
-            <FolderTree :size="14" /> 文件夹
+            <FolderTree :size="14" /> 知识空间
           </button>
         </UiTooltip>
         <button type="button" class="toolbar-btn toolbar-btn--primary" @click="goCreate">
@@ -402,7 +402,7 @@ async function onCardMenuAction(actionId: string) {
         class="folder-pane"
         :class="{ open: folderDrawerOpen, collapsed: folderPaneCollapsed }"
       >
-        <NoteFolderTree
+        <KnowledgeSpaceNav
           v-show="!folderPaneCollapsed"
           ref="folderTreeRef"
           v-model="folderSelection"
@@ -412,7 +412,7 @@ async function onCardMenuAction(actionId: string) {
           @collapse="setFolderPaneCollapsed(true)"
         />
         <div v-if="folderPaneCollapsed" class="folder-pane-rail">
-          <UiTooltip content="展开文件夹" placement="right">
+          <UiTooltip content="展开知识空间" placement="right">
             <button type="button" class="folder-pane-expand" @click="setFolderPaneCollapsed(false)">
               <PanelLeft :size="16" />
             </button>
