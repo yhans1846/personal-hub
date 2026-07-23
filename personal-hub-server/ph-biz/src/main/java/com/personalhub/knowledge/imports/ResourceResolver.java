@@ -10,6 +10,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
+import java.net.Proxy;
+import java.net.ProxySelector;
+import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
@@ -17,6 +20,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Base64;
+import java.util.List;
 
 /**
  * Markdown 资源解析器 — 将 Markdown 中各种格式的资源引用解析为真实数据
@@ -62,7 +66,7 @@ public class ResourceResolver {
         return ResolveResult.fail(ref, "相对路径资源无法定位，请使用「从 Markdown 文件导入」并提供 baseDir");
     }
 
-    /** HTTP(S) 网络资源（禁 SSRF） */
+    /** HTTP(S) 网络资源（禁 SSRF；遵循系统代理，避免直连被墙/黑洞） */
     private ResolveResult resolveHttp(String ref) {
         try {
             URI uri = new URI(ref);
@@ -78,18 +82,21 @@ public class ResourceResolver {
                 return ResolveResult.fail(ref, "不允许访问内网或本地地址");
             }
 
-            HttpURLConnection conn = (HttpURLConnection) uri.toURL().openConnection();
-            conn.setConnectTimeout(10000);
-            conn.setReadTimeout(15000);
+            Proxy proxy = selectProxy(uri);
+            HttpURLConnection conn = (HttpURLConnection) uri.toURL().openConnection(proxy);
+            conn.setConnectTimeout(15000);
+            conn.setReadTimeout(30000);
             conn.setInstanceFollowRedirects(false);
-            conn.setRequestProperty("User-Agent", "PersonalHub/1.0");
+            conn.setRequestProperty("User-Agent",
+                    "Mozilla/5.0 (compatible; PersonalHub/1.0; +https://github.com/personal-hub)");
+            conn.setRequestProperty("Accept", "image/avif,image/webp,image/apng,image/*,*/*;q=0.8");
 
             int status = conn.getResponseCode();
             if (status >= 300 && status < 400) {
                 return ResolveResult.fail(ref, "不支持 HTTP 重定向");
             }
             if (status < 200 || status >= 300) {
-                return ResolveResult.fail(ref, "远程资源不可用");
+                return ResolveResult.fail(ref, "远程资源不可用（HTTP " + status + "）");
             }
 
             String contentType = conn.getContentType();
@@ -105,10 +112,27 @@ public class ResourceResolver {
         } catch (UnknownHostException e) {
             log.warn("网络资源主机无法解析: {}", ref);
             return ResolveResult.fail(ref, "主机无法解析");
+        } catch (SocketTimeoutException e) {
+            log.warn("网络资源连接超时: {}", ref);
+            return ResolveResult.fail(ref, "连接超时（若使用 Clash 等代理，请确认系统代理已开启且 JVM 已启用 useSystemProxies）");
         } catch (IOException | URISyntaxException e) {
             log.warn("网络资源下载失败: {}", ref, e);
-            return ResolveResult.fail(ref, "下载失败");
+            String detail = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
+            return ResolveResult.fail(ref, "下载失败: " + detail);
         }
+    }
+
+    /** 使用默认 ProxySelector（配合 java.net.useSystemProxies） */
+    private static Proxy selectProxy(URI uri) {
+        try {
+            List<Proxy> proxies = ProxySelector.getDefault().select(uri);
+            if (proxies != null && !proxies.isEmpty()) {
+                return proxies.get(0);
+            }
+        } catch (Exception e) {
+            log.debug("解析系统代理失败，改用直连: {}", e.toString());
+        }
+        return Proxy.NO_PROXY;
     }
 
     private boolean isBlockedHostName(String host) {

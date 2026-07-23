@@ -19,6 +19,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 public class PersonalHubApplication {
 
     public static void main(String[] args) {
+        // Windows 系统代理（Clash 等）对 JVM 默认不生效，外链配图/导入会直连超时
+        if (System.getProperty("java.net.useSystemProxies") == null) {
+            System.setProperty("java.net.useSystemProxies", "true");
+        }
         SpringApplication.run(PersonalHubApplication.class, args);
     }
 

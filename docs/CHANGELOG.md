@@ -7,6 +7,7 @@
 ### 2026-07-23
 - **功能**：日记配图支持「从链接添加」——`POST /api/diaries/{id}/images/from-url`，服务端下载 http(s) 图片（禁内网）
 - **功能**：设置·数据「清空数据」——字符图验证码（`GET /api/security/image-captcha`）通过后先备份再清空业务数据；保留账号/资料/`user_layout`；备份历史只留该快照并触发下载（`POST /api/data/purge`）
+- **修复**：外链资源下载遵循系统代理（`java.net.useSystemProxies`）——直连 CDN 超时时经 Clash 等本地代理可拉取（如 iStock）
 - **文档**：规格 `2026-07-23-diary-image-url-and-data-purge-design`
 
 ### 2026-07-22
