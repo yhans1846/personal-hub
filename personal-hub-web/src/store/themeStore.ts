@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { getLayoutAll, saveLayout } from '@/api/layoutApi'
 import { useStorageSync } from '@/composables/useStorageSync'
 import type { AppearanceConfig, ExtendedAppearanceConfig, LayoutResponse } from '@/types/layout'
+import { applyUiFontToDOM, DEFAULT_UI_FONT, normalizeUiFont } from '@/utils/uiFonts'
 
 const STORAGE_KEY_APPEARANCE = 'appearance-config'
 
@@ -12,6 +13,7 @@ const DEFAULT_APPEARANCE: ExtendedAppearanceConfig = {
   animationSpeed: 'normal',
   density: 'standard',
   contentWidth: 80,
+  uiFont: DEFAULT_UI_FONT,
 }
 
 /** 兼容旧枚举 narrow/standard/wide/full → 百分比 */
@@ -65,6 +67,9 @@ function applyAppearanceToDOM(config: AppearanceConfig | ExtendedAppearanceConfi
   root.style.setProperty('--sp-density', String(s))
   root.style.setProperty('--content-max-width', `${ext.contentWidth}%`)
 
+  ext.uiFont = normalizeUiFont(ext.uiFont)
+  applyUiFontToDOM(ext.uiFont)
+
   requestAnimationFrame(() => {
     const accent = getComputedStyle(root).getPropertyValue('--accent').trim()
     if (accent) {
@@ -86,7 +91,11 @@ export const useThemeStore = defineStore('theme', () => {
       const appLayout = layouts.find((l) => l.layoutType === 'appearance')
       if (!appLayout?.layoutJson) return null
       const parsed = JSON.parse(appLayout.layoutJson) as Partial<ExtendedAppearanceConfig>
-      return { ...parsed, contentWidth: normalizeContentWidth(parsed.contentWidth) }
+      return {
+        ...parsed,
+        contentWidth: normalizeContentWidth(parsed.contentWidth),
+        uiFont: normalizeUiFont(parsed.uiFont),
+      }
     },
     saveApi: async (data) => {
       await saveLayout({
@@ -100,6 +109,7 @@ export const useThemeStore = defineStore('theme', () => {
 
   const appearanceConfig = appearanceSync.data
   appearanceConfig.contentWidth = normalizeContentWidth(appearanceConfig.contentWidth)
+  appearanceConfig.uiFont = normalizeUiFont(appearanceConfig.uiFont)
   applyAppearanceToDOM(appearanceConfig)
 
   async function fetchAppearanceFromBackend() {

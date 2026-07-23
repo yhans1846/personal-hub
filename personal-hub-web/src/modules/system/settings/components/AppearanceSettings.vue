@@ -1,13 +1,22 @@
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import { useThemeStore } from '@/store/themeStore'
 import { ElMessage } from 'element-plus'
 import { storeToRefs } from 'pinia'
-import { Sun, Moon, Leaf, RotateCcw, Maximize2, Minimize2, Wind, Minus, Plus } from 'lucide-vue-next'
+import { Sun, Moon, Leaf, RotateCcw, Maximize2, Minimize2, Wind, Minus, Plus, Type } from 'lucide-vue-next'
 import type { ExtendedAppearanceConfig } from '@/types/layout'
+import { ensureUiFontStylesheet, UI_FONT_OPTIONS, type UiFontKey } from '@/utils/uiFonts'
 import UiTooltip from '@/components/UiTooltip.vue'
 
 const themeStore = useThemeStore()
 const { appearanceConfig } = storeToRefs(themeStore)
+
+/** 进入外观页时预加载预置字体，便于选项卡即时预览 */
+onMounted(() => {
+  for (const f of UI_FONT_OPTIONS) {
+    ensureUiFontStylesheet(f.stylesheetHref)
+  }
+})
 
 const ACCENT_OPTIONS = [
   { key: 'blue', label: '蓝色', color: '#4F7BFF' },
@@ -135,6 +144,27 @@ async function handleReset() {
     </section>
 
     <section class="setting-section">
+      <h3 class="section-title">界面字体</h3>
+      <p class="font-section-hint">仅影响全站 UI；阅读 / Markdown 正文仍在「阅读」中单独设置</p>
+      <div class="font-options">
+        <button
+          v-for="f in UI_FONT_OPTIONS"
+          :key="f.key"
+          type="button"
+          :class="['font-card', { active: appearanceConfig.uiFont === f.key }]"
+          :style="{ fontFamily: f.stack }"
+          @click="setAppearance('uiFont', f.key as UiFontKey)"
+        >
+          <span class="font-card-label">
+            <Type :size="14" class="font-card-icon" />
+            {{ f.label }}
+          </span>
+          <span class="font-card-sample">个人知识库 Personal Hub</span>
+        </button>
+      </div>
+    </section>
+
+    <section class="setting-section">
       <h3 class="section-title">强调色</h3>
       <div class="accent-grid">
         <button
@@ -246,6 +276,53 @@ async function handleReset() {
   color: var(--text-secondary);
 }
 .section-title-row .section-title { margin-bottom: 0; }
+
+.font-section-hint {
+  margin: -4px 0 var(--sp-3);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  line-height: 1.45;
+}
+.font-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.font-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  cursor: pointer;
+  text-align: left;
+  color: var(--text-primary);
+  transition: border-color var(--transition-duration) ease, background var(--transition-duration) ease;
+}
+.font-card:hover { background: var(--bg-hover); }
+.font-card.active {
+  border-color: var(--accent);
+  background: var(--accent-light);
+}
+.font-card-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+.font-card-icon { color: var(--text-tertiary); flex-shrink: 0; }
+.font-card.active .font-card-icon { color: var(--accent); }
+.font-card-sample {
+  font-size: var(--text-sm);
+  font-weight: 400;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
 
 .reset-link {
   display: inline-flex;

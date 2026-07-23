@@ -5,6 +5,8 @@
 ## [Unreleased]
 
 ### 2026-07-23
+- **功能**：全站 UI 字体可切换——默认思源黑体；外观提供思源宋体 / 霞鹜文楷 / Inter / 系统默认；阅读 Markdown 不联动；规格 `2026-07-23-ui-font-switch-design`
+- **UI**：系统设置文字阶梯统一走 `--text-*` Token（卡片标题 / 分区标题 / 提示）
 - **功能**：笔记新建/编辑 Overlay **真实路由**——`/notes/new`、`/notes/:id/edit`（与列表同组件同步 workspace）；刷新不丢；首次保存 replace 为 edit；旧 `?create`/`?edit` 自动迁移；列表/首页/命令面板/工作台入口**新开标签**打开（与预览一致）；规格 `2026-07-23-note-edit-route-design`
 - **性能**：日记列表不再等配图 blob 齐了才出列表——`usePaginatedList` 的 `onFetched` 不阻塞骨架屏；缩略图后台按张渐进填充（卡片只拉封面 1 张）
 - **UI**：知识空间收起后「展开」按钮改回窄条**顶部**（与标题栏「收起」同侧对齐）

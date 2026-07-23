@@ -9,6 +9,16 @@ import './styles/product-list.css'
 import './styles/stats-row.css'
 import App from './App.vue'
 import router from './router'
+import { applyUiFontToDOM } from './utils/uiFonts'
+
+// 尽早应用 UI 字体，避免首屏系统栈闪一下
+try {
+  const raw = localStorage.getItem('appearance-config')
+  const parsed = raw ? JSON.parse(raw) as { uiFont?: string } : null
+  applyUiFontToDOM(parsed?.uiFont ?? 'source-sans')
+} catch {
+  applyUiFontToDOM('source-sans')
+}
 
 const app = createApp(App)
 app.use(createPinia())

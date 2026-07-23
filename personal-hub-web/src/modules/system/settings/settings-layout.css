@@ -1,5 +1,5 @@
 /**
- * 系统设置四 Tab 共用间距节奏
+ * 系统设置四 Tab 共用间距与文字阶梯
  * 卡片间距 12 · 卡片标题下 12 · 区块 20（末清零）· 小标题下 10 · 行间 12
  */
 .settings-stack {
@@ -16,8 +16,9 @@
 .settings-card-title,
 .settings-content .card-title {
   margin: 0 0 12px;
-  font-size: 15px;
-  font-weight: 700;
+  font-size: var(--text-base);
+  font-weight: 600;
+  line-height: 1.35;
   color: var(--text-primary);
 }
 
@@ -38,8 +39,9 @@
 
 .settings-content .section-title {
   margin: 0 0 10px;
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 600;
+  line-height: 1.35;
   color: var(--text-secondary);
 }
 .settings-content .section-title-row .section-title {
@@ -51,4 +53,24 @@
 }
 .settings-content .setting-row:last-child {
   margin-bottom: 0;
+}
+
+/* 提示 / 次要说明 — 各 Tab 共用 */
+.settings-content .settings-hint,
+.settings-content .manager-hint,
+.settings-content .btn-hint,
+.settings-content .cache-hint,
+.settings-content .font-section-hint {
+  font-size: var(--text-xs);
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--text-tertiary);
+}
+
+.settings-content .manager-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
 }

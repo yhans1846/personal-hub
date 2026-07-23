@@ -48,6 +48,11 @@ export interface ExtendedAppearanceConfig extends AppearanceConfig {
   density: 'comfortable' | 'standard' | 'compact'
   /** 主内容区最大宽度占比 50–100，默认 80 */
   contentWidth: number
+  /**
+   * 全站 UI 字体（阅读/Markdown 不跟此联动）
+   * source-sans | source-serif | lxgw-wenkai | inter | system
+   */
+  uiFont: import('@/utils/uiFonts').UiFontKey
 }
 
 /** 通知配置 */
